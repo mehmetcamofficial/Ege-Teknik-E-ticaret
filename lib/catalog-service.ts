@@ -3,7 +3,9 @@ import { products } from "@/db/schema";
 import { catalogDefaults } from "@/lib/catalog-defaults";
 import { count } from "drizzle-orm";
 
-const INSERT_BATCH_SIZE = 20;
+// D1/SQLite limits the number of bound parameters per statement. Each product
+// contributes many columns, so small batches keep the import safely below it.
+const INSERT_BATCH_SIZE = 5;
 
 export async function ensureCatalogInitialized() {
   const db = getDb();
