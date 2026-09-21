@@ -1,0 +1,2 @@
+import { env } from "cloudflare:workers";
+export async function GET(_request:Request,context:{params:Promise<{key:string[]}>}){const {key}=await context.params,obj=await env.MEDIA.get(key.join("/"));if(!obj)return new Response("Bulunamadı",{status:404});const headers=new Headers();obj.writeHttpMetadata(headers);headers.set("etag",obj.httpEtag);headers.set("cache-control","public, max-age=31536000, immutable");return new Response(obj.body,{headers})}
