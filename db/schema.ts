@@ -9,7 +9,21 @@ export const products = sqliteTable("products", {
   energyClass: text("energy_class").notNull().default(""), wifi: text("wifi").notNull().default(""), price: integer("price").notNull().default(0),
   stock: integer("stock").notNull().default(0), saleMode: text("sale_mode").notNull().default("quote"), status: text("status").notNull().default("draft"),
   description: text("description").notNull().default(""), ...timestamps,
+  imageUrl: text("image_url").notNull().default(""),
 }, (t) => [index("products_status_category_idx").on(t.status, t.category)]);
+
+export const secondHandProducts = sqliteTable("second_hand_products", {
+  id: text("id").primaryKey(), slug: text("slug").notNull().unique(), name: text("name").notNull(), category: text("category").notNull(),
+  condition: text("condition").notNull().default("İyi"), testNotes: text("test_notes").notNull().default(""), warranty: text("warranty").notNull().default(""),
+  price: integer("price").notNull().default(0), stock: integer("stock").notNull().default(1), imageUrl: text("image_url").notNull().default(""),
+  status: text("status").notNull().default("draft"), description: text("description").notNull().default(""), ...timestamps,
+}, (t) => [index("second_hand_status_created_idx").on(t.status, t.createdAt)]);
+
+export const blogPosts = sqliteTable("blog_posts", {
+  id: text("id").primaryKey(), slug: text("slug").notNull().unique(), title: text("title").notNull(), excerpt: text("excerpt").notNull().default(""),
+  content: text("content").notNull().default(""), imageUrl: text("image_url").notNull().default(""), status: text("status").notNull().default("draft"),
+  publishedAt: text("published_at"), ...timestamps,
+}, (t) => [index("blog_posts_status_published_idx").on(t.status, t.publishedAt)]);
 
 export const serviceRequests = sqliteTable("service_requests", {
   id: text("id").primaryKey(), requestNumber: text("request_number").notNull().unique(), type: text("type").notNull(), name: text("name").notNull(),
