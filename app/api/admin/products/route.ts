@@ -8,6 +8,7 @@ const schema = z.object({
   series: z.string().max(80).default(""), sku: z.string().max(80).default(""), capacity: z.string().max(80).default(""),
   energyClass: z.string().max(30).default(""), wifi: z.string().max(30).default(""), price: z.coerce.number().int().min(0), stock: z.coerce.number().int().min(0),
   saleMode: z.enum(["online", "quote", "discovery", "whatsapp", "out_of_stock"]), status: z.enum(["draft", "published"]), description: z.string().max(4000).default(""),
+  imageUrl: z.string().max(1000).default(""),
 });
 
 export async function POST(request: Request) {
