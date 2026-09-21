@@ -1,0 +1,14 @@
+# Ege Teknik TLC Gree Yetkili Bayi ve Servis
+
+Ege Teknik, Kuşadası/Aydın merkezli klima satış, keşif, montaj, bakım, onarım, yedek parça ve ikinci el ürün işletmesidir. Hedef hizmet alanı Ege Bölgesi'dir.
+
+## Temel sayfalar
+- /catalog.html — GREE ürün kataloğu
+- /services.html — satış ve servis hizmetleri
+- /selector.html — ön BTU kapasite seçici
+- /regions.html — Ege Bölgesi hizmet alanları
+- /blog.html — klima rehberleri
+- /contact.html — doğrulanmış adres, telefon ve talep kanalları
+
+Telefon: 0542 795 75 60
+Adres: İkiçeşmelik Mahallesi Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın

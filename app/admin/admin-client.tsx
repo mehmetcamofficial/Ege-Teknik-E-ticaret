@@ -1,0 +1,50 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+type Product = { id:string; name:string; category:string; stock:number; price:number; status:string; saleMode:string };
+type ServiceRequest = { id:string; requestNumber:string; type:string; name:string; phone:string; city:string; message:string; status:string; createdAt:string };
+type Order = { id:string; orderNumber:string; customerName:string; total:number; status:string; createdAt:string };
+const initial = { name:"", slug:"", category:"Klima", series:"", sku:"", capacity:"", energyClass:"", wifi:"", price:0, stock:0, saleMode:"quote", status:"draft", description:"" };
+
+export default function AdminClient({ email, signOutPath }: { email:string; signOutPath:string }) {
+  const [data, setData] = useState<{products:Product[]; requests:ServiceRequest[]; orders:Order[]}>({products:[],requests:[],orders:[]});
+  const [form, setForm] = useState(initial); const [message, setMessage] = useState("Yükleniyor…");
+  const load = useCallback(async () => { const r=await fetch("/api/admin/overview"); const json=await r.json(); if(r.ok){setData(json);setMessage("")}else setMessage(json.error||"Veriler alınamadı") }, []);
+  useEffect(()=>{
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load();
+  },[load]);
+  async function createProduct(e:React.FormEvent){e.preventDefault();setMessage("Ürün kaydediliyor…");const r=await fetch("/api/admin/products",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(form)});const j=await r.json();if(!r.ok){setMessage(j.error||"Kayıt başarısız");return}setForm(initial);setMessage("Ürün kaydedildi.");await load()}
+  async function updateProduct(id:string, patch:object){setMessage("Güncelleniyor…");const r=await fetch(`/api/admin/products/${id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify(patch)});if(r.ok){await load()}else setMessage("Güncelleme başarısız")}
+  async function updateRequest(id:string,status:string){await fetch(`/api/admin/service-requests/${id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status})});await load()}
+  async function importCatalog(){setMessage("GREE kataloğu veritabanına aktarılıyor…");const r=await fetch("/api/admin/catalog/import",{method:"POST"});const j=await r.json();if(!r.ok){setMessage(j.error||"Katalog aktarılamadı");return}await load();setMessage(`${j.count} katalog kaydı kontrol edildi; eksik ürünler eklendi.`)}
+  async function updateOrder(id:string,status:string){const r=await fetch(`/api/admin/orders/${id}`,{method:"PATCH",headers:{"content-type":"application/json"},body:JSON.stringify({status})});if(!r.ok){setMessage("Sipariş durumu güncellenemedi");return}await load()}
+  const set=(key:string,value:string|number)=>setForm(v=>({...v,[key]:value}));
+  return <main className="min-h-screen bg-[#f4f8f6] text-[#10251f]">
+    <header className="border-b bg-[#07261d] text-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5"><div><p className="text-xs font-bold tracking-[.18em] text-emerald-300">EGE TEKNİK</p><h1 className="text-2xl font-bold">Yönetim Merkezi</h1></div><div className="text-right text-sm"><p>{email}</p><div className="mt-1 flex gap-3"><Link href="/index.html" className="text-emerald-300">Siteyi aç</Link><Link href={signOutPath} className="text-emerald-300">Çıkış</Link></div></div></div></header>
+    <div className="mx-auto grid max-w-7xl gap-6 px-5 py-7">
+      <section className="grid gap-4 sm:grid-cols-4"><Stat label="Veritabanı" value="Bağlı"/><Stat label="Ürün" value={data.products.length}/><Stat label="Açık talep" value={data.requests.filter(x=>!["completed","cancelled"].includes(x.status)).length}/><Stat label="Sipariş" value={data.orders.length}/></section>
+      {message&&<p className="rounded-lg bg-amber-100 px-4 py-3 text-sm">{message}</p>}
+      <Card><CardHeader className="flex-row items-center justify-between gap-4"><div><CardTitle>Ürün kataloğu</CardTitle><p className="mt-1 text-sm text-zinc-500">Fiyat, stok ve yayın bilgileri doğrudan canlı veritabanında tutulur.</p></div><Button type="button" variant="outline" onClick={importCatalog}>GREE kataloğunu yükle</Button></CardHeader><CardContent><h3 className="mb-4 font-semibold">Yeni ürün ekle</h3><form onSubmit={createProduct} className="grid gap-4 md:grid-cols-4">
+        {[["Ürün adı","name"],["URL kısa adı","slug"],["Kategori","category"],["Seri","series"],["SKU","sku"],["Kapasite","capacity"],["Enerji sınıfı","energyClass"],["Wi-Fi","wifi"]].map(([label,key])=><div key={key}><Label>{label}</Label><Input required={key==="name"||key==="slug"||key==="category"} value={String(form[key as keyof typeof form])} onChange={e=>set(key,e.target.value)}/></div>)}
+        <div><Label>Fiyat (TL)</Label><Input type="number" min="0" value={form.price} onChange={e=>set("price",Number(e.target.value))}/></div><div><Label>Stok</Label><Input type="number" min="0" value={form.stock} onChange={e=>set("stock",Number(e.target.value))}/></div>
+        <div><Label>Satış biçimi</Label><select className="h-9 w-full rounded-md border bg-white px-3" value={form.saleMode} onChange={e=>set("saleMode",e.target.value)}><option value="quote">Teklif</option><option value="online">Online</option><option value="discovery">Keşif</option><option value="whatsapp">WhatsApp</option><option value="out_of_stock">Stok dışı</option></select></div>
+        <div><Label>Yayın</Label><select className="h-9 w-full rounded-md border bg-white px-3" value={form.status} onChange={e=>set("status",e.target.value)}><option value="draft">Taslak</option><option value="published">Yayında</option></select></div>
+        <div className="md:col-span-4"><Label>Açıklama</Label><Textarea value={form.description} onChange={e=>set("description",e.target.value)}/></div><Button className="md:col-span-1">Ürünü kaydet</Button>
+      </form></CardContent></Card>
+      <Card><CardHeader><CardTitle>Ürün ve stok yönetimi</CardTitle></CardHeader><CardContent><Table><TableHeader><TableRow><TableHead>Ürün</TableHead><TableHead>Kategori</TableHead><TableHead>Stok</TableHead><TableHead>Fiyat</TableHead><TableHead>Durum</TableHead></TableRow></TableHeader><TableBody>{data.products.map(p=><TableRow key={p.id}><TableCell><b>{p.name}</b></TableCell><TableCell>{p.category}</TableCell><TableCell><Input className="w-20" type="number" defaultValue={p.stock} onBlur={e=>updateProduct(p.id,{stock:Number(e.target.value)})}/></TableCell><TableCell><Input className="w-28" type="number" defaultValue={p.price} onBlur={e=>updateProduct(p.id,{price:Number(e.target.value)})}/></TableCell><TableCell><select value={p.status} onChange={e=>updateProduct(p.id,{status:e.target.value})} className="rounded border p-2"><option value="draft">Taslak</option><option value="published">Yayında</option></select></TableCell></TableRow>)}</TableBody></Table></CardContent></Card>
+      <Card><CardHeader><CardTitle>Servis ve keşif talepleri</CardTitle></CardHeader><CardContent><Table><TableHeader><TableRow><TableHead>No / Tarih</TableHead><TableHead>Müşteri</TableHead><TableHead>Talep</TableHead><TableHead>Durum</TableHead></TableRow></TableHeader><TableBody>{data.requests.map(r=><TableRow key={r.id}><TableCell><b>{r.requestNumber}</b><br/><small>{r.createdAt}</small></TableCell><TableCell>{r.name}<br/><a className="text-emerald-700" href={`tel:${r.phone}`}>{r.phone}</a><br/><small>{r.city}</small></TableCell><TableCell className="max-w-lg whitespace-normal"><b>{r.type}</b><br/>{r.message}</TableCell><TableCell><select value={r.status} onChange={e=>updateRequest(r.id,e.target.value)} className="rounded border p-2"><option value="new">Yeni</option><option value="contacted">Arandı</option><option value="scheduled">Planlandı</option><option value="completed">Tamamlandı</option><option value="cancelled">İptal</option></select></TableCell></TableRow>)}</TableBody></Table></CardContent></Card>
+      <Card><CardHeader><CardTitle>Siparişler</CardTitle></CardHeader><CardContent>{data.orders.length?<Table><TableHeader><TableRow><TableHead>Sipariş</TableHead><TableHead>Müşteri</TableHead><TableHead>Tutar</TableHead><TableHead>Durum</TableHead></TableRow></TableHeader><TableBody>{data.orders.map(o=><TableRow key={o.id}><TableCell><b>{o.orderNumber}</b><br/><small>{o.createdAt}</small></TableCell><TableCell>{o.customerName}</TableCell><TableCell>{new Intl.NumberFormat("tr-TR",{style:"currency",currency:"TRY",maximumFractionDigits:0}).format(o.total)}</TableCell><TableCell><select value={o.status} onChange={e=>updateOrder(o.id,e.target.value)} className="rounded border p-2"><option value="pending_payment">Ödeme bekliyor</option><option value="confirmed">Onaylandı</option><option value="preparing">Hazırlanıyor</option><option value="scheduled">Montaj planlandı</option><option value="completed">Tamamlandı</option><option value="cancelled">İptal</option></select></TableCell></TableRow>)}</TableBody></Table>:<p className="text-sm text-zinc-500">Henüz sipariş yok.</p>}</CardContent></Card>
+    </div>
+  </main>
+}
+
+function Stat({label,value}:{label:string;value:number|string}){return <Card><CardContent className="pt-6"><p className="text-sm text-zinc-500">{label}</p><p className="text-3xl font-bold">{value}</p></CardContent></Card>}

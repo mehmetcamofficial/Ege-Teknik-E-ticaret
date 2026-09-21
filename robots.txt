@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ege-teknik-trendklima.oncoconnect2.chatgpt.site/sitemap.xml
