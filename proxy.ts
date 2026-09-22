@@ -1,0 +1,4 @@
+import { NextRequest, NextResponse } from "next/server";
+const mutating=new Set(["POST","PUT","PATCH","DELETE"]);
+export function proxy(request:NextRequest){if(!mutating.has(request.method))return NextResponse.next();const length=Number(request.headers.get("content-length")||0);if(length>64_000)return NextResponse.json({error:"İstek boyutu çok büyük."},{status:413});const origin=request.headers.get("origin"),host=request.headers.get("x-forwarded-host")||request.headers.get("host");if(!origin||!host){return NextResponse.json({error:"İstek kaynağı doğrulanamadı."},{status:403})}try{if(new URL(origin).host!==host)return NextResponse.json({error:"İstek kaynağı reddedildi."},{status:403})}catch{return NextResponse.json({error:"İstek kaynağı reddedildi."},{status:403})}return NextResponse.next()}
+export const config={matcher:["/api/:path*"]};
