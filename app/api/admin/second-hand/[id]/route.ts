@@ -2,7 +2,7 @@ import { getAdminUser } from "@/lib/admin-auth";
 import { getDb } from "@/db";
 import { auditLogs, secondHandProducts } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { secondHandSchema } from "../route";
+import { secondHandSchema } from "../schema";
 import { readJson } from "@/lib/http-security";
 
 export async function PATCH(request:Request,context:{params:Promise<{id:string}>}){
