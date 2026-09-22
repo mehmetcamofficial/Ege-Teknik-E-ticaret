@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  DEFAULT_MAX_BODY_BYTES,
+  IMAGE_UPLOAD_MAX_BODY_BYTES,
   containsCardData,
   isBucketWindowActive,
   isSameOrigin,
   isValidIdempotencyKey,
+  maxBodyBytesForApiPath,
   rateLimitExceeded,
 } from "../lib/security-policy.ts";
 
@@ -87,4 +90,47 @@ test("the login threshold matches the configured five attempts per window", () =
   const attempts = [1, 2, 3, 4, 5, 6];
   const blocked = attempts.filter((count) => rateLimitExceeded({ count: count - 1, expiresAt: future }, now, 5));
   assert.deepEqual(blocked, [6]);
+});
+
+// A. Exact image route gets the larger, image-specific ceiling.
+test("the exact product-image upload route gets the 4.5 MB body limit", () => {
+  assert.equal(maxBodyBytesForApiPath("/api/admin/products/123/image"), IMAGE_UPLOAD_MAX_BODY_BYTES);
+  assert.equal(IMAGE_UPLOAD_MAX_BODY_BYTES, 4_500_000);
+});
+
+// B. Ordinary mutation routes keep the default JSON-body ceiling.
+test("ordinary mutation routes keep the 64 KB default body limit", () => {
+  for (const pathname of ["/api/orders", "/api/admin/products/123", "/api/auth/login"]) {
+    assert.equal(maxBodyBytesForApiPath(pathname), DEFAULT_MAX_BODY_BYTES, `${pathname} must stay at the default limit`);
+  }
+  assert.equal(DEFAULT_MAX_BODY_BYTES, 64_000);
+});
+
+// C. Lookalike paths must not receive the exception - only the exact single-segment-id route does.
+test("lookalike paths do not receive the image-upload exception", () => {
+  const lookalikes = [
+    "/api/admin/products/123/image/extra",
+    "/api/admin/products/123/imageX",
+    "/api/admin/products/123/image/",
+    "/api/admin/products/image",
+    "/api/admin/products/a/b/image",
+    "/api/admin/products//image",
+    "/API/admin/products/123/image",
+    "/api/admin/products/123/image ",
+  ];
+  for (const pathname of lookalikes) {
+    assert.equal(maxBodyBytesForApiPath(pathname), DEFAULT_MAX_BODY_BYTES, `${pathname} must not get the image exception`);
+  }
+});
+
+// D. The proxy's own comparison still rejects a request whose declared Content-Length
+// exceeds the limit selected for its route - for both the default route and the image route.
+test("the selected limit still rejects a Content-Length over that route's own ceiling", () => {
+  const exceedsLimit = (pathname: string, contentLength: number) => contentLength > maxBodyBytesForApiPath(pathname);
+  assert.equal(exceedsLimit("/api/orders", 64_001), true);
+  assert.equal(exceedsLimit("/api/orders", 64_000), false);
+  assert.equal(exceedsLimit("/api/admin/products/123/image", 4_500_001), true);
+  assert.equal(exceedsLimit("/api/admin/products/123/image", 4_500_000), false);
+  // A lookalike is held to the default ceiling, not the image one, even with a mid-sized body.
+  assert.equal(exceedsLimit("/api/admin/products/123/imageX", 100_000), true);
 });

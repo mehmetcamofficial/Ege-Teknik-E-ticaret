@@ -44,6 +44,19 @@ export function canBootstrapAdmin(input: {
   return input.configuredEmail.trim().toLowerCase() === input.submittedEmail.trim().toLowerCase();
 }
 
+export const DEFAULT_MAX_BODY_BYTES = 64_000;
+// Product image uploads carry a raw file (<=4 MB, enforced again server-side) plus
+// multipart/form-data framing overhead; every other mutating /api/* route keeps the
+// 64 KB JSON-body cap above.
+export const IMAGE_UPLOAD_MAX_BODY_BYTES = 4_500_000;
+const IMAGE_UPLOAD_PATH = /^\/api\/admin\/products\/[^/]+\/image$/;
+
+/** The request-size ceiling the proxy enforces for a given API pathname. Narrowly
+ * scoped: only the exact single-segment-id image-upload route gets the larger limit. */
+export function maxBodyBytesForApiPath(pathname: string): number {
+  return IMAGE_UPLOAD_PATH.test(pathname) ? IMAGE_UPLOAD_MAX_BODY_BYTES : DEFAULT_MAX_BODY_BYTES;
+}
+
 export function isSameOrigin(origin: string | null, host: string | null): boolean {
   if (!origin || !host) return false;
   try {

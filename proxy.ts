@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { appContentSecurityPolicy } from "@/lib/security-headers";
-import { isSameOrigin } from "@/lib/security-policy";
+import { isSameOrigin, maxBodyBytesForApiPath } from "@/lib/security-policy";
 
 const mutating = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 function guardApiRequest(request: NextRequest): NextResponse | null {
   if (!mutating.has(request.method)) return null;
-  if (Number(request.headers.get("content-length") || 0) > 64_000) return NextResponse.json({ error: "İstek boyutu çok büyük." }, { status: 413 });
+  const maxBytes = maxBodyBytesForApiPath(request.nextUrl.pathname);
+  if (Number(request.headers.get("content-length") || 0) > maxBytes) return NextResponse.json({ error: "İstek boyutu çok büyük." }, { status: 413 });
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
   if (!isSameOrigin(request.headers.get("origin"), host)) return NextResponse.json({ error: "İstek kaynağı reddedildi." }, { status: 403 });
   return null;
