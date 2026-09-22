@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -47,12 +48,16 @@ const deps: CustomerIdentityDeps = {
   newId: () => crypto.randomUUID(),
 };
 
+/**
+ * Both resolvers are wrapped in React's per-request cache() so the /account
+ * layout and every nested page can each call them independently (the layout
+ * resolves-or-creates and redirects on null; pages just need the same
+ * customer to scope their own queries) without repeating the lookup/insert
+ * for every server component that renders in one request.
+ */
+
 /** The internal customer linked to the signed-in Clerk user, or null. Never creates. */
-export function getAuthenticatedCustomer() {
-  return resolveAuthenticatedCustomer(deps);
-}
+export const getAuthenticatedCustomer = cache(() => resolveAuthenticatedCustomer(deps));
 
 /** The internal customer linked to the signed-in Clerk user, created race-safely on first login; null when signed out. */
-export function getOrCreateAuthenticatedCustomer() {
-  return resolveOrCreateAuthenticatedCustomer(deps);
-}
+export const getOrCreateAuthenticatedCustomer = cache(() => resolveOrCreateAuthenticatedCustomer(deps));

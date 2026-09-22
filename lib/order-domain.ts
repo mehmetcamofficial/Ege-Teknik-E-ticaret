@@ -2,6 +2,14 @@ import { z } from "zod";
 
 export const orderStatuses = ["pending_payment", "paid", "preparing", "shipped", "delivery", "delivered", "installation", "completed", "cancelled", "returned", "service"] as const;
 export type OrderStatus = typeof orderStatuses[number];
+export const orderStatusLabels: Record<OrderStatus, string> = {
+  pending_payment: "Ödeme Bekleniyor", paid: "Ödeme Alındı", preparing: "Hazırlanıyor", shipped: "Kargoya Verildi",
+  delivery: "Dağıtımda", delivered: "Teslim Edildi", installation: "Montaj Bekleniyor", completed: "Tamamlandı",
+  cancelled: "İptal Edildi", returned: "İade Edildi", service: "Serviste",
+};
+export function orderStatusLabel(status: string) {
+  return orderStatusLabels[status as OrderStatus] ?? status;
+}
 const transitions: Record<OrderStatus, readonly OrderStatus[]> = {
   pending_payment: ["paid", "cancelled"], paid: ["preparing", "cancelled", "service"], preparing: ["shipped", "delivery", "cancelled", "service"],
   shipped: ["delivered", "service"], delivery: ["delivered", "service"], delivered: ["installation", "completed", "returned", "service"],
