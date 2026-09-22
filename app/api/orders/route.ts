@@ -1,17 +1,14 @@
 import { getDb } from "@/db";
 import { addresses, customers, inventory, orderItems, orders, products } from "@/db/schema";
-import { calculateLine } from "@/lib/order-domain";
+import { computeOrderTotals, orderRequestSchema, priceOrderLines } from "@/lib/order-domain";
 import { idempotencyKey } from "@/lib/request-security";
 import { publicRoute, rateLimit, readJson } from "@/lib/http-security";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
-import { z } from "zod";
-
-const schema = z.object({ customerName: z.string().trim().min(2).max(100), phone: z.string().trim().min(7).max(30), email: z.string().trim().email().max(150), city: z.string().trim().min(2).max(100), address: z.string().trim().min(8).max(500), paymentProvider: z.enum(["PayTR", "iyzico", "discovery"]), items: z.array(z.object({ productId: z.string().min(1).max(160), quantity: z.number().int().min(1).max(10) })).min(1).max(20) });
 
 async function createOrder(request: Request) {
   await rateLimit(request,"order-create",8,15*60_000);
   const key = idempotencyKey(request); if (!key) return Response.json({ error: "Güvenli istek anahtarı eksik." }, { status: 400 });
-  const parsed = schema.safeParse(await readJson(request)); if (!parsed.success) return Response.json({ error: "Sipariş bilgilerini kontrol edin." }, { status: 400 });
+  const parsed = orderRequestSchema.safeParse(await readJson(request)); if (!parsed.success) return Response.json({ error: "Sipariş bilgilerini kontrol edin." }, { status: 400 });
   const db = getDb(); const [existing] = await db.select({ orderNumber: orders.orderNumber, total: orders.total, status: orders.status }).from(orders).where(eq(orders.idempotencyKey, key)).limit(1);
   if (existing) return Response.json({ ok: true, ...existing });
   const requested = new Map(parsed.data.items.map((item) => [item.productId, item.quantity]));
@@ -19,8 +16,8 @@ async function createOrder(request: Request) {
   if (rows.length !== requested.size) return Response.json({ error: "Sepette satışa açık olmayan bir ürün var." }, { status: 409 });
   const nameParts = parsed.data.customerName.split(/\s+/), lastName = nameParts.length > 1 ? nameParts.pop()! : "-", firstName = nameParts.join(" ");
   const id = crypto.randomUUID(), customerId = crypto.randomUUID(), addressId = crypto.randomUUID(), orderNumber = `ETS-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${id.slice(0, 6).toUpperCase()}`;
-  const lines = rows.map(({ product }) => { const quantity = requested.get(product.id)!; return { product, quantity, ...calculateLine(product.price, quantity, product.vatRateBps) }; });
-  const subtotal = lines.reduce((sum, line) => sum + line.lineTotal - line.vatAmount, 0), vatTotal = lines.reduce((sum, line) => sum + line.vatAmount, 0), total = subtotal + vatTotal;
+  const lines = priceOrderLines(rows.map(({ product }) => product), requested);
+  const { subtotal, vatTotal, total } = computeOrderTotals(lines);
   try {
     await db.transaction(async (tx) => {
       await tx.insert(customers).values({ id: customerId, firstName, lastName, phone: parsed.data.phone, email: parsed.data.email });
