@@ -15,6 +15,13 @@
       "when": 1790008844965,
       "tag": "0001_graceful_rocket_racer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790104114747,
+      "tag": "0002_customer_clerk_identity",
+      "breakpoints": true
     }
   ]
 }

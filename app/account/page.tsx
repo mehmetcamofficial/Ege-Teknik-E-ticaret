@@ -1,7 +1,12 @@
 import { UserButton } from "@clerk/nextjs";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getOrCreateAuthenticatedCustomer } from "@/lib/customer-auth";
 
 export default async function AccountPage() {
+  // Links the verified Clerk session to its internal customer (created on first login).
+  // The layout's auth.protect() already ran; null here means no usable user session.
+  const customer = await getOrCreateAuthenticatedCustomer();
+  if (!customer) return (await auth()).redirectToSignIn();
   const user = await currentUser();
   return (
     <main className="mx-auto max-w-2xl p-6">
