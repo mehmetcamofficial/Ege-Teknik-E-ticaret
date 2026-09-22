@@ -12,6 +12,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 function AddressCard({ address }: { address: CustomerAddress }) {
   const [editing, setEditing] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (editing) {
     return (
@@ -54,14 +55,21 @@ function AddressCard({ address }: { address: CustomerAddress }) {
             disabled={pending}
             onClick={() => {
               if (!confirm("Bu adresi silmek istediğinize emin misiniz?")) return;
-              startTransition(() => {
-                void deleteAddressAction(address.id);
+              setDeleteError(null);
+              startTransition(async () => {
+                const result = await deleteAddressAction(address.id);
+                if (!result.ok) setDeleteError(result.error ?? "Adres silinemedi.");
               });
             }}
           >
             {pending ? "Siliniyor..." : "Sil"}
           </Button>
         </div>
+        {deleteError ? (
+          <p role="alert" className="mt-2 text-sm text-destructive">
+            {deleteError}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );

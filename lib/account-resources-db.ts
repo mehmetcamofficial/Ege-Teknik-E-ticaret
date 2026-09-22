@@ -104,7 +104,27 @@ export const orderStore: OrderStore = {
     return rows;
   },
   getOwnedOrder: async (customerId, orderId) => {
-    const [order] = await getDb().select().from(orders).where(ownedOrderWhere(customerId, orderId)).limit(1);
+    // Explicit projection: only the columns OrderDetail actually exposes to the account UI.
+    // idempotencyKey, notes and the raw contact-snapshot fields (customerName/phone/email)
+    // never need to leave the database for this read.
+    const [order] = await getDb()
+      .select({
+        id: orders.id,
+        orderNumber: orders.orderNumber,
+        status: orders.status,
+        total: orders.total,
+        currency: orders.currency,
+        createdAt: orders.createdAt,
+        subtotal: orders.subtotal,
+        vatTotal: orders.vatTotal,
+        shippingTotal: orders.shippingTotal,
+        paymentStatus: orders.paymentStatus,
+        shippingAddressSnapshot: orders.shippingAddressSnapshot,
+        billingAddressSnapshot: orders.billingAddressSnapshot,
+      })
+      .from(orders)
+      .where(ownedOrderWhere(customerId, orderId))
+      .limit(1);
     if (!order) return null;
     const items = await getDb()
       .select({ id: orderItems.id, productName: orderItems.productName, productSku: orderItems.productSku, productSlug: orderItems.productSlug, unitPrice: orderItems.unitPrice, quantity: orderItems.quantity, lineTotal: orderItems.lineTotal })

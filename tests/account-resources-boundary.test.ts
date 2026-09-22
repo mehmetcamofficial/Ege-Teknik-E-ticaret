@@ -85,3 +85,58 @@ test("guest checkout (app/api/orders/route.ts) is untouched by the account resou
   assert.equal(/account-resources|customer-auth|customer-identity|@clerk\//.test(source), false);
   assert.match(source, /export const POST=publicRoute\(createOrder\)/);
 });
+
+// --- Phase 3A.3E hardening -------------------------------------------------
+
+test("getOwnedOrder never selects idempotencyKey, notes or raw contact snapshot fields", () => {
+  const block = ACCOUNT_RESOURCES_DB.match(/getOwnedOrder:[\s\S]*?\.limit\(1\);/);
+  assert.ok(block, "getOwnedOrder's order select not found");
+  for (const forbidden of [/idempotencyKey/, /\bnotes\b/, /customerName/, /\bphone:/, /\bemail:/]) {
+    assert.equal(forbidden.test(block![0]), false, `getOwnedOrder must not select ${forbidden}`);
+  }
+  assert.match(block![0], /ownedOrderWhere\(customerId, orderId\)/, "ownership predicate must survive the narrower projection");
+});
+
+test("the narrowed order SELECT's real generated SQL matches exactly the OrderDetail field set (no over-fetch)", async () => {
+  const { and, eq } = await import("drizzle-orm");
+  const { drizzle } = await import("drizzle-orm/node-postgres");
+  const { orders } = await import("../db/schema.ts");
+  const db = drizzle({ connection: "postgres://unused:unused@127.0.0.1:1/unused" });
+
+  const sql = db
+    .select({
+      id: orders.id, orderNumber: orders.orderNumber, status: orders.status, total: orders.total, currency: orders.currency, createdAt: orders.createdAt,
+      subtotal: orders.subtotal, vatTotal: orders.vatTotal, shippingTotal: orders.shippingTotal, paymentStatus: orders.paymentStatus,
+      shippingAddressSnapshot: orders.shippingAddressSnapshot, billingAddressSnapshot: orders.billingAddressSnapshot,
+    })
+    .from(orders)
+    .where(and(eq(orders.id, "order-1"), eq(orders.customerId, "cust-1")))
+    .toSQL();
+  for (const forbidden of ["idempotency_key", "\"notes\"", "customer_name"]) assert.equal(sql.sql.includes(forbidden), false, `${forbidden} must not appear in the generated SQL`);
+  assert.match(sql.sql, /where \("orders"\."id" = \$1 and "orders"\."customer_id" = \$2\)/);
+});
+
+test("all four account mutations rate-limit before doing anything else, via the project's existing rateLimit() architecture", () => {
+  const guard = read("lib/account-action-guard.ts");
+  assert.match(guard, /import\s*\{[^}]*\brateLimit\b[^}]*\}\s*from\s*"@\/lib\/http-security"/, "must reuse rateLimit(), not a second system");
+
+  const profileActions = read("app/account/profile/actions.ts");
+  assert.match(profileActions, /rateLimitAccountAction\("account-profile-update"/);
+
+  const addressActions = read("app/account/addresses/actions.ts");
+  for (const [fn, scope] of [["createAddressAction", "account-address-create"], ["updateAddressAction", "account-address-update"], ["deleteAddressAction", "account-address-delete"]] as const) {
+    const body = addressActions.match(new RegExp(`export async function ${fn}[\\s\\S]*?\\n}`));
+    assert.ok(body, `${fn} not found`);
+    assert.match(body![0], new RegExp(`rateLimitAccountAction\\("${scope}"`), `${fn} must rate-limit with scope ${scope}`);
+  }
+});
+
+test("deleteAddressAction surfaces a non-enumerable failure instead of silently no-op'ing", () => {
+  const source = read("app/account/addresses/actions.ts");
+  const body = source.match(/export async function deleteAddressAction[\s\S]*?\n}/)![0];
+  assert.match(body, /Promise<DeleteAddressResult>/);
+  assert.match(body, /if \(!result\.ok\) return \{ ok: false, error: result\.error \}/);
+  // deleteAddress's error message is identical for "not found" and "not owned" (see lib/account-resources.ts),
+  // so nothing here can add a distinguishing detail - only forward it verbatim.
+  assert.equal(/status|stack|internal|database/i.test(body), false);
+});

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getAuthenticatedCustomer } from "@/lib/customer-auth";
 import { createAddress, deleteAddress, updateAddress } from "@/lib/account-resources";
 import { addressStore } from "@/lib/account-resources-db";
+import { rateLimitAccountAction } from "@/lib/account-action-guard";
 
 export type AddressActionState = { ok: boolean; error?: string };
 
@@ -22,6 +23,9 @@ function addressInputFromForm(formData: FormData) {
 }
 
 export async function createAddressAction(_prev: AddressActionState, formData: FormData): Promise<AddressActionState> {
+  const limited = await rateLimitAccountAction("account-address-create", 20, 15 * 60_000);
+  if (limited) return { ok: false, error: limited };
+
   const customer = await getAuthenticatedCustomer();
   if (!customer) return { ok: false, error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." };
 
@@ -41,6 +45,9 @@ export async function createAddressAction(_prev: AddressActionState, formData: F
  * of ever being editable.
  */
 export async function updateAddressAction(_prev: AddressActionState, formData: FormData): Promise<AddressActionState> {
+  const limited = await rateLimitAccountAction("account-address-update", 20, 15 * 60_000);
+  if (limited) return { ok: false, error: limited };
+
   const customer = await getAuthenticatedCustomer();
   if (!customer) return { ok: false, error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." };
 
@@ -52,10 +59,25 @@ export async function updateAddressAction(_prev: AddressActionState, formData: F
   return { ok: true };
 }
 
-export async function deleteAddressAction(addressId: string) {
+export type DeleteAddressResult = { ok: boolean; error?: string };
+
+/**
+ * The failure message is the same generic string whether the address never
+ * existed or simply isn't this customer's (see deleteAddress in
+ * lib/account-resources.ts) - so a failed delete never tells the caller
+ * which case it was, keeping IDOR attempts non-enumerable.
+ */
+export async function deleteAddressAction(addressId: string): Promise<DeleteAddressResult> {
+  const limited = await rateLimitAccountAction("account-address-delete", 20, 15 * 60_000);
+  if (limited) return { ok: false, error: limited };
+
   const customer = await getAuthenticatedCustomer();
-  if (!customer) return;
-  await deleteAddress(customer, addressId, addressStore);
+  if (!customer) return { ok: false, error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." };
+
+  const result = await deleteAddress(customer, addressId, addressStore);
+  if (!result.ok) return { ok: false, error: result.error };
+
   revalidatePath("/account/addresses");
   revalidatePath("/account");
+  return { ok: true };
 }
