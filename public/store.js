@@ -27,26 +27,85 @@ const seed=[
 ];
 if(!document.querySelector('link[href="phase1b.css"]'))document.head.insertAdjacentHTML('beforeend','<link rel="stylesheet" href="phase1b.css"><link rel="stylesheet" href="phase1c.css">');
 const money=n=>new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n);
-let catalogProducts=seed;
+/* The seed above is a visual fallback only. Orders are refused until /api/products has
+   answered, so fallback data can never reach the order API. */
+let catalogProducts=seed,catalogIsAuthoritative=false;
 const getProducts=()=>catalogProducts;
-async function loadCatalog(){try{const response=await fetch('/api/products');if(!response.ok)return;const data=await response.json();if(data.products?.length){catalogProducts=data.products.map(p=>({...p,energy:p.energyClass,sale:p.saleMode==='online'}));renderCatalog();renderProductPage();renderFavorites();renderCompare();renderCheckout()}}catch{console.info('Katalog başlangıç verisiyle gösteriliyor.')}}
-const getCart=()=>JSON.parse(localStorage.getItem('ege-cart')||'[]');
-const saveCart=c=>{localStorage.setItem('ege-cart',JSON.stringify(c));updateCartCount()};
+function catalogAuthoritative(){return catalogIsAuthoritative}
+async function loadCatalog(){try{const response=await fetch('/api/products');if(!response.ok)return;const data=await response.json();if(data.products?.length){catalogProducts=data.products.map(p=>({...p,energy:p.energyClass,sale:p.saleMode==='online'}));catalogIsAuthoritative=true;pruneCart();renderCatalog();renderProductPage();renderFavorites();renderCompare();renderCheckout();updateCartCount()}}catch{console.info('Katalog başlangıç verisiyle gösteriliyor.')}}
+
+/* Cart state is only {productId, quantity}. Price, VAT, stock and totals always come from
+   the catalog the server served, never from localStorage. */
+const CART_MAX_QUANTITY=10,CART_MAX_LINES=20,PRODUCT_ID_PATTERN=/^[A-Za-z0-9._:-]{1,160}$/;
+function normalizeCartEntries(raw,knownIds){
+  if(!Array.isArray(raw))return [];
+  const merged=new Map();
+  for(const entry of raw){
+    if(!entry||typeof entry!=='object')continue;
+    const productId=typeof entry.productId==='string'&&entry.productId?entry.productId:(typeof entry.id==='string'?entry.id:'');
+    if(!PRODUCT_ID_PATTERN.test(productId))continue;
+    if(knownIds&&!knownIds.has(productId))continue;
+    const parsed=Number(entry.quantity??entry.qty??1);
+    const quantity=Number.isFinite(parsed)&&parsed>=1?Math.min(Math.floor(parsed),CART_MAX_QUANTITY):1;
+    merged.set(productId,Math.min((merged.get(productId)||0)+quantity,CART_MAX_QUANTITY));
+  }
+  return [...merged].slice(0,CART_MAX_LINES).map(([productId,quantity])=>({productId,quantity}));
+}
+function cartLines(entries,products){
+  const index=new Map((products||[]).map(p=>[p.id,p]));
+  return (entries||[]).map(entry=>{const product=index.get(entry.productId)||null;return {productId:entry.productId,quantity:entry.quantity,product,available:Boolean(product&&product.sale)}});
+}
+function cartTotal(lines){return (lines||[]).reduce((sum,line)=>line.available?sum+line.product.price*line.quantity:sum,0)}
+function orderItemsPayload(entries,products){return cartLines(entries,products).filter(line=>line.available).map(line=>({productId:line.productId,quantity:line.quantity}))}
+function buildOrderPayload(fields,entries,products){return {customerName:fields.customerName||'',phone:fields.phone||'',email:fields.email||'',city:fields.city||'',address:fields.address||'',paymentProvider:fields.paymentProvider||'discovery',items:orderItemsPayload(entries,products)}}
+function orderAttemptKey(store){let key=null;try{key=store.getItem('ege-order-attempt')}catch{}if(!key){key=crypto.randomUUID();try{store.setItem('ege-order-attempt',key)}catch{}}return key}
+function clearOrderAttemptKey(store){try{store.removeItem('ege-order-attempt')}catch{}}
+function readCartRaw(){try{return JSON.parse(localStorage.getItem('ege-cart')||'[]')}catch{return []}}
+function knownProductIds(){return catalogIsAuthoritative?new Set(getProducts().map(p=>p.id)):null}
+function writeCart(entries){localStorage.setItem('ege-cart',JSON.stringify(normalizeCartEntries(entries,null)));updateCartCount()}
+/* Drops cart lines whose ids are not in the served catalog, so legacy ids such as
+   "aphro-09" disappear instead of failing at checkout. */
+function pruneCart(){if(!catalogIsAuthoritative)return 0;const before=normalizeCartEntries(readCartRaw(),null),after=normalizeCartEntries(before,knownProductIds());if(after.length!==before.length)writeCart(after);return before.length-after.length}
+const getCart=()=>normalizeCartEntries(readCartRaw(),knownProductIds());
+const saveCart=c=>writeCart(c);
 const getFavorites=()=>JSON.parse(localStorage.getItem('ege-favorites')||'[]');
 const getCompare=()=>JSON.parse(localStorage.getItem('ege-compare')||'[]');
 function toggleFavorite(id){let ids=getFavorites();ids=ids.includes(id)?ids.filter(x=>x!==id):[...ids,id];localStorage.setItem('ege-favorites',JSON.stringify(ids));toast(ids.includes(id)?'Favorilere eklendi':'Favorilerden çıkarıldı');renderFavorites()}
 function toggleCompare(id){let ids=getCompare();if(ids.includes(id))ids=ids.filter(x=>x!==id);else if(ids.length<4)ids.push(id);else return toast('En fazla 4 ürün karşılaştırılabilir');localStorage.setItem('ege-compare',JSON.stringify(ids));toast(ids.includes(id)?'Karşılaştırmaya eklendi':'Karşılaştırmadan çıkarıldı');renderCompare()}
-function updateCartCount(){document.querySelectorAll('[data-cart-count]').forEach(x=>x.textContent=getCart().length)}
+function updateCartCount(){const count=getCart().reduce((sum,entry)=>sum+entry.quantity,0);document.querySelectorAll('[data-cart-count]').forEach(x=>x.textContent=count)}
 function toast(t){const e=document.querySelector('.toast');if(!e)return;e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2400)}
-function addCart(id){const p=getProducts().find(x=>x.id===id);if(!p||!p.sale)return;const c=getCart();c.push({...p,qty:1});saveCart(c);toast('Ürün sepete eklendi')}
+function addCart(id){const p=getProducts().find(x=>x.id===id);if(!p||!p.sale)return;writeCart([...readCartRaw(),{productId:id,quantity:1}]);renderCheckout();toast('Ürün sepete eklendi')}
 function quote(id){const p=getProducts().find(x=>x.id===id);location.href='https://wa.me/905427957560?text='+encodeURIComponent((p?.name||'GREE ürün')+' için fiyat ve keşif bilgisi almak istiyorum. Sayfa: '+location.href)}
 function productCard(p){const fav=getFavorites().includes(p.id),cmp=getCompare().includes(p.id);return `<article class="product"><a href="product.html?id=${p.id}" class="product-visual"><span class="badge ${p.sale?'':'quote'}">${p.sale?'ONLINE SATIŞ':'TEKLİF / KEŞİF'}</span><div class="unit"></div></a><div class="card-tools"><button title="Favori" onclick="toggleFavorite('${p.id}')">${fav?'♥':'♡'}</button><button onclick="toggleCompare('${p.id}')">${cmp?'Karşılaştırmada':'Karşılaştır'}</button></div><h3><a href="product.html?id=${p.id}">${p.name}</a></h3><div class="meta">${p.category} · ${p.series}</div><div class="specs"><span class="spec">${p.capacity}</span><span class="spec">${p.energy}</span><span class="spec">Wi-Fi: ${p.wifi}</span></div><div class="product-foot"><div class="price">${p.sale?money(p.price):'Fiyat Sor'}<small>${p.sale?`Stok: ${p.stock}`:'Projelendirme ile satılır'}</small></div><div class="actions"><a class="ghost" href="product.html?id=${p.id}">İncele</a><button class="primary" onclick="${p.sale?`addCart('${p.id}')`:`quote('${p.id}')`}">${p.sale?'Sepete Ekle':'Teklif'}</button></div></div></article>`}
 function renderCatalog(){const root=document.querySelector('[data-products]');if(!root)return;let cat=document.querySelector('[name=category]:checked')?.value||'Tümü';let q=(document.querySelector('#catalog-search')?.value||'').toLocaleLowerCase('tr');let btu=document.querySelector('.chip.active')?.dataset.btu||'Tümü';let ps=getProducts().filter(p=>(cat==='Tümü'||p.category===cat)&&(btu==='Tümü'||p.capacity.includes(btu))&&(!q||(p.name+' '+p.series+' '+p.category).toLocaleLowerCase('tr').includes(q)));root.innerHTML=ps.length?ps.map(productCard).join(''):'<div class="empty">Bu filtrelerle eşleşen ürün bulunamadı.</div>';document.querySelector('[data-result-count]')?.replaceChildren(document.createTextNode(ps.length+' ürün'))}
 function showProduct(id){const p=getProducts().find(x=>x.id===id);const m=document.querySelector('#product-modal');if(!m||!p)return;m.querySelector('[data-detail]').innerHTML=`<button class="ghost modal-close" onclick="closeModal()">Kapat</button><p class="meta">${p.category} / ${p.series}</p><h2>${p.name}</h2><div class="product-visual" style="height:180px"><div class="unit"></div></div><div class="specs"><span class="spec">Kapasite: ${p.capacity}</span><span class="spec">Enerji: ${p.energy}</span><span class="spec">Wi-Fi: ${p.wifi}</span></div><p>Ürün fiyatı, stok ve satış durumu Ege Teknik yönetim panelinden kontrol edilir. Montaj koşulları sipariş öncesinde adres ve keşif bilgisine göre kesinleştirilir.</p><div class="product-foot"><div class="price">${p.sale?money(p.price):'Proje bazlı teklif'}</div><button class="primary" onclick="${p.sale?`addCart('${p.id}')`:`quote('${p.id}')`}">${p.sale?'Sepete Ekle':'WhatsApp’tan Teklif Al'}</button></div>`;m.classList.add('open')}
 function closeModal(){document.querySelector('#product-modal')?.classList.remove('open')}
-function renderCheckout(){const root=document.querySelector('[data-cart-items]');if(!root)return;const c=getCart();root.innerHTML=c.length?c.map((p,i)=>`<div class="summary-row"><span>${p.name}<br><small>${p.capacity}</small></span><span>${money(p.price)} <button class="ghost" onclick="removeCart(${i})">×</button></span></div>`).join(''):'<p>Sepetiniz boş.</p>';const total=c.reduce((a,p)=>a+p.price,0);document.querySelector('[data-subtotal]').textContent=money(total);document.querySelector('[data-total]').textContent=money(total)}
-function removeCart(i){const c=getCart();c.splice(i,1);saveCart(c);renderCheckout()}
-async function submitOrder(e){e.preventDefault();const cart=getCart();if(!cart.length)return toast('Sepetiniz boş');const f=e.currentTarget,d=new FormData(f),button=f.querySelector('button.primary'),result=f.querySelector('[data-order-result]');button.disabled=true;button.textContent='Sipariş kaydediliyor…';const attemptKey=sessionStorage.getItem('ege-order-attempt')||crypto.randomUUID();sessionStorage.setItem('ege-order-attempt',attemptKey);try{const items=[...cart.reduce((m,p)=>m.set(p.id,(m.get(p.id)||0)+1),new Map())].map(([productId,quantity])=>({productId,quantity}));const response=await fetch('/api/orders',{method:'POST',headers:{'content-type':'application/json','idempotency-key':attemptKey},body:JSON.stringify({customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city'),address:d.get('address'),paymentProvider:d.get('provider'),items})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Sipariş kaydedilemedi');sessionStorage.removeItem('ege-order-attempt');saveCart([]);renderCheckout();result.innerHTML=`<b>Siparişiniz kaydedildi.</b><br>Takip numarası: ${data.orderNumber}<br>Ege Teknik ekibi ödeme ve montaj için sizinle iletişime geçecek.`;button.textContent='Sipariş Kaydedildi'}catch(error){button.disabled=false;button.textContent='Tekrar Dene';result.textContent=error.message||'Sipariş kaydedilemedi.'}}
+function renderCheckout(){const root=document.querySelector('[data-cart-items]');if(!root)return;const lines=cartLines(getCart(),getProducts()),sellable=lines.filter(l=>l.available),blocked=lines.filter(l=>!l.available);
+  const rows=[...sellable.map(l=>`<div class="summary-row"><span>${l.product.name}<br><small>${l.product.capacity} · ${l.quantity} adet</small></span><span>${money(l.product.price*l.quantity)} <button class="ghost" onclick="removeCart('${l.productId}')">×</button></span></div>`),
+    ...blocked.map(l=>`<div class="summary-row"><span>Bu ürün artık satışta değil<br><small>Ürün kodu: ${l.productId}</small></span><span><button class="ghost" onclick="removeCart('${l.productId}')">×</button></span></div>`)];
+  root.innerHTML=rows.length?rows.join(''):'<p>Sepetiniz boş.</p>';
+  const total=money(cartTotal(lines)),subtotalEl=document.querySelector('[data-subtotal]'),totalEl=document.querySelector('[data-total]');
+  if(subtotalEl)subtotalEl.textContent=total;if(totalEl)totalEl.textContent=total}
+function removeCart(productId){writeCart(readCartRaw().filter(entry=>(entry?.productId??entry?.id)!==productId));renderCheckout()}
+async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=f.querySelector('button.primary'),result=f.querySelector('[data-order-result]'),say=t=>{if(result)result.textContent=t};
+  if(!catalogAuthoritative()){say('Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
+  const entries=getCart(),products=getProducts(),payload=buildOrderPayload({customerName:'',phone:'',email:'',city:'',address:'',paymentProvider:''},entries,products);
+  if(!payload.items.length){toast('Sepetiniz boş');say('Sepetinizde satın alınabilir ürün yok.');return}
+  const d=new FormData(f);Object.assign(payload,{customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city'),address:d.get('address'),paymentProvider:d.get('provider')});
+  const attemptKey=orderAttemptKey(sessionStorage);
+  if(button){button.disabled=true;button.textContent='Sipariş kaydediliyor…'}
+  try{
+    const response=await fetch('/api/orders',{method:'POST',headers:{'content-type':'application/json','idempotency-key':attemptKey},body:JSON.stringify(payload)});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||'Sipariş kaydedilemedi');
+    // Cart and attempt key are cleared only once the server has confirmed the order.
+    clearOrderAttemptKey(sessionStorage);writeCart([]);renderCheckout();
+    if(result)result.innerHTML=`<b>Siparişiniz kaydedildi.</b><br>Takip numarası: ${data.orderNumber}<br>Ege Teknik ekibi ödeme ve montaj için sizinle iletişime geçecek.`;
+    if(button)button.textContent='Sipariş Kaydedildi'
+  }catch(error){
+    if(button){button.disabled=false;button.textContent='Tekrar Dene'}
+    say(error.message||'Sipariş kaydedilemedi. Bağlantınızı kontrol edip tekrar deneyin.')
+  }}
 document.addEventListener('DOMContentLoaded',()=>{updateCartCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);document.querySelectorAll('[name=category]').forEach(x=>x.addEventListener('change',renderCatalog));document.querySelector('#catalog-search')?.addEventListener('input',renderCatalog);document.querySelectorAll('.chip').forEach(x=>x.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(y=>y.classList.remove('active'));x.classList.add('active');renderCatalog()}));void loadCatalog()});
 
 const business={name:'Ege Teknik TLC Gree Yetkili Bayi ve Servis',phone:'0542 795 75 60',phoneHref:'tel:+905427957560',wa:'https://wa.me/905427957560',address:'İkiçeşmelik Mahallesi Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın',map:'https://share.google/YHInB4tNwB2khqC10'};
