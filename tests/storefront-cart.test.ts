@@ -31,6 +31,9 @@ type StorefrontApi = {
   clearOrderAttemptKey: (store: KeyStore) => void;
   catalogAuthoritative: () => boolean;
   loadCatalog: () => Promise<void>;
+  loadLegalRequirements: () => Promise<unknown>;
+  acceptedLegalVersionIds: (boxes: unknown) => string[];
+  legalConsentsComplete: (requirements: unknown, acceptedIds: string[]) => boolean;
   submitOrder: (event: unknown) => Promise<void>;
   addCart: (id: string) => void;
   removeCart: (id: string) => void;
@@ -88,15 +91,19 @@ function loadStorefront(options: { fetch?: (url: string, init?: { headers?: Reco
 }
 
 const jsonResponse = (status: number, body: unknown) => Promise.resolve({ ok: status >= 200 && status < 300, status, json: () => Promise.resolve(body) });
+export const legalDocuments = [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", versionId: "ver-ds-1" }, { slug: "pre-information", title: "PREVIEW TEST — Ön Bilgilendirme", versionId: "ver-pi-1" }];
 const catalogFetch = (orderResponse?: () => Promise<unknown>) => (url: string) =>
-  url === "/api/products" ? jsonResponse(200, { products: apiProducts }) : (orderResponse ? orderResponse() : Promise.reject(new Error("offline")));
+  url === "/api/products" ? jsonResponse(200, { products: apiProducts })
+    : url === "/api/legal/required" ? jsonResponse(200, { documents: legalDocuments })
+    : (orderResponse ? orderResponse() : Promise.reject(new Error("offline")));
 
-const checkoutForm = () => {
+const checkoutForm = (ticked: string[] = legalDocuments.map((d) => d.versionId)) => {
   const button = { disabled: false, textContent: "Siparişi tamamla" };
   const result = { textContent: "", innerHTML: "" };
   const form = {
     fields: { customerName: "Ada Lovelace", phone: "05001112233", email: "ada@example.test", city: "İzmir", address: "Kuşadası 1 Sokak No 1", provider: "PayTR" },
     querySelector: (selector: string) => (selector === "button.primary" ? button : selector === "[data-order-result]" ? result : null),
+    querySelectorAll: (selector: string) => (selector === "[data-legal-version]" ? legalDocuments.map((d) => ({ checked: ticked.includes(d.versionId), dataset: { legalVersion: d.versionId } })) : []),
   };
   return { form, button, result, event: { preventDefault: () => {}, currentTarget: form } };
 };
@@ -178,7 +185,7 @@ test("the order payload carries no price, VAT or total and only sellable items",
   const { ctx } = loadStorefront();
   const entries = ctx.normalizeCartEntries([{ productId: BACKEND_ID, quantity: 2 }, { productId: QUOTE_ID, quantity: 1 }], null);
   const payload = plain(ctx.buildOrderPayload({ customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", paymentProvider: "PayTR" }, entries, products));
-  assert.deepEqual(Object.keys(payload).sort(), ["address", "city", "customerName", "email", "items", "paymentProvider", "phone"]);
+  assert.deepEqual(Object.keys(payload).sort(), ["address", "city", "customerName", "email", "installation", "items", "legalAcceptances", "note", "paymentProvider", "phone"]);
   for (const forbidden of ["price", "unitPrice", "total", "subtotal", "vat", "vatTotal", "vatRateBps", "lineTotal"]) {
     assert.equal(forbidden in payload, false, `payload must not contain ${forbidden}`);
   }
@@ -198,6 +205,7 @@ test("an idempotency key is generated once and reused across retries", () => {
 test("checkout posts id and quantity only, with an Idempotency-Key header", async () => {
   const { ctx, calls } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "ETS-20260922-ABC123" })), cart: [{ productId: BACKEND_ID, quantity: 2 }] });
   await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
   await ctx.submitOrder(checkoutForm().event);
   const order = calls.find((c) => c.url === "/api/orders")!;
   assert.ok(order, "an order request should have been sent");
@@ -210,6 +218,7 @@ test("checkout posts id and quantity only, with an Idempotency-Key header", asyn
 test("a confirmed order clears the cart and the attempt key", async () => {
   const { ctx, localStorage, sessionStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "ETS-20260922-ABC123" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
   await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
   await ctx.submitOrder(checkoutForm().event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), []);
   assert.equal(sessionStorage.getItem("ege-order-attempt"), null);
@@ -218,6 +227,7 @@ test("a confirmed order clears the cart and the attempt key", async () => {
 test("a network failure keeps the cart and reuses the same key on retry", async () => {
   const { ctx, localStorage, sessionStorage, calls } = loadStorefront({ fetch: catalogFetch(() => Promise.reject(new Error("offline"))), cart: [{ productId: BACKEND_ID, quantity: 2 }] });
   await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
   const first = checkoutForm();
   await ctx.submitOrder(first.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 2 }], "cart must survive a failure");
@@ -233,6 +243,7 @@ test("a network failure keeps the cart and reuses the same key on retry", async 
 test("an out-of-stock rejection keeps the cart and surfaces the server message", async () => {
   const { ctx, localStorage, sessionStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(409, { error: "GREE Aphro 9.000 BTU için yeterli stok yok." })), cart: [{ productId: BACKEND_ID, quantity: 2 }] });
   await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
   const checkout = checkoutForm();
   await ctx.submitOrder(checkout.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 2 }]);
@@ -243,6 +254,7 @@ test("an out-of-stock rejection keeps the cart and surfaces the server message",
 test("a validation rejection keeps the cart intact", async () => {
   const { ctx, localStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(400, { error: "Sipariş bilgilerini kontrol edin." })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
   await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
   const checkout = checkoutForm();
   await ctx.submitOrder(checkout.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 1 }]);
@@ -262,8 +274,60 @@ test("an unavailable catalog can never place an order", async () => {
 test("checkout refuses when nothing in the cart is sellable", async () => {
   const { ctx, calls } = loadStorefront({ fetch: catalogFetch(), cart: [{ productId: QUOTE_ID, quantity: 1 }] });
   await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
   const checkout = checkoutForm();
   await ctx.submitOrder(checkout.event);
   assert.equal(calls.filter((c) => c.url === "/api/orders").length, 0);
   assert.match(checkout.result.textContent, /satın alınabilir ürün yok/);
+});
+
+test("checkout blocks submission when a required legal box is unticked", async () => {
+  const { ctx, calls, localStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "X" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
+  await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
+  for (const ticked of [[], ["ver-ds-1"], ["ver-pi-1"]]) {
+    const checkout = checkoutForm(ticked);
+    await ctx.submitOrder(checkout.event);
+    assert.match(checkout.result.textContent, /yasal metinleri kabul/);
+  }
+  assert.equal(calls.filter((c) => c.url === "/api/orders").length, 0, "no order request without every acceptance");
+  assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 1 }]);
+});
+
+test("checkout cannot be submitted when the legal requirements could not be loaded", async () => {
+  const { ctx, calls } = loadStorefront({ fetch: (url: string) => (url === "/api/products" ? jsonResponse(200, { products: apiProducts }) : jsonResponse(503, { code: "LEGAL_DOCUMENTS_UNAVAILABLE" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
+  await ctx.loadCatalog();
+  assert.equal(await ctx.loadLegalRequirements(), null);
+  const checkout = checkoutForm();
+  await ctx.submitOrder(checkout.event);
+  assert.equal(calls.filter((c) => c.url === "/api/orders").length, 0);
+  assert.match(checkout.result.textContent, /Yasal metinler yüklenemedi/);
+});
+
+test("the order request carries the ticked legal version ids, sorted as the server listed them", async () => {
+  const { ctx, calls } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "ETS-1" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
+  await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
+  await ctx.submitOrder(checkoutForm().event);
+  const body = JSON.parse(calls.find((c) => c.url === "/api/orders")!.body);
+  assert.deepEqual(body.legalAcceptances, ["ver-ds-1", "ver-pi-1"]);
+  assert.ok(body.legalAcceptances.every((id: string) => typeof id === "string" && id.length > 0 && id.length <= 100));
+  for (const forbidden of ["acceptedAt", "accepted_at", "accepted"]) assert.equal(forbidden in body, false, "the client never sends a timestamp or a bare accepted flag");
+});
+
+test("a legal version mismatch releases the attempt key and reloads the requirements", async () => {
+  const { ctx, sessionStorage, calls } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(409, { error: "güncellendi", code: "LEGAL_VERSION_MISMATCH" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
+  await ctx.loadCatalog();
+  await ctx.loadLegalRequirements();
+  await ctx.submitOrder(checkoutForm().event);
+  assert.equal(sessionStorage.getItem("ege-order-attempt"), null, "a corrected request must not reuse the rejected key");
+  assert.equal(calls.filter((c) => c.url === "/api/legal/required").length, 2, "requirements are reloaded after a mismatch");
+});
+
+test("legalConsentsComplete requires every server-listed version to be ticked", () => {
+  const { ctx } = loadStorefront();
+  assert.equal(ctx.legalConsentsComplete(legalDocuments, ["ver-ds-1", "ver-pi-1"]), true);
+  assert.equal(ctx.legalConsentsComplete(legalDocuments, ["ver-ds-1"]), false);
+  assert.equal(ctx.legalConsentsComplete(null, []), false);
+  assert.equal(ctx.legalConsentsComplete([], []), false);
 });

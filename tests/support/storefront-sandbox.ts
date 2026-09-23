@@ -129,6 +129,7 @@ export function loadStorefront(options: {
       if (url === "/api/products") return respond(api.products, "products");
       if (url === "/api/second-hand") return respond(api.secondHand, "products");
       if (url === "/api/blog") return respond(api.blog, "posts");
+      if (url === "/api/legal/required") return Promise.resolve({ ok: true, status: 200, json: async () => ({ documents: [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", versionId: "ver-ds-1" }] }) });
       if (url === "/api/orders" && api.order) return api.order();
       return Promise.reject(new Error(`unexpected fetch ${url}`));
     },

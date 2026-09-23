@@ -219,12 +219,13 @@ test("a hostile ?city= value is never echoed into the region page", () => {
 test("a hostile order number in the server response is shown as text", async () => {
   const result = { textContent: "", innerHTML: "" };
   const button = { disabled: false, textContent: "" };
-  const form = { fields: { customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", provider: "PayTR" }, querySelector: (s: string) => (s === "button.primary" ? button : s === "[data-order-result]" ? result : null) };
+  const form = { fields: { customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", provider: "PayTR" }, querySelectorAll: (s: string) => (s === "[data-legal-version]" ? [{ checked: true, dataset: { legalVersion: "ver-ds-1" } }] : []), querySelector: (s: string) => (s === "button.primary" ? button : s === "[data-order-result]" ? result : null) };
   const store = loadStorefront({
     storage: { "ege-cart": [{ productId: "synthetic-product-1", quantity: 1 }] },
     api: { products: [apiProduct()], order: async () => ({ ok: true, status: 201, json: async () => ({ ok: true, orderNumber: PAYLOAD }) }) },
   });
   await store.fn<() => Promise<void>>("loadCatalog")();
+  await store.fn<() => Promise<unknown>>("loadLegalRequirements")();
   await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: form });
   assert.match(result.innerHTML, /Siparişiniz kaydedildi/);
   assertInert(result.innerHTML, "order confirmation");

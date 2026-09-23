@@ -45,7 +45,14 @@ function cartLines(entries,products){
 }
 function cartTotal(lines){return (lines||[]).reduce((sum,line)=>line.available?sum+line.product.price*line.quantity:sum,0)}
 function orderItemsPayload(entries,products){return cartLines(entries,products).filter(line=>line.available).map(line=>({productId:line.productId,quantity:line.quantity}))}
-function buildOrderPayload(fields,entries,products){return {customerName:fields.customerName||'',phone:fields.phone||'',email:fields.email||'',city:fields.city||'',address:fields.address||'',paymentProvider:fields.paymentProvider||'discovery',items:orderItemsPayload(entries,products)}}
+function buildOrderPayload(fields,entries,products){return {customerName:fields.customerName||'',phone:fields.phone||'',email:fields.email||'',city:fields.city||'',address:fields.address||'',paymentProvider:fields.paymentProvider||'discovery',installation:fields.installation||'survey_then_install',note:fields.note||'',legalAcceptances:fields.legalAcceptances||[],items:orderItemsPayload(entries,products)}}
+/* Required legal documents come from GET /api/legal/required (server-decided version ids). Checkout only
+   ever submits the ids of boxes the customer actively ticked; the server re-validates them. */
+let legalRequirements=null;
+async function loadLegalRequirements(){legalRequirements=null;try{const response=await fetch('/api/legal/required');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents)&&data.documents.length)legalRequirements=data.documents}catch{}renderLegalConsents();return legalRequirements}
+function renderLegalConsents(){const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" data-legal-version="${esc(d.versionId)}"><span><a href="policies.html" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
+function acceptedLegalVersionIds(boxes){return Array.from(boxes||[]).filter(box=>box.checked).map(box=>box.dataset.legalVersion)}
+function legalConsentsComplete(requirements,acceptedIds){return Boolean(requirements&&requirements.length)&&requirements.every(d=>acceptedIds.includes(d.versionId))}
 function orderAttemptKey(store){let key=null;try{key=store.getItem('ege-order-attempt')}catch{}if(!key){key=crypto.randomUUID();try{store.setItem('ege-order-attempt',key)}catch{}}return key}
 function clearOrderAttemptKey(store){try{store.removeItem('ege-order-attempt')}catch{}}
 function readCartRaw(){try{return JSON.parse(localStorage.getItem('ege-cart')||'[]')}catch{return []}}
@@ -87,13 +94,16 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=
   if(!catalogAuthoritative()){say('Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
   const entries=getCart(),products=getProducts(),payload=buildOrderPayload({customerName:'',phone:'',email:'',city:'',address:'',paymentProvider:''},entries,products);
   if(!payload.items.length){toast('Sepetiniz boş');say('Sepetinizde satın alınabilir ürün yok.');return}
-  const d=new FormData(f);Object.assign(payload,{customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city'),address:d.get('address'),paymentProvider:d.get('provider')});
+  const accepted=acceptedLegalVersionIds(f.querySelectorAll('[data-legal-version]'));
+  if(!legalConsentsComplete(legalRequirements,accepted)){say(legalRequirements?'Devam etmek için tüm yasal metinleri kabul etmelisiniz.':'Yasal metinler yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.');return}
+  const d=new FormData(f);Object.assign(payload,{customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city'),address:d.get('address'),paymentProvider:d.get('provider'),installation:d.get('installation')||'survey_then_install',note:d.get('note')||'',legalAcceptances:accepted});
   const attemptKey=orderAttemptKey(sessionStorage);
   if(button){button.disabled=true;button.textContent='Sipariş kaydediliyor…'}
   try{
     const response=await fetch('/api/orders',{method:'POST',headers:{'content-type':'application/json','idempotency-key':attemptKey},body:JSON.stringify(payload)});
     const data=await response.json().catch(()=>({}));
-    if(!response.ok)throw new Error(data.error||'Sipariş kaydedilemedi');
+    /* The attempt key is released only when the server rejected the request itself (invalid, legal version changed, key reused for a different request), so the corrected form gets a fresh key. Stock conflicts, 5xx and network failures keep it so a retry dedupes. */
+    if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();throw new Error(data.error||'Sipariş kaydedilemedi')}
     // Cart and attempt key are cleared only once the server has confirmed the order.
     clearOrderAttemptKey(sessionStorage);writeCart([]);renderCheckout();
     if(result)result.innerHTML=`<b>Siparişiniz kaydedildi.</b><br>Takip numarası: ${esc(data.orderNumber)}<br>Ege Teknik ekibi ödeme ve montaj için sizinle iletişime geçecek.`;
@@ -132,7 +142,7 @@ function handleDelegatedClick(e){
 }
 document.addEventListener('click',handleDelegatedClick);
 
-document.addEventListener('DOMContentLoaded',()=>{updateCartCount();updateFavoritesCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);document.querySelectorAll('[name=category]').forEach(x=>x.addEventListener('change',renderCatalog));document.querySelector('#catalog-search')?.addEventListener('input',renderCatalog);document.querySelectorAll('.chip').forEach(x=>x.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(y=>y.classList.remove('active'));x.classList.add('active');renderCatalog()}));void loadCatalog()});
+document.addEventListener('DOMContentLoaded',()=>{updateCartCount();updateFavoritesCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);if(document.querySelector('[data-legal-consents]'))void loadLegalRequirements();document.querySelectorAll('[name=category]').forEach(x=>x.addEventListener('change',renderCatalog));document.querySelector('#catalog-search')?.addEventListener('input',renderCatalog);document.querySelectorAll('.chip').forEach(x=>x.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(y=>y.classList.remove('active'));x.classList.add('active');renderCatalog()}));void loadCatalog()});
 
 const business={name:'Ege Teknik',phone:'0542 795 75 60',phoneHref:'tel:+905427957560',wa:'https://wa.me/905427957560',address:'İkiçeşmelik Mahallesi Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın',map:'https://share.google/YHInB4tNwB2khqC10'};
 function renderHeader(){const root=document.querySelector('[data-site-header]');if(!root)return;root.innerHTML=`<header class="store-header"><div class="store-top"><span>Kuşadası merkezli • Tüm Ege Bölgesi</span><a href="${business.phoneHref}">${business.phone}</a></div><nav class="store-nav"><a class="brand" href="/">EGE TEKNİK<small>KLİMA & TEKNOLOJİ</small></a><button class="menu-toggle ghost" data-action="toggle-menu">Menü</button><div class="nav-links"><a href="catalog.html">GREE Klimalar</a><a href="services.html">Hizmetler</a><a href="selector.html">Klima Seçici</a><a href="regions.html">Hizmet Bölgeleri</a><a href="blog.html">Rehber</a><a href="contact.html">İletişim</a></div><div class="header-tools"><a href="favorites.html" title="Favoriler">♡</a><a href="compare.html" title="Karşılaştır">⇄</a><a class="ghost" href="checkout.html">Sepet <span class="cart-count" data-cart-count>0</span></a></div></nav></header>`}

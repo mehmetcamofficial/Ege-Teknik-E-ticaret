@@ -29,6 +29,13 @@
       "when": 1790199716478,
       "tag": "0003_legal_document_versioning",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790200697993,
+      "tag": "0004_order_fingerprint_installation",
+      "breakpoints": true
     }
   ]
 }

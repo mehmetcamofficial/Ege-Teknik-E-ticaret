@@ -19,8 +19,8 @@
           <label class="field">E-posta<input name="email" required type="email" autocomplete="email"></label>
           <label class="field">İl / İlçe<input name="city" required></label>
           <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea name="address" required rows="3"></textarea></label>
-          <label class="field">Montaj tercihi<select name="installation"><option>Keşif sonrası montaj</option><option>Yalnız ürün teslimatı</option></select></label>
-          <label class="field">Teslimat notu<input name="note" placeholder="Varsa ekleyin"></label>
+          <label class="field">Montaj tercihi<select name="installation"><option value="survey_then_install">Keşif sonrası montaj</option><option value="delivery_only">Yalnız ürün teslimatı</option></select></label>
+          <label class="field">Teslimat notu<input name="note" maxlength="500" placeholder="Varsa ekleyin"></label>
         </div>
         <h2>Ödeme yöntemi</h2>
         <label class="pay-option"><input type="radio" name="provider" value="PayTR" disabled aria-describedby="payment-status"><span><b>PayTR ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
@@ -28,7 +28,7 @@
         <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Ödeme yöntemi ve montaj koşulları sizinle görüşülerek kesinleştirilir.</small></span></label>
         <div class="notice" id="payment-status">Online kartla ödeme henüz aktif değil; bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Siparişiniz “ödeme bekliyor” durumuyla kaydedilir, ardından sizinle iletişime geçilir.</div>
       </section>
-      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>Montaj / kargo</span><span>Keşifte netleşir</span></div><div class="summary-row" style="font-size:20px"><b>Toplam</b><b data-total>₺0</b></div><button class="primary" style="width:100%;margin-top:18px">Siparişi Kaydet</button><p data-order-result aria-live="polite"></p></aside>
+      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>Montaj / kargo</span><span>Keşifte netleşir</span></div><div class="summary-row" style="font-size:20px"><b>Toplam</b><b data-total>₺0</b></div><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset><button class="primary" style="width:100%;margin-top:18px">Siparişi Kaydet</button><p data-order-result aria-live="polite"></p></aside>
     </form>
   </main>
   <div class="toast"></div><script src="store.js"></script>

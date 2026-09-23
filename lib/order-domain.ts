@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 
 export const orderStatuses = ["pending_payment", "paid", "preparing", "shipped", "delivery", "delivered", "installation", "completed", "cancelled", "returned", "service"] as const;
@@ -24,6 +25,7 @@ export function calculateLine(unitPrice: number, quantity: number, vatRateBps: n
  * The request body carries product ids and quantities only. Prices, VAT rates and totals are
  * never read from the client; they are derived here from the rows the server loaded.
  */
+export const installationPreferences = ["survey_then_install", "delivery_only"] as const;
 export const orderRequestSchema = z.object({
   customerName: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(7).max(30),
@@ -32,7 +34,14 @@ export const orderRequestSchema = z.object({
   address: z.string().trim().min(8).max(500),
   paymentProvider: z.enum(["PayTR", "iyzico", "discovery"]),
   items: z.array(z.object({ productId: z.string().min(1).max(160), quantity: z.number().int().min(1).max(10) })).min(1).max(20),
+  installation: z.enum(installationPreferences).default("survey_then_install"),
+  // Free-text delivery note: trimmed, length-limited, control characters removed.
+  note: z.string().trim().max(500).transform((value) => value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")).default(""),
+  // Ids of the legal document versions the customer accepted. The server decides which versions are
+  // required; these are only checked against that set, never trusted as the source of truth.
+  legalAcceptances: z.array(z.string().min(1).max(100)).max(10).refine((ids) => new Set(ids).size === ids.length, "Duplicate legal acceptance").default([]),
 });
+export type OrderRequest = z.infer<typeof orderRequestSchema>;
 
 export type PricedProduct = { id: string; price: number; vatRateBps: number };
 
@@ -47,4 +56,17 @@ export function computeOrderTotals(lines: readonly { lineTotal: number; vatAmoun
   const total = lines.reduce((sum, line) => sum + line.lineTotal, 0);
   const vatTotal = lines.reduce((sum, line) => sum + line.vatAmount, 0);
   return { subtotal: total - vatTotal, vatTotal, total };
+}
+
+/**
+ * Deterministic fingerprint of the meaningful order-creation input, stored on the order so that an
+ * Idempotency-Key replay can be told apart from a key re-used for a different request.
+ * Canonical form: a fixed-order JSON array (never an object, so key order cannot vary), items sorted
+ * by productId, legal version ids sorted. Client prices/totals and accepted_at are never part of it.
+ * Bump the leading version number if the layout ever changes.
+ */
+export function orderRequestFingerprint(data: OrderRequest, quantities: ReadonlyMap<string, number>): string {
+  const items = [...quantities].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  const canonical = JSON.stringify([1, data.customerName, data.phone, data.email, data.city, data.address, data.paymentProvider, data.installation, data.note, items, [...data.legalAcceptances].sort()]);
+  return createHash("sha256").update(canonical, "utf8").digest("hex");
 }
