@@ -30,7 +30,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
       <div className="min-h-dvh bg-background">
         <header className="border-b border-border bg-card">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-            <Link href="/index.html" className="text-lg font-bold tracking-tight text-foreground">
+            <Link href="/" className="text-lg font-bold tracking-tight text-foreground">
               Ege Teknik
             </Link>
             <UserButton />

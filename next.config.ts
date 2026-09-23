@@ -10,6 +10,48 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: [{ key: "Content-Security-Policy", value: staticCsp }, ...staticSecurityHeaders] }];
   },
+  async redirects() {
+    return [
+      // Canonical host: www -> apex. Specific paths first so every www URL
+      // lands on the apex in a single hop (no redirect chains).
+      {
+        source: "/index.html",
+        has: [{ type: "host", value: "www.egeteknik.tr" }],
+        destination: "https://egeteknik.tr/",
+        permanent: true,
+      },
+      {
+        source: "/",
+        has: [{ type: "host", value: "www.egeteknik.tr" }],
+        destination: "https://egeteknik.tr/",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.egeteknik.tr" }],
+        destination: "https://egeteknik.tr/:path*",
+        permanent: true,
+      },
+      // Canonical homepage: /index.html -> / (apex only; www is handled above).
+      {
+        source: "/index.html",
+        destination: "/",
+        permanent: true,
+      },
+    ];
+  },
+  async rewrites() {
+    // Serve the single static storefront file at the clean root URL.
+    // beforeFiles: runs before filesystem lookup so it wins over the
+    // implicit public/index.html directory-index mapping, and it only
+    // fires for the exact path "/" (never for /index.html, so the
+    // redirect above cannot loop).
+    return {
+      beforeFiles: [{ source: "/", destination: "/index.html" }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
 };
 
 export default withSentryConfig(nextConfig, {

@@ -29,5 +29,5 @@ test("the dead external homepage logo URL is absent from every production storef
 test("shared storefront header retains the existing EGE TEKNİK text brand", () => {
   // Subtitle matches the homepage wordmark; dealer-status wording was removed in Phase 3A.3F
   // because the project holds no evidence for it (see tests/storefront-claims.test.ts).
-  assert.match(storeJs, /class="brand" href="index\.html">EGE TEKNİK<small>KLİMA & TEKNOLOJİ<\/small>/);
+  assert.match(storeJs, /class="brand" href="\/">EGE TEKNİK<small>KLİMA & TEKNOLOJİ<\/small>/);
 });
