@@ -65,3 +65,43 @@ export function checkLegalAcceptance(required: readonly RequiredLegalVersion[], 
   if (new Set(submittedIds).size !== requiredIds.size) return { ok: false, code: "LEGAL_ACCEPTANCE_REQUIRED" };
   return { ok: true };
 }
+
+export type PublicLegalVersion = LegalVersionRow & { body: string; contentHash: string };
+export type LegalVersionStatus = "effective" | "scheduled" | "superseded";
+export type PublicLegalResolution =
+  | { ok: true; version: PublicLegalVersion; status: LegalVersionStatus }
+  | { ok: false; reason: "not_found" | "version_not_found" };
+
+const isPublished = (row: LegalVersionRow, now: Date) => row.publishedAt <= now;
+
+/**
+ * Resolves what a public visitor may see for ONE document's versions (`rows` = all versions of the slug).
+ * - Only published versions are ever visible; unpublished ids behave exactly like unknown ids.
+ * - No requested id: the current version (published and effective, highest version) - same rule as checkout.
+ * - A requested id is returned as-is or rejected; it is NEVER replaced by a newer/other version.
+ */
+export function resolvePublicLegalVersion(rows: readonly PublicLegalVersion[], requestedVersionId: string | null, now: Date): PublicLegalResolution {
+  const published = rows.filter((row) => isPublished(row, now));
+  const current = published.filter((row) => row.effectiveAt <= now).sort((a, b) => b.version - a.version)[0];
+  if (requestedVersionId === null) return current ? { ok: true, version: current, status: "effective" } : { ok: false, reason: "not_found" };
+  const version = published.find((row) => row.id === requestedVersionId);
+  if (!version) return { ok: false, reason: published.length ? "version_not_found" : "not_found" };
+  const status: LegalVersionStatus = version.effectiveAt > now ? "scheduled" : version.id === current?.id ? "effective" : "superseded";
+  return { ok: true, version, status };
+}
+
+/** Current published version per slug, for the public legal index (metadata only, never bodies). */
+export function selectCurrentLegalVersions(rows: readonly LegalVersionRow[], now: Date): { slug: string; title: string; versionId: string }[] {
+  const best = new Map<string, LegalVersionRow>();
+  for (const row of rows) {
+    if (!isPublished(row, now) || row.effectiveAt > now) continue;
+    const held = best.get(row.slug);
+    if (!held || row.version > held.version) best.set(row.slug, row);
+  }
+  return [...best.values()].sort((a, b) => a.slug.localeCompare(b.slug)).map((row) => ({ slug: row.slug, title: row.title, versionId: row.id }));
+}
+
+/** Exact-version public URL: opens precisely the accepted version, even after a newer one is published. */
+export function legalVersionPath(slug: string, versionId: string): string {
+  return `/legal/${encodeURIComponent(slug)}?version=${encodeURIComponent(versionId)}`;
+}

@@ -1,9 +1,9 @@
 export type AdminRole = "owner" | "operations_manager" | "catalog_manager" | "support_agent" | "viewer";
-export type AdminPermission = "catalog:write" | "orders:write" | "service:write" | "content:write" | "admin:read";
+export type AdminPermission = "catalog:write" | "orders:write" | "service:write" | "content:write" | "legal:write" | "admin:read";
 
 export const adminRoles: readonly AdminRole[] = ["owner", "operations_manager", "catalog_manager", "support_agent", "viewer"];
 export const adminPermissions: Record<AdminRole, readonly AdminPermission[]> = {
-  owner: ["catalog:write", "orders:write", "service:write", "content:write", "admin:read"],
+  owner: ["catalog:write", "orders:write", "service:write", "content:write", "legal:write", "admin:read"],
   operations_manager: ["catalog:write", "orders:write", "service:write", "admin:read"],
   catalog_manager: ["catalog:write", "content:write", "admin:read"],
   support_agent: ["orders:write", "service:write", "admin:read"],

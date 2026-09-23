@@ -61,6 +61,8 @@ test("no application code mutates published legal versions", () => {
   for (const file of files) {
     const source = readFileSync(file, "utf8");
     if (!/legalDocumentVersions/.test(source)) continue;
+    // Phase 3B.3: lib/legal-admin-db.ts is the single writer, and only for drafts (see tests/legal-admin.test.ts).
+    if (file === "lib/legal-admin-db.ts") continue;
     assert.doesNotMatch(source, /\.(update|delete)\(\s*legalDocumentVersions\s*\)/, `${file} must not update/delete legal versions`);
   }
 });

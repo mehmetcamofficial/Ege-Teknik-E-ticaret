@@ -2,15 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { adminPermissions, adminRoles, roleHasPermission, type AdminPermission, type AdminRole } from "../lib/security-policy.ts";
 
-const writePermissions: AdminPermission[] = ["catalog:write", "orders:write", "service:write", "content:write"];
+const writePermissions: AdminPermission[] = ["catalog:write", "orders:write", "service:write", "content:write", "legal:write"];
 
 // Mirrors the permission each admin API route demands, so a widened role is caught here.
 const expected: Record<AdminRole, Record<AdminPermission, boolean>> = {
-  owner: { "catalog:write": true, "orders:write": true, "service:write": true, "content:write": true, "admin:read": true },
-  operations_manager: { "catalog:write": true, "orders:write": true, "service:write": true, "content:write": false, "admin:read": true },
-  catalog_manager: { "catalog:write": true, "orders:write": false, "service:write": false, "content:write": true, "admin:read": true },
-  support_agent: { "catalog:write": false, "orders:write": true, "service:write": true, "content:write": false, "admin:read": true },
-  viewer: { "catalog:write": false, "orders:write": false, "service:write": false, "content:write": false, "admin:read": true },
+  owner: { "catalog:write": true, "orders:write": true, "service:write": true, "content:write": true, "legal:write": true, "admin:read": true },
+  operations_manager: { "catalog:write": true, "orders:write": true, "service:write": true, "content:write": false, "legal:write": false, "admin:read": true },
+  catalog_manager: { "catalog:write": true, "orders:write": false, "service:write": false, "content:write": true, "legal:write": false, "admin:read": true },
+  support_agent: { "catalog:write": false, "orders:write": true, "service:write": true, "content:write": false, "legal:write": false, "admin:read": true },
+  viewer: { "catalog:write": false, "orders:write": false, "service:write": false, "content:write": false, "legal:write": false, "admin:read": true },
 };
 
 test("the role/permission matrix matches the documented Phase 3A matrix", () => {

@@ -36,6 +36,13 @@
       "when": 1790200697993,
       "tag": "0004_order_fingerprint_installation",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790202870956,
+      "tag": "0005_legal_drafts_and_immutability",
+      "breakpoints": true
     }
   ]
 }
