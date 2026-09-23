@@ -249,13 +249,13 @@ test("a validation rejection keeps the cart intact", async () => {
   assert.match(checkout.result.textContent, /kontrol edin/);
 });
 
-test("fallback seed data can never place an order", async () => {
+test("an unavailable catalog can never place an order", async () => {
   const { ctx, calls } = loadStorefront({ fetch: () => Promise.reject(new Error("offline")), cart: [{ productId: "aphro-09", quantity: 1 }] });
   await ctx.loadCatalog();
   assert.equal(ctx.catalogAuthoritative(), false);
   const checkout = checkoutForm();
   await ctx.submitOrder(checkout.event);
-  assert.equal(calls.filter((c) => c.url === "/api/orders").length, 0, "no order may be sent from fallback data");
+  assert.equal(calls.filter((c) => c.url === "/api/orders").length, 0, "no order may be sent without the served catalog");
   assert.match(checkout.result.textContent, /doğrulanamadı/);
 });
 

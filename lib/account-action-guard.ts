@@ -2,6 +2,10 @@ import "server-only";
 import { headers } from "next/headers";
 import { HttpError, rateLimit } from "@/lib/http-security";
 
+/** Shared by every /account mutation: 20 attempts per client per 15 minutes, per action scope. */
+export const ACCOUNT_MUTATION_LIMIT = 20;
+export const ACCOUNT_MUTATION_WINDOW_MS = 15 * 60_000;
+
 /**
  * Rate limiting for /account Server Actions, reusing the project's existing
  * rateLimit()/rate_limit_buckets architecture (see lib/http-security.ts) -

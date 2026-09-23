@@ -1,7 +1,8 @@
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { addresses, orderItems, orders, customers } from "@/db/schema";
+import { addresses, customers } from "@/db/schema";
+import { orderItemsQuery, ownedAddressWhere, ownedOrderDetailQuery, ownedOrderListQuery } from "@/lib/account-queries";
 import {
   addressType,
   type AddressInput,
@@ -35,15 +36,6 @@ const addressRow = (row: typeof addresses.$inferSelect): CustomerAddress => ({
   line2: row.line2,
   billing: row.billing,
 });
-
-/** Exported so tests can assert the exact WHERE predicate without needing a live database (see .toSQL() in tests/account-resources-boundary.test.ts). */
-export function ownedAddressWhere(customerId: string, addressId: string) {
-  return and(eq(addresses.id, addressId), eq(addresses.customerId, customerId));
-}
-
-export function ownedOrderWhere(customerId: string, orderId: string) {
-  return and(eq(orders.id, orderId), eq(orders.customerId, customerId));
-}
 
 export const profileStore: ProfileStore = {
   getOwnedProfile: async (customerId) => {
@@ -95,55 +87,11 @@ export const addressStore: AddressStore = {
 };
 
 export const orderStore: OrderStore = {
-  listOwnedOrders: async (customerId) => {
-    const rows = await getDb()
-      .select({ id: orders.id, orderNumber: orders.orderNumber, status: orders.status, total: orders.total, currency: orders.currency, createdAt: orders.createdAt })
-      .from(orders)
-      .where(eq(orders.customerId, customerId))
-      .orderBy(desc(orders.createdAt));
-    return rows;
-  },
+  listOwnedOrders: async (customerId) => ownedOrderListQuery(getDb(), customerId),
   getOwnedOrder: async (customerId, orderId) => {
-    // Explicit projection: only the columns OrderDetail actually exposes to the account UI.
-    // idempotencyKey, notes and the raw contact-snapshot fields (customerName/phone/email)
-    // never need to leave the database for this read.
-    const [order] = await getDb()
-      .select({
-        id: orders.id,
-        orderNumber: orders.orderNumber,
-        status: orders.status,
-        total: orders.total,
-        currency: orders.currency,
-        createdAt: orders.createdAt,
-        subtotal: orders.subtotal,
-        vatTotal: orders.vatTotal,
-        shippingTotal: orders.shippingTotal,
-        paymentStatus: orders.paymentStatus,
-        shippingAddressSnapshot: orders.shippingAddressSnapshot,
-        billingAddressSnapshot: orders.billingAddressSnapshot,
-      })
-      .from(orders)
-      .where(ownedOrderWhere(customerId, orderId))
-      .limit(1);
+    const [order] = await ownedOrderDetailQuery(getDb(), customerId, orderId);
     if (!order) return null;
-    const items = await getDb()
-      .select({ id: orderItems.id, productName: orderItems.productName, productSku: orderItems.productSku, productSlug: orderItems.productSlug, unitPrice: orderItems.unitPrice, quantity: orderItems.quantity, lineTotal: orderItems.lineTotal })
-      .from(orderItems)
-      .where(eq(orderItems.orderId, order.id));
-    return {
-      id: order.id,
-      orderNumber: order.orderNumber,
-      status: order.status,
-      total: order.total,
-      currency: order.currency,
-      createdAt: order.createdAt,
-      subtotal: order.subtotal,
-      vatTotal: order.vatTotal,
-      shippingTotal: order.shippingTotal,
-      paymentStatus: order.paymentStatus,
-      shippingAddressSnapshot: order.shippingAddressSnapshot,
-      billingAddressSnapshot: order.billingAddressSnapshot,
-      items,
-    };
+    const items = await orderItemsQuery(getDb(), order.id);
+    return { ...order, items };
   },
 };

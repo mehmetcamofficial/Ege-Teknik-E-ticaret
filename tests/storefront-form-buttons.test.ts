@@ -15,10 +15,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import test from "node:test";
-import vm from "node:vm";
+import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public");
-const storeJsSource = readFileSync(path.join(PUBLIC_DIR, "store.js"), "utf8");
 
 /** Buttons that perform a JS action (data-action) must never be implicit submit buttons. */
 function implicitSubmitActionButtons(html: string): string[] {
@@ -31,54 +30,41 @@ function formBodies(html: string): string[] {
   return [...html.matchAll(/<form\b[^>]*>([\s\S]*?)<\/form>/g)].map((m) => m[1]);
 }
 
-function renderCartItems(cart: { productId: string; quantity: number }[]): string {
-  const root = { innerHTML: "", querySelector: () => null };
-  const storage = new Map<string, string>([["ege-cart", JSON.stringify(cart)]]);
-  const context: Record<string, unknown> = {
-    console,
-    URLSearchParams,
-    crypto,
-    Intl,
-    localStorage: {
-      getItem: (k: string) => storage.get(k) ?? null,
-      setItem: (k: string, v: string) => { storage.set(k, String(v)); },
-      removeItem: (k: string) => { storage.delete(k); },
-    },
-    sessionStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
-    location: { search: "", href: "" },
-    fetch: async () => ({ ok: false }),
-    document: {
-      title: "",
-      head: { insertAdjacentHTML() {} },
-      querySelector: (sel: string) => (sel === "[data-cart-items]" ? root : null),
-      querySelectorAll: () => [],
-      addEventListener: () => {},
-    },
-  };
-  vm.createContext(context);
-  new vm.Script(storeJsSource, { filename: "store.js" }).runInContext(context);
-  (context.renderCheckout as () => void)();
+/**
+ * The real renderCheckout() output after the real loadCatalog() has answered. One line is
+ * sellable and one is a quote-only product (rendered as a not-for-sale row), so both
+ * remove-button templates are exercised. (Ids missing from the catalog are pruned on load.)
+ */
+async function renderCartItems(cart: { productId: string; quantity: number }[]): Promise<string> {
+  const root = fakeElement();
+  const store = loadStorefront({
+    path: "checkout.html",
+    elements: { "[data-cart-items]": root },
+    storage: { "ege-cart": cart },
+    api: { products: [apiProduct({ id: "synthetic-a" }), apiProduct({ id: "quote-b", saleMode: "quote" })] },
+  });
+  await store.fn<() => Promise<void>>("loadCatalog")();
   return root.innerHTML;
 }
 
-test("the real rendered cart rows expose a remove control per line, and none of them is a submit button", () => {
+test("the real rendered cart rows expose a remove control per line, and none of them is a submit button", async () => {
   // Two lines so the regression scenario (remove one, the other would have been ordered) is covered.
-  const html = renderCartItems([{ productId: "aphro-09", quantity: 2 }, { productId: "pular-12", quantity: 1 }]);
+  const html = await renderCartItems([{ productId: "synthetic-a", quantity: 2 }, { productId: "quote-b", quantity: 1 }]);
   const removeButtons = [...html.matchAll(/<button\b[^>]*data-action="remove-cart"[^>]*>/g)].map((m) => m[0]);
   assert.equal(removeButtons.length, 2, `expected one remove control per cart line, got: ${html}`);
   for (const tag of removeButtons) {
     assert.match(tag, /\btype="button"/, `cart remove control would submit the checkout form: ${tag}`);
-    assert.match(tag, /data-id="(aphro-09|pular-12)"/, `remove control lost its product id: ${tag}`);
+    assert.match(tag, /data-id="(synthetic-a|quote-b)"/, `remove control lost its product id: ${tag}`);
   }
 });
 
-test("real generated cart markup, injected into the real checkout form, contains no implicit-submit action button", () => {
+test("real generated cart markup, injected into the real checkout form, contains no implicit-submit action button", async () => {
   const checkout = readFileSync(path.join(PUBLIC_DIR, "checkout.html"), "utf8");
   const container = /<[a-z]+\b[^>]*\bdata-cart-items\b[^>]*>/.exec(checkout);
   assert.ok(container, "checkout.html no longer has a [data-cart-items] container");
 
   // Compose exactly what the browser ends up with: the static form + the generated rows.
-  const composed = checkout.replace(container[0], container[0] + renderCartItems([{ productId: "aphro-09", quantity: 1 }]));
+  const composed = checkout.replace(container[0], container[0] + (await renderCartItems([{ productId: "synthetic-a", quantity: 1 }])));
   const insideForms = formBodies(composed);
   assert.ok(insideForms.some((body) => /data-action="remove-cart"/.test(body)), "the generated cart rows should land inside the checkout <form> - that is what makes the button type matter");
 

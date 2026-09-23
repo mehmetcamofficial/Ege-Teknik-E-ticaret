@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="store.css">
 </head>
 <body class="store">
-  <header class="store-header"><nav class="store-nav"><a class="brand" href="index.html">EGE TEKNİK<small>GÜVENLİ SİPARİŞ</small></a><div class="nav-links"><a href="catalog.html">Mağazaya dön</a></div><span>SSL korumalı işlem</span></nav></header>
+  <header class="store-header"><nav class="store-nav"><a class="brand" href="index.html">EGE TEKNİK<small>GÜVENLİ SİPARİŞ</small></a><div class="nav-links"><a href="catalog.html">Mağazaya dön</a></div><span>Güvenli bağlantı (HTTPS)</span></nav></header>
   <main class="store-shell">
-    <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Adres ve montaj tercihinizi iletin; ödeme bağlantısı onay sonrası güvenli biçimde gönderilir.</p></div></div>
+    <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Adres ve montaj tercihinizi iletin; ödeme ve montaj koşulları sipariş sonrası sizinle teyit edilir.</p></div></div>
     <form class="checkout-grid" data-checkout-form>
       <section class="panel">
         <h2>Teslimat bilgileri</h2>
@@ -23,10 +23,10 @@
           <label class="field">Teslimat notu<input name="note" placeholder="Varsa ekleyin"></label>
         </div>
         <h2>Ödeme yöntemi</h2>
-        <label class="pay-option"><input type="radio" name="provider" value="PayTR" checked><span><b>PayTR ile güvenli ödeme</b><br><small>İşletme hesabı etkinleştirildiğinde 3D Secure bağlantısı gönderilir.</small></span></label>
-        <label class="pay-option"><input type="radio" name="provider" value="iyzico"><span><b>iyzico ile güvenli ödeme</b><br><small>İşletme hesabı etkinleştirildiğinde 3D Secure bağlantısı gönderilir.</small></span></label>
-        <label class="pay-option"><input type="radio" name="provider" value="discovery"><span><b>Önce keşif, sonra ödeme</b><br><small>Montaj koşulları kesinleştirildikten sonra ödeme alınır.</small></span></label>
-        <div class="notice">Kart bilgileri Ege Teknik sunucusunda tutulmaz. Ödeme sağlayıcısı etkinleşene kadar siparişiniz “ödeme bekliyor” durumuyla güvenli şekilde kaydedilir.</div>
+        <label class="pay-option"><input type="radio" name="provider" value="PayTR" disabled aria-describedby="payment-status"><span><b>PayTR ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
+        <label class="pay-option"><input type="radio" name="provider" value="iyzico" disabled aria-describedby="payment-status"><span><b>iyzico ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
+        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Ödeme yöntemi ve montaj koşulları sizinle görüşülerek kesinleştirilir.</small></span></label>
+        <div class="notice" id="payment-status">Online kartla ödeme henüz aktif değil; bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Siparişiniz “ödeme bekliyor” durumuyla kaydedilir, ardından sizinle iletişime geçilir.</div>
       </section>
       <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>Montaj / kargo</span><span>Keşifte netleşir</span></div><div class="summary-row" style="font-size:20px"><b>Toplam</b><b data-total>₺0</b></div><button class="primary" style="width:100%;margin-top:18px">Siparişi Kaydet</button><p data-order-result aria-live="polite"></p></aside>
     </form>

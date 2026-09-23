@@ -20,6 +20,34 @@ import { z } from "zod";
 import type { AuthenticatedCustomer } from "@/lib/customer-identity";
 
 // ---------------------------------------------------------------------------
+// Mutation sequence
+// ---------------------------------------------------------------------------
+
+export type MutationResult = { ok: boolean; error?: string };
+
+export const SESSION_MISSING_ERROR = "Oturum bulunamadı. Lütfen tekrar giriş yapın.";
+
+/**
+ * The one sequence every /account mutation runs, in this order:
+ *   1. throttle - an over-limit client never reaches identity resolution or the store;
+ *   2. resolve the customer from the verified session - never from a request value;
+ *   3. mutate, with the store scoping the write to that customer.
+ * Each step short-circuits the rest, so a rejected step can never lead to a write.
+ */
+export async function runAccountMutation<C>(steps: {
+  rateLimit: () => Promise<string | null>;
+  resolveCustomer: () => Promise<C | null>;
+  mutate: (customer: C) => Promise<MutationResult>;
+}): Promise<MutationResult> {
+  const limited = await steps.rateLimit();
+  if (limited) return { ok: false, error: limited };
+  const customer = await steps.resolveCustomer();
+  if (!customer) return { ok: false, error: SESSION_MISSING_ERROR };
+  const result = await steps.mutate(customer);
+  return result.ok ? { ok: true } : { ok: false, error: result.error };
+}
+
+// ---------------------------------------------------------------------------
 // Profile
 // ---------------------------------------------------------------------------
 

@@ -22,6 +22,7 @@ function loadStore(options: { registerSelectors?: Record<string, FakeElement>; f
   const storage = new Map<string, string>();
   const context: Record<string, unknown> = {
     console,
+    URL,
     URLSearchParams,
     crypto,
     Intl,
@@ -31,7 +32,7 @@ function loadStore(options: { registerSelectors?: Record<string, FakeElement>; f
       removeItem: (k: string) => { storage.delete(k); },
     },
     sessionStorage: { getItem: () => null, setItem: () => {}, removeItem: () => {} },
-    location: { search: options.search ?? "", href: "" },
+    location: { search: options.search ?? "", href: `https://shop.test/product.html${options.search ?? ""}`, origin: "https://shop.test" },
     fetch: options.fetchImpl ?? (async () => ({ ok: false })),
     document: {
       title: "",
@@ -108,6 +109,6 @@ test("product detail page keeps the placeholder + caption when imageUrl is empty
   });
   await (context.loadCatalog as () => Promise<void>)();
   assert.match(root.innerHTML, /class="unit large"/);
-  assert.match(root.innerHTML, /Temsili görünüm • Gerçek bayi görselleri eklenecek/);
+  assert.match(root.innerHTML, /Temsili görünüm • Ürün görseli henüz eklenmedi/);
   assert.doesNotMatch(root.innerHTML, /class="detail-image"/);
 });

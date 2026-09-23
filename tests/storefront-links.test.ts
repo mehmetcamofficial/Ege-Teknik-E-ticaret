@@ -47,16 +47,14 @@ test("no href uses a javascript: pseudo-URL", () => {
 });
 
 test("every in-page #fragment link resolves to a real id on the same page", () => {
-  let checked = 0;
   for (const page of pages) {
     for (const href of hrefsOf(pageHtml.get(page)!)) {
       if (!href.startsWith("#") || href === "#") continue;
-      checked++;
       const fragment = href.slice(1);
       assert.ok(pageIds.get(page)!.has(fragment), `${page}: href="${href}" has no matching id="${fragment}" on the page`);
     }
   }
-  assert.ok(checked > 0, "expected at least one legitimate in-page #fragment link to check");
+  // Zero such links is fine (the homepage no longer uses in-page anchors); any that exist must resolve.
 });
 
 test("every local *.html href points at a page that exists, and any #fragment on it resolves on that target page", () => {

@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedCustomer } from "@/lib/customer-auth";
-import { createAddress, deleteAddress, updateAddress } from "@/lib/account-resources";
+import { createAddress, deleteAddress, runAccountMutation, updateAddress, type MutationResult } from "@/lib/account-resources";
 import { addressStore } from "@/lib/account-resources-db";
-import { rateLimitAccountAction } from "@/lib/account-action-guard";
+import { ACCOUNT_MUTATION_LIMIT, ACCOUNT_MUTATION_WINDOW_MS, rateLimitAccountAction } from "@/lib/account-action-guard";
 
-export type AddressActionState = { ok: boolean; error?: string };
+export type AddressActionState = MutationResult;
 
 function addressInputFromForm(formData: FormData) {
   return {
@@ -22,44 +22,39 @@ function addressInputFromForm(formData: FormData) {
   };
 }
 
+const limit = (scope: string) => () => rateLimitAccountAction(scope, ACCOUNT_MUTATION_LIMIT, ACCOUNT_MUTATION_WINDOW_MS);
+
 export async function createAddressAction(_prev: AddressActionState, formData: FormData): Promise<AddressActionState> {
-  const limited = await rateLimitAccountAction("account-address-create", 20, 15 * 60_000);
-  if (limited) return { ok: false, error: limited };
-
-  const customer = await getAuthenticatedCustomer();
-  if (!customer) return { ok: false, error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." };
-
-  const result = await createAddress(customer, addressInputFromForm(formData), crypto.randomUUID(), addressStore);
-  if (!result.ok) return { ok: false, error: result.error };
-
-  revalidatePath("/account/addresses");
-  revalidatePath("/account");
-  return { ok: true };
+  const result = await runAccountMutation({
+    rateLimit: limit("account-address-create"),
+    resolveCustomer: getAuthenticatedCustomer,
+    mutate: (customer) => createAddress(customer, addressInputFromForm(formData), crypto.randomUUID(), addressStore),
+  });
+  if (result.ok) {
+    revalidatePath("/account/addresses");
+    revalidatePath("/account");
+  }
+  return result;
 }
 
 /**
  * addressId comes from a hidden form field, but that is safe: the store's
  * ownership contract filters by id AND the server-resolved customer.id in the
- * same query (see lib/account-resources-db.ts's ownedAddressWhere), so a
- * tampered id for another customer's address simply matches no row instead
- * of ever being editable.
+ * same query (see ownedAddressWhere in lib/account-queries.ts), so a tampered
+ * id for another customer's address simply matches no row instead of ever
+ * being editable.
  */
 export async function updateAddressAction(_prev: AddressActionState, formData: FormData): Promise<AddressActionState> {
-  const limited = await rateLimitAccountAction("account-address-update", 20, 15 * 60_000);
-  if (limited) return { ok: false, error: limited };
-
-  const customer = await getAuthenticatedCustomer();
-  if (!customer) return { ok: false, error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." };
-
-  const addressId = String(formData.get("addressId") ?? "");
-  const result = await updateAddress(customer, addressId, addressInputFromForm(formData), addressStore);
-  if (!result.ok) return { ok: false, error: result.error };
-
-  revalidatePath("/account/addresses");
-  return { ok: true };
+  const result = await runAccountMutation({
+    rateLimit: limit("account-address-update"),
+    resolveCustomer: getAuthenticatedCustomer,
+    mutate: (customer) => updateAddress(customer, String(formData.get("addressId") ?? ""), addressInputFromForm(formData), addressStore),
+  });
+  if (result.ok) revalidatePath("/account/addresses");
+  return result;
 }
 
-export type DeleteAddressResult = { ok: boolean; error?: string };
+export type DeleteAddressResult = MutationResult;
 
 /**
  * The failure message is the same generic string whether the address never
@@ -68,16 +63,14 @@ export type DeleteAddressResult = { ok: boolean; error?: string };
  * which case it was, keeping IDOR attempts non-enumerable.
  */
 export async function deleteAddressAction(addressId: string): Promise<DeleteAddressResult> {
-  const limited = await rateLimitAccountAction("account-address-delete", 20, 15 * 60_000);
-  if (limited) return { ok: false, error: limited };
-
-  const customer = await getAuthenticatedCustomer();
-  if (!customer) return { ok: false, error: "Oturum bulunamadı. Lütfen tekrar giriş yapın." };
-
-  const result = await deleteAddress(customer, addressId, addressStore);
-  if (!result.ok) return { ok: false, error: result.error };
-
-  revalidatePath("/account/addresses");
-  revalidatePath("/account");
-  return { ok: true };
+  const result = await runAccountMutation({
+    rateLimit: limit("account-address-delete"),
+    resolveCustomer: getAuthenticatedCustomer,
+    mutate: (customer) => deleteAddress(customer, addressId, addressStore),
+  });
+  if (result.ok) {
+    revalidatePath("/account/addresses");
+    revalidatePath("/account");
+  }
+  return result;
 }
