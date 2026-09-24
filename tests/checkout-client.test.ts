@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
-import { apiProduct, loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
 
 const pending = { delivery: { status: "pending" }, installation: { status: "pending" } };
 const okOrder = () => Promise.resolve({ ok: true, status: 201, json: async () => ({ ok: true, orderNumber: "ETS-TEST-000001" }) });
@@ -88,4 +89,57 @@ test("a PRICE_CHANGED refusal reloads the charges and keeps the cart", async () 
 test("the KVKK notice reuses the exact-version link builder", () => {
   const href = loadStorefront().fn<(d: { slug: string; versionId: string }) => string>("legalVersionHref")({ slug: "kvkk", versionId: "v-1" });
   assert.equal(href, "/legal/kvkk?version=v-1");
+});
+
+// ---- fail-closed confirmation button ---------------------------------------------------------------------
+const checkoutHtml = readFileSync("public/checkout.html", "utf8");
+const storeJs = readFileSync("public/store.js", "utf8");
+function checkoutPage(opts: { cart?: unknown[]; charges?: Record<string, unknown> } = {}) {
+  const submitButton = { disabled: /data-submit-order disabled/.test(checkoutHtml), textContent: "" }; // starts exactly as the shipped HTML does
+  const elements = { "[data-submit-order]": submitButton, "[data-cart-items]": fakeElement(), "[data-subtotal]": fakeElement(), "[data-charge-summary]": fakeElement(), "[data-total]": fakeElement(), "[data-charge-notice]": { ...fakeElement(), hidden: true }, "[data-installation]": { value: "delivery_only" } } as unknown as Record<string, ReturnType<typeof fakeElement>>;
+  const store = loadStorefront({ path: "checkout.html", elements, storage: { "ege-cart": opts.cart ?? [{ productId: "synthetic-product-1", quantity: 1 }] }, api: { products: [apiProduct()], charges: opts.charges } });
+  return { store, submitButton };
+}
+
+test("checkout ships the confirmation button disabled in the HTML itself, not only after JavaScript runs", () => {
+  assert.match(checkoutHtml, /<button class="primary" data-submit-order disabled[^>]*>Siparişi Onayla — ödeme yükümlülüğü doğurur<\/button>/);
+});
+
+test("before charge data is available the confirmation stays disabled (catalog loading, then catalog ready without tariffs)", async () => {
+  const { store, submitButton } = checkoutPage();
+  store.fn<() => void>("renderChargeSummary")();
+  assert.equal(submitButton.disabled, true, "catalog not yet authoritative");
+  await store.fn<() => Promise<void>>("loadCatalog")();
+  store.fn<() => void>("renderChargeSummary")();
+  assert.equal(submitButton.disabled, true, "catalog ready, charges not loaded");
+});
+
+test("pending or unknown charges keep the confirmation disabled", async () => {
+  for (const charges of [pending, { delivery: { status: "pending" }, installation: { status: "configured", amount: 1000, vatRateBps: 2000 } }]) {
+    const { store, submitButton } = checkoutPage({ charges });
+    await store.fn<() => Promise<void>>("loadCatalog")();
+    await store.fn<() => Promise<void>>("loadCheckoutCharges")();
+    assert.equal(submitButton.disabled, true, JSON.stringify(charges));
+  }
+});
+
+test("existing client logic enables it only once the catalog is authoritative, charges are known and the cart has items", async () => {
+  const known = { delivery: { status: "configured", amount: 500, vatRateBps: 2000 }, installation: { status: "configured", amount: 1000, vatRateBps: 2000 } };
+  const ready = checkoutPage({ charges: known });
+  await ready.store.fn<() => Promise<void>>("loadCheckoutCharges")();
+  assert.equal(ready.submitButton.disabled, true, "charges known but catalog not yet authoritative");
+  await ready.store.fn<() => Promise<void>>("loadCatalog")();
+  assert.equal(ready.submitButton.disabled, false);
+  const empty = checkoutPage({ charges: known, cart: [] });
+  await empty.store.fn<() => Promise<void>>("loadCatalog")();
+  await empty.store.fn<() => Promise<void>>("loadCheckoutCharges")();
+  assert.equal(empty.submitButton.disabled, true, "empty cart");
+  assert.match(storeJs, /if\(submit\)submit\.disabled=summary\.total===null\|\|!hasItems\}/, "the only enabling path is the charge summary");
+});
+
+test("no legal or marketing checkbox is ever preselected", () => {
+  const boxes = [...checkoutHtml.matchAll(/<input type="checkbox"[^>]*>/g), ...storeJs.matchAll(/<input type="checkbox"[^>]*>/g)].map((m) => m[0]);
+  assert.ok(boxes.length >= 4);
+  for (const box of boxes) assert.doesNotMatch(box, /\bchecked\b/, box);
+  assert.equal((checkoutHtml.match(/data-marketing-channel="(sms|email|whatsapp)"/g) ?? []).length, 3);
 });
