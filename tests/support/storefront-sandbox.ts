@@ -78,6 +78,13 @@ export function apiProduct(overrides: Record<string, unknown> = {}) {
     stock: 3,
     saleMode: "online",
     imageUrl: "",
+    vatRateBps: 2000,
+    shortDescription: "Kısa ürün açıklaması.",
+    description: "Ayrıntılı ürün açıklaması.",
+    gallery: [],
+    specifications: [],
+    documents: [],
+    warranty: null,
     ...overrides,
   };
 }
@@ -88,7 +95,7 @@ export function loadStorefront(options: {
   storage?: Record<string, unknown>;
   elements?: Record<string, FakeElement>;
   featured?: ReturnType<typeof featuredCard>[];
-  api?: { products?: ApiValue; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown> };
+  api?: { products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown> };
 } = {}) {
   const storage = new Map(Object.entries(options.storage ?? {}).map(([k, v]) => [k, JSON.stringify(v)]));
   const search = options.search ?? "";
@@ -129,6 +136,14 @@ export function loadStorefront(options: {
       fetchCalls.push(url);
       if (url === "/api/orders" && init?.body) orderBodies.push(init.body);
       if (url === "/api/products") return respond(api.products, "products");
+      if (url.startsWith("/api/products/")) {
+        if (api.detail === "fail") return Promise.resolve({ ok: false, status: 503, json: async () => ({}) });
+        const id = decodeURIComponent(url.slice("/api/products/".length));
+        const product = api.detail ?? (Array.isArray(api.products) ? api.products.find((p) => p.id === id) : undefined);
+        return product
+          ? Promise.resolve({ ok: true, status: 200, json: async () => ({ product }) })
+          : Promise.resolve({ ok: false, status: 404, json: async () => ({ error: "Ürün bulunamadı." }) });
+      }
       if (url === "/api/second-hand") return respond(api.secondHand, "products");
       if (url === "/api/blog") return respond(api.blog, "posts");
       if (url === "/api/legal/required") return Promise.resolve({ ok: true, status: 200, json: async () => ({ documents: [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", versionId: "ver-ds-1" }] }) });

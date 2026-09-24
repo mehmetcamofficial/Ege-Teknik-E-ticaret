@@ -192,9 +192,11 @@ export function summarizePlan(dataset: EnrichmentDataset, plan: readonly PlanEnt
 export type CatalogRow = ProductRow & { brandId?: string | null; categoryId?: string | null; category: string; series: string; capacity: string; vatRateBps: number; createdAt?: unknown; updatedAt?: unknown };
 
 /** Catalog list item: everything the storefront list already used, minus the heavy/internal enrichment columns. */
-export function toCatalogListItem<T extends Record<string, unknown>>(product: T, stock: number | null) {
-  const { gallery: _g, specifications: _s, documents: _d, manufacturerWarranty: _w, sourceUrl: _u, ...rest } = product;
-  return { ...rest, stock: stock ?? 0 };
+export function toCatalogListItem<T extends Record<string, unknown>>(product: T, stock: number | null): Omit<T, "gallery" | "specifications" | "documents" | "manufacturerWarranty" | "sourceUrl"> & { stock: number } {
+  const rest: Record<string, unknown> = { ...product };
+  for (const key of ["gallery", "specifications", "documents", "manufacturerWarranty", "sourceUrl"]) delete rest[key];
+  if (typeof rest.description === "string") rest.description = sanitizePublicDescription(rest.description);
+  return { ...rest, stock: stock ?? 0 } as Omit<T, "gallery" | "specifications" | "documents" | "manufacturerWarranty" | "sourceUrl"> & { stock: number };
 }
 
 const SPEC_ORDER = SPEC_KEYS as readonly string[];
@@ -218,7 +220,19 @@ export function toPublicWarranty(warranty: unknown) {
   const parsed = warrantySchema.safeParse(warranty);
   if (!parsed.success) return null;
   const w = parsed.data;
-  return { kind: w.classification === "VERIFIED_PRODUCT_SPECIFIC" ? "product" : w.classification === "GENERAL_TERMS_ONLY" ? "general" : "contact", text: w.displayText };
+  if (w.classification === "VERIFIED_PRODUCT_SPECIFIC") return { kind: "product", text: w.displayText, conditions: w.conditions };
+  return { kind: w.classification === "GENERAL_TERMS_ONLY" ? "general" : "contact", text: NEUTRAL_WARRANTY_TEXT, conditions: null };
+}
+
+/**
+ * Legacy blocked records can contain a customer-facing official-source footer. Keep the
+ * surrounding prose intact while removing only a standalone GREE source line. The stored
+ * record is deliberately left untouched; this is a public-presentation boundary.
+ */
+export function sanitizePublicDescription(description: unknown): string {
+  return String(description ?? "")
+    .replace(/\s*Kaynak:\s*https?:\/\/(?:www\.)?gree\.com\.tr(?:\/\S*)?\s*$/i, "")
+    .trim();
 }
 
 export function toPublicProductDetail(product: Record<string, unknown> & { id: string }, stock: number | null) {
@@ -226,7 +240,7 @@ export function toPublicProductDetail(product: Record<string, unknown> & { id: s
   return {
     id: product.id, slug: pick("slug"), name: pick("name"), category: pick("category"), series: pick("series"), sku: pick("sku"), capacity: pick("capacity"),
     energyClass: pick("energyClass"), wifi: pick("wifi"), price: pick("price"), vatRateBps: pick("vatRateBps"), saleMode: pick("saleMode"), stock: stock ?? 0,
-    imageUrl: pick("imageUrl"), shortDescription: pick("shortDescription") ?? null, description: pick("description"),
+    imageUrl: pick("imageUrl"), shortDescription: pick("shortDescription") ?? null, description: sanitizePublicDescription(pick("description")),
     gallery: toPublicGallery(pick("gallery")), specifications: toPublicSpecifications(pick("specifications")),
     documents: toPublicDocuments(pick("documents")), warranty: toPublicWarranty(pick("manufacturerWarranty")),
   };

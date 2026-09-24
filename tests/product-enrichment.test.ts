@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
-  buildUpdate, datasetSchema, documentSchema, enrichmentRecordSchema, galleryItemSchema, planEnrichment, PROTECTED_FIELDS, specificationsSchema, summarizePlan,
+  buildUpdate, datasetSchema, documentSchema, enrichmentRecordSchema, galleryItemSchema, planEnrichment, PROTECTED_FIELDS, sanitizePublicDescription, specificationsSchema, summarizePlan,
   toCatalogListItem, toPublicProductDetail, toPublicSpecifications, toPublicWarranty, warrantySchema, WRITABLE_COLUMNS, type EnrichmentDataset, type PlanEntry, type ProductRow,
 } from "../lib/product-enrichment.ts";
 import { PRODUCT_SLUG_REDIRECTS, resolveProductIdentifier } from "../lib/product-slugs.ts";
@@ -208,7 +208,7 @@ test("the public detail exposes only approved display data: no confidence, parti
   const detail = toPublicProductDetail(row, 5);
   assert.deepEqual(Object.keys(detail).sort(), ["capacity", "category", "description", "documents", "energyClass", "gallery", "id", "imageUrl", "name", "price", "saleMode", "series", "shortDescription", "sku", "slug", "specifications", "stock", "vatRateBps", "warranty", "wifi"]);
   const json = JSON.stringify(detail);
-  for (const leak of ["confidence", "\"status\"", "sourceUrl", "pageValue", "conditions", "retrievedAt", "generalTermsUrl", "reviewerNotes", "reviewFlags", "manufacturerWarranty", "\"source\"", record.sourceUrl]) assert.equal(json.includes(leak), false, leak);
+  for (const leak of ["confidence", "\"status\"", "sourceUrl", "pageValue", "retrievedAt", "generalTermsUrl", "reviewerNotes", "reviewFlags", "manufacturerWarranty", "\"source\"", record.sourceUrl]) assert.equal(json.includes(leak), false, leak);
   for (const spec of detail.specifications) assert.deepEqual(Object.keys(spec).sort(), ["key", "label", "unit", "value"]);
   const partial = Object.entries(record.specifications).filter(([, e]) => e.status === "partial").map(([k]) => k);
   for (const k of partial) assert.equal(detail.specifications.some((s) => s.key === k), false, k);
@@ -224,9 +224,19 @@ test("the new descriptions carry no source URL, installation, free-shipping or f
 test("the public detail shows a safe warranty presentation only", () => {
   for (const record of Object.values(dataset.records)) {
     const w = toPublicWarranty(record.manufacturerWarranty)!;
-    assert.deepEqual(Object.keys(w).sort(), ["kind", "text"]);
+    assert.deepEqual(Object.keys(w).sort(), ["conditions", "kind", "text"]);
     assert.ok(["product", "general", "contact"].includes(w.kind));
+    if (w.kind !== "product") {
+      assert.equal(w.conditions, null);
+      assert.doesNotMatch(w.text, /\d|yıl|yil|year/i);
+    }
   }
+});
+test("legacy GREE source footers are removed at presentation time without deleting surrounding prose", () => {
+  const prose = "İlk paragraf.\n\nİkinci paragraf.\nKaynak: https://www.gree.com.tr/urun/ornek";
+  assert.equal(sanitizePublicDescription(prose), "İlk paragraf.\n\nİkinci paragraf.");
+  assert.equal(sanitizePublicDescription("Kaynak bilgisi metnin içindedir."), "Kaynak bilgisi metnin içindedir.");
+  assert.equal(sanitizePublicDescription("Kaynak: https://example.com/x"), "Kaynak: https://example.com/x");
 });
 
 // ---- slug plan ------------------------------------------------------------------------------------------

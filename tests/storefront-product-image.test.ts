@@ -93,22 +93,31 @@ test("product detail page renders the real image and drops the placeholder capti
   const context = loadStore({
     registerSelectors: { "[data-product-page]": root },
     search: "?id=p1",
-    fetchImpl: async (url: string) => (url === "/api/products" ? { ok: true, json: async () => ({ products: [{ ...PRODUCT_WITH_IMAGE, energyClass: PRODUCT_WITH_IMAGE.energy, saleMode: "online" }] }) } : { ok: false }),
+    fetchImpl: async (url: string) => url === "/api/products"
+      ? { ok: true, json: async () => ({ products: [{ ...PRODUCT_WITH_IMAGE, energyClass: PRODUCT_WITH_IMAGE.energy, saleMode: "online" }] }) }
+      : url === "/api/products/p1"
+        ? { ok: true, json: async () => ({ product: { ...PRODUCT_WITH_IMAGE, energyClass: PRODUCT_WITH_IMAGE.energy, saleMode: "online", gallery: [{ url: PRODUCT_WITH_IMAGE.imageUrl, alt: PRODUCT_WITH_IMAGE.name, width: 1200, height: 800 }], specifications: [], documents: [], warranty: null } }) }
+        : { ok: false },
   });
   await (context.loadCatalog as () => Promise<void>)();
   assert.match(root.innerHTML, /<img class="detail-image" src="https:\/\/ege-teknik-product-images\.public\.blob\.vercel-storage\.com\/products\/SKU1\/primary\.jpg"/);
   assert.doesNotMatch(root.innerHTML, /Temsili görünüm/);
 });
 
-test("product detail page keeps the placeholder + caption when imageUrl is empty", async () => {
+test("product detail page keeps an honest missing-image state when imageUrl is empty", async () => {
   const root = fakeElement();
   const context = loadStore({
     registerSelectors: { "[data-product-page]": root },
     search: "?id=p1",
-    fetchImpl: async (url: string) => (url === "/api/products" ? { ok: true, json: async () => ({ products: [{ ...PRODUCT_WITHOUT_IMAGE, energyClass: PRODUCT_WITHOUT_IMAGE.energy, saleMode: "online" }] }) } : { ok: false }),
+    fetchImpl: async (url: string) => url === "/api/products"
+      ? { ok: true, json: async () => ({ products: [{ ...PRODUCT_WITHOUT_IMAGE, energyClass: PRODUCT_WITHOUT_IMAGE.energy, saleMode: "online" }] }) }
+      : url === "/api/products/p1"
+        ? { ok: true, json: async () => ({ product: { ...PRODUCT_WITHOUT_IMAGE, energyClass: PRODUCT_WITHOUT_IMAGE.energy, saleMode: "online", gallery: [], specifications: [], documents: [], warranty: null } }) }
+        : { ok: false },
   });
   await (context.loadCatalog as () => Promise<void>)();
-  assert.match(root.innerHTML, /class="unit large"/);
-  assert.match(root.innerHTML, /Temsili görünüm • Ürün görseli henüz eklenmedi/);
+  assert.match(root.innerHTML, /class="detail-visual missing-product-image"/);
+  assert.match(root.innerHTML, /Ürün görseli henüz eklenmedi/);
+  assert.doesNotMatch(root.innerHTML, /class="unit large"/);
   assert.doesNotMatch(root.innerHTML, /class="detail-image"/);
 });

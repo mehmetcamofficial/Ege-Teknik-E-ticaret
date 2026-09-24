@@ -81,7 +81,7 @@ test("the real renderProductPage() buy-actions markup has no inline handler", as
   const store = loadStorefront({ path: "product.html", search: "?id=p1", elements: { "[data-product-page]": root }, api: { products: [API_SALE_PRODUCT] } });
   await store.fn<() => Promise<void>>("loadCatalog")();
   assert.doesNotMatch(root.innerHTML, INLINE_HANDLER_ATTR);
-  assert.match(root.innerHTML, /data-action="add-cart" data-id="p1"/);
+  assert.match(root.innerHTML, /data-action="add-product-cart" data-id="p1"/);
   assert.match(root.innerHTML, /data-action="quote" data-id="p1"/);
 });
 

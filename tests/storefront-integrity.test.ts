@@ -70,7 +70,7 @@ test("before the catalog answers, no surface shows a price - only a loading stat
 test("when the catalog is unavailable every surface says so and none invents a price", async () => {
   const card = featuredCard("synthetic-airy");
   const elements = { "[data-products]": fakeElement(), "[data-product-page]": fakeElement(), "[data-favorites]": fakeElement(), "[data-compare]": fakeElement(), "[data-cart-items]": fakeElement() };
-  const store = loadStorefront({ search: "?id=synthetic-airy", featured: [card], elements, storage: { "ege-cart": [{ productId: "synthetic-airy", quantity: 1 }] }, api: { products: "fail" } });
+  const store = loadStorefront({ search: "?id=synthetic-airy", featured: [card], elements, storage: { "ege-cart": [{ productId: "synthetic-airy", quantity: 1 }] }, api: { products: "fail", detail: "fail" } });
   await store.fn<() => Promise<void>>("loadCatalog")();
   assert.equal(store.fn<() => boolean>("catalogAuthoritative")(), false);
   assert.equal(card.fields.price.textContent, "Fiyat bilgisi alınamadı");

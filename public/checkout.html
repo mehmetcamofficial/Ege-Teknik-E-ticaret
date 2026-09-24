@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8"><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Güvenli Sipariş | Ege Teknik</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="store.css">
@@ -19,7 +19,7 @@
           <label class="field">E-posta<input name="email" required type="email" autocomplete="email"></label>
           <label class="field">İl / İlçe<input name="city" required></label>
           <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea name="address" required rows="3"></textarea></label>
-          <label class="field">Kurulum (isteğe bağlı)<select name="installation" data-installation><option value="delivery_only" selected>Kurulum istemiyorum — yalnız ürün teslimatı</option><option value="survey_then_install">Kurulum istiyorum (keşif sonrası montaj)</option></select></label>
+          <label class="field">Kurulum (isteğe bağlı)<select name="installation" data-installation aria-describedby="installation-help"><option value="delivery_only" selected>Kurulum yok</option><option value="survey_then_install">Kurulum istiyorum</option></select><small class="field-help" id="installation-help"><b>Kurulum yok:</b> ürün yalnızca teslim edilir. <b>Kurulum istiyorum:</b> montaj keşif sonrası yapılır ve ayrıca fiyatlandırılır. Kurulum bedeli sipariş özetinde gösterilir; bedel belirlenmeden sipariş onaylanamaz.</small></label>
           <label class="field">Teslimat notu<input name="note" maxlength="500" placeholder="Varsa ekleyin"></label>
         </div>
         <h2>Ödeme yöntemi</h2>

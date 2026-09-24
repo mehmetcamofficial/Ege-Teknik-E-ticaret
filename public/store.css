@@ -3,3 +3,84 @@
 .consents{border:0;padding:0;margin:16px 0 0}.consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;margin:10px 0}.consent input{margin-top:3px}.consent a{text-decoration:underline;font-weight:700}
 
 .marketing{border:0;padding:0;margin:16px 0 0}.marketing legend{font-weight:700;font-size:13px;padding:0}.marketing small{display:block;color:var(--muted);margin-top:6px}.tax-note{margin:6px 0 0;color:var(--muted)}[hidden]{display:none!important}
+.product{min-width:0}.product-visual .product-image{display:block;width:100%;max-width:100%;height:100%;padding:12px 16px;object-fit:contain;mix-blend-mode:multiply}.store .primary:disabled{background:#d5dfdb;color:#3b4643;cursor:not-allowed}
+/* ---- Phase 4C: shared responsive layer (header, touch targets, forms, grids). Fixes the offending elements; no body overflow clipping. ---- */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.store-nav{flex-wrap:nowrap;gap:clamp(12px,2vw,22px)}
+.store-nav .brand{flex:0 0 auto;white-space:nowrap;line-height:1.1}
+.store-nav .nav-links a{white-space:nowrap;padding:10px 2px}
+.store-nav .nav-links a[aria-current=page]{color:var(--s);box-shadow:inset 0 -2px 0 currentColor}
+.store-nav .nav-extra{display:none}
+.store-nav .header-tools{display:flex;align-items:center;gap:6px;margin-left:auto;flex:0 0 auto}
+.store-nav .header-tools>a.header-icon{display:inline-grid;place-items:center;width:44px;height:44px;padding:0;border-radius:10px;font-size:20px;line-height:1;color:var(--p)}
+.store-nav .header-icon:hover,.store-nav .header-icon[aria-current=page]{background:var(--mint)}
+.store-nav .header-tools .ghost{display:inline-flex;align-items:center;gap:6px;min-height:44px;white-space:nowrap}
+.store-nav .brand{order:0}.store-nav .nav-links{order:1}.store-nav .header-tools{order:2}.store-nav>.menu-toggle{order:3;display:none}
+@media(max-width:1180px){.store-nav{flex-wrap:wrap;row-gap:0}.store-nav .nav-links{display:none;order:5;flex:0 0 100%;flex-direction:column;gap:0;margin:8px 0 0;padding:4px 0;border-top:1px solid var(--line)}.store-nav .nav-links.open{display:flex}.store-nav .nav-links a{display:flex;align-items:center;min-height:48px;padding:0 4px;border-bottom:1px solid var(--line);font-size:16px}.store-nav .nav-links a:last-child{border-bottom:0}.store-nav .nav-links a[aria-current=page]{box-shadow:none}.store-nav>.menu-toggle{display:inline-flex;align-items:center;min-height:44px;margin-left:0;white-space:nowrap}}
+@media(max-width:430px){.store-nav{padding:10px 14px;gap:8px}.store-nav .brand{font-size:19px}.store-nav .header-tools>a.header-icon{display:none}.store-nav .nav-extra{display:flex}.store-nav .header-tools .ghost,.store-nav>.menu-toggle{padding:10px 12px}}
+
+/* touch targets: comfortable on touch screens, not oversized on desktop */
+.chip{min-height:36px;padding:8px 14px}
+.store .card-tools button{min-height:36px;min-width:40px;padding:8px 12px;font-size:13px}
+.filter-group label{align-items:center;min-height:32px;margin:4px 0;cursor:pointer}
+.filter-group input[type=radio],.filter-group input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--p)}
+.product .actions>*{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+@media(max-width:1000px){.chip{min-height:44px}.store .card-tools button{min-height:44px;min-width:44px}.filter-group label{min-height:44px;margin:0}}
+
+/* small text floor */
+.spec,.badge,.price small,.card-tools button{font-size:12px}
+
+/* shared layout robustness: grid tracks may shrink below their content's min-content */
+.shop-grid{grid-template-columns:250px minmax(0,1fr)}
+.checkout-grid{grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr)}
+.store input,.store select,.store textarea{max-width:100%;min-width:0}
+.empty{padding:clamp(28px,7vw,70px) clamp(18px,5vw,70px)}
+.empty .primary.inline{margin-top:14px;min-height:44px;display:inline-flex;align-items:center}
+.page-head{flex-wrap:wrap}
+.page-head h1{font-size:clamp(28px,4.2vw,38px);line-height:1.15}
+@media(max-width:1000px){.shop-grid,.checkout-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:650px){.field input,.field select,.field textarea{font-size:16px;min-height:46px}}
+.form-status{margin:12px 0 0;padding:12px 14px;border-radius:10px;background:#fbe9e5;color:#8b2e20;font-size:14px;font-weight:600}
+
+/* compare: a deliberate, labelled scroll region; the page itself never scrolls sideways */
+.compare-hint{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.compare-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:#fff;scrollbar-width:thin}
+.compare-scroll:focus-visible{outline:3px solid #0b7a55;outline-offset:3px}
+.store .compare-grid{width:max-content;min-width:100%;border:0;border-radius:0;overflow:visible}
+.compare-grid .cmp-label{position:sticky;left:0;z-index:1;background:#f6faf9;font-weight:700;color:var(--p)}
+.compare-grid b.cmp-label{background:#eef5f3}
+.cmp-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
+.cmp-actions>*{min-height:44px;display:inline-flex;align-items:center}
+@media(min-width:1001px){.compare-hint{display:none}}
+
+/* second-hand: the request links inherited white text on a light button */
+.second-card .ghost{color:var(--p);display:inline-flex;align-items:center;min-height:44px;margin-top:6px}
+@media(max-width:374px){.store-nav{padding:10px 12px;gap:6px}.store-nav .brand{font-size:18px}.store-nav .brand small{letter-spacing:.08em}.store-nav .header-tools{gap:4px}.store-nav .header-tools .ghost,.store-nav>.menu-toggle{padding:10px 10px}}
+
+.field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:650px){.field-grid{grid-template-columns:minmax(0,1fr)}}
+.store input[type=radio],.store input[type=checkbox]{width:20px;height:20px;flex:0 0 20px;accent-color:var(--p)}
+.store .compare-grid{grid-template-columns:minmax(120px,160px) repeat(var(--cmp-n,1),minmax(170px,240px))}@media(min-width:1001px){.store .compare-grid{width:100%;grid-template-columns:minmax(150px,210px) repeat(var(--cmp-n,1),minmax(180px,1fr))}}
+/* links styled as buttons keep their button colours (.store a{color:inherit} otherwise wins) */
+.store a.primary{color:#fff}.store a.ghost{color:var(--p)}
+.brand.light small{color:#7fd4ad}
+/* one visible focus style on every store page */
+.store a:focus-visible,.store button:focus-visible,.store input:focus-visible,.store select:focus-visible,.store textarea:focus-visible,.store summary:focus-visible{outline:3px solid #0b7a55;outline-offset:3px}
+.store-footer a:focus-visible,.contact-panel a:focus-visible,.contact-panel button:focus-visible{outline-color:#9fe0c2}
+@media(prefers-reduced-motion:reduce){.store *,.store *::before,.store *::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}.product:hover{transform:none}}
+.cart-count{font-size:12px}
+/* text links: at least 24px tall targets (WCAG 2.5.8 minimum) */
+.store-footer a:not(.brand){display:inline-flex;align-items:center;min-height:32px}
+.product h3 a{display:inline-block;padding-block:2px}
+.brand small{font-size:12px;letter-spacing:.1em}
+.notice,.notice small{overflow-wrap:anywhere}
+.policy main a,.policy article a,main.policy a:not(.primary):not(.ghost){text-decoration:underline;text-underline-offset:3px;color:var(--p)}
+[data-kvkk-notice] a,.notice a,.alert a{text-decoration:underline;text-underline-offset:3px;font-weight:700}
+.cart-empty .primary.inline{display:inline-flex;align-items:center;min-height:44px;margin-top:10px}
+.filter-title{font-size:18px}
+/* remaining text links reach the 24px minimum target */
+.breadcrumbs a,.store-top a,.service-grid a,.contact-card a,.article-card a,.empty a{display:inline-flex;align-items:center;min-height:24px}
+@media(max-width:1000px){.consent{min-height:44px;align-items:center}}
+.field-help{display:block;font-size:13px;font-weight:500;line-height:1.5;color:var(--muted)}.field-help b{color:var(--ink);font-weight:700}
+@media(max-width:430px){.store-nav .brand small{letter-spacing:.03em}}
+.store-top,.breadcrumbs{align-items:center}
+.notice small{font-size:12px}
