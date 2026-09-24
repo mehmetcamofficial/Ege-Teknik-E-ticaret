@@ -50,6 +50,13 @@
       "when": 1790207595710,
       "tag": "0006_checkout_charges_and_marketing_consents",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790257441756,
+      "tag": "0007_product_enrichment",
+      "breakpoints": true
     }
   ]
 }
