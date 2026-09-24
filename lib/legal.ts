@@ -31,6 +31,15 @@ export function hashLegalDocument(input: { title: string; body: string }): strin
 /** Legal documents that must be accepted at checkout. Their texts are published separately (Phase 3B.3). */
 export const CHECKOUT_LEGAL_SLUGS = ["distance-sales", "pre-information"] as const;
 
+/**
+ * Informational documents that must be PUBLISHED before an order can be taken but are never a checkbox:
+ * the KVKK disclosure is given at the point of data collection; it is not a consent (and never bundled with one).
+ */
+export const CHECKOUT_NOTICE_SLUGS = ["kvkk"] as const;
+export function missingNoticeSlugs(currentSlugs: readonly string[], required: readonly string[] = CHECKOUT_NOTICE_SLUGS): string[] {
+  return required.filter((slug) => !currentSlugs.includes(slug));
+}
+
 export type LegalVersionRow = { id: string; slug: string; version: number; title: string; effectiveAt: Date; publishedAt: Date };
 export type RequiredLegalVersion = { slug: string; title: string; versionId: string };
 

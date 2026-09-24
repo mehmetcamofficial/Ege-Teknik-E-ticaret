@@ -226,6 +226,7 @@ test("a hostile order number in the server response is shown as text", async () 
   });
   await store.fn<() => Promise<void>>("loadCatalog")();
   await store.fn<() => Promise<unknown>>("loadLegalRequirements")();
+  await store.fn<() => Promise<unknown>>("loadCheckoutCharges")();
   await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: form });
   assert.match(result.innerHTML, /Siparişiniz kaydedildi/);
   assertInert(result.innerHTML, "order confirmation");

@@ -9,7 +9,7 @@
 <body class="store">
   <header class="store-header"><nav class="store-nav"><a class="brand" href="index.html">EGE TEKNİK<small>GÜVENLİ SİPARİŞ</small></a><div class="nav-links"><a href="catalog.html">Mağazaya dön</a></div><span>Güvenli bağlantı (HTTPS)</span></nav></header>
   <main class="store-shell">
-    <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Adres ve montaj tercihinizi iletin; ödeme ve montaj koşulları sipariş sonrası sizinle teyit edilir.</p></div></div>
+    <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Teslimat bilgilerinizi girin. Siparişi onaylamadan önce ödenecek kesin tutar ve varsa ek masraflar aşağıda gösterilir; gösterilmeyen bir bedel sizden talep edilmez.</p></div></div>
     <form class="checkout-grid" data-checkout-form>
       <section class="panel">
         <h2>Teslimat bilgileri</h2>
@@ -19,16 +19,25 @@
           <label class="field">E-posta<input name="email" required type="email" autocomplete="email"></label>
           <label class="field">İl / İlçe<input name="city" required></label>
           <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea name="address" required rows="3"></textarea></label>
-          <label class="field">Montaj tercihi<select name="installation"><option value="survey_then_install">Keşif sonrası montaj</option><option value="delivery_only">Yalnız ürün teslimatı</option></select></label>
+          <label class="field">Kurulum (isteğe bağlı)<select name="installation" data-installation><option value="delivery_only" selected>Kurulum istemiyorum — yalnız ürün teslimatı</option><option value="survey_then_install">Kurulum istiyorum (keşif sonrası montaj)</option></select></label>
           <label class="field">Teslimat notu<input name="note" maxlength="500" placeholder="Varsa ekleyin"></label>
         </div>
         <h2>Ödeme yöntemi</h2>
         <label class="pay-option"><input type="radio" name="provider" value="PayTR" disabled aria-describedby="payment-status"><span><b>PayTR ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
         <label class="pay-option"><input type="radio" name="provider" value="iyzico" disabled aria-describedby="payment-status"><span><b>iyzico ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
-        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Ödeme yöntemi ve montaj koşulları sizinle görüşülerek kesinleştirilir.</small></span></label>
+        <label class="pay-option"><input type="radio" name="provider" value="bank_transfer" disabled aria-describedby="payment-status"><span><b>Banka havalesi / EFT</b><br><small>Yapılandırma bekleniyor; henüz kullanılamıyor</small></span></label>
+        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Ödeme yöntemi teyit edilir; bu sırada yukarıda gösterilen tutarın dışında ek bir bedel istenmez. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
         <div class="notice" id="payment-status">Online kartla ödeme henüz aktif değil; bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Siparişiniz “ödeme bekliyor” durumuyla kaydedilir, ardından sizinle iletişime geçilir.</div>
       </section>
-      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>Montaj / kargo</span><span>Keşifte netleşir</span></div><div class="summary-row" style="font-size:20px"><b>Toplam</b><b data-total>₺0</b></div><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset><button class="primary" style="width:100%;margin-top:18px">Siparişi Kaydet</button><p data-order-result aria-live="polite"></p></aside>
+      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
+        <p class="notice" data-kvkk-notice></p>
+        <fieldset class="marketing" data-marketing-consents aria-label="İsteğe bağlı iletişim izinleri"><legend>Tanıtım ve duyuru iletileri (isteğe bağlı)</legend>
+          <label class="consent"><input type="checkbox" data-marketing-channel="sms"><span>SMS ile tanıtım ve duyuru iletisi almak istiyorum.</span></label>
+          <label class="consent"><input type="checkbox" data-marketing-channel="email"><span>E-posta ile tanıtım ve duyuru iletisi almak istiyorum.</span></label>
+          <label class="consent"><input type="checkbox" data-marketing-channel="whatsapp"><span>WhatsApp ile tanıtım ve duyuru iletisi almak istiyorum.</span></label>
+          <small>Bu izinler isteğe bağlıdır, siparişiniz için gerekli değildir ve dilediğiniz zaman geri alınabilir.</small>
+        </fieldset>
+        <button class="primary" data-submit-order style="width:100%;margin-top:18px">Siparişi Onayla — ödeme yükümlülüğü doğurur</button><p data-order-result aria-live="polite"></p></aside>
     </form>
   </main>
   <div class="toast"></div><script src="store.js"></script>

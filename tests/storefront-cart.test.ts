@@ -32,6 +32,7 @@ type StorefrontApi = {
   catalogAuthoritative: () => boolean;
   loadCatalog: () => Promise<void>;
   loadLegalRequirements: () => Promise<unknown>;
+  loadCheckoutCharges: () => Promise<void>;
   acceptedLegalVersionIds: (boxes: unknown) => string[];
   legalConsentsComplete: (requirements: unknown, acceptedIds: string[]) => boolean;
   submitOrder: (event: unknown) => Promise<void>;
@@ -95,6 +96,7 @@ export const legalDocuments = [{ slug: "distance-sales", title: "PREVIEW TEST �
 const catalogFetch = (orderResponse?: () => Promise<unknown>) => (url: string) =>
   url === "/api/products" ? jsonResponse(200, { products: apiProducts })
     : url === "/api/legal/required" ? jsonResponse(200, { documents: legalDocuments })
+    : url === "/api/checkout/charges" ? jsonResponse(200, { delivery: { status: "configured", amount: 500, vatRateBps: 2000 }, installation: { status: "configured", amount: 1000, vatRateBps: 2000 } })
     : (orderResponse ? orderResponse() : Promise.reject(new Error("offline")));
 
 const checkoutForm = (ticked: string[] = legalDocuments.map((d) => d.versionId)) => {
@@ -206,6 +208,7 @@ test("checkout posts id and quantity only, with an Idempotency-Key header", asyn
   const { ctx, calls } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "ETS-20260922-ABC123" })), cart: [{ productId: BACKEND_ID, quantity: 2 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   await ctx.submitOrder(checkoutForm().event);
   const order = calls.find((c) => c.url === "/api/orders")!;
   assert.ok(order, "an order request should have been sent");
@@ -219,6 +222,7 @@ test("a confirmed order clears the cart and the attempt key", async () => {
   const { ctx, localStorage, sessionStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "ETS-20260922-ABC123" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   await ctx.submitOrder(checkoutForm().event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), []);
   assert.equal(sessionStorage.getItem("ege-order-attempt"), null);
@@ -228,6 +232,7 @@ test("a network failure keeps the cart and reuses the same key on retry", async 
   const { ctx, localStorage, sessionStorage, calls } = loadStorefront({ fetch: catalogFetch(() => Promise.reject(new Error("offline"))), cart: [{ productId: BACKEND_ID, quantity: 2 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   const first = checkoutForm();
   await ctx.submitOrder(first.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 2 }], "cart must survive a failure");
@@ -244,6 +249,7 @@ test("an out-of-stock rejection keeps the cart and surfaces the server message",
   const { ctx, localStorage, sessionStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(409, { error: "GREE Aphro 9.000 BTU için yeterli stok yok." })), cart: [{ productId: BACKEND_ID, quantity: 2 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   const checkout = checkoutForm();
   await ctx.submitOrder(checkout.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 2 }]);
@@ -255,6 +261,7 @@ test("a validation rejection keeps the cart intact", async () => {
   const { ctx, localStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(400, { error: "Sipariş bilgilerini kontrol edin." })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   const checkout = checkoutForm();
   await ctx.submitOrder(checkout.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 1 }]);
@@ -275,6 +282,7 @@ test("checkout refuses when nothing in the cart is sellable", async () => {
   const { ctx, calls } = loadStorefront({ fetch: catalogFetch(), cart: [{ productId: QUOTE_ID, quantity: 1 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   const checkout = checkoutForm();
   await ctx.submitOrder(checkout.event);
   assert.equal(calls.filter((c) => c.url === "/api/orders").length, 0);
@@ -285,6 +293,7 @@ test("checkout blocks submission when a required legal box is unticked", async (
   const { ctx, calls, localStorage } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "X" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   for (const ticked of [[], ["ver-ds-1"], ["ver-pi-1"]]) {
     const checkout = checkoutForm(ticked);
     await ctx.submitOrder(checkout.event);
@@ -308,6 +317,7 @@ test("the order request carries the ticked legal version ids, sorted as the serv
   const { ctx, calls } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(201, { ok: true, orderNumber: "ETS-1" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   await ctx.submitOrder(checkoutForm().event);
   const body = JSON.parse(calls.find((c) => c.url === "/api/orders")!.body);
   assert.deepEqual(body.legalAcceptances, ["ver-ds-1", "ver-pi-1"]);
@@ -319,6 +329,7 @@ test("a legal version mismatch releases the attempt key and reloads the requirem
   const { ctx, sessionStorage, calls } = loadStorefront({ fetch: catalogFetch(() => jsonResponse(409, { error: "güncellendi", code: "LEGAL_VERSION_MISMATCH" })), cart: [{ productId: BACKEND_ID, quantity: 1 }] });
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
+  await ctx.loadCheckoutCharges();
   await ctx.submitOrder(checkoutForm().event);
   assert.equal(sessionStorage.getItem("ege-order-attempt"), null, "a corrected request must not reuse the rejected key");
   assert.equal(calls.filter((c) => c.url === "/api/legal/required").length, 2, "requirements are reloaded after a mismatch");

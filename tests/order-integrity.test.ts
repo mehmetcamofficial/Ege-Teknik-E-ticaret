@@ -10,6 +10,7 @@ const baseRequest = {
   address: "Kuşadası Mahallesi 1 Sokak No 1",
   paymentProvider: "PayTR" as const,
   items: [{ productId: "p1", quantity: 2 }],
+  expectedTotal: 1000,
 };
 
 test("a valid order request parses", () => {

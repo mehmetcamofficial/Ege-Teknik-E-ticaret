@@ -88,7 +88,7 @@ export function loadStorefront(options: {
   storage?: Record<string, unknown>;
   elements?: Record<string, FakeElement>;
   featured?: ReturnType<typeof featuredCard>[];
-  api?: { products?: ApiValue; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown> };
+  api?: { products?: ApiValue; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown> };
 } = {}) {
   const storage = new Map(Object.entries(options.storage ?? {}).map(([k, v]) => [k, JSON.stringify(v)]));
   const search = options.search ?? "";
@@ -98,6 +98,7 @@ export function loadStorefront(options: {
   const api = options.api ?? {};
   const listeners: Record<string, ((event: unknown) => void)[]> = {};
   const fetchCalls: string[] = [];
+  const orderBodies: string[] = [];
 
   const respond = (value: ApiValue | undefined, key: string) => {
     if (value === "pending") return new Promise(() => {});
@@ -124,12 +125,14 @@ export function loadStorefront(options: {
       constructor(form: { fields: Record<string, string> }) { this.fields = form.fields; }
       get(name: string) { return this.fields[name] ?? ""; }
     },
-    fetch: (url: string) => {
+    fetch: (url: string, init?: { body?: string }) => {
       fetchCalls.push(url);
+      if (url === "/api/orders" && init?.body) orderBodies.push(init.body);
       if (url === "/api/products") return respond(api.products, "products");
       if (url === "/api/second-hand") return respond(api.secondHand, "products");
       if (url === "/api/blog") return respond(api.blog, "posts");
       if (url === "/api/legal/required") return Promise.resolve({ ok: true, status: 200, json: async () => ({ documents: [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", versionId: "ver-ds-1" }] }) });
+      if (url === "/api/checkout/charges") return Promise.resolve({ ok: true, status: 200, json: async () => api.charges ?? ({ delivery: { status: "configured", amount: 500, vatRateBps: 2000 }, installation: { status: "configured", amount: 1000, vatRateBps: 2000 } }) });
       if (url === "/api/orders" && api.order) return api.order();
       return Promise.reject(new Error(`unexpected fetch ${url}`));
     },
@@ -155,6 +158,7 @@ export function loadStorefront(options: {
     featured,
     listeners,
     fetchCalls,
+    orderBodies,
     document: context.document as { title: string },
   };
 }

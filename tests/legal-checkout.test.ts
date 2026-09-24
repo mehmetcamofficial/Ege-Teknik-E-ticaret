@@ -9,7 +9,7 @@ const past = new Date("2026-09-01T00:00:00Z");
 const future = new Date("2026-10-01T00:00:00Z");
 const row = (over: Partial<LegalVersionRow>): LegalVersionRow => ({ id: "v", slug: "distance-sales", version: 1, title: "PREVIEW TEST", effectiveAt: past, publishedAt: past, ...over });
 const published: LegalVersionRow[] = [row({ id: "ds-1", slug: "distance-sales" }), row({ id: "pi-1", slug: "pre-information" })];
-const base = { customerName: "Test Kişi", phone: "05000000000", email: "test@example.test", city: "İzmir", address: "Test Mahallesi 1 Sokak No 1", paymentProvider: "discovery" as const, items: [{ productId: "p1", quantity: 1 }] };
+const base = { customerName: "Test Kişi", phone: "05000000000", email: "test@example.test", city: "İzmir", address: "Test Mahallesi 1 Sokak No 1", paymentProvider: "discovery" as const, items: [{ productId: "p1", quantity: 1 }], expectedTotal: 1000 };
 const parse = (extra: Record<string, unknown> = {}) => { const r = orderRequestSchema.safeParse({ ...base, ...extra }); assert.equal(r.success, true); return r.success ? r.data : (undefined as never); };
 const fp = (extra: Record<string, unknown> = {}) => { const d = parse(extra); return orderRequestFingerprint(d, new Map(d.items.map((i) => [i.productId, i.quantity]))); };
 const required = (rows = published) => { const r = selectRequiredLegalVersions(rows, NOW); assert.equal(r.ok, true); return r.ok ? r.required : []; };
@@ -123,7 +123,7 @@ test("changed quantity / product / customer data / payment provider => different
 
 test("changed installation preference or note => different fingerprint", () => {
   assert.notEqual(fp({ note: "Zile basmayın" }), fp());
-  assert.notEqual(fp({ installation: "delivery_only" }), fp());
+  assert.notEqual(fp({ installation: "survey_then_install" }), fp());
 });
 
 test("changed legal acceptance version => different fingerprint", () => {
@@ -164,9 +164,9 @@ test("notes are trimmed and control characters are stripped", () => {
   assert.equal(parse().note, "");
 });
 
-test("an unknown installation preference is rejected and the default is survey_then_install", () => {
+test("an unknown installation preference is rejected and installation is NOT pre-selected (default delivery_only)", () => {
   assert.equal(orderRequestSchema.safeParse({ ...base, installation: "whatever" }).success, false);
-  assert.equal(parse().installation, "survey_then_install");
+  assert.equal(parse().installation, "delivery_only");
 });
 
 test("the note and installation preference are persisted on the order", () => {
@@ -193,6 +193,12 @@ test("checkout.html has a legal consent container and never pre-checks anything"
   assert.doesNotMatch(template, /\bchecked\b/, "generated checkboxes must be unchecked by default");
 });
 
-test("marketing consent is not part of the legal acceptance UI", () => {
-  assert.doesNotMatch(html, /pazarlama|marketing|kampanya/i);
+test("optional marketing consent is separate from the legal acceptance UI, unchecked and not required", () => {
+  const legalFieldset = html.match(/<fieldset[^>]*data-legal-consents[^>]*>[\s\S]*?<\/fieldset>/)![0];
+  assert.doesNotMatch(legalFieldset, /marketing|pazarlama|tanıtım/i, "marketing lives outside the mandatory legal block");
+  const marketing = html.match(/<fieldset[^>]*data-marketing-consents[^>]*>[\s\S]*?<\/fieldset>/)![0];
+  const boxes = [...marketing.matchAll(/<input\b[^>]*>/g)].map((m) => m[0]);
+  assert.deepEqual(boxes.map((b) => b.match(/data-marketing-channel="(\w+)"/)![1]), ["sms", "email", "whatsapp"]);
+  for (const box of boxes) { assert.doesNotMatch(box, /\bchecked\b|\brequired\b/); assert.match(box, /type="checkbox"/); }
+  assert.doesNotMatch(html, /hepsini kabul|accept all/i);
 });

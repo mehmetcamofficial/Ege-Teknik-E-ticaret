@@ -34,14 +34,26 @@ export const orderRequestSchema = z.object({
   address: z.string().trim().min(8).max(500),
   paymentProvider: z.enum(["PayTR", "iyzico", "discovery"]),
   items: z.array(z.object({ productId: z.string().min(1).max(160), quantity: z.number().int().min(1).max(10) })).min(1).max(20),
-  installation: z.enum(installationPreferences).default("survey_then_install"),
+  // Installation is OPTIONAL and must never be pre-selected: an omitted value means no installation.
+  installation: z.enum(installationPreferences).default("delivery_only"),
   // Free-text delivery note: trimmed, length-limited, control characters removed.
   note: z.string().trim().max(500).transform((value) => value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")).default(""),
   // Ids of the legal document versions the customer accepted. The server decides which versions are
   // required; these are only checked against that set, never trusted as the source of truth.
+  // The total shown to the customer. A guard only: the server recomputes every amount and refuses on mismatch.
+  expectedTotal: z.number().int().min(0).max(100_000_000),
+  // Optional, channel-specific marketing permission. Only an explicit `true` counts; omitted/false = no permission.
+  marketing: z.object({ sms: z.boolean().default(false), email: z.boolean().default(false), whatsapp: z.boolean().default(false) }).default({ sms: false, email: false, whatsapp: false }),
   legalAcceptances: z.array(z.string().min(1).max(100)).max(10).refine((ids) => new Set(ids).size === ids.length, "Duplicate legal acceptance").default([]),
 });
 export type OrderRequest = z.infer<typeof orderRequestSchema>;
+
+export const marketingChannelList = ["sms", "email", "whatsapp"] as const;
+export type MarketingChannel = typeof marketingChannelList[number];
+/** The channels the customer explicitly ticked, in a fixed order. */
+export function marketingChannels(marketing: OrderRequest["marketing"]): MarketingChannel[] {
+  return marketingChannelList.filter((channel) => marketing[channel] === true);
+}
 
 export type PricedProduct = { id: string; price: number; vatRateBps: number };
 
@@ -63,10 +75,10 @@ export function computeOrderTotals(lines: readonly { lineTotal: number; vatAmoun
  * Idempotency-Key replay can be told apart from a key re-used for a different request.
  * Canonical form: a fixed-order JSON array (never an object, so key order cannot vary), items sorted
  * by productId, legal version ids sorted. Client prices/totals and accepted_at are never part of it.
- * Bump the leading version number if the layout ever changes.
+ * v2 adds the marketing channel choices. Bump the leading version number if the layout ever changes.
  */
 export function orderRequestFingerprint(data: OrderRequest, quantities: ReadonlyMap<string, number>): string {
   const items = [...quantities].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  const canonical = JSON.stringify([1, data.customerName, data.phone, data.email, data.city, data.address, data.paymentProvider, data.installation, data.note, items, [...data.legalAcceptances].sort()]);
+  const canonical = JSON.stringify([2, data.customerName, data.phone, data.email, data.city, data.address, data.paymentProvider, data.installation, data.note, items, [...data.legalAcceptances].sort(), marketingChannels(data.marketing)]);
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }

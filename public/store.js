@@ -45,7 +45,7 @@ function cartLines(entries,products){
 }
 function cartTotal(lines){return (lines||[]).reduce((sum,line)=>line.available?sum+line.product.price*line.quantity:sum,0)}
 function orderItemsPayload(entries,products){return cartLines(entries,products).filter(line=>line.available).map(line=>({productId:line.productId,quantity:line.quantity}))}
-function buildOrderPayload(fields,entries,products){return {customerName:fields.customerName||'',phone:fields.phone||'',email:fields.email||'',city:fields.city||'',address:fields.address||'',paymentProvider:fields.paymentProvider||'discovery',installation:fields.installation||'survey_then_install',note:fields.note||'',legalAcceptances:fields.legalAcceptances||[],items:orderItemsPayload(entries,products)}}
+function buildOrderPayload(fields,entries,products){return {customerName:fields.customerName||'',phone:fields.phone||'',email:fields.email||'',city:fields.city||'',address:fields.address||'',paymentProvider:fields.paymentProvider||'discovery',installation:fields.installation||'delivery_only',note:fields.note||'',legalAcceptances:fields.legalAcceptances||[],items:orderItemsPayload(entries,products)}}
 /* Required legal documents come from GET /api/legal/required (server-decided version ids). Checkout only
    ever submits the ids of boxes the customer actively ticked; the server re-validates them. */
 let legalRequirements=null;
@@ -80,6 +80,36 @@ function productCard(p){const fav=getFavorites().includes(p.id),cmp=getCompare()
 /* Real capacities are written "12000 BTU/h"; the chips say "12.000". Compare digits only, and only for BTU-rated products. */
 const capacityBtuDigits=p=>/btu/i.test(p.capacity||'')?p.capacity.replace(/\D/g,''):'';
 function renderCatalog(){const root=document.querySelector('[data-products]');if(!root)return;const count=document.querySelector('[data-result-count]');if(!catalogAuthoritative()){root.innerHTML=`<div class="empty">${catalogNotice()}</div>`;count?.replaceChildren();return}const cat=document.querySelector('[name=category]:checked')?.value||'Tümü',q=(document.querySelector('#catalog-search')?.value||'').toLocaleLowerCase('tr'),btu=document.querySelector('.chip.active')?.dataset.btu||'Tümü';const ps=getProducts().filter(p=>(cat==='Tümü'||p.category===cat)&&(btu==='Tümü'||capacityBtuDigits(p)===btu.replace(/\D/g,''))&&(!q||[p.name,p.series,p.category].join(' ').toLocaleLowerCase('tr').includes(q)));root.innerHTML=ps.length?ps.map(productCard).join(''):'<div class="empty">Bu filtrelerle eşleşen ürün bulunamadı.</div>';count?.replaceChildren(document.createTextNode(ps.length+' ürün'))}
+/* Delivery/installation tariffs come from GET /api/checkout/charges (display only; the server recomputes every amount
+   and refuses an order whose displayed total differs). A tariff that is not configured is "undetermined": the order cannot
+   be submitted as a final-price order and the customer is sent to the quote/contact path instead. */
+let checkoutTariffs=null;
+async function loadCheckoutCharges(){checkoutTariffs=null;try{const response=await fetch('/api/checkout/charges');const data=await response.json().catch(()=>({}));if(response.ok&&data&&data.delivery&&data.installation)checkoutTariffs=data}catch{}renderChargeSummary()}
+const tariffKnown=t=>Boolean(t&&t.status==='configured'&&Number.isInteger(t.amount)&&t.amount>=0);
+function checkoutSummary(productTotal,installation,tariffs){
+  if(!tariffs)return {rows:[],total:null,blocked:['unavailable']};
+  const blocked=[],rows=[];let total=productTotal;
+  if(tariffKnown(tariffs.delivery)){total+=tariffs.delivery.amount;rows.push(['Teslimat',money(tariffs.delivery.amount)])}else{blocked.push('delivery');rows.push(['Teslimat','Henüz belirlenmedi'])}
+  if(installation==='survey_then_install'){if(tariffKnown(tariffs.installation)){total+=tariffs.installation.amount;rows.push(['Kurulum (standart paket)',money(tariffs.installation.amount)])}else{blocked.push('installation');rows.push(['Kurulum (standart paket)','Henüz belirlenmedi'])}}
+  else rows.push(['Kurulum','Seçilmedi'])
+  return {rows,total:blocked.length?null:total,blocked}}
+function checkoutNotice(blocked){
+  if(blocked.includes('unavailable'))return 'Teslimat ve kurulum bedelleri şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.';
+  const what=blocked.map(b=>b==='delivery'?'teslimat':'kurulum').join(' ve ');
+  return `Bu sipariş için ${what} bedeli henüz belirlenmedi; kesin tutar olmadan sipariş oluşturulamaz. <a href="contact.html?subject=${blocked.includes('installation')?'kesif':'urun'}">Kesin fiyat teklifi için bize ulaşın.</a>`}
+function renderChargeSummary(){
+  const box=document.querySelector('[data-charge-summary]');if(!box)return;
+  const totalEl=document.querySelector('[data-total]'),notice=document.querySelector('[data-charge-notice]'),submit=document.querySelector('[data-submit-order]'),select=document.querySelector('[data-installation]');
+  if(!catalogAuthoritative()){box.innerHTML='';if(totalEl)totalEl.textContent='—';return}
+  const lines=cartLines(getCart(),getProducts()),summary=checkoutSummary(cartTotal(lines),select?select.value:'delivery_only',checkoutTariffs),hasItems=lines.some(l=>l.available);
+  box.innerHTML=summary.rows.map(([label,text])=>`<div class="summary-row"><span>${esc(label)}</span><b>${esc(text)}</b></div>`).join('');
+  if(totalEl)totalEl.textContent=summary.total===null?'Kesinleşmedi':money(summary.total);
+  if(notice){notice.hidden=summary.total!==null;notice.innerHTML=summary.total===null?checkoutNotice(summary.blocked):''}
+  if(submit)submit.disabled=summary.total===null||!hasItems}
+function marketingChoices(boxes){const choices={sms:false,email:false,whatsapp:false};Array.from(boxes||[]).forEach(box=>{if(box.checked&&Object.hasOwn(choices,box.dataset.marketingChannel))choices[box.dataset.marketingChannel]=true});return choices}
+/* KVKK Aydınlatma is informational, never a checkbox. The link points at the currently published document; if none is published the page says so. */
+async function renderKvkkNotices(){const slots=document.querySelectorAll('[data-kvkk-notice]');if(!slots.length)return;let doc=null;try{const response=await fetch('/api/legal/documents');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents))doc=data.documents.find(d=>d.slug==='kvkk')||null}catch{}
+  slots.forEach(slot=>{slot.innerHTML=doc?`Kişisel verilerinizin işlenmesine ilişkin <a href="${esc(legalVersionHref(doc))}" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni inceleyebilirsiniz.`:'KVKK Aydınlatma Metni henüz yayınlanmamıştır.'})}
 function renderCheckout(){const root=document.querySelector('[data-cart-items]');if(!root)return;const subtotalEl=document.querySelector('[data-subtotal]'),totalEl=document.querySelector('[data-total]'),setTotals=t=>{if(subtotalEl)subtotalEl.textContent=t;if(totalEl)totalEl.textContent=t};
   // Never show a price or an "unavailable" verdict for a line before the server catalog has answered.
   if(!catalogAuthoritative()){root.innerHTML=getCart().length?`<p>${catalogNotice()}</p>`:'<p>Sepetiniz boş.</p>';setTotals('—');return}
@@ -90,7 +120,7 @@ function renderCheckout(){const root=document.querySelector('[data-cart-items]')
   const rows=[...sellable.map(l=>`<div class="summary-row"><span>${esc(l.product.name)}<br><small>${esc(l.product.capacity)} · ${l.quantity} adet</small></span><span>${money(l.product.price*l.quantity)} <button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}">×</button></span></div>`),
     ...blocked.map(l=>`<div class="summary-row"><span>Bu ürün artık satışta değil<br><small>Ürün kodu: ${esc(l.productId)}</small></span><span><button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}">×</button></span></div>`)];
   root.innerHTML=rows.length?rows.join(''):'<p>Sepetiniz boş.</p>';
-  setTotals(money(cartTotal(lines)))}
+  if(subtotalEl)subtotalEl.textContent=money(cartTotal(lines));renderChargeSummary()}
 function removeCart(productId){writeCart(readCartRaw().filter(entry=>(entry?.productId??entry?.id)!==productId));renderCheckout()}
 async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=f.querySelector('button.primary'),result=f.querySelector('[data-order-result]'),say=t=>{if(result)result.textContent=t};
   if(!catalogAuthoritative()){say('Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
@@ -98,20 +128,22 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=
   if(!payload.items.length){toast('Sepetiniz boş');say('Sepetinizde satın alınabilir ürün yok.');return}
   const accepted=acceptedLegalVersionIds(f.querySelectorAll('[data-legal-version]'));
   if(!legalConsentsComplete(legalRequirements,accepted)){say(legalRequirements?'Devam etmek için tüm yasal metinleri kabul etmelisiniz.':'Yasal metinler yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.');return}
-  const d=new FormData(f);Object.assign(payload,{customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city'),address:d.get('address'),paymentProvider:d.get('provider'),installation:d.get('installation')||'survey_then_install',note:d.get('note')||'',legalAcceptances:accepted});
+  const summary=checkoutSummary(cartTotal(cartLines(entries,products)),f.querySelector('[name=installation]')?.value||'delivery_only',checkoutTariffs);
+  if(summary.total===null){say(checkoutNotice(summary.blocked).replace(/<[^>]*>/g,''));return}
+  const d=new FormData(f);Object.assign(payload,{expectedTotal:summary.total,marketing:marketingChoices(f.querySelectorAll('[data-marketing-channel]')),customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city'),address:d.get('address'),paymentProvider:d.get('provider'),installation:d.get('installation')||'delivery_only',note:d.get('note')||'',legalAcceptances:accepted});
   const attemptKey=orderAttemptKey(sessionStorage);
   if(button){button.disabled=true;button.textContent='Sipariş kaydediliyor…'}
   try{
     const response=await fetch('/api/orders',{method:'POST',headers:{'content-type':'application/json','idempotency-key':attemptKey},body:JSON.stringify(payload)});
     const data=await response.json().catch(()=>({}));
     /* The attempt key is released only when the server rejected the request itself (invalid, legal version changed, key reused for a different request), so the corrected form gets a fresh key. Stock conflicts, 5xx and network failures keep it so a retry dedupes. */
-    if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();throw new Error(data.error||'Sipariş kaydedilemedi')}
+    if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();throw new Error(data.error||'Sipariş kaydedilemedi')}
     // Cart and attempt key are cleared only once the server has confirmed the order.
     clearOrderAttemptKey(sessionStorage);writeCart([]);renderCheckout();
     if(result)result.innerHTML=`<b>Siparişiniz kaydedildi.</b><br>Takip numarası: ${esc(data.orderNumber)}<br>Ege Teknik ekibi ödeme ve montaj için sizinle iletişime geçecek.`;
     if(button)button.textContent='Sipariş Kaydedildi'
   }catch(error){
-    if(button){button.disabled=false;button.textContent='Tekrar Dene'}
+    if(button){button.disabled=false;button.textContent='Tekrar Dene'}renderChargeSummary();
     say(error.message||'Sipariş kaydedilemedi. Bağlantınızı kontrol edip tekrar deneyin.')
   }}
 
@@ -144,7 +176,7 @@ function handleDelegatedClick(e){
 }
 document.addEventListener('click',handleDelegatedClick);
 
-document.addEventListener('DOMContentLoaded',()=>{updateCartCount();updateFavoritesCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);if(document.querySelector('[data-legal-consents]'))void loadLegalRequirements();document.querySelectorAll('[name=category]').forEach(x=>x.addEventListener('change',renderCatalog));document.querySelector('#catalog-search')?.addEventListener('input',renderCatalog);document.querySelectorAll('.chip').forEach(x=>x.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(y=>y.classList.remove('active'));x.classList.add('active');renderCatalog()}));void loadCatalog()});
+document.addEventListener('DOMContentLoaded',()=>{updateCartCount();updateFavoritesCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);if(document.querySelector('[data-legal-consents]'))void loadLegalRequirements();if(document.querySelector('[data-charge-summary]'))void loadCheckoutCharges();document.querySelector('[data-installation]')?.addEventListener('change',renderChargeSummary);void renderKvkkNotices();document.querySelectorAll('[name=category]').forEach(x=>x.addEventListener('change',renderCatalog));document.querySelector('#catalog-search')?.addEventListener('input',renderCatalog);document.querySelectorAll('.chip').forEach(x=>x.addEventListener('click',()=>{document.querySelectorAll('.chip').forEach(y=>y.classList.remove('active'));x.classList.add('active');renderCatalog()}));void loadCatalog()});
 
 const business={name:'Ege Teknik',phone:'0542 795 75 60',phoneHref:'tel:+905427957560',wa:'https://wa.me/905427957560',address:'İkiçeşmelik Mahallesi Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın',map:'https://share.google/YHInB4tNwB2khqC10'};
 function renderHeader(){const root=document.querySelector('[data-site-header]');if(!root)return;root.innerHTML=`<header class="store-header"><div class="store-top"><span>Kuşadası merkezli • Tüm Ege Bölgesi</span><a href="${business.phoneHref}">${business.phone}</a></div><nav class="store-nav"><a class="brand" href="/">EGE TEKNİK<small>KLİMA & TEKNOLOJİ</small></a><button class="menu-toggle ghost" data-action="toggle-menu">Menü</button><div class="nav-links"><a href="catalog.html">GREE Klimalar</a><a href="services.html">Hizmetler</a><a href="selector.html">Klima Seçici</a><a href="regions.html">Hizmet Bölgeleri</a><a href="blog.html">Rehber</a><a href="contact.html">İletişim</a></div><div class="header-tools"><a href="favorites.html" title="Favoriler">♡</a><a href="compare.html" title="Karşılaştır">⇄</a><a class="ghost" href="checkout.html">Sepet <span class="cart-count" data-cart-count>0</span></a></div></nav></header>`}

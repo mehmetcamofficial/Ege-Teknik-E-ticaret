@@ -71,7 +71,7 @@ test("checkout does not present an inactive card payment as selectable or workin
   // confirm-later option, it is the default, and the page says plainly that no card payment is taken.
   const html = readFileSync("public/checkout.html", "utf8");
   const radios = [...html.matchAll(/<input\b[^>]*name="provider"[^>]*>/g)].map((m) => m[0]);
-  assert.equal(radios.length, 3);
+  assert.equal(radios.length, 4); // PayTR, iyzico and bank transfer are disabled; only confirm-later is live
   for (const radio of radios) {
     const live = /value="discovery"/.test(radio);
     assert.equal(/\sdisabled\b/.test(radio), !live, `${radio} enabled state`);
