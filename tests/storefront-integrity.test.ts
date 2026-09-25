@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { LIVE_HANDLER_ATTR, ORIGIN, apiProduct, fakeElement, featuredCard, loadStorefront } from "./support/storefront-sandbox.ts";
+import { LIVE_HANDLER_ATTR, ORIGIN, apiProduct, confirmationBox, fakeElement, featuredCard, loadStorefront } from "./support/storefront-sandbox.ts";
 
 const homepage = readFileSync("public/index.html", "utf8");
 const storeJs = readFileSync("public/store.js", "utf8");
@@ -219,17 +219,32 @@ test("a hostile ?city= value is never echoed into the region page", () => {
 test("a hostile order number in the server response is shown as text", async () => {
   const result = { textContent: "", innerHTML: "" };
   const button = { disabled: false, textContent: "" };
-  const form = { fields: { customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", provider: "PayTR" }, querySelectorAll: (s: string) => (s === "[data-legal-version]" ? [{ checked: true, dataset: { legalVersion: "ver-ds-1" } }] : []), querySelector: (s: string) => (s === "button.primary" ? button : s === "[data-order-result]" ? result : null) };
+  const form = { ...fakeElement(), hidden: false, fields: { customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", provider: "PayTR" }, querySelectorAll: (s: string) => (s === "[data-legal-version]" ? [{ checked: true, dataset: { legalVersion: "ver-ds-1" } }] : []), querySelector: (s: string) => (s === "button.primary" ? button : s === "[data-order-result]" ? result : null) };
+  const box = confirmationBox();
   const store = loadStorefront({
     storage: { "ege-cart": [{ productId: "synthetic-product-1", quantity: 1 }] },
-    api: { products: [apiProduct()], order: async () => ({ ok: true, status: 201, json: async () => ({ ok: true, orderNumber: PAYLOAD }) }) },
+    elements: { "[data-order-confirmation]": box, "[data-checkout-form]": form },
+    api: {
+      products: [apiProduct()],
+      order: async () => ({
+        ok: true, status: 201, json: async () => ({
+          ok: true, orderNumber: PAYLOAD, status: "pending_payment",
+          items: [{ productName: "Sentetik Ürün 12000 BTU/h", quantity: 1, unitPrice: 12_345, lineTotal: 12_345 }],
+          subtotal: 10_288, vatTotal: 2_057, shippingTotal: 0, installationTotal: 0, total: 12_345,
+          delivery: { name: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", installation: "delivery_only" },
+        }),
+      }),
+    },
   });
   await store.fn<() => Promise<void>>("loadCatalog")();
   await store.fn<() => Promise<unknown>>("loadLegalRequirements")();
   await store.fn<() => Promise<unknown>>("loadCheckoutCharges")();
   await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: form });
-  assert.match(result.innerHTML, /Siparişiniz kaydedildi/);
-  assertInert(result.innerHTML, "order confirmation");
+  const numberCell = box.children["[data-confirmation-number]"];
+  assert.match(numberCell.innerHTML, /Takip numarası/);
+  assertInert(numberCell.innerHTML, "order confirmation number");
+  assert.equal(box.hidden, false, "the confirmation panel is shown");
+  assert.equal(form.hidden, true, "the form is hidden once the order is confirmed");
 });
 
 test("homepage featured fields are written as text, so a hostile product name stays inert", async () => {

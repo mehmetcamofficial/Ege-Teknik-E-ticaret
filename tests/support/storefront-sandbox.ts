@@ -16,6 +16,7 @@ export type FakeElement = {
   textContent: string;
   value: string;
   checked?: boolean;
+  hidden?: boolean;
   dataset: Record<string, string>;
   style: { setProperty: (name: string, value: string) => void };
   classList: { add: () => void; remove: () => void; toggle: () => void };
@@ -59,6 +60,28 @@ export function featuredCard(productId: string) {
       return field && fields[field] ? [fields[field]] : [];
     },
   };
+}
+
+/**
+ * The [data-order-confirmation] subtree renderOrderConfirmation() writes into. Each
+ * [data-confirmation-*] child is a real fakeElement so assertions can read back exactly
+ * what was written (innerHTML/textContent), the same way a real DOM would hold it.
+ */
+export function confirmationBox() {
+  const children: Record<string, FakeElement & { focus?: () => void; hidden?: boolean }> = {
+    "[data-confirmation-heading]": { ...fakeElement(), focus: () => {} },
+    "[data-confirmation-number]": fakeElement(),
+    "[data-confirmation-items]": fakeElement(),
+    "[data-confirmation-subtotal]": fakeElement(),
+    "[data-confirmation-vat]": fakeElement(),
+    "[data-confirmation-shipping]": fakeElement(),
+    "[data-confirmation-installation-row]": { ...fakeElement(), hidden: true },
+    "[data-confirmation-installation]": fakeElement(),
+    "[data-confirmation-total]": fakeElement(),
+    "[data-confirmation-delivery]": fakeElement(),
+  };
+  const box = { ...fakeElement(), hidden: true, scrollIntoView: () => {}, querySelector: (selector: string) => children[selector] ?? null, children };
+  return box;
 }
 
 type ApiValue = Record<string, unknown>[] | "fail" | "pending";

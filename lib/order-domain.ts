@@ -70,6 +70,58 @@ export function computeOrderTotals(lines: readonly { lineTotal: number; vatAmoun
   return { subtotal: total - vatTotal, vatTotal, total };
 }
 
+// ---- guest order confirmation --------------------------------------------------------------------
+// What the customer may see immediately after placing (or replaying) an order: real order data only,
+// projected through an explicit allow-list. No internal id ever appears here - not the order id, the
+// customer id it was billed to, the address id, or the idempotency key. Both the just-created and the
+// idempotent-replay response in app/api/orders/route.ts build their answer through this one function,
+// so the two can never quietly drift apart.
+export type PublicOrderItem = { productName: string; quantity: number; unitPrice: number; lineTotal: number };
+export type PublicOrderConfirmation = {
+  orderNumber: string;
+  status: OrderStatus;
+  items: PublicOrderItem[];
+  subtotal: number;
+  vatTotal: number;
+  shippingTotal: number;
+  installationTotal: number;
+  total: number;
+  delivery: { name: string; phone: string; email: string; city: string; address: string; installation: string };
+};
+
+export function toPublicOrderItem(line: { product: { name: string }; quantity: number; lineTotal: number }, unitPrice: number): PublicOrderItem {
+  return { productName: line.product.name, quantity: line.quantity, unitPrice, lineTotal: line.lineTotal };
+}
+
+export function toOrderConfirmation(input: {
+  orderNumber: string;
+  status: string;
+  items: readonly PublicOrderItem[];
+  subtotal: number;
+  vatTotal: number;
+  shippingTotal: number;
+  installationTotal: number;
+  total: number;
+  customerName: string;
+  phone: string;
+  email: string;
+  city: string;
+  address: string;
+  installation: string;
+}): PublicOrderConfirmation {
+  return {
+    orderNumber: input.orderNumber,
+    status: input.status as OrderStatus,
+    items: input.items.map((item) => ({ ...item })),
+    subtotal: input.subtotal,
+    vatTotal: input.vatTotal,
+    shippingTotal: input.shippingTotal,
+    installationTotal: input.installationTotal,
+    total: input.total,
+    delivery: { name: input.customerName, phone: input.phone, email: input.email, city: input.city, address: input.address, installation: input.installation },
+  };
+}
+
 /**
  * Deterministic fingerprint of the meaningful order-creation input, stored on the order so that an
  * Idempotency-Key replay can be told apart from a key re-used for a different request.

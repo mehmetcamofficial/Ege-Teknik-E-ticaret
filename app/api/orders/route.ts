@@ -3,7 +3,7 @@ import { addresses, customers, inventory, marketingConsents, orderItems, orderLe
 import { finalizeOrderTotals, priceCharges, totalMatchesDisplayed } from "@/lib/checkout-charges";
 import { checkLegalAcceptance, missingNoticeSlugs } from "@/lib/legal";
 import { loadCurrentLegalIndex, loadRequiredCheckoutLegalVersions } from "@/lib/legal-db";
-import { computeOrderTotals, marketingChannels, orderRequestFingerprint, orderRequestSchema, priceOrderLines } from "@/lib/order-domain";
+import { computeOrderTotals, marketingChannels, orderRequestFingerprint, orderRequestSchema, priceOrderLines, toOrderConfirmation, toPublicOrderItem } from "@/lib/order-domain";
 import { idempotencyKey } from "@/lib/request-security";
 import { publicRoute, rateLimit, readJson } from "@/lib/http-security";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
@@ -19,10 +19,16 @@ async function createOrder(request: Request) {
   const fingerprint = orderRequestFingerprint(parsed.data, requested);
   // Same key + same request => the original result; same key + different request => conflict.
   const replay = async () => {
-    const [existing] = await db.select({ orderNumber: orders.orderNumber, total: orders.total, status: orders.status, requestFingerprint: orders.requestFingerprint }).from(orders).where(eq(orders.idempotencyKey, key)).limit(1);
+    const [existing] = await db.select({
+      id: orders.id, orderNumber: orders.orderNumber, total: orders.total, status: orders.status, requestFingerprint: orders.requestFingerprint,
+      subtotal: orders.subtotal, vatTotal: orders.vatTotal, shippingTotal: orders.shippingTotal, installationTotal: orders.installationTotal,
+      customerName: orders.customerName, phone: orders.phone, email: orders.email, city: orders.city, address: orders.address, installationPreference: orders.installationPreference,
+    }).from(orders).where(eq(orders.idempotencyKey, key)).limit(1);
     if (!existing) return null;
     if (existing.requestFingerprint !== fingerprint) return Response.json({ error: "Bu istek anahtarı farklı bir sipariş için kullanıldı.", code: "IDEMPOTENCY_KEY_REUSED" }, { status: 409 });
-    return Response.json({ ok: true, orderNumber: existing.orderNumber, total: existing.total, status: existing.status });
+    // The order this key already created - never re-run against inventory, just retell the same story.
+    const items = await db.select({ productName: orderItems.productName, quantity: orderItems.quantity, unitPrice: orderItems.unitPrice, lineTotal: orderItems.lineTotal }).from(orderItems).where(eq(orderItems.orderId, existing.id)).orderBy(orderItems.createdAt);
+    return Response.json({ ok: true, ...toOrderConfirmation({ orderNumber: existing.orderNumber, status: existing.status, items, subtotal: existing.subtotal, vatTotal: existing.vatTotal, shippingTotal: existing.shippingTotal, installationTotal: existing.installationTotal, total: existing.total, customerName: existing.customerName, phone: existing.phone, email: existing.email, city: existing.city, address: existing.address, installation: existing.installationPreference ?? "delivery_only" }) });
   };
   const replayed = await replay(); if (replayed) return replayed;
   const legal = await loadRequiredCheckoutLegalVersions();
@@ -61,6 +67,7 @@ async function createOrder(request: Request) {
       await tx.insert(orderLegalAcceptances).values(legal.required.map((version) => ({ id: crypto.randomUUID(), orderId: id, documentVersionId: version.versionId, acceptedAt })));
     });
   } catch (error) { if (error instanceof IdempotentReplay) return (await replay()) ?? Response.json({ error: "İstek işlenemedi." }, { status: 409 }); if (error instanceof Error && error.message.startsWith("OUT_OF_STOCK:")) return Response.json({ error: `${error.message.slice(13)} için yeterli stok yok.` }, { status: 409 }); throw error; }
-  return Response.json({ ok: true, orderNumber, total, status: "pending_payment" }, { status: 201 });
+  const items = lines.map((line) => toPublicOrderItem(line, line.product.price));
+  return Response.json({ ok: true, ...toOrderConfirmation({ orderNumber, status: "pending_payment", items, subtotal, vatTotal, shippingTotal, installationTotal, total, customerName: parsed.data.customerName, phone: parsed.data.phone, email: parsed.data.email, city: parsed.data.city, address: parsed.data.address, installation: parsed.data.installation }) }, { status: 201 });
 }
 export const POST=publicRoute(createOrder);

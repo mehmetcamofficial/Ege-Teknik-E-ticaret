@@ -9,7 +9,22 @@
 <body class="store">
   <header class="store-header"><nav class="store-nav"><a class="brand" href="index.html">EGE TEKNİK<small>GÜVENLİ SİPARİŞ</small></a><div class="nav-links"><a href="catalog.html">Mağazaya dön</a></div><span>Güvenli bağlantı (HTTPS)</span></nav></header>
   <main class="store-shell">
-    <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Teslimat bilgilerinizi girin. Siparişi onaylamadan önce ödenecek kesin tutar ve varsa ek masraflar aşağıda gösterilir; gösterilmeyen bir bedel sizden talep edilmez.</p></div></div>
+    <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Teslimat bilgilerinizi girin. Siparişi onaylamadan önce ödenecek kesin tutar ve varsa ek masraflar aşağıda gösterilir; gösterilmeyen bir bedel sizden talep edilmez. <b>Hesap oluşturmadan, misafir olarak sipariş verebilirsiniz.</b></p></div></div>
+    <section class="panel" data-order-confirmation hidden>
+      <h2 tabindex="-1" data-confirmation-heading>Siparişiniz alındı</h2>
+      <p data-confirmation-number></p>
+      <div data-confirmation-items></div>
+      <div class="summary-row"><span>Ara toplam</span><b data-confirmation-subtotal></b></div>
+      <div class="summary-row"><span>KDV</span><b data-confirmation-vat></b></div>
+      <div class="summary-row"><span>Teslimat</span><b data-confirmation-shipping></b></div>
+      <div class="summary-row" data-confirmation-installation-row hidden><span>Kurulum</span><b data-confirmation-installation></b></div>
+      <div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-confirmation-total></b></div>
+      <p class="notice" data-confirmation-payment-notice>Online kartla ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi. Ekibimiz ödeme yöntemini teyit etmek için sizinle iletişime geçecek.</p>
+      <h3>Teslimat bilgileri</h3>
+      <p data-confirmation-delivery></p>
+      <div class="notice" data-confirmation-account>İleride siparişlerinizi kolayca takip etmek isterseniz <a href="/account">hesap oluşturabilirsiniz</a>. Bu tamamen isteğe bağlıdır ve siparişinizi etkilemez; bu misafir siparişi hesabınıza otomatik eklenmez.</div>
+      <p><a class="ghost" href="catalog.html">Alışverişe devam et</a></p>
+    </section>
     <form class="checkout-grid" data-checkout-form>
       <section class="panel">
         <h2>Teslimat bilgileri</h2>
@@ -29,7 +44,7 @@
         <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Ödeme yöntemi teyit edilir; bu sırada yukarıda gösterilen tutarın dışında ek bir bedel istenmez. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
         <div class="notice" id="payment-status">Online kartla ödeme henüz aktif değil; bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Siparişiniz “ödeme bekliyor” durumuyla kaydedilir, ardından sizinle iletişime geçilir.</div>
       </section>
-      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
+      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>KDV (ara toplama dahil)</span><b data-vat>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
         <p class="notice" data-kvkk-notice></p>
         <fieldset class="marketing" data-marketing-consents aria-label="İsteğe bağlı iletişim izinleri"><legend>Tanıtım ve duyuru iletileri (isteğe bağlı)</legend>
           <label class="consent"><input type="checkbox" data-marketing-channel="sms"><span>SMS ile tanıtım ve duyuru iletisi almak istiyorum.</span></label>

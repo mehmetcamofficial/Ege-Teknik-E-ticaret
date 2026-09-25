@@ -25,7 +25,10 @@
 .filter-group label{align-items:center;min-height:32px;margin:4px 0;cursor:pointer}
 .filter-group input[type=radio],.filter-group input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--p)}
 .product .actions>*{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+[data-submit-order]{min-height:44px}
+[data-order-confirmation]{scroll-margin-top:110px}
 @media(max-width:1000px){.chip{min-height:44px}.store .card-tools button{min-height:44px;min-width:44px}.filter-group label{min-height:44px;margin:0}}
+@media(max-width:1000px){.summary-row button.ghost{min-height:44px;min-width:44px}}
 
 /* small text floor */
 .spec,.badge,.price small,.card-tools button{font-size:12px}

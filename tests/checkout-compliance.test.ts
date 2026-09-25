@@ -171,3 +171,38 @@ test("the misleading 'Keşifte netleşir' total row is gone; the summary shows a
   assert.match(store, /summary\.total===null\?'Kesinleşmedi'/);
   assert.match(store, /if\(submit\)submit\.disabled=summary\.total===null\|\|!hasItems/);
 });
+
+// ---- Phase 5B: guest checkout is the only path, and confirmation exposes no internal id -----------
+test("checkout never requires an account: no sign-in/register control on the page, and guest checkout is stated explicitly", () => {
+  assert.doesNotMatch(html, /sign[\s-]?in|giriş yap|kayıt ol|hesap oluşturun ve devam/i);
+  assert.match(html, /Hesap oluşturmadan, misafir olarak sipariş verebilirsiniz/);
+});
+test("the post-order account offer is optional, non-blocking and never claims the guest order will appear in it", () => {
+  assert.match(html, /data-confirmation-account/);
+  assert.match(html, /isteğe bağlıdır ve siparişinizi etkilemez/);
+  // The one honest claim it may make is that the account link exists - never that THIS order is now in it.
+  assert.doesNotMatch(html, /bu sipariş(i|inizi)? hesabınız(da|a)/i);
+  assert.match(html, /bu misafir siparişi hesabınıza otomatik eklenmez/);
+});
+test("both the just-created and the idempotent-replay response are built by the same allow-list function", () => {
+  const matches = [...route.matchAll(/toOrderConfirmation\(/g)];
+  assert.equal(matches.length, 2, "toOrderConfirmation must be called exactly twice: create and replay");
+});
+test("neither order response ever inlines an internal id: only the allow-list helpers construct the JSON body", () => {
+  for (const forbidden of [/Response\.json\(\{[^}]*\bid:\s*(id|existing\.id)\b/, /Response\.json\(\{[^}]*\bcustomerId\b/, /Response\.json\(\{[^}]*\baddressId\b/, /Response\.json\(\{[^}]*idempotencyKey:\s*key\b/]) assert.doesNotMatch(route, forbidden);
+});
+test("the idempotency key is claimed before inventory is ever touched - a concurrent duplicate can never reserve stock twice", () => {
+  const claim = route.indexOf("onConflictDoNothing({ target: orders.idempotencyKey })");
+  const throwReplay = route.indexOf("throw new IdempotentReplay()");
+  const inventoryUpdate = route.indexOf("tx.update(inventory)");
+  assert.ok(claim > 0 && throwReplay > claim && throwReplay < inventoryUpdate, "claim -> replay-check -> inventory, in that order");
+});
+test("the inventory guard is an atomic conditional UPDATE (on_hand >= quantity), not a separate read-then-write", () => {
+  assert.match(route, /tx\.update\(inventory\)\.set\(\{[^}]*onHand:\s*sql`\$\{inventory\.onHand\}\s*-\s*\$\{line\.quantity\}`/);
+  assert.match(route, /gte\(inventory\.onHand,\s*line\.quantity\)/);
+  assert.match(route, /if\s*\(!changed\.length\)\s*throw new Error\(`OUT_OF_STOCK/);
+});
+test("a replayed request never re-touches inventory: replay() only selects, it has no insert/update/delete", () => {
+  const replayFn = route.slice(route.indexOf("const replay = async"), route.indexOf("const replayed = await replay()"));
+  assert.doesNotMatch(replayFn, /tx\.|\.insert\(|\.update\(|\.delete\(/);
+});

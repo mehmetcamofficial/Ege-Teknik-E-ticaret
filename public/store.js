@@ -113,18 +113,43 @@ function marketingChoices(boxes){const choices={sms:false,email:false,whatsapp:f
 /* KVKK Aydınlatma is informational, never a checkbox. The link points at the currently published document; if none is published the page says so. */
 async function renderKvkkNotices(){const slots=document.querySelectorAll('[data-kvkk-notice]');if(!slots.length)return;let doc=null;try{const response=await fetch('/api/legal/documents');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents))doc=data.documents.find(d=>d.slug==='kvkk')||null}catch{}
   slots.forEach(slot=>{slot.innerHTML=doc?`Kişisel verilerinizin işlenmesine ilişkin <a href="${esc(legalVersionHref(doc))}" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni inceleyebilirsiniz.`:'KVKK Aydınlatma Metni henüz yayınlanmamıştır.'})}
-function renderCheckout(){const root=document.querySelector('[data-cart-items]');if(!root)return;const subtotalEl=document.querySelector('[data-subtotal]'),totalEl=document.querySelector('[data-total]'),setTotals=t=>{if(subtotalEl)subtotalEl.textContent=t;if(totalEl)totalEl.textContent=t};
+/* Display-only mirror of lib/order-domain.ts's calculateLine: VAT carved out of a VAT-inclusive line total.
+   The server is always the authority - this only lets the customer see the breakdown before submitting. */
+function lineVat(unitPrice,quantity,vatRateBps){return Math.round(unitPrice*quantity*vatRateBps/(10000+vatRateBps))}
+function cartVat(lines){return (lines||[]).reduce((sum,l)=>l.available?sum+lineVat(l.product.price,l.quantity,l.product.vatRateBps||0):sum,0)}
+function renderCheckout(){const root=document.querySelector('[data-cart-items]');if(!root)return;const subtotalEl=document.querySelector('[data-subtotal]'),vatEl=document.querySelector('[data-vat]'),totalEl=document.querySelector('[data-total]'),setTotals=t=>{if(subtotalEl)subtotalEl.textContent=t;if(vatEl)vatEl.textContent=t;if(totalEl)totalEl.textContent=t};
   // Never show a price or an "unavailable" verdict for a line before the server catalog has answered.
   if(!catalogAuthoritative()){root.innerHTML=getCart().length?`<p>${catalogNotice()}</p>`:'<p class="cart-empty">Sepetiniz boş. <a class="primary inline" href="catalog.html">Ürünleri inceleyin</a></p>';setTotals('—');return}
   const lines=cartLines(getCart(),getProducts()),sellable=lines.filter(l=>l.available),blocked=lines.filter(l=>!l.available);
   /* type="button" is required, not cosmetic: these rows render inside checkout.html's
      <form data-checkout-form>, and a <button> with no type defaults to submit - so a
      remove click would also fire submitOrder and place an order for the rest of the cart. */
-  const rows=[...sellable.map(l=>`<div class="summary-row"><span>${esc(l.product.name)}<br><small>${esc(l.product.capacity)} · ${l.quantity} adet</small></span><span>${money(l.product.price*l.quantity)} <button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}">×</button></span></div>`),
+  const rows=[...sellable.map(l=>`<div class="summary-row"><span>${esc(l.product.name)}<br><small>${esc(l.product.capacity)} · ${money(l.product.price)} × ${l.quantity} adet</small></span><span>${money(l.product.price*l.quantity)} <button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}">×</button></span></div>`),
     ...blocked.map(l=>`<div class="summary-row"><span>Bu ürün artık satışta değil<br><small>Ürün kodu: ${esc(l.productId)}</small></span><span><button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}">×</button></span></div>`)];
   root.innerHTML=rows.length?rows.join(''):'<p class="cart-empty">Sepetiniz boş. <a class="primary inline" href="catalog.html">Ürünleri inceleyin</a></p>';
-  if(subtotalEl)subtotalEl.textContent=money(cartTotal(lines));renderChargeSummary()}
+  if(subtotalEl)subtotalEl.textContent=money(cartTotal(lines));if(vatEl)vatEl.textContent=money(cartVat(lines));renderChargeSummary()}
 function removeCart(productId){writeCart(readCartRaw().filter(entry=>(entry?.productId??entry?.id)!==productId));renderCheckout()}
+/* Guest order confirmation: built entirely from the server's response (lib/order-domain.ts's
+   toOrderConfirmation allow-list) - no internal id ever reaches this markup. Replaces the form
+   so the customer sees a clear result, not a still-fillable form with a one-line note. */
+const installationLabel=v=>v==='survey_then_install'?'Kurulum istiyorum (montaj keşif sonrası ayrıca fiyatlandırılır)':'Kurulum yok';
+function renderOrderConfirmation(data){
+  const box=document.querySelector('[data-order-confirmation]');if(!box)return;
+  const items=Array.isArray(data.items)?data.items:[],d=data.delivery||{};
+  box.querySelector('[data-confirmation-number]').innerHTML=`Takip numarası: <b>${esc(data.orderNumber)}</b>`;
+  box.querySelector('[data-confirmation-items]').innerHTML=items.map(i=>`<div class="summary-row"><span>${esc(i.productName)}<br><small>${money(i.unitPrice)} × ${esc(i.quantity)} adet</small></span><b>${money(i.lineTotal)}</b></div>`).join('');
+  box.querySelector('[data-confirmation-subtotal]').textContent=money(items.reduce((s,i)=>s+i.lineTotal,0));
+  box.querySelector('[data-confirmation-vat]').textContent=money(data.vatTotal);
+  box.querySelector('[data-confirmation-shipping]').textContent=money(data.shippingTotal);
+  const instRow=box.querySelector('[data-confirmation-installation-row]');
+  if(d.installation==='survey_then_install'){instRow.hidden=false;box.querySelector('[data-confirmation-installation]').textContent=data.installationTotal>0?money(data.installationTotal):'Keşif sonrası belirlenecek'}else instRow.hidden=true;
+  box.querySelector('[data-confirmation-total]').textContent=money(data.total);
+  box.querySelector('[data-confirmation-delivery]').innerHTML=`${esc(d.name)}<br>${esc(d.phone)} · ${esc(d.email)}<br>${esc(d.address)}, ${esc(d.city)}<br><small>${esc(installationLabel(d.installation))}</small>`;
+  box.hidden=false;
+  const form=document.querySelector('[data-checkout-form]');if(form)form.hidden=true;
+  const heading=box.querySelector('[data-confirmation-heading]');heading?.focus();
+  box.scrollIntoView({block:'start'})
+}
 async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=f.querySelector('button.primary'),result=f.querySelector('[data-order-result]'),say=t=>{if(result)result.textContent=t};
   if(!catalogAuthoritative()){say('Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
   const entries=getCart(),products=getProducts(),payload=buildOrderPayload({customerName:'',phone:'',email:'',city:'',address:'',paymentProvider:''},entries,products);
@@ -142,9 +167,8 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=
     /* The attempt key is released only when the server rejected the request itself (invalid, legal version changed, key reused for a different request), so the corrected form gets a fresh key. Stock conflicts, 5xx and network failures keep it so a retry dedupes. */
     if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();throw new Error(data.error||'Sipariş kaydedilemedi')}
     // Cart and attempt key are cleared only once the server has confirmed the order.
-    clearOrderAttemptKey(sessionStorage);writeCart([]);renderCheckout();
-    if(result)result.innerHTML=`<b>Siparişiniz kaydedildi.</b><br>Takip numarası: ${esc(data.orderNumber)}<br>Ege Teknik ekibi ödeme ve montaj için sizinle iletişime geçecek.`;
-    if(button)button.textContent='Sipariş Kaydedildi'
+    clearOrderAttemptKey(sessionStorage);writeCart([]);
+    renderOrderConfirmation(data);
   }catch(error){
     if(button){button.disabled=false;button.textContent='Tekrar Dene'}renderChargeSummary();
     say(error.message||'Sipariş kaydedilemedi. Bağlantınızı kontrol edip tekrar deneyin.')
