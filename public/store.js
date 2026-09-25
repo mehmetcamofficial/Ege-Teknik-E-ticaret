@@ -348,3 +348,16 @@ async function loadManagedContent(){const [b,s]=await Promise.allSettled([fetch(
   if(secondHand)renderManagedSecondHand(secondHand);renderSecondHandHighlights(secondHand)}
 document.addEventListener('DOMContentLoaded',()=>{renderHeader();renderFooter();updateCartCount();updateFavoritesCount();renderFeaturedProducts();applyCatalogQuery();renderProductPage();renderRegions();renderRegionPage();renderBlog();renderArticle();renderContactForm();renderFavorites();renderCompare()});
 document.addEventListener('DOMContentLoaded',()=>{void loadManagedContent()});
+/* First-party analytics beacon (Phase 6A). Fire-and-forget: never blocks rendering or any other
+   fetch, never throws, and a failure here is silently ignored - the storefront works identically
+   with or without it. No raw IP or user-agent is ever sent or stored (see lib/analytics.ts for
+   the full privacy model); the anonymous visitor id lives in a server-set, httpOnly first-party
+   cookie this script never reads or writes directly. */
+function sendAnalyticsEvent(){try{
+  const body={path:location.pathname};
+  if(document.referrer)body.referrer=document.referrer;
+  if(document.querySelector('[data-product-page]')){const id=new URLSearchParams(location.search).get('id');if(id)body.productId=id}
+  fetch('/api/analytics/event',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(()=>{})
+}catch{}}
+const scheduleAnalyticsEvent=typeof requestIdleCallback==='function'?requestIdleCallback:(cb=>setTimeout(cb,300));
+document.addEventListener('DOMContentLoaded',()=>{scheduleAnalyticsEvent(sendAnalyticsEvent)});

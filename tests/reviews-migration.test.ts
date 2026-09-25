@@ -11,9 +11,10 @@ const functionBody = migration.slice(migration.indexOf("AS $$") + 5, migration.l
 const outsideFunction = migration.replace(functionBody, "").replace(/BEFORE INSERT OR UPDATE ON "product_reviews"/, "");
 
 test("migration 0008 is the next journal entry after 0007 and ships its snapshot", () => {
-  const tags = (JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8")).entries as { tag: string; idx: number }[]);
-  assert.deepEqual(tags.slice(-2).map((e) => e.tag), ["0007_product_enrichment", "0008_product_reviews"]);
-  assert.equal(tags.at(-1)!.idx, 8);
+  const entries = (JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8")).entries as { tag: string; idx: number }[]);
+  const at = (tag: string) => entries.find((e) => e.tag === tag);
+  assert.equal(at("0008_product_reviews")?.idx, at("0007_product_enrichment")!.idx + 1);
+  assert.equal(at("0008_product_reviews")?.idx, 8);
   assert.ok(readdirSync("drizzle-pg").includes("0008_product_reviews.sql"));
   assert.ok(readdirSync("drizzle-pg/meta").includes("0008_snapshot.json"));
 });

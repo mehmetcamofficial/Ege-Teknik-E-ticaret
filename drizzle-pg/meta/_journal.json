@@ -64,6 +64,13 @@
       "when": 1790286929119,
       "tag": "0008_product_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790301055885,
+      "tag": "0009_analytics_events",
+      "breakpoints": true
     }
   ]
 }

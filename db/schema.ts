@@ -47,3 +47,19 @@ export const productReviews=pgTable("product_reviews",{id:text("id").primaryKey(
   check("product_reviews_note_ck",sql`${t.moderationNote} IS NULL OR char_length(${t.moderationNote}) <= 500`),
   check("product_reviews_moderation_ck",sql`(${t.status} = 'pending' AND ${t.moderatedAt} IS NULL AND ${t.moderatedBy} IS NULL) OR (${t.status} <> 'pending' AND ${t.moderatedAt} IS NOT NULL AND ${t.moderatedBy} IS NOT NULL)`),
 ]);
+/**
+ * First-party analytics (Phase 6A). One row per page/product view. No raw IP, no raw
+ * user-agent, no cross-site identifier - see lib/analytics.ts for exactly what visitor_id
+ * is and how device/bot classification works. Aggregates are computed at query time
+ * (GROUP BY over this table); a pre-aggregated rollup table is a natural follow-up once
+ * traffic volume makes that worthwhile, not needed at this scale.
+ */
+export const analyticsEvents=pgTable("analytics_events",{id:text("id").primaryKey(),visitorId:text("visitor_id").notNull(),path:text("path").notNull(),productId:text("product_id").references(()=>products.id),referrerHost:text("referrer_host"),device:text("device").notNull(),isBot:boolean("is_bot").notNull().default(false),isNewVisitor:boolean("is_new_visitor").notNull(),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  index("analytics_events_created_idx").on(t.createdAt),
+  index("analytics_events_visitor_created_idx").on(t.visitorId,t.createdAt),
+  index("analytics_events_path_created_idx").on(t.path,t.createdAt),
+  index("analytics_events_product_created_idx").on(t.productId,t.createdAt),
+  check("analytics_events_path_ck",sql`char_length(${t.path}) BETWEEN 1 AND 200 AND ${t.path} LIKE '/%'`),
+  check("analytics_events_device_ck",sql`${t.device} IN ('mobile','tablet','desktop')`),
+  check("analytics_events_visitor_ck",sql`${t.visitorId} ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'`),
+]);

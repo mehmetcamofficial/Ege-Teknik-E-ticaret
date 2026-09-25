@@ -115,14 +115,15 @@ export function apiProduct(overrides: Record<string, unknown> = {}) {
 export function loadStorefront(options: {
   path?: string;
   search?: string;
+  referrer?: string;
   storage?: Record<string, unknown>;
   elements?: Record<string, FakeElement>;
   featured?: ReturnType<typeof featuredCard>[];
-  api?: { products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown>; reviews?: ((url: string) => unknown) | Record<string, unknown> | "fail"; reviewPost?: (body: unknown, headers: Record<string, string>) => { status: number; body: unknown } };
+  api?: { products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown>; reviews?: ((url: string) => unknown) | Record<string, unknown> | "fail"; reviewPost?: (body: unknown, headers: Record<string, string>) => { status: number; body: unknown }; analyticsFail?: boolean };
 } = {}) {
   const storage = new Map(Object.entries(options.storage ?? {}).map(([k, v]) => [k, JSON.stringify(v)]));
   const search = options.search ?? "";
-  const location = { href: `${ORIGIN}/${options.path ?? "index.html"}${search}`, origin: ORIGIN, search };
+  const location = { href: `${ORIGIN}/${options.path ?? "index.html"}${search}`, origin: ORIGIN, search, pathname: `/${options.path ?? "index.html"}` };
   const elements = options.elements ?? {};
   const featured = options.featured ?? [];
   const api = options.api ?? {};
@@ -130,6 +131,7 @@ export function loadStorefront(options: {
   const fetchCalls: string[] = [];
   const orderBodies: string[] = [];
   const reviewBodies: { body: unknown; headers: Record<string, string> }[] = [];
+  const analyticsBodies: { body: unknown; init: Record<string, unknown> }[] = [];
 
   const respond = (value: ApiValue | undefined, key: string) => {
     if (value === "pending") return new Promise(() => {});
@@ -156,8 +158,9 @@ export function loadStorefront(options: {
       constructor(form: { fields: Record<string, string> }) { this.fields = form.fields; }
       get(name: string) { return this.fields[name] ?? ""; }
     },
-    fetch: (url: string, init?: { body?: string; method?: string; headers?: Record<string, string> }) => {
+    fetch: (url: string, init?: { body?: string; method?: string; headers?: Record<string, string>; keepalive?: boolean }) => {
       fetchCalls.push(url);
+      if (url === "/api/analytics/event") { analyticsBodies.push({ body: JSON.parse(init?.body ?? "{}"), init: { ...init } }); return api.analyticsFail ? Promise.reject(new Error("network")) : Promise.resolve({ ok: true, status: 202, json: async () => ({ ok: true }) }); }
       if (url === "/api/orders" && init?.body) orderBodies.push(init.body);
       if (/^\/api\/products\/[^/?]+\/reviews/.test(url)) {
         if (init?.method === "POST") { reviewBodies.push({ body: JSON.parse(init.body ?? "{}"), headers: init.headers ?? {} }); const r = api.reviewPost ? api.reviewPost(JSON.parse(init.body ?? "{}"), init.headers ?? {}) : { status: 202, body: { ok: true, status: "pending" } }; return Promise.resolve({ ok: r.status < 300, status: r.status, json: async () => r.body }); }
@@ -183,6 +186,7 @@ export function loadStorefront(options: {
     },
     document: {
       title: "",
+      referrer: options.referrer ?? "",
       head: { insertAdjacentHTML: () => {} },
       querySelector: (selector: string) => elements[selector] ?? null,
       querySelectorAll: (selector: string) => (selector === "[data-featured-product]" ? featured : []),
@@ -205,6 +209,7 @@ export function loadStorefront(options: {
     fetchCalls,
     orderBodies,
     reviewBodies,
+    analyticsBodies,
     document: context.document as { title: string },
   };
 }
