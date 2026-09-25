@@ -8,5 +8,5 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const admin = await getAdminUser();
   if (!admin) redirect("/admin/login");
-  return <AdminClient email={admin.email} signOutPath="/api/auth/logout" canManageLegal={roleHasPermission(admin.role, "legal:write")} />;
+  return <AdminClient email={admin.email} signOutPath="/api/auth/logout" canManageLegal={roleHasPermission(admin.role, "legal:write")} canModerateReviews={roleHasPermission(admin.role, "content:write")} />;
 }

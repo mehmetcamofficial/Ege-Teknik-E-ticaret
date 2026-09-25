@@ -95,7 +95,7 @@ export function loadStorefront(options: {
   storage?: Record<string, unknown>;
   elements?: Record<string, FakeElement>;
   featured?: ReturnType<typeof featuredCard>[];
-  api?: { products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown> };
+  api?: { products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown>; reviews?: ((url: string) => unknown) | Record<string, unknown> | "fail"; reviewPost?: (body: unknown, headers: Record<string, string>) => { status: number; body: unknown } };
 } = {}) {
   const storage = new Map(Object.entries(options.storage ?? {}).map(([k, v]) => [k, JSON.stringify(v)]));
   const search = options.search ?? "";
@@ -106,6 +106,7 @@ export function loadStorefront(options: {
   const listeners: Record<string, ((event: unknown) => void)[]> = {};
   const fetchCalls: string[] = [];
   const orderBodies: string[] = [];
+  const reviewBodies: { body: unknown; headers: Record<string, string> }[] = [];
 
   const respond = (value: ApiValue | undefined, key: string) => {
     if (value === "pending") return new Promise(() => {});
@@ -132,9 +133,15 @@ export function loadStorefront(options: {
       constructor(form: { fields: Record<string, string> }) { this.fields = form.fields; }
       get(name: string) { return this.fields[name] ?? ""; }
     },
-    fetch: (url: string, init?: { body?: string }) => {
+    fetch: (url: string, init?: { body?: string; method?: string; headers?: Record<string, string> }) => {
       fetchCalls.push(url);
       if (url === "/api/orders" && init?.body) orderBodies.push(init.body);
+      if (/^\/api\/products\/[^/?]+\/reviews/.test(url)) {
+        if (init?.method === "POST") { reviewBodies.push({ body: JSON.parse(init.body ?? "{}"), headers: init.headers ?? {} }); const r = api.reviewPost ? api.reviewPost(JSON.parse(init.body ?? "{}"), init.headers ?? {}) : { status: 202, body: { ok: true, status: "pending" } }; return Promise.resolve({ ok: r.status < 300, status: r.status, json: async () => r.body }); }
+        if (api.reviews === "fail") return Promise.resolve({ ok: false, status: 503, json: async () => ({}) });
+        const data = typeof api.reviews === "function" ? api.reviews(url) : api.reviews ?? { summary: { count: 0, average: null, distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }, reviews: [], nextCursor: null };
+        return Promise.resolve({ ok: true, status: 200, json: async () => data });
+      }
       if (url === "/api/products") return respond(api.products, "products");
       if (url.startsWith("/api/products/")) {
         if (api.detail === "fail") return Promise.resolve({ ok: false, status: 503, json: async () => ({}) });
@@ -174,6 +181,7 @@ export function loadStorefront(options: {
     listeners,
     fetchCalls,
     orderBodies,
+    reviewBodies,
     document: context.document as { title: string },
   };
 }

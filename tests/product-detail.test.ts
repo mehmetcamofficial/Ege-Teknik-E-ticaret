@@ -196,5 +196,5 @@ test("design tokens are defined once, mobile rules stack specs and related produ
   assert.match(css, /\.related-section \.product-grid\{display:grid;grid-template-columns:none;grid-auto-flow:column;[^}]*overflow-x:auto/);
   assert.doesNotMatch(css + readFileSync("public/store.css", "utf8"), /(^|[;{}])\s*(html|body)[^{]*\{[^}]*overflow-x\s*:\s*hidden/);
   assert.match(readFileSync("public/store.css", "utf8"), /\.product-visual \.product-image\{[^}]*height:100%[^}]*object-fit:contain/);
-  for (const banned of [/indirim/, /eski fiyat/, /stokta son|son \d+ (adet|ürün)/, /popüler/, /en çok satan/, /yıldız/, /müşteri yorum/, /randevu/, /yapay zeka/, /bugün \d+ kişi/]) assert.doesNotMatch(js.toLocaleLowerCase("tr"), banned);
+  for (const banned of [/indirim/, /eski fiyat/, /stokta son|son \d+ (adet|ürün)/, /popüler/, /en çok satan/, /randevu/, /yapay zeka/, /bugün \d+ kişi/]) assert.doesNotMatch(js.toLocaleLowerCase("tr"), banned);
 });

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgTable, smallint, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 const timestamps={createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow()};
 export const brands=pgTable("brands",{id:text("id").primaryKey(),name:text("name").notNull(),slug:text("slug").notNull(),active:boolean("active").notNull().default(true),...timestamps},t=>[uniqueIndex("brands_slug_uq").on(t.slug)]);
@@ -30,3 +30,20 @@ export const legalDocuments=pgTable("legal_documents",{id:text("id").primaryKey(
 export const legalDocumentVersions=pgTable("legal_document_versions",{id:text("id").primaryKey(),documentId:text("document_id").notNull().references(()=>legalDocuments.id),version:integer("version").notNull(),title:text("title").notNull(),body:text("body").notNull(),contentHash:text("content_hash").notNull(),effectiveAt:timestamp("effective_at",{withTimezone:true}),publishedAt:timestamp("published_at",{withTimezone:true}),publishedBy:text("published_by"),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[uniqueIndex("legal_document_versions_doc_version_uq").on(t.documentId,t.version),check("legal_document_versions_publication_ck",sql`(${t.publishedAt} IS NULL AND ${t.publishedBy} IS NULL) OR (${t.publishedAt} IS NOT NULL AND ${t.publishedBy} IS NOT NULL AND ${t.effectiveAt} IS NOT NULL)`)]);
 export const orderLegalAcceptances=pgTable("order_legal_acceptances",{id:text("id").primaryKey(),orderId:text("order_id").notNull().references(()=>orders.id),documentVersionId:text("document_version_id").notNull().references(()=>legalDocumentVersions.id),acceptedAt:timestamp("accepted_at",{withTimezone:true}).notNull(),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[uniqueIndex("order_legal_acceptances_order_version_uq").on(t.orderId,t.documentVersionId),index("order_legal_acceptances_version_idx").on(t.documentVersionId)]);
 export const marketingConsents=pgTable("marketing_consents",{id:text("id").primaryKey(),customerId:text("customer_id").notNull().references(()=>customers.id),channel:text("channel").notNull(),granted:boolean("granted").notNull(),orderId:text("order_id").references(()=>orders.id),source:text("source").notNull().default("checkout"),recordedAt:timestamp("recorded_at",{withTimezone:true}).notNull().defaultNow()},t=>[index("marketing_consents_customer_channel_idx").on(t.customerId,t.channel,t.recordedAt),check("marketing_consents_channel_ck",sql`${t.channel} IN ('sms','email','whatsapp')`)]);
+/* Customer reviews (Phase 5A). Content is immutable after insert and verification is DB-derived: see the guard trigger in drizzle-pg/0008_product_reviews.sql. */
+export const productReviews=pgTable("product_reviews",{id:text("id").primaryKey(),productId:text("product_id").notNull().references(()=>products.id),rating:smallint("rating").notNull(),displayName:text("display_name").notNull(),body:text("body").notNull(),status:text("status").notNull().default("pending"),verifiedPurchase:boolean("verified_purchase").notNull().default(false),orderItemId:text("order_item_id").references(()=>orderItems.id),contentHash:text("content_hash").notNull(),idempotencyKey:text("idempotency_key").notNull(),ipHash:text("ip_hash").notNull().default(""),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow(),moderatedAt:timestamp("moderated_at",{withTimezone:true}),moderatedBy:text("moderated_by").references(()=>adminUsers.id),moderationNote:text("moderation_note")},t=>[
+  uniqueIndex("product_reviews_idempotency_uq").on(t.idempotencyKey),
+  uniqueIndex("product_reviews_order_item_live_uq").on(t.orderItemId).where(sql`${t.orderItemId} IS NOT NULL AND ${t.status} IN ('pending','approved')`),
+  uniqueIndex("product_reviews_content_live_uq").on(t.productId,t.contentHash).where(sql`${t.status} IN ('pending','approved')`),
+  index("product_reviews_public_idx").on(t.productId,t.status,t.createdAt,t.id),
+  index("product_reviews_moderation_idx").on(t.status,t.createdAt),
+  check("product_reviews_rating_ck",sql`${t.rating} BETWEEN 1 AND 5`),
+  check("product_reviews_status_ck",sql`${t.status} IN ('pending','approved','rejected')`),
+  check("product_reviews_display_name_ck",sql`char_length(${t.displayName}) BETWEEN 2 AND 40`),
+  check("product_reviews_body_ck",sql`char_length(${t.body}) BETWEEN 10 AND 2000`),
+  check("product_reviews_verified_ck",sql`${t.verifiedPurchase} = (${t.orderItemId} IS NOT NULL)`),
+  check("product_reviews_content_hash_ck",sql`${t.contentHash} ~ '^[0-9a-f]{64}$'`),
+  check("product_reviews_idempotency_ck",sql`char_length(${t.idempotencyKey}) BETWEEN 8 AND 200`),
+  check("product_reviews_note_ck",sql`${t.moderationNote} IS NULL OR char_length(${t.moderationNote}) <= 500`),
+  check("product_reviews_moderation_ck",sql`(${t.status} = 'pending' AND ${t.moderatedAt} IS NULL AND ${t.moderatedBy} IS NULL) OR (${t.status} <> 'pending' AND ${t.moderatedAt} IS NOT NULL AND ${t.moderatedBy} IS NOT NULL)`),
+]);

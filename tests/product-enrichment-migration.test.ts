@@ -1,14 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
-
-/** Returns every reason the SQL is not purely additive. */
-export function destructiveReasons(sql: string): string[] {
-  const withoutFkActions = sql.replace(/ON DELETE no action ON UPDATE no action/g, "");
-  const reasons: string[] = [];
-  for (const keyword of ["DROP", "TRUNCATE", "DELETE", "UPDATE", "INSERT", "RENAME", "ALTER COLUMN"]) if (new RegExp(`\\b${keyword}\\b`, "i").test(withoutFkActions)) reasons.push(keyword);
-  return reasons;
-}
+import { destructiveReasons } from "./support/migration-sql.ts";
 
 const file = "drizzle-pg/0007_product_enrichment.sql";
 const migration = readFileSync(file, "utf8");
@@ -20,8 +13,7 @@ test("the destructive-SQL detector actually catches destructive statements", () 
 });
 test("migration 0007 follows 0006 in the journal and is additive only", () => {
   const tags = (JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8")).entries as { tag: string }[]).map((e) => e.tag);
-  assert.equal(tags.at(-1), "0007_product_enrichment");
-  assert.equal(tags.at(-2), "0006_checkout_charges_and_marketing_consents");
+  assert.equal(tags[tags.indexOf("0006_checkout_charges_and_marketing_consents") + 1], "0007_product_enrichment");
   assert.ok(readdirSync("drizzle-pg").includes("0007_product_enrichment.sql"));
   assert.deepEqual(destructiveReasons(migration), []);
 });
