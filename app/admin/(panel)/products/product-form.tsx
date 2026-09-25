@@ -1,6 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,20 +28,35 @@ export default function ProductForm({ product, brands, categories }: { product?:
   const [upload, setUpload] = useState<{ status: "idle" | "uploading" | "error"; error?: string }>({ status: "idle" });
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((f) => ({ ...f, [key]: value }));
 
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true); setMessage({ tone: "info", text: editing ? "Güncelleniyor…" : "Ürün kaydediliyor…" });
     const r = editing ? await sendAdmin(`/api/admin/products/${product!.id}`, "PATCH", form) : await sendAdmin("/api/admin/products", "POST", form);
     setBusy(false);
-    if (!r.ok) { setMessage({ tone: "error", text: r.error || "Kayıt başarısız." }); return; }
+    if (!r.ok) {
+      toast.error(r.error || "Kayıt başarısız.");
+      setMessage({ tone: "error", text: r.error || "Kayıt başarısız." });
+      return;
+    }
+    toast.success(editing ? "Değişiklikler kaydedildi." : "Yeni ürün başarıyla eklendi.");
     if (editing) setMessage({ tone: "success", text: "Değişiklikler kaydedildi." });
     else router.push("/admin/products");
   }
 
-  async function archive() {
-    if (!product || !confirm("Ürün yayından kaldırılıp stok dışı yapılsın mı?")) return;
+  async function confirmArchive() {
+    if (!product) return;
+    setArchiving(true);
     const r = await sendAdmin(`/api/admin/products/${product.id}`, "DELETE");
-    if (!r.ok) { setMessage({ tone: "error", text: r.error || "İşlem başarısız." }); return; }
+    setArchiving(false);
+    if (!r.ok) {
+      toast.error(r.error || "İşlem başarısız.");
+      setMessage({ tone: "error", text: r.error || "İşlem başarısız." });
+      return;
+    }
+    toast.success("Ürün yayından kaldırıldı ve stok dışı yapıldı.");
     router.push("/admin/products");
   }
 
@@ -108,8 +126,28 @@ export default function ProductForm({ product, brands, categories }: { product?:
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={busy}>{editing ? "Değişiklikleri kaydet" : "Ürünü kaydet"}</Button>
-        {editing && <Button type="button" variant="destructive" onClick={archive}>Yayından kaldır</Button>}
+        {editing && <Button type="button" variant="destructive" onClick={() => setArchiveOpen(true)}>Yayından kaldır</Button>}
       </div>
+
+      <ConfirmDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        title="Ürünü Yayından Kaldırma Onayı"
+        description={
+          <span>
+            <strong>&quot;{product?.name}&quot;</strong> ürününü yayından kaldırmak ve satış modunu &apos;stok dışı&apos; olarak güncellemek istediğinizden emin misiniz?
+            <br />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Not: Sipariş ve sepet bütünlüğünü korumak adına kayıt silinmez, güvenli bir şekilde arşivlenir.
+            </span>
+          </span>
+        }
+        confirmLabel="Evet, Yayından Kaldır"
+        cancelLabel="Vazgeç"
+        variant="destructive"
+        loading={archiving}
+        onConfirm={confirmArchive}
+      />
     </form>
   );
 }

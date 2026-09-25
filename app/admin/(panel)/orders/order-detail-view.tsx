@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+
 import { Button } from "@/components/ui/button";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
 import { sendAdmin, useAdminJson, type Overview } from "@/components/admin/use-admin-data";
@@ -14,12 +17,29 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
   const order = data?.orders.find((o) => o.id === orderId);
   const [nextStatus, setNextStatus] = useState<string | null>(null);
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
-  async function saveStatus() {
-    if (!order || !nextStatus || nextStatus === order.status) return;
-    const r = await sendAdmin(`/api/admin/orders/${order.id}`, "PATCH", { status: nextStatus });
-    setMessage(r.ok ? { tone: "success", text: "Sipariş durumu güncellendi." } : { tone: "error", text: r.error || "Sipariş durumu güncellenemedi." });
-    if (r.ok) { setNextStatus(null); reload(); }
+  async function saveStatus(statusToSave?: string) {
+    const target = statusToSave ?? nextStatus;
+    if (!order || !target || target === order.status) return;
+    const r = await sendAdmin(`/api/admin/orders/${order.id}`, "PATCH", { status: target });
+    if (r.ok) {
+      toast.success(`Sipariş durumu "${orderStatusLabel[target] ?? target}" olarak güncellendi.`);
+      setMessage({ tone: "success", text: "Sipariş durumu güncellendi." });
+      setNextStatus(null);
+      reload();
+    } else {
+      toast.error(r.error || "Sipariş durumu güncellenemedi.");
+      setMessage({ tone: "error", text: r.error || "Sipariş durumu güncellenemedi." });
+    }
+  }
+
+  async function confirmCancel() {
+    setCancelling(true);
+    await saveStatus("cancelled");
+    setCancelling(false);
+    setCancelOpen(false);
   }
 
   if (!data) return <><PageHeader title="Sipariş" breadcrumb={crumbs} />{error ? <Notice tone="error">{error}</Notice> : loading ? <Notice tone="info">Yükleniyor…</Notice> : null}</>;
@@ -61,12 +81,39 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
                 <FormField label="Sipariş durumu" htmlFor="order-next-status">
                   <select id="order-next-status" className={selectClass} value={selected} onChange={(e) => setNextStatus(e.target.value)}>{Object.entries(orderStatusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
                 </FormField>
-                <Button type="button" onClick={saveStatus} disabled={selected === order.status}>Durumu kaydet</Button>
+                <div className="flex flex-col gap-2">
+                  <Button type="button" onClick={() => void saveStatus()} disabled={selected === order.status}>Durumu kaydet</Button>
+                  {order.status !== "cancelled" && order.status !== "delivered" && (
+                    <Button type="button" variant="outline" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setCancelOpen(true)}>
+                      Siparişi iptal et
+                    </Button>
+                  )}
+                </div>
               </div>
             </Panel>
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        title="Sipariş İptal Onayı"
+        description={
+          <span>
+            <strong>{order.orderNumber}</strong> numaralı siparişi iptal etmek istediğinizden emin misiniz?
+            <br />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Not: İptal edilen siparişler finansal/yasal denetim için veritabanında saklanır ve hard-delete edilmez.
+            </span>
+          </span>
+        }
+        confirmLabel="Evet, İptal Et"
+        cancelLabel="Vazgeç"
+        variant="destructive"
+        loading={cancelling}
+        onConfirm={confirmCancel}
+      />
     </>
   );
 }

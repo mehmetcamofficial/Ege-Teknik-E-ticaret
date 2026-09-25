@@ -1,4 +1,5 @@
-import AuthShell, { authButton, authInput, authLabel, authLink } from "@/components/admin/auth-shell";
+import AuthShell from "@/components/admin/auth-shell";
+import { AuthFooterLink, AuthForm, AuthNotice, AuthPasswordField } from "@/components/admin/auth-form";
 
 const errorMessage: Record<string, string> = {
   invalid: "Bu bağlantı geçersiz veya süresi dolmuş. Yeni bir sıfırlama bağlantısı isteyin.",
@@ -16,21 +17,18 @@ export default async function ResetPasswordPage({ searchParams }: { searchParams
   const message = error ? errorMessage[error] ?? "Bir sorun oluştu. Lütfen tekrar deneyin." : null;
   return (
     <AuthShell title="Yeni parola belirle" description="En az 12 karakterlik, tahmin edilmesi zor bir parola seçin.">
-      {message && <p role="alert" className="mt-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{message}</p>}
+      {message && <AuthNotice tone="error">{message}</AuthNotice>}
       {!token ? (
         <p className="mt-5 text-sm text-muted-foreground">Bu sayfaya doğrudan erişemezsiniz. E-postanızdaki sıfırlama bağlantısını kullanın.</p>
       ) : (
-        <form method="post" action="/api/auth/reset-password">
+        <AuthForm action="/api/auth/reset-password" submitLabel="Parolayı güncelle" pendingLabel="Güncelleniyor…">
           <input type="hidden" name="token" value={token} />
-          <label htmlFor="reset-password" className={authLabel}>Yeni parola</label>
-          <input id="reset-password" name="password" type="password" autoComplete="new-password" required minLength={12} maxLength={200} aria-describedby="reset-policy" className={`${authInput} h-11`} />
-          <label htmlFor="reset-confirm" className={authLabel}>Yeni parola (tekrar)</label>
-          <input id="reset-confirm" name="confirmPassword" type="password" autoComplete="new-password" required minLength={12} maxLength={200} aria-describedby="reset-policy" className={`${authInput} h-11`} />
-          <p id="reset-policy" className="mt-2 text-xs text-muted-foreground">En az 12, en fazla 200 karakter. Büyük/küçük harf veya sembol zorunluluğu yok; yalnızca çok yaygın veya tahmin edilmesi kolay parolalar reddedilir.</p>
-          <button type="submit" className={`${authButton} h-11`}>Parolayı güncelle</button>
-        </form>
+          <AuthPasswordField id="reset-password" name="password" label="Yeni parola" autoComplete="new-password" minLength={12} maxLength={200} describedBy="reset-policy" />
+          <AuthPasswordField id="reset-confirm" name="confirmPassword" label="Yeni parola (tekrar)" autoComplete="new-password" minLength={12} maxLength={200} describedBy="reset-policy" />
+          <p id="reset-policy" className="mt-2.5 text-xs text-muted-foreground">En az 12, en fazla 200 karakter. Büyük/küçük harf veya sembol zorunluluğu yok; yalnızca çok yaygın veya tahmin edilmesi kolay parolalar reddedilir.</p>
+        </AuthForm>
       )}
-      <p className="mt-5 text-center text-sm"><a href="/admin/login" className={`${authLink} inline-flex min-h-11 items-center`}>Girişe dön</a></p>
+      <AuthFooterLink href="/admin/login">Girişe dön</AuthFooterLink>
     </AuthShell>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "sonner";
+
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +17,13 @@ export default function BlogView({ canWrite }: { canWrite: boolean }) {
 
   async function updateStatus(id: string, title: string, status: string) {
     const r = await sendAdmin(`/api/admin/blog/${id}`, "PATCH", { status });
-    setMessage(r.ok ? { tone: "success", text: `"${title}" ${status === "published" ? "yayınlandı" : "taslağa alındı"}.` } : { tone: "error", text: r.error || "Güncelleme başarısız." });
+    if (r.ok) {
+      toast.success(`"${title}" ${status === "published" ? "yayınlandı" : "taslağa alındı"}.`);
+      setMessage({ tone: "success", text: `"${title}" ${status === "published" ? "yayınlandı" : "taslağa alındı"}.` });
+    } else {
+      toast.error(r.error || "Güncelleme başarısız.");
+      setMessage({ tone: "error", text: r.error || "Güncelleme başarısız." });
+    }
     reload();
   }
 

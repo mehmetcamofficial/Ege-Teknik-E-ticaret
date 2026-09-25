@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -44,7 +46,13 @@ export default function ReviewsAdmin() {
     const note = (notes[review.id] ?? "").trim();
     const r = await fetch(`/api/admin/reviews/${encodeURIComponent(review.id)}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(note ? { status: to, note } : { status: to }) });
     const data = (await r.json().catch(() => ({}))) as { error?: string };
-    setMessage(r.ok ? `Yorum ${to === "approved" ? "onaylandı" : "reddedildi"}.` : data.error || "İşlem tamamlanamadı.");
+    if (r.ok) {
+      toast.success(`Yorum ${to === "approved" ? "onaylandı" : "reddedildi"}.`);
+      setMessage(`Yorum ${to === "approved" ? "onaylandı" : "reddedildi"}.`);
+    } else {
+      toast.error(data.error || "İşlem tamamlanamadı.");
+      setMessage(data.error || "İşlem tamamlanamadı.");
+    }
     apply(await fetchReviews(status));
   }
 

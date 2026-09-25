@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "sonner";
+
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,13 @@ export default function SecondHandView({ canWrite }: { canWrite: boolean }) {
   /** Same quick status change the previous dashboard offered (e.g. marking an item sold). */
   async function updateStatus(id: string, name: string, status: string) {
     const r = await sendAdmin(`/api/admin/second-hand/${id}`, "PATCH", { status });
-    setMessage(r.ok ? { tone: "success", text: `${name}: "${publishLabel[status]}" olarak güncellendi.` } : { tone: "error", text: r.error || "Güncelleme başarısız." });
+    if (r.ok) {
+      toast.success(`${name}: "${publishLabel[status]}" olarak güncellendi.`);
+      setMessage({ tone: "success", text: `${name}: "${publishLabel[status]}" olarak güncellendi.` });
+    } else {
+      toast.error(r.error || "Güncelleme başarısız.");
+      setMessage({ tone: "error", text: r.error || "Güncelleme başarısız." });
+    }
     reload();
   }
 

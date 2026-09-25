@@ -1,6 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,14 +20,36 @@ function SecondHandForm({ item }: { item?: SecondHand }) {
   const router = useRouter();
   const [form, setForm] = useState<Form>(() => item ? { name: item.name, slug: item.slug, category: item.category, condition: item.condition, testNotes: item.testNotes, warranty: item.warranty, price: item.price, stock: item.stock, imageUrl: item.imageUrl, status: item.status, description: item.description } : empty);
   const [message, setMessage] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setMessage({ tone: "info", text: "Kaydediliyor…" });
     const r = item ? await sendAdmin(`/api/admin/second-hand/${item.id}`, "PATCH", form) : await sendAdmin("/api/admin/second-hand", "POST", form);
-    if (!r.ok) { setMessage({ tone: "error", text: r.error || "Kayıt başarısız." }); return; }
-    if (item) setMessage({ tone: "success", text: "Değişiklikler kaydedildi." }); else router.push("/admin/second-hand");
+    if (!r.ok) {
+      toast.error(r.error || "Kayıt başarısız.");
+      setMessage({ tone: "error", text: r.error || "Kayıt başarısız." });
+      return;
+    }
+    toast.success(item ? "Değişiklikler kaydedildi." : "İkinci el ilanı başarıyla oluşturuldu.");
+    if (item) setMessage({ tone: "success", text: "Değişiklikler kaydedildi." });
+    else router.push("/admin/second-hand");
+  }
+
+  async function confirmDelete() {
+    if (!item) return;
+    setDeleting(true);
+    const r = await sendAdmin(`/api/admin/second-hand/${item.id}?hard=1`, "DELETE");
+    setDeleting(false);
+    if (!r.ok) {
+      toast.error(r.error || "Silme işlemi başarısız.");
+      setMessage({ tone: "error", text: r.error || "Silme işlemi başarısız." });
+      return;
+    }
+    toast.success("İkinci el ilanı kalıcı olarak silindi.");
+    router.push("/admin/second-hand");
   }
 
   const text: [keyof Form, string, boolean][] = [["name", "Ad", true], ["slug", "URL kısa adı", true], ["category", "Kategori", true], ["condition", "Kondisyon", false], ["warranty", "Garanti", false]];
@@ -46,7 +71,30 @@ function SecondHandForm({ item }: { item?: SecondHand }) {
           <FormField label="Açıklama" htmlFor="sh-desc" className="sm:col-span-2"><Textarea id="sh-desc" rows={4} value={form.description} onChange={(e) => set("description", e.target.value)} /></FormField>
         </div>
       </Panel>
-      <div><Button type="submit">{item ? "Değişiklikleri kaydet" : "İlanı kaydet"}</Button></div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="submit">{item ? "Değişiklikleri kaydet" : "İlanı kaydet"}</Button>
+        {item && <Button type="button" variant="destructive" onClick={() => setDeleteOpen(true)}>İlanı sil</Button>}
+      </div>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="İkinci El İlanı Silme Onayı"
+        description={
+          <span>
+            <strong>&quot;{item?.name}&quot;</strong> ilanını kalıcı olarak silmek istediğinizden emin misiniz?
+            <br />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Not: İlana ait müşteri rezervasyon geçmişi varsa veri bütünlüğü için silme işlemi engellenecektir.
+            </span>
+          </span>
+        }
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        variant="destructive"
+        loading={deleting}
+        onConfirm={confirmDelete}
+      />
     </form>
   );
 }

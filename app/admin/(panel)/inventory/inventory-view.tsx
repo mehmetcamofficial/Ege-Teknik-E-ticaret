@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,9 +31,19 @@ export default function InventoryView({ canWrite }: { canWrite: boolean }) {
 
   async function save(id: string, name: string) {
     const value = Number(drafts[id]);
-    if (!Number.isInteger(value) || value < 0) { setMessage({ tone: "error", text: "Stok 0 veya daha büyük bir tam sayı olmalı." }); return; }
+    if (!Number.isInteger(value) || value < 0) {
+      toast.error("Stok 0 veya daha büyük bir tam sayı olmalı.");
+      setMessage({ tone: "error", text: "Stok 0 veya daha büyük bir tam sayı olmalı." });
+      return;
+    }
     const r = await sendAdmin(`/api/admin/products/${id}`, "PATCH", { stock: value });
-    setMessage(r.ok ? { tone: "success", text: `${name} stoğu ${value} adet olarak kaydedildi.` } : { tone: "error", text: r.error || "Stok güncellenemedi." });
+    if (r.ok) {
+      toast.success(`${name} stoğu ${value} adet olarak kaydedildi.`);
+      setMessage({ tone: "success", text: `${name} stoğu ${value} adet olarak kaydedildi.` });
+    } else {
+      toast.error(r.error || "Stok güncellenemedi.");
+      setMessage({ tone: "error", text: r.error || "Stok güncellenemedi." });
+    }
     if (r.ok) { setDrafts((d) => { const next = { ...d }; delete next[id]; return next; }); reload(); }
   }
 

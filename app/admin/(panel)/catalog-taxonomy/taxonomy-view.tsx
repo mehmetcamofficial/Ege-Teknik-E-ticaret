@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge } from "@/components/admin/ui";
@@ -9,19 +12,49 @@ import { sendAdmin, useAdminJson, type Taxonomy } from "@/components/admin/use-a
 type Kind = "category" | "brand";
 const collator = new Intl.Collator("tr");
 
-function TaxonomyPanel({ kind, items, canWrite, onChanged }: { kind: Kind; items: Taxonomy[]; canWrite: boolean; onChanged: (msg: { tone: "success" | "error"; text: string }) => void }) {
+function TaxonomyPanel({ kind, items, canWrite, onChanged }: { kind: Kind; items: Taxonomy[]; canWrite: boolean; onChanged: (msg?: { tone: "success" | "error"; text: string }) => void }) {
   const [form, setForm] = useState({ name: "", slug: "" });
+  const [deleteTarget, setDeleteTarget] = useState<Taxonomy | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const noun = kind === "category" ? "Kategori" : "Marka";
 
   async function add(e: FormEvent) {
     e.preventDefault();
     const r = await sendAdmin("/api/admin/taxonomy", "POST", { type: kind, ...form });
-    if (r.ok) setForm({ name: "", slug: "" });
-    onChanged(r.ok ? { tone: "success", text: `${noun} "${form.name}" eklendi.` } : { tone: "error", text: r.error || "Kayıt başarısız." });
+    if (r.ok) {
+      toast.success(`${noun} "${form.name}" eklendi.`);
+      setForm({ name: "", slug: "" });
+      onChanged();
+    } else {
+      toast.error(r.error || "Kayıt başarısız.");
+      onChanged({ tone: "error", text: r.error || "Kayıt başarısız." });
+    }
   }
   async function toggle(item: Taxonomy) {
-    const r = await sendAdmin("/api/admin/taxonomy", "PATCH", { type: kind, id: item.id, active: !item.active });
-    onChanged(r.ok ? { tone: "success", text: `${item.name} ${item.active ? "pasifleştirildi" : "etkinleştirildi"}.` } : { tone: "error", text: r.error || "Güncelleme başarısız." });
+    const next = !item.active;
+    const r = await sendAdmin("/api/admin/taxonomy", "PATCH", { type: kind, id: item.id, active: next });
+    if (r.ok) {
+      toast.success(`${item.name} ${next ? "etkinleştirildi" : "pasifleştirildi"}.`);
+      onChanged();
+    } else {
+      toast.error(r.error || "Güncelleme başarısız.");
+      onChanged({ tone: "error", text: r.error || "Güncelleme başarısız." });
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const r = await sendAdmin("/api/admin/taxonomy", "DELETE", { type: kind, id: deleteTarget.id });
+    setDeleting(false);
+    if (r.ok) {
+      toast.success(`${noun} "${deleteTarget.name}" silindi.`);
+      setDeleteTarget(null);
+      onChanged();
+    } else {
+      toast.error(r.error || "Silme başarısız.");
+      onChanged({ tone: "error", text: r.error || "Silme başarısız." });
+    }
   }
 
   const sorted = [...items].sort((a, b) => collator.compare(a.name, b.name));
@@ -37,16 +70,43 @@ function TaxonomyPanel({ kind, items, canWrite, onChanged }: { kind: Kind; items
       {sorted.length ? (
         <ul className="divide-y">
           {sorted.map((item) => (
-            <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-2">
+            <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
               <div className="min-w-0"><p className="font-medium">{item.name}</p><p className="text-xs text-muted-foreground">{item.slug}</p></div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <StatusBadge tone={item.active ? "success" : "neutral"}>{item.active ? "Aktif" : "Pasif"}</StatusBadge>
-                {canWrite && <Button type="button" variant="outline" size="sm" onClick={() => toggle(item)} aria-label={`${item.name}: ${item.active ? "pasifleştir" : "etkinleştir"}`}>{item.active ? "Pasifleştir" : "Etkinleştir"}</Button>}
+                {canWrite && (
+                  <>
+                    <Button type="button" variant="outline" size="sm" onClick={() => toggle(item)} aria-label={`${item.name}: ${item.active ? "pasifleştir" : "etkinleştir"}`}>{item.active ? "Pasifleştir" : "Etkinleştir"}</Button>
+                    <Button type="button" variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteTarget(item)} aria-label={`${item.name} sil`}>
+                      <Trash2 aria-hidden="true" className="size-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </li>
           ))}
         </ul>
       ) : <EmptyState title={`Henüz ${noun.toLocaleLowerCase("tr")} yok`} />}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title={`${noun} Silme Onayı`}
+        description={
+          <span>
+            <strong>&quot;{deleteTarget?.name}&quot;</strong> kaydını silmek istediğinizden emin misiniz?
+            <br />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Not: Bu kayda bağlı aktif ürünler varsa veritabanı bütünlüğü için silme işlemi engellenecektir.
+            </span>
+          </span>
+        }
+        confirmLabel="Evet, Sil"
+        cancelLabel="Vazgeç"
+        variant="destructive"
+        loading={deleting}
+        onConfirm={confirmDelete}
+      />
     </Panel>
   );
 }
@@ -54,10 +114,10 @@ function TaxonomyPanel({ kind, items, canWrite, onChanged }: { kind: Kind; items
 export default function TaxonomyView({ canWrite }: { canWrite: boolean }) {
   const { data, error, loading, reload } = useAdminJson<{ brands: Taxonomy[]; categories: Taxonomy[] }>("/api/admin/taxonomy");
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
-  const changed = (m: { tone: "success" | "error"; text: string }) => { setMessage(m); reload(); };
+  const changed = (m?: { tone: "success" | "error"; text: string }) => { if (m) setMessage(m); reload(); };
   return (
     <>
-      <PageHeader title="Kategoriler & Markalar" description="Pasif kayıtlar ürün formlarında seçilemez; mevcut ürün bağlantıları korunur." />
+      <PageHeader title="Kategoriler & Markalar" description="Pasif kayıtlar ürün formlarında seçilemez; mevcut ürün bağlantıları korunur. Bağlantısız kayıtlar güvenle silinebilir." />
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       {error && <Notice tone="error">{error}</Notice>}
       {loading && !data && <Notice tone="info">Yükleniyor…</Notice>}

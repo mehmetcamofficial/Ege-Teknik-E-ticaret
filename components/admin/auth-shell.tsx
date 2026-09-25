@@ -1,3 +1,4 @@
+import { Package, ShoppingCart, Wrench } from "lucide-react";
 import type { ReactNode } from "react";
 
 /**
@@ -5,29 +6,65 @@ import type { ReactNode } from "react";
  * each page keeps its own <form> (action, field names, validation attributes) exactly as the auth
  * routes expect, so nothing about authentication behaviour lives here.
  */
+const features = [
+  { icon: ShoppingCart, text: "Siparişler ve ödeme durumu tek ekranda" },
+  { icon: Package, text: "Katalog, stok ve fiyatlar canlı veritabanında" },
+  { icon: Wrench, text: "Servis ve keşif talepleri baştan sona takipte" },
+];
+
+function Mark({ tone = "light" }: { tone?: "light" | "dark" }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        tone === "light"
+          ? "grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-base font-bold tracking-tight text-emerald-200 ring-1 ring-white/15"
+          : "grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-base font-bold tracking-tight text-primary-foreground"
+      }
+    >
+      ET
+    </span>
+  );
+}
+
 export default function AuthShell({ title, description, children }: { title: string; description: ReactNode; children: ReactNode }) {
   return (
-    <div className="admin-theme min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      <aside className="relative hidden overflow-hidden bg-[#07261d] p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -bottom-24 size-96 rounded-full border-[40px] border-emerald-400/10" />
-        <div>
-          <p className="text-xs font-bold tracking-[.18em] text-emerald-300">EGE TEKNİK</p>
-          <p className="mt-2 text-3xl font-semibold tracking-tight">Yönetim Merkezi</p>
+    <div className="admin-theme min-h-screen bg-background lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <aside className="relative hidden overflow-hidden bg-[#07261d] px-12 py-14 text-white lg:flex lg:flex-col lg:justify-between">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] [background-size:22px_22px] [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" />
+        <div className="relative flex items-center gap-3">
+          <Mark />
+          <div>
+            <p className="text-xs font-bold tracking-[.2em] text-emerald-300">EGE TEKNİK</p>
+            <p className="text-xl font-semibold tracking-tight">Yönetim Merkezi</p>
+          </div>
         </div>
         <div className="relative max-w-sm">
-          <p className="text-lg leading-relaxed text-emerald-50/90">Siparişler, servis talepleri, katalog ve içerik tek yerden.</p>
-          <p className="mt-4 text-sm text-emerald-100/60">Yalnızca yetkili Ege Teknik personeli içindir.</p>
+          <p className="text-2xl leading-snug font-medium text-balance">Klima ve ısıtma operasyonunuzu tek panelden yönetin.</p>
+          <ul className="mt-8 grid gap-4">
+            {features.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-3 text-sm text-emerald-50/85">
+                <span aria-hidden="true" className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-white/10 ring-1 ring-white/10"><Icon className="size-3.5" /></span>
+                {text}
+              </li>
+            ))}
+          </ul>
         </div>
+        <p className="relative text-sm text-emerald-100/50">Yalnızca yetkili Ege Teknik personeli içindir.</p>
       </aside>
-      <main className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+
+      <main className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-16">
         <div className="w-full max-w-md">
-          <div className="mb-6 lg:hidden">
-            <p className="text-xs font-bold tracking-[.18em] text-primary">EGE TEKNİK</p>
-            <p className="text-lg font-semibold">Yönetim Merkezi</p>
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <Mark tone="dark" />
+            <div>
+              <p className="text-xs font-bold tracking-[.2em] text-primary">EGE TEKNİK</p>
+              <p className="text-lg font-semibold">Yönetim Merkezi</p>
+            </div>
           </div>
-          <div className="rounded-2xl border bg-card p-6 shadow-[0_1px_3px_rgba(16,37,31,0.08)] sm:p-8">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>
+          <div className="rounded-2xl border bg-card p-7 shadow-[0_1px_2px_rgba(16,37,31,0.04),0_12px_32px_-16px_rgba(16,37,31,0.18)] sm:p-9">
+            <h1 className="text-2xl font-semibold tracking-tight text-balance">{title}</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
             {children}
           </div>
         </div>
@@ -35,8 +72,3 @@ export default function AuthShell({ title, description, children }: { title: str
     </div>
   );
 }
-
-export const authLabel = "mt-5 block text-sm font-medium";
-export const authInput = "mt-1.5 w-full rounded-lg border border-input bg-white px-3 text-base shadow-xs outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30 sm:text-sm";
-export const authButton = "mt-6 w-full rounded-lg bg-primary font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
-export const authLink = "rounded-sm font-medium text-primary underline underline-offset-4 hover:text-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";

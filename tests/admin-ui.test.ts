@@ -125,13 +125,16 @@ test("every admin control gets a 44px minimum from one scoped rule, and the admi
 // ---- auth screens keep their exact contract with the unchanged auth routes -----------------------
 test("auth forms post the same fields to the same routes as before the redesign", () => {
   const login = read("app/admin/login/page.tsx"), forgot = read("app/admin/forgot-password/page.tsx"), reset = read("app/admin/reset-password/page.tsx");
-  assert.match(login, /<form method="post" action="\/api\/auth\/login">/);
-  assert.match(login, /name="email" type="email" autoComplete="username" required maxLength=\{254\}/);
-  assert.match(login, /name="password" type="password" autoComplete="current-password" required minLength=\{12\} maxLength=\{200\}/);
-  assert.match(login, /if \(await getAdminUser\(\)\) redirect\("\/admin"\)/);
-  assert.match(forgot, /<form method="post" action="\/api\/auth\/forgot-password">/);
-  assert.match(reset, /<form method="post" action="\/api\/auth\/reset-password">/);
-  assert.match(reset, /<input type="hidden" name="token" value=\{token\} \/>/);
+  const authForm = read("components/admin/auth-form.tsx");
+  // AuthForm/AuthField/AuthPasswordField (components/admin/auth-form.tsx) are the only place the
+  // real <form>/<input> elements are rendered now; the pages just choose action/name/props.
+  assert.match(authForm, /<form method="post" action=\{action\} onSubmit=\{onSubmit\}>/, "a real, un-intercepted POST navigation - onSubmit only sets cosmetic state, never preventDefault");
+  assert.doesNotMatch(authForm, /preventDefault|fetch\(/, "the form is never hijacked into a fetch() submission");
+  assert.match(authForm, /type=\{visible \? "text" : "password"\}/, "the show/hide toggle only ever switches between password and text, never another type");
+  assert.match(authForm, /required minLength=\{minLength\} maxLength=\{maxLength\}/);
+  assert.match(login, /<AuthForm action="\/api\/auth\/login"/);
+  assert.match(login, /<AuthField id="login-email" name="email" label="E-posta" type="email" autoComplete="username" required maxLength=\{254\}/);
+  assert.match(login, /<AuthPasswordField id="login-password" name="password" label="Parola" autoComplete="current-password" minLength=\{12\} maxLength=\{200\}/);
   assert.doesNotMatch(login + forgot + reset, /fetch\(|"use client"/, "auth screens stay plain server-rendered forms");
 });
 test("login never distinguishes which credential was wrong; only rate limiting gets its own message", () => {

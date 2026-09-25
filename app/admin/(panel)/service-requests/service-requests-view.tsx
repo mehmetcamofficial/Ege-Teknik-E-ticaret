@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +25,13 @@ export default function ServiceRequestsView({ canWrite }: { canWrite: boolean })
   /** Same behaviour as before the redesign: choosing a status saves it immediately. */
   async function updateStatus(id: string, requestNumber: string, status: string) {
     const r = await sendAdmin(`/api/admin/service-requests/${id}`, "PATCH", { status });
-    setMessage(r.ok ? { tone: "success", text: `${requestNumber} durumu "${serviceStatusLabel[status]}" olarak güncellendi.` } : { tone: "error", text: r.error || "Talep güncellenemedi." });
+    if (r.ok) {
+      toast.success(`${requestNumber} durumu "${serviceStatusLabel[status]}" olarak güncellendi.`);
+      setMessage({ tone: "success", text: `${requestNumber} durumu "${serviceStatusLabel[status]}" olarak güncellendi.` });
+    } else {
+      toast.error(r.error || "Talep güncellenemedi.");
+      setMessage({ tone: "error", text: r.error || "Talep güncellenemedi." });
+    }
     reload();
   }
 

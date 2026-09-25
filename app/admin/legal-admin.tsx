@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,10 @@ export default function LegalAdmin() {
   const [draft, setDraft] = useState({ title: "", body: "" });
   const [effectiveAt, setEffectiveAt] = useState("");
   const [note, setNote] = useState("");
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const loadVersions = useCallback(async (target: string) => {
     if (!target) return;
@@ -69,14 +75,34 @@ export default function LegalAdmin() {
     if (!selected || !(await send(`/api/admin/legal/versions/${selected.id}`, "PATCH", draft))) return;
     setNote("Taslak kaydedildi."); await loadVersions(slug); await open(selected.id);
   }
-  async function removeDraft() {
-    if (!selected || !confirm("Bu taslak silinsin mi? (Yayınlanmış sürümler silinemez.)")) return;
-    if (await send(`/api/admin/legal/versions/${selected.id}`, "DELETE")) { setSelected(null); setNote("Taslak silindi."); await loadVersions(slug); }
+  async function confirmRemoveDraft() {
+    if (!selected) return;
+    setBusy(true);
+    const res = await send(`/api/admin/legal/versions/${selected.id}`, "DELETE");
+    setBusy(false);
+    setDeleteOpen(false);
+    if (res) {
+      toast.success("Taslak silindi.");
+      setSelected(null);
+      setNote("Taslak silindi.");
+      await loadVersions(slug);
+    }
   }
-  async function publish() {
-    if (!selected || !effectiveAt) return setNote("Yürürlük tarihi seçin.");
-    if (!confirm("Yayınlandıktan sonra bu sürüm değiştirilemez ve silinemez. Yayınlansın mı?")) return;
-    if (await send(`/api/admin/legal/versions/${selected.id}/publish`, "POST", { effectiveAt: new Date(effectiveAt).toISOString() })) { setNote("Sürüm yayınlandı."); await loadVersions(slug); await open(selected.id); }
+  async function confirmPublish() {
+    if (!selected || !effectiveAt) {
+      toast.error("Yürürlük tarihi seçin.");
+      return setNote("Yürürlük tarihi seçin.");
+    }
+    setBusy(true);
+    const res = await send(`/api/admin/legal/versions/${selected.id}/publish`, "POST", { effectiveAt: new Date(effectiveAt).toISOString() });
+    setBusy(false);
+    setPublishOpen(false);
+    if (res) {
+      toast.success("Sürüm yayınlandı.");
+      setNote("Sürüm yayınlandı.");
+      await loadVersions(slug);
+      await open(selected.id);
+    }
   }
 
   const isDraft = selected?.status === "draft";
@@ -92,9 +118,32 @@ export default function LegalAdmin() {
       <div><Label>Metin (düz metin)</Label><Textarea rows={16} value={draft.body} readOnly={!isDraft} onChange={(e) => setDraft({ ...draft, body: e.target.value })} /></div>
       <div className="flex flex-wrap items-end gap-3">
         <a className="text-sm underline" href={`/api/admin/legal/versions/${selected.id}/preview`} target="_blank" rel="noopener">Önizle</a>
-        {isDraft && <><Button type="button" onClick={saveDraft}>Taslağı kaydet</Button><Button type="button" variant="outline" onClick={removeDraft}>Taslağı sil</Button>
-          <div><Label>Yürürlük tarihi (zorunlu)</Label><Input type="datetime-local" value={effectiveAt} onChange={(e) => setEffectiveAt(e.target.value)} /></div><Button type="button" onClick={publish}>Yayınla</Button></>}
+        {isDraft && <><Button type="button" onClick={saveDraft}>Taslağı kaydet</Button><Button type="button" variant="outline" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleteOpen(true)}>Taslağı sil</Button>
+          <div><Label>Yürürlük tarihi (zorunlu)</Label><Input type="datetime-local" value={effectiveAt} onChange={(e) => setEffectiveAt(e.target.value)} /></div><Button type="button" onClick={() => setPublishOpen(true)}>Yayınla</Button></>}
       </div>
     </div>}
+
+    <ConfirmDialog
+      open={deleteOpen}
+      onOpenChange={setDeleteOpen}
+      title="Taslak Sürüm Silme Onayı"
+      description="Bu taslak sürümü silmek istediğinizden emin misiniz? Yayınlanmış sürümler veritabanında değiştirilemez biçimde korunur."
+      confirmLabel="Evet, Sil"
+      cancelLabel="Vazgeç"
+      variant="destructive"
+      loading={busy}
+      onConfirm={confirmRemoveDraft}
+    />
+
+    <ConfirmDialog
+      open={publishOpen}
+      onOpenChange={setPublishOpen}
+      title="Yasal Belge Sürümünü Yayınlama Onayı"
+      description="Yayınlandıktan sonra bu sürümün içeriği ve SHA-256 özeti kilitlenir; değiştirilemez veya silinemez. Yayınlamak istediğinizden emin misiniz?"
+      confirmLabel="Evet, Yayınla"
+      cancelLabel="Vazgeç"
+      loading={busy}
+      onConfirm={confirmPublish}
+    />
   </CardContent></Card>;
 }

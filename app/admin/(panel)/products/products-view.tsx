@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,7 +30,12 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
   async function importCatalog() {
     setMessage({ tone: "info", text: "GREE kataloğu veritabanına aktarılıyor…" });
     const r = await sendAdmin("/api/admin/catalog/import", "POST");
-    if (!r.ok) { setMessage({ tone: "error", text: r.error || "Katalog aktarılamadı." }); return; }
+    if (!r.ok) {
+      toast.error(r.error || "Katalog aktarılamadı.");
+      setMessage({ tone: "error", text: r.error || "Katalog aktarılamadı." });
+      return;
+    }
+    toast.success(`${Number(r.json?.total ?? 0)} katalog kaydı kontrol edildi; ${Number(r.json?.inserted ?? 0)} eksik ürün eklendi.`);
     setMessage({ tone: "success", text: `${Number(r.json?.total ?? 0)} katalog kaydı kontrol edildi; ${Number(r.json?.inserted ?? 0)} eksik ürün eklendi.` });
     reload();
   }
