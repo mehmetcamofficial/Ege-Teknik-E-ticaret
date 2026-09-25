@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -50,7 +50,6 @@ export default function ReviewsAdmin() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Yorumlar</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2" role="group" aria-label="Yorum durumu">
           {(Object.keys(statusLabel) as Status[]).map((s) => <Button key={s} type="button" variant={s === status ? "default" : "outline"} aria-pressed={s === status} onClick={() => setStatus(s)}>{statusLabel[s]}</Button>)}

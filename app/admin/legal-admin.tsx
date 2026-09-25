@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,9 +80,9 @@ export default function LegalAdmin() {
   }
 
   const isDraft = selected?.status === "draft";
-  return <Card><CardHeader><CardTitle>Hukuki Belgeler</CardTitle><p className="mt-1 text-sm text-zinc-500">Yayınlanan sürümler değiştirilemez; metni değiştirmek için yeni sürüm oluşturun. Bu bölüm yalnızca yetkili sahip hesabı içindir.</p></CardHeader><CardContent className="grid gap-4">
+  return <Card><CardContent className="grid gap-4">
     {note && <p className="rounded-lg bg-amber-100 px-4 py-3 text-sm">{note}</p>}
-    <div className="flex flex-wrap items-end gap-3"><div><Label>Belge</Label><select className="h-9 rounded-md border bg-white px-3" value={slug} onChange={(e) => setSlug(e.target.value)}>{slugs.map((s) => <option key={s} value={s}>{slugLabel[s] ?? s}</option>)}</select></div><Button type="button" onClick={createDraft}>Yeni taslak sürüm</Button></div>
+    <div className="flex flex-wrap items-end gap-3"><div><Label htmlFor="legal-document">Belge</Label><select id="legal-document" className="h-9 rounded-md border bg-white px-3" value={slug} onChange={(e) => setSlug(e.target.value)}>{slugs.map((s) => <option key={s} value={s}>{slugLabel[s] ?? s}</option>)}</select></div><Button type="button" onClick={createDraft}>Yeni taslak sürüm</Button></div>
     <Table><TableHeader><TableRow><TableHead>Sürüm</TableHead><TableHead>Durum</TableHead><TableHead>Başlık</TableHead><TableHead>Yürürlük</TableHead><TableHead>Yayın</TableHead><TableHead>Yayınlayan</TableHead><TableHead>İçerik özeti (SHA-256)</TableHead><TableHead/></TableRow></TableHeader><TableBody>
       {versions.length ? versions.map((v) => <TableRow key={v.id}><TableCell>{v.version}</TableCell><TableCell>{statusLabel[v.status]}</TableCell><TableCell>{v.title}</TableCell><TableCell>{fmt(v.effectiveAt)}</TableCell><TableCell>{fmt(v.publishedAt)}</TableCell><TableCell>{v.publishedBy ?? "—"}</TableCell><TableCell className="max-w-40 truncate font-mono text-xs" title={v.contentHash}>{v.contentHash}</TableCell><TableCell><Button type="button" variant="outline" size="sm" onClick={() => void open(v.id)}>Aç</Button></TableCell></TableRow>) : <TableRow><TableCell colSpan={8} className="text-zinc-500">Bu belge için henüz sürüm yok.</TableCell></TableRow>}
     </TableBody></Table>

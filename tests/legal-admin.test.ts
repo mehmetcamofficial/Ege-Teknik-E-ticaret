@@ -125,8 +125,14 @@ test("no route can update or delete a published version, or set publication fiel
   for (const f of legalRouteFiles) assert.doesNotMatch(readFileSync(f, "utf8"), /legalDocumentVersions|getDb/, `${f} must go through lib/legal-admin-db.ts`);
 });
 test("admin UI section is rendered only for legal:write holders and published versions are read-only", () => {
-  assert.match(readFileSync("app/admin/page.tsx", "utf8"), /canManageLegal=\{roleHasPermission\(admin\.role, "legal:write"\)\}/);
-  assert.match(readFileSync("app/admin/admin-client.tsx", "utf8"), /\{canManageLegal&&<LegalAdmin\/>\}/);
+  // Admin Panel V2: the legal module is its own route, and the page refuses to render (server-side,
+  // before LegalAdmin) without legal:write - stronger than the old client-side prop toggle.
+  const page = readFileSync("app/admin/(panel)/legal/page.tsx", "utf8");
+  assert.match(page, /await requireAdminPage\("legal:write"\)/);
+  assert.ok(page.indexOf('requireAdminPage("legal:write")') < page.indexOf("<LegalAdmin"), "authorization precedes rendering");
+  assert.match(readFileSync("lib/admin-ui.ts", "utf8"), /href: "\/admin\/legal", label: "Hukuki Belgeler", icon: "legal", permission: "legal:write"/, "nav entry is hidden from non-owners");
+  const renderers = globSync("app/admin/**/*.tsx").filter((f) => readFileSync(f, "utf8").includes("<LegalAdmin")).sort();
+  assert.deepEqual(renderers, ["app/admin/(panel)/legal/page.tsx"], "no other admin screen renders the legal module");
   const ui = readFileSync("app/admin/legal-admin.tsx", "utf8");
   assert.match(ui, /readOnly=\{!isDraft\}/);
   assert.match(ui, /\{isDraft && </);

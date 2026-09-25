@@ -11,7 +11,7 @@ const migration = readFileSync("drizzle-pg/0010_admin_password_resets.sql", "utf
 const loginPage = readFileSync("app/admin/login/page.tsx", "utf8");
 const forgotPage = readFileSync("app/admin/forgot-password/page.tsx", "utf8");
 const resetPage = readFileSync("app/admin/reset-password/page.tsx", "utf8");
-const adminClient = readFileSync("app/admin/admin-client.tsx", "utf8");
+const adminShell = readFileSync("components/admin/admin-shell.tsx", "utf8");
 
 // ---- schema / migration ---------------------------------------------------------------------
 test("the reset-token table stores only a hash, never the raw token; single-use via used_at", () => {
@@ -142,5 +142,9 @@ test("the password field on reset-password states the policy in plain language a
 
 // ---- admin dashboard layout fix -----------------------------------------------------------------
 test("the admin dashboard's outer grid constrains its single column to minmax(0,1fr), so content (e.g. wide tables) can never force the whole page wider than the viewport", () => {
-  assert.match(adminClient, /className="mx-auto grid max-w-7xl grid-cols-\[minmax\(0,1fr\)\] gap-6 px-5 py-7"/);
+  // Admin Panel V2 moved every module into components/admin/admin-shell.tsx: both the page grid's
+  // content track and the <main> column's own grid must stay minmax(0,1fr) with min-w-0.
+  assert.match(adminShell, /lg:grid-cols-\[auto_minmax\(0,1fr\)\]/, "sidebar + content grid: content track may shrink below its content");
+  assert.match(adminShell, /<div className="flex min-w-0 flex-col">/, "the content column itself can shrink");
+  assert.match(adminShell, /<main id="admin-main"[^>]*className="[^"]*\bmin-w-0\b[^"]*grid-cols-\[minmax\(0,1fr\)\]/, "the main grid's single column is minmax(0,1fr)");
 });

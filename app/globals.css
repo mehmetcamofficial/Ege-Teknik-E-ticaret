@@ -135,3 +135,54 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/*
+ * Admin Panel V2 (Phase 6C). Scoped to .admin-theme so the storefront/account areas are untouched.
+ * Pins a light palette regardless of OS dark mode (the previous admin mixed hardcoded light page
+ * backgrounds with dark-mode card tokens), and replaces the near-black primary with a restrained
+ * Ege Teknik green so shadcn Button/Input focus rings and primary actions carry the brand.
+ */
+.admin-theme {
+  color-scheme: light;
+  --background: #f4f7f6;
+  --foreground: #10251f;
+  --card: #ffffff;
+  --card-foreground: #10251f;
+  --popover: #ffffff;
+  --popover-foreground: #10251f;
+  --primary: #0b5a45;
+  --primary-foreground: #ffffff;
+  --secondary: #eef3f1;
+  --secondary-foreground: #10251f;
+  --muted: #eef3f1;
+  --muted-foreground: #5b6b66;
+  --accent: #e6efec;
+  --accent-foreground: #0b3d30;
+  --destructive: #c0262d;
+  --border: #dde5e2;
+  --input: #c9d4d0;
+  --ring: #0b5a45;
+  --radius: 0.625rem;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* 44px minimum touch target for every admin control, in one place instead of per-call classNames. */
+.admin-theme :is([data-slot="button"], [data-slot="input"], select) {
+  min-height: 2.75rem;
+}
+.admin-theme [data-slot="button"][data-size^="icon"] {
+  min-width: 2.75rem;
+}
+
+/*
+ * Tailwind v4's default border colour is currentColor and nothing in this project set a base border
+ * colour, which is why every admin `border` rendered as a thin near-black line. In the base layer so
+ * any explicit border-* utility (status notices, sidebar dividers) still wins.
+ */
+@layer base {
+  .admin-theme *, .admin-theme ::before, .admin-theme ::after {
+    border-color: var(--border);
+  }
+}

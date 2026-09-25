@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -96,7 +96,6 @@ export default function AnalyticsAdmin() {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Analitik</CardTitle></CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-wrap gap-2" role="group" aria-label="Tarih aralığı">
@@ -134,7 +133,7 @@ export default function AnalyticsAdmin() {
                 <section>
                   <h3 className="mb-2 text-sm font-semibold">Günlük ziyaretçi trendi</h3>
                   <ul className="divide-y" aria-label="Günlük ziyaretçi trendi, tarih ve tekil ziyaretçi sayısı">{data.dailyTrend.map((d) => <BarRow key={d.date} label={dateFmt(d.date)} value={d.visitors} max={maxTrend} />)}</ul>
-                  <details className="mt-2 text-sm"><summary>Tablo olarak gör</summary>
+                  <details className="mt-2 text-sm"><summary className="flex min-h-11 cursor-pointer items-center">Tablo olarak gör</summary>
                     <Table className="mt-2"><TableHeader><TableRow><TableHead>Tarih</TableHead><TableHead>Ziyaretçi</TableHead><TableHead>Sayfa görüntüleme</TableHead></TableRow></TableHeader>
                       <TableBody>{data.dailyTrend.map((d) => <TableRow key={d.date}><TableCell>{dateFmt(d.date)}</TableCell><TableCell>{n(d.visitors)}</TableCell><TableCell>{n(d.pageViews)}</TableCell></TableRow>)}</TableBody>
                     </Table>
