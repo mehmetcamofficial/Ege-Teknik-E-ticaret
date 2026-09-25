@@ -63,3 +63,16 @@ export const analyticsEvents=pgTable("analytics_events",{id:text("id").primaryKe
   check("analytics_events_device_ck",sql`${t.device} IN ('mobile','tablet','desktop')`),
   check("analytics_events_visitor_ck",sql`${t.visitorId} ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'`),
 ]);
+/**
+ * Admin "forgot password" reset tokens (Phase 6B). The raw token is a random 256-bit value the
+ * caller only ever sees once, in the e-mail; only its sha256 hash is stored here, so a DB read
+ * alone can never mint a valid reset. Single-use: used_at starts NULL and is set exactly once,
+ * atomically with the password update and session revocation (see lib/admin-auth.ts's
+ * consumePasswordResetToken) - a second attempt at the same token finds used_at already set and
+ * fails, exactly like the conditional-update pattern in lib/reviews-db.ts's moderateReview.
+ */
+export const adminPasswordResets=pgTable("admin_password_resets",{id:text("id").primaryKey(),adminUserId:text("admin_user_id").notNull().references(()=>adminUsers.id),tokenHash:text("token_hash").notNull(),expiresAt:timestamp("expires_at",{withTimezone:true}).notNull(),usedAt:timestamp("used_at",{withTimezone:true}),requestIpHash:text("request_ip_hash").notNull().default(""),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  uniqueIndex("admin_password_resets_token_uq").on(t.tokenHash),
+  index("admin_password_resets_user_created_idx").on(t.adminUserId,t.createdAt),
+  check("admin_password_resets_token_ck",sql`${t.tokenHash} ~ '^[0-9a-f]{64}$'`),
+]);

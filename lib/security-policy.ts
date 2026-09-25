@@ -19,6 +19,7 @@ export function roleHasPermission(role: string, permission: AdminPermission): bo
 
 export const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 export const SESSION_ROTATE_AFTER_MS = 30 * 60 * 1000;
+export const PASSWORD_RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 export function isSessionActive(session: { expiresAt: Date; revokedAt: Date | null }, now: Date): boolean {
   return session.revokedAt === null && session.expiresAt.getTime() > now.getTime();
