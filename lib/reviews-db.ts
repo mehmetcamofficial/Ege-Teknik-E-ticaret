@@ -5,6 +5,7 @@ import {
   canTransitionReview, encodeReviewCursor, summarizeRatings, toPublicReview, verifyPurchase,
   type ReviewCursor, type ReviewSort, type ReviewStatus, type ReviewSubmission, reviewContentHash,
 } from "@/lib/reviews";
+import { pgErrorCode } from "@/lib/db-errors";
 
 /** Reviews are only readable/writable for products the storefront publishes. */
 export async function findPublishedProduct(productId: string) {
@@ -68,7 +69,7 @@ export async function submitReview(input: { productId: string; submission: Revie
     return inserted.length ? "stored" : "dropped";
   } catch (error) {
     // The guard trigger re-checks verification (e.g. the order changed status meanwhile): store the review unverified instead.
-    if (orderItemId && (error as { code?: string })?.code === "23514") {
+    if (orderItemId && pgErrorCode(error) === "23514") {
       const inserted = await db.insert(productReviews).values({ ...row, verifiedPurchase: false, orderItemId: null }).onConflictDoNothing().returning({ id: productReviews.id });
       return inserted.length ? "stored" : "dropped";
     }
@@ -96,7 +97,7 @@ export async function moderateReview(input: { reviewId: string; to: "approved" |
     });
   } catch (error) {
     // Re-approving while another live review holds the same order line / content: unique index says no.
-    if ((error as { code?: string })?.code === "23505") return { ok: false, code: "CONFLICT" };
+    if (pgErrorCode(error) === "23505") return { ok: false, code: "CONFLICT" };
     throw error;
   }
 }
