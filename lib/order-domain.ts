@@ -46,7 +46,10 @@ export const orderRequestSchema = z.object({
   district: z.string().trim().max(100).default(""),
   address: z.string().trim().max(500).default(""),
   paymentProvider: z.enum(["PayTR", "iyzico", "discovery"]),
-  items: z.array(z.object({ productId: z.string().min(1).max(160), quantity: z.number().int().min(1).max(10) })).min(1).max(20),
+  items: z.array(z.object({ productId: z.string().min(1).max(160), quantity: z.number().int().min(1).max(10) }))
+    .min(1)
+    .max(20)
+    .refine((items) => new Set(items.map((item) => item.productId)).size === items.length, "Duplicate product"),
   // How the order is delivered. Only a PREFERENCE: the server derives what is allowed from the products' delivery
   // classes and prices any shipping itself. Omitted = the server's default (dealer delivery, or pickup for parts only).
   // Any `installation`/shipping/price field a client still sends is stripped by the schema and never read.

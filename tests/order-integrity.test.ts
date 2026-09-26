@@ -40,6 +40,17 @@ test("an empty cart is rejected", () => {
   assert.equal(orderRequestSchema.safeParse({ ...baseRequest, items: [] }).success, false);
 });
 
+test("duplicate product ids are rejected instead of silently replacing a quantity", () => {
+  const parsed = orderRequestSchema.safeParse({
+    ...baseRequest,
+    items: [
+      { productId: "p1", quantity: 1 },
+      { productId: "p1", quantity: 2 },
+    ],
+  });
+  assert.equal(parsed.success, false);
+});
+
 test("client-supplied prices, VAT and totals are stripped from the parsed request", () => {
   const parsed = orderRequestSchema.parse({
     ...baseRequest,
