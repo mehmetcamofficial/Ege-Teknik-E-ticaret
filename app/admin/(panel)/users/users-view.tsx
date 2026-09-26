@@ -71,6 +71,65 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
   const reloadAll = () => { users.reload(); invites.reload(); audit.reload(); };
   const fail = (text: string) => { toast.error(text); setError(text); };
 
+  /**
+   * Row primitives shared by the desktop table and the mobile card list, so both
+   * presentations render the same data, the same permission checks and the same actions.
+   * `scope` keeps every id unique because only one of the two presentations is visible.
+   */
+  const isLastSuperAdmin = (u: ManagedUser) => u.active && u.role === "super_admin" && activeSuperAdmins <= 1;
+  const roleControl = (u: ManagedUser, scope: string) => {
+    const draft = roleDrafts[u.id] ?? (u.role as AdminRole);
+    if (!canAssignRoles) return <StatusBadge tone={u.role === "super_admin" ? "info" : "neutral"}>{roleLabel[u.role] ?? u.role}</StatusBadge>;
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor={`role-${scope}-${u.id}`} className="sr-only">{u.email} rolü</label>
+        <select
+          id={`role-${scope}-${u.id}`}
+          className={`${selectClass} sm:w-52`}
+          value={draft}
+          onChange={(e) => setRoleDrafts((d) => ({ ...d, [u.id]: e.target.value as AdminRole }))}
+        >
+          {ASSIGNABLE.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+        </select>
+        {draft !== u.role ? <Button size="sm" onClick={() => setConfirm({ kind: "role", user: u, role: draft })}>Uygula</Button> : null}
+      </div>
+    );
+  };
+  const grantChips = (u: ManagedUser) => (
+    u.grants.length ? (
+      <ul className="flex flex-wrap gap-1.5">
+        {u.grants.map((g) => (
+          <li key={g.id}>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-800 ring-1 ring-inset ring-sky-200">
+              {permissionLabel[g.permission as AdminPermission] ?? g.permission}
+              <span className="font-normal">· {fmt(g.expiresAt)}</span>
+              {canAssignRoles ? (
+                <button type="button" onClick={() => setConfirm({ kind: "revoke", user: u, grant: g })} className="underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">sonlandır</button>
+              ) : null}
+            </span>
+          </li>
+        ))}
+      </ul>
+    ) : <span className="text-sm text-muted-foreground">—</span>
+  );
+  const rowActions = (u: ManagedUser) => (
+    <div className="flex flex-wrap justify-end gap-2">
+      {canAssignRoles ? (
+        <Button size="sm" variant="outline" onClick={() => { setGrantUser(u); setGrantPermission("orders:write"); setGrantTtl(8); setGrantOpen(true); }}>Geçici yetki</Button>
+      ) : null}
+      {canManageUsers ? (
+        <Button
+          size="sm"
+          variant={u.active ? "destructive" : "outline"}
+          title={isLastSuperAdmin(u) ? "Son aktif Süper Yönetici devre dışı bırakılamaz." : undefined}
+          onClick={() => setConfirm({ kind: "status", user: u })}
+        >
+          {u.active ? "Devre dışı bırak" : "Etkinleştir"}
+        </Button>
+      ) : null}
+    </div>
+  );
+
   async function submitInvite() {
     setBusy(true);
     const r = await sendAdmin("/api/admin/users/invites", "POST", { email: inviteEmail, role: inviteRole, ttlHours: inviteTtl });
@@ -122,7 +181,8 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
         {!rows.length && !users.loading ? (
           <div className="p-4 sm:p-5"><EmptyState title="Kullanıcı bulunamadı" /></div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -132,64 +192,42 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((u) => {
-                  const isLastSuperAdmin = u.active && u.role === "super_admin" && activeSuperAdmins <= 1;
-                  const draft = roleDrafts[u.id] ?? (u.role as AdminRole);
-                  return (
-                    <TableRow key={u.id}>
-                      <TableCell className="max-w-[16rem] whitespace-normal font-medium">
-                        {u.email}{u.id === selfId ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(siz)</span> : null}
-                      </TableCell>
-                      <TableCell>
-                        {canAssignRoles ? (
-                          <div className="flex items-center gap-2">
-                            <label htmlFor={`role-${u.id}`} className="sr-only">{u.email} rolü</label>
-                            <select id={`role-${u.id}`} className={selectClass} value={draft} onChange={(e) => setRoleDrafts((d) => ({ ...d, [u.id]: e.target.value as AdminRole }))}>
-                              {ASSIGNABLE.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                            </select>
-                            {draft !== u.role ? <Button size="sm" onClick={() => setConfirm({ kind: "role", user: u, role: draft })}>Uygula</Button> : null}
-                          </div>
-                        ) : <StatusBadge tone={u.role === "super_admin" ? "info" : "neutral"}>{roleLabel[u.role] ?? u.role}</StatusBadge>}
-                      </TableCell>
-                      <TableCell><StatusBadge tone={u.active ? "success" : "neutral"}>{u.active ? "Aktif" : "Pasif"}</StatusBadge></TableCell>
-                      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{fmt(u.lastActivityAt ?? u.lastLoginAt)}</TableCell>
-                      <TableCell>
-                        {u.grants.length ? (
-                          <ul className="flex flex-wrap gap-1.5">
-                            {u.grants.map((g) => (
-                              <li key={g.id}>
-                                <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-800 ring-1 ring-inset ring-sky-200">
-                                  {permissionLabel[g.permission as AdminPermission] ?? g.permission}
-                                  <span className="font-normal">· {fmt(g.expiresAt)}</span>
-                                  {canAssignRoles ? (
-                                    <button type="button" onClick={() => setConfirm({ kind: "revoke", user: u, grant: g })} className="underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">sonlandır</button>
-                                  ) : null}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : <span className="text-sm text-muted-foreground">—</span>}
-                      </TableCell>
-                      {(canManageUsers || canAssignRoles) ? (
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            {canAssignRoles ? (
-                              <Button size="sm" variant="outline" onClick={() => { setGrantUser(u); setGrantPermission("orders:write"); setGrantTtl(8); setGrantOpen(true); }}>Geçici yetki</Button>
-                            ) : null}
-                            {canManageUsers ? (
-                              <Button size="sm" variant={u.active ? "destructive" : "outline"} title={isLastSuperAdmin ? "Son aktif Süper Yönetici devre dışı bırakılamaz." : undefined} onClick={() => setConfirm({ kind: "status", user: u })}>
-                                {u.active ? "Devre dışı bırak" : "Etkinleştir"}
-                              </Button>
-                            ) : null}
-                          </div>
-                        </TableCell>
-                      ) : null}
-                    </TableRow>
-                  );
-                })}
+                {rows.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell className="max-w-[16rem] whitespace-normal font-medium">
+                      {u.email}{u.id === selfId ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(siz)</span> : null}
+                    </TableCell>
+                    <TableCell>{roleControl(u, "table")}</TableCell>
+                    <TableCell><StatusBadge tone={u.active ? "success" : "neutral"}>{u.active ? "Aktif" : "Pasif"}</StatusBadge></TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{fmt(u.lastActivityAt ?? u.lastLoginAt)}</TableCell>
+                    <TableCell>{grantChips(u)}</TableCell>
+                    {(canManageUsers || canAssignRoles) ? <TableCell className="text-right">{rowActions(u)}</TableCell> : null}
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
+          {/* Mobile: a stacked card per account instead of a 788px horizontally scrolling table. */}
+          <ul className="grid gap-3 p-3 sm:p-4 md:hidden">
+            {rows.map((u) => (
+              <li key={u.id} className="rounded-lg border p-3.5">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium break-all">{u.email}{u.id === selfId ? <span className="ml-1.5 text-xs font-normal text-muted-foreground">(siz)</span> : null}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Son aktivite: {fmt(u.lastActivityAt ?? u.lastLoginAt)}</p>
+                  </div>
+                  <StatusBadge tone={u.active ? "success" : "neutral"}>{u.active ? "Aktif" : "Pasif"}</StatusBadge>
+                </div>
+                <div className="mt-3">{roleControl(u, "card")}</div>
+                <div className="mt-3">
+                  <p className="mb-1.5 text-xs font-medium text-muted-foreground">Geçici yetkiler</p>
+                  {grantChips(u)}
+                </div>
+                {(canManageUsers || canAssignRoles) ? <div className="mt-3 border-t pt-3">{rowActions(u)}</div> : null}
+              </li>
+            ))}
+          </ul>
+          </>
         )}
       </Panel>
 
@@ -246,7 +284,9 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
           <DialogHeader><DialogTitle>Yönetici davet et</DialogTitle><DialogDescription>Davet bağlantısı e-posta ile gönderilir ve en fazla {ADMIN_INVITE_MAX_TTL_HOURS} saat geçerlidir.</DialogDescription></DialogHeader>
           <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); void submitInvite(); }}>
             <FormField label="E-posta" htmlFor="invite-email">
-              <Input id="invite-email" type="email" required maxLength={254} autoComplete="off" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+              {/* Radix portals the dialog outside .admin-theme, so the scoped 44px control rule never
+                  reaches it - the height is set explicitly to keep touch targets consistent. */}
+              <Input id="invite-email" type="email" required maxLength={254} autoComplete="off" className="h-11" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
             </FormField>
             <FormField label="Rol" htmlFor="invite-role">
               <select id="invite-role" className={selectClass} value={inviteRole} onChange={(e) => setInviteRole(e.target.value as AdminRole)}>
@@ -274,7 +314,7 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
             <DialogDescription>Yetki sunucu tarafında süre bitince kendiliğinden düşer. {grantCeiling > 0 ? `Üst sınır: ${hoursLabel(grantCeiling)}.` : ""}</DialogDescription>
           </DialogHeader>
           <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); void submitGrant(); }}>
-            <FormField label="Kullanıcı" htmlFor="grant-user"><Input id="grant-user" readOnly value={grantUser?.email ?? ""} /></FormField>
+            <FormField label="Kullanıcı" htmlFor="grant-user"><Input id="grant-user" readOnly className="h-11" value={grantUser?.email ?? ""} /></FormField>
             <FormField label="Yetki" htmlFor="grant-permission">
               <select id="grant-permission" className={selectClass} value={grantPermission} onChange={(e) => setGrantPermission(e.target.value as AdminPermission)}>
                 {GRANTABLE.map((p) => <option key={p} value={p}>{permissionLabel[p]}{isPrivilegedPermission(p) ? " (en fazla 24 saat)" : ""}</option>)}
@@ -286,7 +326,7 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
               </select>
             </FormField>
             <FormField label="Gerekçe" htmlFor="grant-reason" hint="Denetim kaydına yazılır.">
-              <Input id="grant-reason" maxLength={200} value={grantReason} onChange={(e) => setGrantReason(e.target.value)} />
+              <Input id="grant-reason" maxLength={200} className="h-11" value={grantReason} onChange={(e) => setGrantReason(e.target.value)} />
             </FormField>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setGrantOpen(false)} disabled={busy}>Vazgeç</Button>
