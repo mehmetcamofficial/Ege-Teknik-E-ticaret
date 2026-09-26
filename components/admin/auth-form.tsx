@@ -13,13 +13,13 @@ import { useState, type FormEvent, type ReactNode } from "react";
  * the request with an XHR/fetch call.
  */
 
-const inputBase = "h-12 w-full rounded-xl border border-input bg-white pl-11 text-base shadow-xs outline-none transition-[box-shadow,border-color] placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/25 sm:text-sm";
+const inputBase = "h-12 w-full rounded-xl border border-input bg-white/80 pl-11 text-base shadow-xs outline-none transition-[box-shadow,border-color,background-color] placeholder:text-muted-foreground/60 hover:border-primary/40 focus-visible:border-primary focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-emerald-500/20 sm:text-sm";
 const iconBase = "pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2 text-muted-foreground";
 const toggleBase = "absolute top-1/2 right-1 grid size-11 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 export function AuthField({ id, name, label, type = "text", autoComplete, required, maxLength, hint }: { id: string; name: string; label: string; type?: string; autoComplete?: string; required?: boolean; maxLength?: number; hint?: string }) {
   return (
-    <div className="mt-5">
+    <div className="mt-6">
       <label htmlFor={id} className="block text-sm font-medium">{label}</label>
       <div className="relative mt-1.5">
         <Mail aria-hidden="true" className={iconBase} />
@@ -32,7 +32,7 @@ export function AuthField({ id, name, label, type = "text", autoComplete, requir
 export function AuthPasswordField({ id, name, label, autoComplete, minLength, maxLength, describedBy }: { id: string; name: string; label: string; autoComplete: string; minLength: number; maxLength: number; describedBy?: string }) {
   const [visible, setVisible] = useState(false);
   return (
-    <div className="mt-5">
+    <div className="mt-6">
       <label htmlFor={id} className="block text-sm font-medium">{label}</label>
       <div className="relative mt-1.5">
         <Lock aria-hidden="true" className={iconBase} />
@@ -53,7 +53,7 @@ export function AuthForm({ action, submitLabel, pendingLabel, children }: { acti
   return (
     <form method="post" action={action} onSubmit={onSubmit}>
       {children}
-      <button type="submit" disabled={pending} aria-busy={pending} className="mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-[0.95rem] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-80">
+      <button type="submit" disabled={pending} aria-busy={pending} className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary bg-gradient-to-br from-[#0f7a5c] to-[#0b5a45] text-[0.95rem] font-semibold text-primary-foreground shadow-lg shadow-emerald-900/25 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-900/30 active:scale-[0.99] motion-reduce:transition-none motion-reduce:hover:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-80">
         {pending && <Loader2 aria-hidden="true" className="size-4 animate-spin motion-reduce:hidden" />}
         {pending ? pendingLabel : submitLabel}
       </button>
