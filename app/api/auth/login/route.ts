@@ -29,8 +29,11 @@ async function bootstrapFirstAdmin(email: string, password: string): Promise<Adm
       const [{ value: confirmed }] = await tx.select({ value: count() }).from(adminUsers);
       if (confirmed !== 0) return null;
       const id = crypto.randomUUID();
-      const [created] = await tx.insert(adminUsers).values({ id, externalUserId: `password:${email}`, email, passwordHash: configuredPasswordHash!, role: "owner" }).returning();
-      await tx.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId: id, actorEmail: email, action: "bootstrap", entityType: "admin_user", entityId: id, payload: { role: "owner", reason: "initial_admin_bootstrap" } });
+      // Phase 6D.1: the first administrator is created as super_admin. The legacy
+      // "owner" role is retired, so bootstrapping it would be rejected by the
+      // admin_users_retire_owner_trg trigger once migration 0011 is applied.
+      const [created] = await tx.insert(adminUsers).values({ id, externalUserId: `password:${email}`, email, passwordHash: configuredPasswordHash!, role: "super_admin" }).returning();
+      await tx.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId: id, actorEmail: email, action: "bootstrap", entityType: "admin_user", entityId: id, payload: { role: "super_admin", reason: "initial_admin_bootstrap" } });
       return created ?? null;
     });
   } catch {

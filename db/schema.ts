@@ -76,3 +76,27 @@ export const adminPasswordResets=pgTable("admin_password_resets",{id:text("id").
   index("admin_password_resets_user_created_idx").on(t.adminUserId,t.createdAt),
   check("admin_password_resets_token_ck",sql`${t.tokenHash} ~ '^[0-9a-f]{64}$'`),
 ]);
+/**
+ * Privileged governance tables (Phase 6D.1). PayTR is OUT OF SCOPE: no credential
+ * column/table exists anywhere here. integration_configs stores only metadata
+ * (configured flag + short masked hint), never a secret.
+ */
+export const adminInvites=pgTable("admin_invites",{id:text("id").primaryKey(),email:text("email").notNull(),role:text("role").notNull(),tokenHash:text("token_hash").notNull(),expiresAt:timestamp("expires_at",{withTimezone:true}).notNull(),acceptedAt:timestamp("accepted_at",{withTimezone:true}),revokedAt:timestamp("revoked_at",{withTimezone:true}),invitedBy:text("invited_by").notNull().references(()=>adminUsers.id),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  uniqueIndex("admin_invites_token_uq").on(t.tokenHash),
+  index("admin_invites_email_created_idx").on(t.email,t.createdAt),
+  check("admin_invites_token_ck",sql`${t.tokenHash} ~ '^[0-9a-f]{64}$'`),
+  check("admin_invites_role_ck",sql`${t.role} IN ('super_admin','admin','operations_manager','catalog_manager','support_agent','viewer')`),
+  // Invitation lifetime is capped at 72 HOURS in the database, not only in code.
+  check("admin_invites_expiry_ck",sql`${t.expiresAt} > ${t.createdAt} AND ${t.expiresAt} <= ${t.createdAt} + make_interval(hours => 72)`),
+]);
+export const adminGrants=pgTable("admin_grants",{id:text("id").primaryKey(),adminUserId:text("admin_user_id").notNull().references(()=>adminUsers.id),permission:text("permission").notNull(),reason:text("reason").notNull().default(""),expiresAt:timestamp("expires_at",{withTimezone:true}).notNull(),revokedAt:timestamp("revoked_at",{withTimezone:true}),grantedBy:text("granted_by").notNull().references(()=>adminUsers.id),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  index("admin_grants_user_expiry_idx").on(t.adminUserId,t.expiresAt),
+  check("admin_grants_no_payments_configure_ck",sql`${t.permission} <> 'payments:configure'`),
+  check("admin_grants_permission_ck",sql`${t.permission} IN ('catalog:write','orders:write','service:write','content:write','legal:write','admin:read','users:read','users:write','roles:write','integrations:read','integrations:write','payments:configure','security:write','audit:read')`),
+  // DB backstop: 168 HOURS max. The per-permission 24-hour privileged ceiling is
+  // enforced in code (maxGrantTtlHours) because a single CHECK cannot vary by permission.
+  check("admin_grants_expiry_ck",sql`${t.expiresAt} > ${t.createdAt} AND ${t.expiresAt} <= ${t.createdAt} + make_interval(hours => 168)`),
+]);
+export const integrationConfigs=pgTable("integration_configs",{key:text("key").primaryKey(),displayName:text("display_name").notNull(),configured:boolean("configured").notNull().default(false),hint:text("hint").notNull().default(""),updatedBy:text("updated_by").references(()=>adminUsers.id),updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  check("integration_configs_hint_ck",sql`char_length(${t.hint}) <= 32`),
+]);

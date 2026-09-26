@@ -78,6 +78,13 @@
       "when": 1790357736800,
       "tag": "0010_admin_password_resets",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790379147585,
+      "tag": "0011_admin_governance",
+      "breakpoints": true
     }
   ]
 }

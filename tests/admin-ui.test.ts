@@ -10,28 +10,32 @@ const hrefsFor = (role: string) => visibleNav(role).flatMap((s) => s.items.map((
 const read = (f: string) => readFileSync(f, "utf8");
 
 // ---- navigation: permission-aware, driven by the existing RBAC -----------------------------------
-test("owner sees every module; the deferred Customers and Audit Logs modules are not in the nav at all", () => {
-  assert.deepEqual(hrefsFor("owner"), ["/admin", "/admin/orders", "/admin/service-requests", "/admin/products", "/admin/second-hand", "/admin/catalog-taxonomy", "/admin/inventory", "/admin/blog", "/admin/reviews", "/admin/legal", "/admin/analytics", "/admin/settings"]);
+test("super_admin sees every module, including the new Users & Permissions entry; the deferred Customers module is not in the nav at all", () => {
+  assert.deepEqual(hrefsFor("super_admin"), ["/admin", "/admin/orders", "/admin/service-requests", "/admin/products", "/admin/second-hand", "/admin/catalog-taxonomy", "/admin/inventory", "/admin/blog", "/admin/reviews", "/admin/legal", "/admin/analytics", "/admin/users", "/admin/settings"]);
   const all = ADMIN_NAV.flatMap((s) => s.items.map((i) => i.href));
-  assert.ok(!all.some((h) => /customers|audit/.test(h)), "no nav entry for a module without an existing safe read path");
+  assert.ok(!all.some((h) => /customers/.test(h)), "no nav entry for a module without an existing safe read path");
+  assert.ok(all.includes("/admin/users"), "Phase 6D.1 ships the users module with a real read route");
 });
 test("write-gated modules follow the same permission their API enforces: Reviews needs content:write, Legal needs legal:write", () => {
   assert.ok(!hrefsFor("viewer").includes("/admin/reviews") && !hrefsFor("viewer").includes("/admin/legal"));
   assert.ok(!hrefsFor("support_agent").includes("/admin/reviews"));
   assert.ok(hrefsFor("catalog_manager").includes("/admin/reviews"), "catalog_manager holds content:write");
-  for (const role of adminRoles.filter((r) => r !== "owner")) assert.ok(!hrefsFor(role).includes("/admin/legal"), `${role} must not see Legal`);
+  for (const role of adminRoles.filter((r) => r !== "owner" && r !== "super_admin")) assert.ok(!hrefsFor(role).includes("/admin/legal"), `${role} must not see Legal`);
+});
+test("the privileged Users & Permissions module is invisible to every non-super_admin role, including admin", () => {
+  for (const role of adminRoles.filter((r) => r !== "super_admin")) assert.ok(!hrefsFor(role).includes("/admin/users"), `${role} must not see Users & Permissions`);
 });
 test("every role keeps every admin:read module it could already see on the old single-page admin", () => {
   for (const role of adminRoles) for (const h of ["/admin", "/admin/orders", "/admin/service-requests", "/admin/products", "/admin/second-hand", "/admin/catalog-taxonomy", "/admin/inventory", "/admin/blog", "/admin/analytics", "/admin/settings"]) assert.ok(hrefsFor(role).includes(h), `${role} -> ${h}`);
 });
 test("an unknown or prototype-polluting role gets no navigation at all (roleHasPermission own-property check)", () => {
-  for (const role of ["", "admin", "__proto__", "constructor"]) assert.deepEqual(visibleNav(role), []);
+  for (const role of ["", "superuser", "__proto__", "constructor"]) assert.deepEqual(visibleNav(role), []);
 });
 test("sections with no permitted item are removed rather than rendered empty", () => {
   for (const role of adminRoles) for (const s of visibleNav(role)) assert.ok(s.items.length > 0);
 });
 test("active nav item is the longest matching prefix, and /admin only matches itself", () => {
-  const nav = visibleNav("owner");
+  const nav = visibleNav("super_admin");
   assert.equal(activeNavHref("/admin", nav), "/admin");
   assert.equal(activeNavHref("/admin/products/new", nav), "/admin/products");
   assert.equal(activeNavHref("/admin/orders/abc-123", nav), "/admin/orders");
@@ -67,14 +71,17 @@ test("requireAdminPage: no session -> login, missing permission -> dashboard, on
   assert.match(guard, /if \(!admin\) redirect\("\/admin\/login"\)/);
   assert.match(guard, /if \(!roleHasPermission\(admin\.role, permission\)\) redirect\("\/admin"\)/);
 });
-test("the redesign added no admin API endpoint (no new data exposure): the route set is unchanged", () => {
+test("every admin API route is registered explicitly: Phase 6D.1 adds only the privileged governance routes", () => {
   assert.deepEqual(globSync("app/api/admin/**/route.ts").sort(), [
-    "app/api/admin/analytics/route.ts", "app/api/admin/blog/[id]/route.ts", "app/api/admin/blog/route.ts", "app/api/admin/catalog/import/route.ts",
+    "app/api/admin/analytics/route.ts", "app/api/admin/audit/route.ts", "app/api/admin/blog/[id]/route.ts", "app/api/admin/blog/route.ts",
+    "app/api/admin/catalog/import/route.ts", "app/api/admin/integrations/route.ts",
     "app/api/admin/legal/documents/[slug]/versions/route.ts", "app/api/admin/legal/documents/route.ts", "app/api/admin/legal/versions/[id]/preview/route.ts",
     "app/api/admin/legal/versions/[id]/publish/route.ts", "app/api/admin/legal/versions/[id]/route.ts", "app/api/admin/media/route.ts",
     "app/api/admin/orders/[id]/route.ts", "app/api/admin/overview/route.ts", "app/api/admin/products/[id]/image/route.ts", "app/api/admin/products/[id]/route.ts",
     "app/api/admin/products/route.ts", "app/api/admin/reviews/[id]/route.ts", "app/api/admin/reviews/route.ts", "app/api/admin/second-hand/[id]/route.ts",
     "app/api/admin/second-hand/route.ts", "app/api/admin/service-requests/[id]/route.ts", "app/api/admin/taxonomy/route.ts",
+    "app/api/admin/users/[id]/grants/route.ts", "app/api/admin/users/[id]/role/route.ts", "app/api/admin/users/[id]/status/route.ts",
+    "app/api/admin/users/grants/[grantId]/revoke/route.ts", "app/api/admin/users/invites/route.ts", "app/api/admin/users/route.ts",
   ].sort());
 });
 test("no client-side admin code reads environment variables or server-only modules (e.g. Resend configuration)", () => {
@@ -135,7 +142,11 @@ test("auth forms post the same fields to the same routes as before the redesign"
   assert.match(login, /<AuthForm action="\/api\/auth\/login"/);
   assert.match(login, /<AuthField id="login-email" name="email" label="E-posta" type="email" autoComplete="username" required maxLength=\{254\}/);
   assert.match(login, /<AuthPasswordField id="login-password" name="password" label="Parola" autoComplete="current-password" minLength=\{12\} maxLength=\{200\}/);
-  assert.doesNotMatch(login + forgot + reset, /fetch\(|"use client"/, "auth screens stay plain server-rendered forms");
+  assert.match(login, /if \(await getAdminUser\(\)\) redirect\("\/admin"\)/);
+  assert.match(forgot, /<AuthForm action="\/api\/auth\/forgot-password"/);
+  assert.match(reset, /<AuthForm action="\/api\/auth\/reset-password"/);
+  assert.match(reset, /<input type="hidden" name="token" value=\{token\} \/>/);
+  assert.doesNotMatch(login + forgot + reset, /fetch\(|"use client"/, "the pages themselves stay plain server components - no client directive, no fetch");
 });
 test("login never distinguishes which credential was wrong; only rate limiting gets its own message", () => {
   const login = read("app/admin/login/page.tsx");

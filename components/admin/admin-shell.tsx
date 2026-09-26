@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { BarChart3, Boxes, ExternalLink, LayoutDashboard, LogOut, Menu, MessageSquare, Newspaper, Package, PanelLeftClose, PanelLeftOpen, Recycle, Scale, Settings, ShoppingCart, Tags, Wrench, X, type LucideIcon } from "lucide-react";
+import { BarChart3, Boxes, ExternalLink, LayoutDashboard, LogOut, Menu, MessageSquare, Newspaper, Package, PanelLeftClose, PanelLeftOpen, Recycle, Scale, Settings, ShieldCheck, ShoppingCart, Tags, Wrench, X, type LucideIcon } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { activeNavHref, roleLabel, type NavIcon, type NavSection } from "@/lib/admin-ui";
 import { cn } from "@/lib/utils";
 
 const icons: Record<NavIcon, LucideIcon> = {
   dashboard: LayoutDashboard, orders: ShoppingCart, service: Wrench, products: Package, secondHand: Recycle, taxonomy: Tags,
-  inventory: Boxes, blog: Newspaper, reviews: MessageSquare, legal: Scale, analytics: BarChart3, settings: Settings,
+  inventory: Boxes, blog: Newspaper, reviews: MessageSquare, legal: Scale, analytics: BarChart3, settings: Settings, users: ShieldCheck,
 };
 const focusRing = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300";
 

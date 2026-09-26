@@ -8,7 +8,7 @@ import { roleHasPermission, type AdminPermission } from "./security-policy.ts";
  */
 export type NavItem = { href: string; label: string; icon: NavIcon; permission: AdminPermission };
 export type NavSection = { title: string | null; items: NavItem[] };
-export type NavIcon = "dashboard" | "orders" | "service" | "products" | "secondHand" | "taxonomy" | "inventory" | "blog" | "reviews" | "legal" | "analytics" | "settings";
+export type NavIcon = "dashboard" | "orders" | "service" | "products" | "secondHand" | "taxonomy" | "inventory" | "blog" | "reviews" | "legal" | "analytics" | "settings" | "users";
 
 export const ADMIN_NAV: readonly NavSection[] = [
   { title: null, items: [{ href: "/admin", label: "Genel Bakış", icon: "dashboard", permission: "admin:read" }] },
@@ -29,7 +29,11 @@ export const ADMIN_NAV: readonly NavSection[] = [
     { href: "/admin/legal", label: "Hukuki Belgeler", icon: "legal", permission: "legal:write" },
   ] },
   { title: "Raporlama", items: [{ href: "/admin/analytics", label: "Analitik", icon: "analytics", permission: "admin:read" }] },
-  { title: "Sistem", items: [{ href: "/admin/settings", label: "Ayarlar", icon: "settings", permission: "admin:read" }] },
+  // Phase 6D.1: only super_admin holds users:read, so this section is invisible to every other role.
+  { title: "Sistem", items: [
+    { href: "/admin/users", label: "Kullanıcılar & Yetkiler", icon: "users", permission: "users:read" },
+    { href: "/admin/settings", label: "Ayarlar", icon: "settings", permission: "admin:read" },
+  ] },
 ];
 
 /** Sections with no permitted item disappear entirely. */
@@ -45,11 +49,15 @@ export function activeNavHref(pathname: string, sections: readonly NavSection[])
 }
 
 export const roleLabel: Record<string, string> = {
-  owner: "Sahip", operations_manager: "Operasyon Yöneticisi", catalog_manager: "Katalog Yöneticisi", support_agent: "Destek Uzmanı", viewer: "İzleyici",
+  super_admin: "Süper Yönetici", admin: "Yönetici",
+  owner: "Sahip (devredışı, legacy)", operations_manager: "Operasyon Yöneticisi", catalog_manager: "Katalog Yöneticisi", support_agent: "Destek Uzmanı", viewer: "İzleyici",
 };
 export const permissionLabel: Record<AdminPermission, string> = {
   "admin:read": "Yönetim panelini görüntüleme", "catalog:write": "Katalog ve stok düzenleme", "orders:write": "Sipariş durumu güncelleme",
   "service:write": "Servis talebi güncelleme", "content:write": "Blog ve yorum yönetimi", "legal:write": "Hukuki belge yayınlama",
+  "users:read": "Kullanıcıları görüntüleme", "users:write": "Kullanıcı davet/yönetim", "roles:write": "Rol ve süreli yetki yönetimi",
+  "integrations:read": "Entegrasyon durumunu görüntüleme", "integrations:write": "Entegrasyon yapılandırma",
+  "payments:configure": "Ödeme sağlayıcı yapılandırma (yalnızca Süper Yönetici)", "security:write": "Güvenlik yapılandırması", "audit:read": "Denetim kayıtlarını görüntüleme",
 };
 
 // ---- status vocabulary ----------------------------------------------------------------------------

@@ -101,11 +101,11 @@ test("audit payloads carry safe identifiers only, never the body", () => {
 });
 
 // ---- RBAC ----------------------------------------------------------------------------------------
-test("legal:write is owner-only", () => {
-  assert.equal(roleHasPermission("owner", "legal:write"), true);
-  for (const role of adminRoles.filter((r) => r !== "owner")) assert.equal(roleHasPermission(role, "legal:write"), false, role);
-  assert.equal(roleHasPermission("catalog_manager", "legal:write"), false);
-  assert.equal(roleHasPermission("operations_manager", "legal:write"), false);
+test("legal:write belongs to super_admin and the frozen legacy owner only - never to admin", () => {
+  assert.equal(roleHasPermission("super_admin", "legal:write"), true);
+  assert.equal(roleHasPermission("owner", "legal:write"), true, "the frozen legacy row keeps its pre-6D.1 permission");
+  assert.equal(roleHasPermission("admin", "legal:write"), false, "admin is operational and must never publish legal documents");
+  for (const role of adminRoles.filter((r) => r !== "owner" && r !== "super_admin")) assert.equal(roleHasPermission(role, "legal:write"), false, role);
   assert.equal(roleHasPermission("catalog_manager", "content:write"), true, "content:write is not repurposed");
 });
 test("every admin legal endpoint is wrapped by the legal:write guard (no session => 403)", () => {

@@ -12,6 +12,7 @@ const loginPage = readFileSync("app/admin/login/page.tsx", "utf8");
 const forgotPage = readFileSync("app/admin/forgot-password/page.tsx", "utf8");
 const resetPage = readFileSync("app/admin/reset-password/page.tsx", "utf8");
 const adminShell = readFileSync("components/admin/admin-shell.tsx", "utf8");
+const authForm = readFileSync("components/admin/auth-form.tsx", "utf8");
 
 // ---- schema / migration ---------------------------------------------------------------------
 test("the reset-token table stores only a hash, never the raw token; single-use via used_at", () => {
@@ -64,7 +65,10 @@ test("the audit log payload for a password reset never carries the token, its ha
   assert.deepEqual(payloadMatch![0], 'payload: { method: "forgot_password" }');
 });
 test("token lookup requires: unused, unexpired, and the joined admin is active - all three, not a subset", () => {
-  const fn = authLib.slice(authLib.indexOf("export async function consumePasswordResetToken"), authLib.indexOf("return db.transaction"));
+  const start = authLib.indexOf("export async function consumePasswordResetToken");
+  // Scope the slice to this function only: lib/admin-auth.ts now contains several
+  // transactions (Phase 6D.1 governance), so an unanchored indexOf would read past it.
+  const fn = authLib.slice(start, authLib.indexOf("return db.transaction", start));
   assert.match(fn, /isNull\(adminPasswordResets\.usedAt\)/);
   assert.match(fn, /gt\(adminPasswordResets\.expiresAt, now\)/);
   assert.match(fn, /eq\(adminUsers\.active, true\)/);
@@ -115,17 +119,21 @@ test("a failed consume (invalid/expired/replayed token) and a malformed request 
 });
 
 // ---- UI pages: professional, responsive, accessible touches -----------------------------------
-test("all three auth pages use the 44px touch-target convention (h-11) for their inputs and primary button", () => {
-  for (const page of [loginPage, forgotPage, resetPage]) {
-    assert.match(page, /h-11/);
-  }
+test("auth inputs and the primary button meet the 44px+ touch target minimum (shared in components/admin/auth-form.tsx)", () => {
+  assert.match(authForm, /h-12 w-full rounded-xl border/, "text/password inputs are 48px tall");
+  assert.match(authForm, /size-11 -translate-y-1\/2/, "the password show/hide toggle is a real 44px control, not a small icon-only hit target");
+  assert.match(authForm, /flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary/, "the submit button is 48px tall");
+  assert.match(authForm, /inline-flex min-h-11 items-center/, "the footer link (Şifremi unuttum / Girişe dön) meets 44px");
 });
 test("error/status messages use an ARIA role so they are announced, not just visually styled", () => {
-  assert.match(loginPage, /role="alert"/);
-  assert.match(loginPage, /role="status"/);
-  assert.match(forgotPage, /role="status"/);
-  assert.match(forgotPage, /role="alert"/);
-  assert.match(resetPage, /role="alert"/);
+  // AuthNotice (components/admin/auth-form.tsx) is the only place role=status/alert is set now;
+  // each page selects the tone, so this also confirms every page can render both.
+  assert.match(authForm, /role=\{tone === "success" \? "status" : "alert"\}/);
+  assert.match(loginPage, /<AuthNotice tone="success">/);
+  assert.match(loginPage, /<AuthNotice tone="error">/);
+  assert.match(forgotPage, /<AuthNotice tone="success">/);
+  assert.match(forgotPage, /<AuthNotice tone="error">/);
+  assert.match(resetPage, /<AuthNotice tone="error">/);
 });
 test("login links to forgot-password; forgot-password and reset-password both link back to login", () => {
   assert.match(loginPage, /href="\/admin\/forgot-password"/);
