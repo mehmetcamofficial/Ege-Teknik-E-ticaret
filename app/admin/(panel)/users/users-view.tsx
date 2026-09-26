@@ -182,7 +182,7 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
           <div className="p-4 sm:p-5"><EmptyState title="Kullanıcı bulunamadı" /></div>
         ) : (
           <>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-x-auto xl:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -207,8 +207,8 @@ export default function UsersView({ canManageUsers, canAssignRoles, selfId }: { 
               </TableBody>
             </Table>
           </div>
-          {/* Mobile: a stacked card per account instead of a 788px horizontally scrolling table. */}
-          <ul className="grid gap-3 p-3 sm:p-4 md:hidden">
+          {/* Below xl (mobile and tablet, where the sidebar leaves < ~860px for the 857px table) each account is a stacked card, so the row actions are never scrolled off-screen. */}
+          <ul className="grid gap-3 p-3 sm:p-4 xl:hidden">
             {rows.map((u) => (
               <li key={u.id} className="rounded-lg border p-3.5">
                 <div className="flex flex-wrap items-start justify-between gap-2">

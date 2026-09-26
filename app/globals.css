@@ -177,6 +177,15 @@ body {
 }
 
 /*
+ * Radix portals dialogs to <body>, outside .admin-theme, so the rule above never reached them and their
+ * buttons rendered at 36px. Every dialog in the project lives in the admin panel; scope the same minimum
+ * to the dialog content itself.
+ */
+:is([data-slot="dialog-content"], [data-slot="alert-dialog-content"]) :is([data-slot="button"], [data-slot="input"], select, [data-slot="alert-dialog-action"], [data-slot="alert-dialog-cancel"]) {
+  min-height: 2.75rem;
+}
+
+/*
  * Tailwind v4's default border colour is currentColor and nothing in this project set a base border
  * colour, which is why every admin `border` rendered as a thin near-black line. In the base layer so
  * any explicit border-* utility (status notices, sidebar dividers) still wins.
