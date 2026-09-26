@@ -16,7 +16,7 @@
 
 Bu liste taslakların "gerçek" olabilmesi için mevcut uygulamada eksik olan işleri gösterir. Hiçbiri bu fazda yapılmamıştır.
 
-1. **Toplam fiyat / teslimat bedeli:** Checkout bugün "Montaj / kargo: Keşifte netleşir" gösteriyor; ön bilgi m.5/1-(d) tüm vergiler ve nakliye dâhil toplam fiyatı ister. Teslimat ücreti hesaplanmalı ve sipariş özetinde gösterilmeli (C3).
+1. **Toplam fiyat / teslimat bedeli:** Checkout Phase 3.4 ile klimada teslimat + standart montajı ürün fiyatına dâhil, kargoyu yalnızca parça için opsiyonel/ücretli sunar (kargo tarifesi henüz `pending`); ilgili hukuki metinler teknik olarak uyarlanmıştır, hukuki onay yoktur; ön bilgi m.5/1-(d) tüm vergiler ve nakliye dâhil toplam fiyatı ister. Teslimat ücreti hesaplanmalı ve sipariş özetinde gösterilmeli (C3).
 2. **Ön bilginin gösterimi (m.6/2-a, m.7, m.8):** (a),(d),(g),(h) bilgileri ödeme yükümlülüğünden hemen önce bir bütün olarak, ≥12 punto; ön bilgi teyidi; sipariş butonunda "ödeme yükümlülüğü" ifadesi.
 3. **Sipariş-özel alanlar:** `{{...}}` alanlarını dolduran, üretilen sözleşme/ön bilgi görünümünün sipariş kaydıyla saklanması (bugün yalnızca sürüm kimliği ve kabul zamanı saklanıyor; sürüm içeriği değişmez olduğundan sipariş verisiyle birlikte render edilmelidir).
 4. **Kurulum seçimi ve ek iş onayı:** kurulum seçeneği önceden işaretsiz; ek iş için ayrı onay kaydı ve ayrı tahsilat akışı (m.19). Bugün yalnızca "survey_then_install / delivery_only" tercihi var.

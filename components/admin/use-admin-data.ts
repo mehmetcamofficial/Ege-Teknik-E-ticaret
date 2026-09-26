@@ -43,9 +43,9 @@ export async function sendAdmin(url: string, method: "POST" | "PATCH" | "DELETE"
 }
 
 /** Shape of the existing GET /api/admin/overview response (unchanged). */
-export type Product = { id: string; name: string; slug: string; category: string; brandId: string | null; categoryId: string | null; series: string; sku: string; capacity: string; energyClass: string; wifi: string; stock: number; price: number; status: string; saleMode: string; description: string; imageUrl: string; updatedAt?: string };
+export type Product = { id: string; name: string; slug: string; category: string; brandId: string | null; categoryId: string | null; series: string; sku: string; capacity: string; energyClass: string; wifi: string; stock: number; price: number; status: string; saleMode: string; deliveryClass: string; description: string; imageUrl: string; updatedAt?: string };
 export type ServiceRequest = { id: string; requestNumber: string; type: string; name: string; phone: string; email?: string; city: string; message: string; status: string; createdAt: string };
-export type Order = { id: string; orderNumber: string; customerName: string; phone: string; email: string; city: string; address: string; subtotal: number; vatTotal: number; shippingTotal: number; installationTotal: number; total: number; paymentStatus: string; status: string; notes: string; installationPreference: string | null; createdAt: string };
+export type Order = { id: string; orderNumber: string; customerName: string; phone: string; email: string; city: string; address: string; subtotal: number; vatTotal: number; shippingTotal: number; installationTotal: number; total: number; paymentStatus: string; status: string; notes: string; installationPreference: string | null; shippingAddressSnapshot?: unknown; createdAt: string };
 export type SecondHand = { id: string; name: string; slug: string; category: string; condition: string; testNotes: string; warranty: string; price: number; stock: number; imageUrl: string; status: string; description: string };
 export type Post = { id: string; title: string; slug: string; excerpt: string; content: string; imageUrl: string; status: string; publishedAt?: string | null; updatedAt?: string };
 export type Taxonomy = { id: string; name: string; slug: string; active: boolean };

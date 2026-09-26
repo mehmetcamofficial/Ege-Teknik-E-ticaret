@@ -213,13 +213,13 @@ test("a hostile ?city= value is never echoed into the region page", () => {
   store.fn<() => void>("renderRegionPage")();
   assertInert(root.innerHTML, "region page");
   assert.doesNotMatch(root.innerHTML, /onerror|alert/);
-  assert.match(root.innerHTML, /Ege Bölgesi Klima Satış/);
+  assert.match(root.innerHTML, /Hizmet Bölgesi Klima Satış/);
 });
 
 test("a hostile order number in the server response is shown as text", async () => {
   const result = { textContent: "", innerHTML: "" };
   const button = { disabled: false, textContent: "" };
-  const form = { ...fakeElement(), hidden: false, fields: { customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", provider: "PayTR" }, querySelectorAll: (s: string) => (s === "[data-legal-version]" ? [{ checked: true, dataset: { legalVersion: "ver-ds-1" } }] : []), querySelector: (s: string) => (s === "button.primary" ? button : s === "[data-order-result]" ? result : null) };
+  const form = { ...fakeElement(), hidden: false, fields: { customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", district: "Bornova", address: "Sokak No 1", provider: "PayTR" }, querySelectorAll: (s: string) => (s === "[data-legal-version]" ? [{ checked: true, dataset: { legalVersion: "ver-ds-1" } }] : []), querySelector: (s: string) => (s === "button.primary" ? button : s === "[data-order-result]" ? result : null) };
   const box = confirmationBox();
   const store = loadStorefront({
     storage: { "ege-cart": [{ productId: "synthetic-product-1", quantity: 1 }] },
@@ -253,4 +253,22 @@ test("homepage featured fields are written as text, so a hostile product name st
   await store.fn<() => Promise<void>>("loadCatalog")();
   assert.equal(card.fields.name.textContent, PAYLOAD, "textContent keeps the payload as literal text");
   assert.equal(card.fields.name.innerHTML, "", "nothing was written as markup");
+});
+
+test("region pages cover exactly the 9 service provinces and use service-area wording", () => {
+  const provinces = ["İzmir", "Aydın", "Muğla", "Manisa", "Denizli", "Uşak", "Kütahya", "Afyonkarahisar", "Balıkesir"];
+  const src = readFileSync(new URL("../public/store.js", import.meta.url), "utf8");
+  const listed = [...(/const regions=\[(.*?)\];/.exec(src)?.[1] ?? "").matchAll(/\['[a-z]+','([^']+)'\]/g)].map((m) => m[1]);
+  assert.deepEqual([...listed].sort(), [...provinces].sort());
+  const slugs = [...(/const regions=\[(.*?)\];/.exec(src)?.[1] ?? "").matchAll(/\['([a-z]+)','([^']+)'\]/g)].map((m) => [m[1], m[2]]);
+  for (const [slug, name] of slugs) {
+    const root = fakeElement();
+    loadStorefront({ path: "region.html", search: `?city=${slug}`, elements: { "[data-region-page]": root } }).fn<() => void>("renderRegionPage")();
+    assert.match(root.innerHTML, new RegExp(`${name} Klima Satış`));
+  }
+  for (const page of ["contact", "regions", "index", "services"]) {
+    const html = readFileSync(new URL(`../public/${page}.html`, import.meta.url), "utf8");
+    assert.doesNotMatch(html, /Tüm Ege Bölgesi|Ege Bölgesi genelinde/, `${page} claims the whole geographic region as service scope`);
+  }
+  assert.doesNotMatch(src, /Tüm Ege Bölgesi|tüm Ege Bölgesi/);
 });

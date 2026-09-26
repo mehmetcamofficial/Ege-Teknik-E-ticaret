@@ -31,6 +31,14 @@ const UNVERIFIED = [
   { name: "fixed delivery period", pattern: /\d+\s*[–-]\s*\d+\s*iş\s*günü/i },
 ];
 
+/**
+ * Wording the OPERATOR supplied as the checkout business model (Phase 3.4) and that is therefore not an unverified claim:
+ * air conditioners are delivered and installed by Ege Teknik / the related service organisation, and store pickup is free.
+ * Each entry is exact; the patterns above stay in force for everything else (including "ücretsiz kargo" / "ücretsiz montaj").
+ */
+const OPERATOR_APPROVED_PHRASES = ["Yetkili servis yönlendirmesi", "Mağazadan teslim · Ücretsiz", "<small>Ücretsiz</small>"];
+const withoutApproved = (text: string) => OPERATOR_APPROVED_PHRASES.reduce((t, phrase) => t.split(phrase).join(""), text);
+
 function customerFacingText(html: string) {
   const body = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/g, "");
   const attributes = [...body.matchAll(/\b(?:content|title|alt|aria-label|placeholder)="([^"]*)"/g)].map((m) => m[1]);
@@ -59,7 +67,7 @@ test("store.js templates make none of those claims either", () => {
     .replace(/const articles=\[[\s\S]*?\]\];/, "")
     .replace(/\bhref="[^"]*"/g, "");
   assert.ok(!/const articles=/.test(source), "the guide list moved - update this exclusion rather than dropping coverage");
-  const literals = [...source.matchAll(/`[^`]*`|'[^'\n]*'/g)].map((m) => m[0]).join("\n");
+  const literals = withoutApproved([...source.matchAll(/`[^`]*`|'[^'\n]*'/g)].map((m) => m[0]).join("\n"));
   for (const { name, pattern } of UNVERIFIED) {
     const hit = literals.match(pattern);
     assert.equal(hit, null, `store.js: unverified ${name}: "${hit?.[0]}"`);

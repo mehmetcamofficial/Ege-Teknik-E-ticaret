@@ -205,8 +205,8 @@ test("the catalog list never carries enrichment columns or the source URL", () =
 test("the public detail exposes only approved display data: no confidence, partial values, raw warranty, source URL or review metadata", () => {
   const id = oneEligible(); const record = dataset.records[id]; const base = dataset.baseline[id];
   const row = { ...base, description: record.description, gallery: record.gallery, specifications: record.specifications, documents: record.documents, manufacturerWarranty: record.manufacturerWarranty, sourceUrl: record.sourceUrl, shortDescription: record.shortDescription, category: "c", series: "s", capacity: "x", reviewerNotes: "internal", reviewFlags: ["x"], createdAt: "t" };
-  const detail = toPublicProductDetail(row, 5);
-  assert.deepEqual(Object.keys(detail).sort(), ["capacity", "category", "description", "documents", "energyClass", "gallery", "id", "imageUrl", "name", "price", "saleMode", "series", "shortDescription", "sku", "slug", "specifications", "stock", "vatRateBps", "warranty", "wifi"]);
+  const detail = toPublicProductDetail({ ...row, deliveryClass: "installed_delivery" }, 5); // deliveryClass (Phase 3.4) is the one deliberately added, non-secret field
+  assert.deepEqual(Object.keys(detail).sort(), ["capacity", "category", "deliveryClass", "description", "documents", "energyClass", "gallery", "id", "imageUrl", "name", "price", "saleMode", "series", "shortDescription", "sku", "slug", "specifications", "stock", "vatRateBps", "warranty", "wifi"]);
   const json = JSON.stringify(detail);
   for (const leak of ["confidence", "\"status\"", "sourceUrl", "pageValue", "retrievedAt", "generalTermsUrl", "reviewerNotes", "reviewFlags", "manufacturerWarranty", "\"source\"", record.sourceUrl]) assert.equal(json.includes(leak), false, leak);
   for (const spec of detail.specifications) assert.deepEqual(Object.keys(spec).sort(), ["key", "label", "unit", "value"]);

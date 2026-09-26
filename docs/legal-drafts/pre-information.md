@@ -1,5 +1,7 @@
 > **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
 > `[DOĞRULAMA BEKLİYOR: ...]` = doğrulanmamış bilgi; `{{...}}` = sipariş anında sistemce doldurulacak alan.
+> **TEKNİK TASLAK GÜNCELLEMESİ (Phase 3.4 iş modeli) — HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR:** Bu bölüm yalnızca yeni checkout iş modeline teknik olarak uyarlanmıştır (operatör talimatı: klima ürünlerinde Ege Teknik hizmet bölgesinde adrese teslim ve standart montaj ürün fiyatına dâhildir; yalnızca gönderime uygun yedek parça/aksesuar için mağazadan teslim veya ücretli kargo). Metin hukuken incelenmemiştir, onaylanmamıştır ve yayınlanamaz. Standart montaj paketinin kapsamı hâlâ doğrulanmamıştır.
+
 
 # ÖN BİLGİLENDİRME FORMU
 
@@ -19,8 +21,9 @@ değiştirilemez (m.5/2).
 | Sipariş numarası / tarihi | {{SIPARIS_NO}} / {{SIPARIS_TARIHI}} |
 | **Ürün(ler) ve temel nitelikleri** (marka, model, kapasite, enerji sınıfı, adet) | {{URUN_SATIRLARI}} |
 | Ürün fiyatı (KDV dâhil) | {{URUN_TOPLAMI}} |
-| Teslimat (kargo/kendi teslimatımız) bedeli | {{TESLIMAT_BEDELI}} |
-| İsteğe bağlı kurulum/montaj — seçim ve bedel | {{MONTAJ_SECIMI}} / {{MONTAJ_BEDELI}} |
+| Teslimat yöntemi | {{TESLIMAT_YONTEMI}} |
+| Kargo ücreti (yalnızca gönderime uygun ürünlerde ve kargo seçildiyse) | {{KARGO_UCRETI}} |
+| Standart montaj (klima ürünlerinde) | Ürün bedeline dâhildir; ayrıca bedel alınmaz |
 | Diğer ek masraflar | {{DIGER_EK_MASRAFLAR}} |
 | **Tüm vergiler dâhil toplam ödenecek tutar** | **{{TOPLAM_TUTAR}}** |
 
@@ -58,7 +61,7 @@ siparişin bize ulaşmasından itibaren 30 günü geçemez (m.16); süre aşıl�
 
 ## 5. Kurulum / montaj (seçtiyseniz)
 
-Kurulum isteğe bağlıdır ve Ege Teknik personelince yapılır. Standart paket kapsamı: [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı].
+Klima ürünlerinde standart kurulum ürün bedeline dâhildir ve Ege Teknik personelince yapılır. Standart paket kapsamı: [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı].
 Kapsam dışı işlerin ücreti önceden bildirilir ve ayrıca onayınıza tabidir: [DOĞRULAMA BEKLİYOR: ek iş/hizmet tarifesi]. Ayrıntı: "Kurulum ve Montaj Bilgilendirmesi".
 
 ## 6. Cayma hakkı (Yönetmelik m.9–15)

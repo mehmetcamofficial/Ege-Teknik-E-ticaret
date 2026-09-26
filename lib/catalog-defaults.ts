@@ -1,17 +1,19 @@
+import type { DeliveryClass } from "./delivery.ts";
+
 export type CatalogDefault = {
   id: string; slug: string; name: string; category: string; series: string;
   capacity: string; energyClass: string; wifi: string; price: number; stock: number;
-  saleMode: "online" | "quote"; status: "published"; description: string;
+  saleMode: "online" | "quote"; status: "published"; description: string; deliveryClass: DeliveryClass;
 };
 
 const product = (
   id: string, name: string, category: string, series: string,
-  capacity: string, price: number, sourcePath: string,
+  capacity: string, price: number, sourcePath: string, deliveryClass: DeliveryClass = "installed_delivery",
 ): CatalogDefault => ({
   id, slug: id, name, category, series, capacity,
   energyClass: "", wifi: /wifi/i.test(name) ? "Dahili" : "",
   price, stock: price > 0 ? 10 : 0,
-  saleMode: price > 0 ? "online" : "quote", status: "published",
+  saleMode: price > 0 ? "online" : "quote", status: "published", deliveryClass,
   description: `${name}; GREE Türkiye kataloğundan aktarılmıştır. Ege Teknik satış, keşif, montaj ve satış sonrası destek hizmetleriyle sunulur. Kaynak: https://www.gree.com.tr${sourcePath}`,
 });
 
@@ -81,10 +83,10 @@ export const catalogDefaults: CatalogDefault[] = [
   product("karavan-klimasi-9-000-btu-h", "Karavan Kliması - 9.000 BTU/h", "Ticari Klima", "Karavan", "9.000 BTU/h", 67750, "/urun/karavan-klimasi-9-000-btu-h"),
   product("yer-tavan-tip-inverter-klima-42000-btu-h", "Gree Yer/Tavan Tipi İnverter Klima – 42000 BTU/h", "Ticari Klima", "Yer/Tavan Tipi", "42000 BTU/h", 138590, "/urun/yer-tavan-tip-inverter-klima-42000-btu-h"),
   product("yer-tavan-tip-inverter-klima-24000-btu-h", "Gree Yer/Tavan Tipi İnverter Klima – 24000 BTU/h", "Ticari Klima", "Yer/Tavan Tipi", "24000 BTU/h", 81990, "/urun/yer-tavan-tip-inverter-klima-24000-btu-h"),
-  product("wifi-kiti-aphro-18000-24000-72", "Gree Aphro Wifi Kiti – 9000-12000 BTU/h", "Yedek Parça", "Aphro", "12000 BTU/h", 3000, "/urun/wifi-kiti-aphro-18000-24000-72"),
-  product("hava-temizleme-cihazi-filtresi", "Hava Temizleme Cihazı Filtresi", "Yedek Parça", "Filtre", "", 1400, "/urun/hava-temizleme-cihazi-filtresi"),
-  product("wifi-kiti-aphro-64-1", "Gree Aphro Wifi Kiti – 18000-24000 BTU/h", "Yedek Parça", "Aphro", "24000 BTU/h", 3000, "/urun/wifi-kiti-aphro-64-1"),
-  product("multi-fonksiyonel-filtre", "Multi Fonksiyonel Filtre", "Yedek Parça", "Filtre", "", 750, "/urun/multi-fonksiyonel-filtre"),
+  product("wifi-kiti-aphro-18000-24000-72", "Gree Aphro Wifi Kiti – 9000-12000 BTU/h", "Yedek Parça", "Aphro", "12000 BTU/h", 3000, "/urun/wifi-kiti-aphro-18000-24000-72", "shippable"),
+  product("hava-temizleme-cihazi-filtresi", "Hava Temizleme Cihazı Filtresi", "Yedek Parça", "Filtre", "", 1400, "/urun/hava-temizleme-cihazi-filtresi", "shippable"),
+  product("wifi-kiti-aphro-64-1", "Gree Aphro Wifi Kiti – 18000-24000 BTU/h", "Yedek Parça", "Aphro", "24000 BTU/h", 3000, "/urun/wifi-kiti-aphro-64-1", "shippable"),
+  product("multi-fonksiyonel-filtre", "Multi Fonksiyonel Filtre", "Yedek Parça", "Filtre", "", 750, "/urun/multi-fonksiyonel-filtre", "shippable"),
   product("versati-4-monoblok-60-c-r32-wifi-16-kw-elektrikli-isiticili", "VERSATI 4 MONOBLOK 60 °C R32 WİFİ – 16 kW (Elektrikli Isıtıcılı)", "Isı Pompası", "Versati 4", "16 kW", 0, "/urun/versati-4-monoblok-60-c-r32-wifi-16-kw-elektrikli-isiticili"),
   product("versati-4-monoblok-60-c-r32-wifi-12-kw-elektrikli-isiticili", "VERSATI 4 MONOBLOK 60 °C  R32 WİFİ – 12 kW (Elektrikli Isıtıcılı)", "Isı Pompası", "Versati 4", "12 kW", 0, "/urun/versati-4-monoblok-60-c-r32-wifi-12-kw-elektrikli-isiticili"),
   product("versati-4-monoblok-60-c-r32-wifi-10-kw-elektrikli-isiticili", "VERSATI 4 MONOBLOK 60 °C  R32 WİFİ – 10 kW (Elektrikli Isıtıcılı)", "Isı Pompası", "Versati 4", "10 kW", 0, "/urun/versati-4-monoblok-60-c-r32-wifi-10-kw-elektrikli-isiticili"),

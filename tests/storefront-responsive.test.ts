@@ -97,11 +97,23 @@ test("second-hand request links stay readable on the dark cards", () => {
 });
 
 // ---- Phase 4C finalization ------------------------------------------------------------------------------
-test("checkout installation stays a native select with concise options and an adjacent, linked explanation", () => {
+test("checkout has the delivery model in the markup: province and district selects, no retired installation control, no free-shipping wording", () => {
   const html = readFileSync("public/checkout.html", "utf8");
-  assert.match(html, /<select name="installation" data-installation aria-describedby="installation-help"><option value="delivery_only" selected>Kurulum yok<\/option><option value="survey_then_install">Kurulum istiyorum<\/option><\/select><small class="field-help" id="installation-help">/);
-  assert.match(html, /bedel belirlenmeden sipariş onaylanamaz/);
+  assert.match(html, /<select name="city" data-province autocomplete="address-level1">/, "the province is a controlled select filled from the API list");
+  assert.match(html, /<select name="district" data-district autocomplete="address-level2" disabled><option value="">Önce il seçin<\/option><\/select>/, "the district is a select, disabled until a province is chosen");
+  assert.doesNotMatch(html, /<input[^>]*name="district"/, "no free-text district input");
+  assert.match(html, /data-delivery-options/);
+  assert.doesNotMatch(html, /name="installation"|data-installation|survey_then_install|delivery_only|Kurulum istiyorum|Kurulum \(isteğe bağlı\)/, "the optional-installation control is gone");
+  assert.doesNotMatch(html, /İl \/ İlçe/, "the single free-text city field is gone");
   assert.doesNotMatch(html, /<select[^>]*title=/);
+  assert.doesNotMatch(html, /[Üü]cretsiz (kargo|montaj)|[Bb]edava/);
+});
+test("checkout delivery UI is responsive with 44px targets: option rows, single-column grid on narrow screens, 16px form controls", () => {
+  assert.match(storeCss, /\.delivery-option\{[^}]*min-height:44px/);
+  assert.match(storeCss, /@media\(max-width:1000px\)\{\.shop-grid,\.checkout-grid\{grid-template-columns:minmax\(0,1fr\)\}\}/);
+  assert.match(storeCss, /@media\(max-width:650px\)\{\.field-grid\{grid-template-columns:minmax\(0,1fr\)\}\}/);
+  assert.match(storeCss, /@media\(max-width:650px\)\{\.field input,\.field select,\.field textarea\{font-size:16px;min-height:46px\}\}/);
+  assert.match(storeCss, /\.delivery-option small\{[^}]*overflow-wrap:anywhere/);
 });
 
 test("homepage readable text: no 10-11px shared label token, 12px+ top bar and tagline", () => {

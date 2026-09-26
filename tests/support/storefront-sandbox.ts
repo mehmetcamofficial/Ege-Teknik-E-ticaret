@@ -8,8 +8,13 @@
  */
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { DISTRICTS_BY_PROVINCE, EGE_TEKNIK_SERVICE_PROVINCES, publicDeliveryTraits } from "../../lib/delivery.ts";
 
 export const ORIGIN = "https://shop.test";
+
+/** What GET /api/checkout/charges serves today: shipping tariff pending, the service-area provinces, the province -> district dataset and the delivery-class trait table (all from lib/delivery.ts). */
+export const DEFAULT_CHARGES = { shipping: { status: "pending" }, serviceProvinces: [...EGE_TEKNIK_SERVICE_PROVINCES], locations: DISTRICTS_BY_PROVINCE, deliveryTraits: publicDeliveryTraits };
+export const CONFIGURED_SHIPPING = { ...DEFAULT_CHARGES, shipping: { status: "configured", amount: 600, vatRateBps: 2000 } };
 
 export type FakeElement = {
   innerHTML: string;
@@ -99,6 +104,7 @@ export function apiProduct(overrides: Record<string, unknown> = {}) {
     sku: "SKU-SYNTH-1",
     price: 12_345,
     stock: 3,
+    deliveryClass: "installed_delivery",
     saleMode: "online",
     imageUrl: "",
     vatRateBps: 2000,
@@ -180,7 +186,7 @@ export function loadStorefront(options: {
       if (url === "/api/second-hand") return respond(api.secondHand, "products");
       if (url === "/api/blog") return respond(api.blog, "posts");
       if (url === "/api/legal/required") return Promise.resolve({ ok: true, status: 200, json: async () => ({ documents: [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", versionId: "ver-ds-1" }] }) });
-      if (url === "/api/checkout/charges") return Promise.resolve({ ok: true, status: 200, json: async () => api.charges ?? ({ delivery: { status: "configured", amount: 500, vatRateBps: 2000 }, installation: { status: "configured", amount: 1000, vatRateBps: 2000 } }) });
+      if (url === "/api/checkout/charges") return Promise.resolve({ ok: true, status: 200, json: async () => api.charges ?? DEFAULT_CHARGES });
       if (url === "/api/orders" && api.order) return api.order();
       return Promise.reject(new Error(`unexpected fetch ${url}`));
     },

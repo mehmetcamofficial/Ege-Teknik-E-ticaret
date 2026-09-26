@@ -2,21 +2,14 @@ import { getAdminUser } from "@/lib/admin-auth";
 import { getDb } from "@/db";
 import { auditLogs, inventory, products } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 import { readJson } from "@/lib/http-security";
+import { patchProductSchema } from "@/lib/admin-product-schema";
 
-const patchSchema = z.object({
-  name:z.string().min(2).max(160).optional(), slug:z.string().min(2).max(160).regex(/^[a-z0-9-]+$/).optional(), category:z.string().min(2).max(80).optional(),
-  series:z.string().max(80).optional(), sku:z.string().max(80).optional(), capacity:z.string().max(80).optional(), energyClass:z.string().max(30).optional(), wifi:z.string().max(30).optional(),
-  stock: z.coerce.number().int().min(0).optional(), price: z.coerce.number().int().min(0).optional(), status: z.enum(["draft", "published"]).optional(),
-  saleMode: z.enum(["online", "quote", "discovery", "whatsapp", "out_of_stock"]).optional(), description:z.string().max(4000).optional(), imageUrl:z.string().max(1000).optional(),
-  brandId:z.string().min(1).max(160).nullable().optional(),categoryId:z.string().min(1).max(160).nullable().optional(),
-}).refine((v) => Object.keys(v).length > 0);
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const user = await getAdminUser("catalog:write");
   if (!user) return Response.json({ error: "Yetkisiz erişim" }, { status: 403 });
-  const parsed = patchSchema.safeParse(await readJson(request));
+  const parsed = patchProductSchema.safeParse(await readJson(request));
   if (!parsed.success) return Response.json({ error: "Güncelleme alanlarını kontrol edin." }, { status: 400 });
   const { id } = await context.params; const db = getDb();
   const { stock, ...product } = parsed.data;

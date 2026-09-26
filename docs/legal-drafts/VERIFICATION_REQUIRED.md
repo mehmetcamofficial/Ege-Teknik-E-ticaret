@@ -71,7 +71,7 @@ Sorumlu: **İŞ** = işletme sahibi/operatör · **MM** = mali müşavir · **AV
 | info@egeteknik.tr | tüm | posta kutusu çalışıyor mu (E3) |
 | 0542 795 75 60 | tüm | — |
 | Teslimat ücretli; hedef ≈7 iş günü; kargo veya kendi teslimatı | teslimat/satış/ön bilgi | C1–C4 |
-| Kurulum isteğe bağlı, kendi personeli | installation, satış, ön bilgi | D1–D2 |
+| Klimada standart montaj + Ege teslimatı ürün fiyatına dâhil (operatör talimatı, Phase 3.4); kendi personeli; kargo yalnızca opsiyonel/parça | installation, satış, ön bilgi, teslimat | D1–D2 |
 | PayTR ve havale planlı, PayTR **aktif değil** | satış, ön bilgi | B1–B3 |
 
 ## H. Site ile tutarsızlık (metinlerden önce giderilmeli)

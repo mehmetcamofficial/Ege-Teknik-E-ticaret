@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField, Notice, Panel, selectClass } from "@/components/admin/ui";
 import { sendAdmin, type Product, type Taxonomy } from "@/components/admin/use-admin-data";
+import { DEFAULT_DELIVERY_CLASS, deliveryClassDescriptions, deliveryClassLabels, deliveryClasses, isDeliveryClass, type DeliveryClass } from "@/lib/delivery-classes";
 
 /** Exactly the POST /api/admin/products body the previous dashboard form sent. */
-const empty = { name: "", slug: "", category: "Klima", brandId: null as string | null, categoryId: null as string | null, series: "", sku: "", capacity: "", energyClass: "", wifi: "", price: 0, stock: 0, saleMode: "quote", status: "draft", description: "", imageUrl: "" };
+const empty = { name: "", slug: "", category: "Klima", brandId: null as string | null, categoryId: null as string | null, series: "", sku: "", capacity: "", energyClass: "", wifi: "", price: 0, stock: 0, saleMode: "quote", status: "draft", description: "", imageUrl: "", deliveryClass: DEFAULT_DELIVERY_CLASS as DeliveryClass };
 type Form = typeof empty;
 const saleModes: [string, string][] = [["quote", "Teklif"], ["online", "Online satış"], ["discovery", "Keşif"], ["whatsapp", "WhatsApp"], ["out_of_stock", "Stok dışı"]];
 const textFields: [keyof Form, string, boolean][] = [["name", "Ürün adı", true], ["slug", "URL kısa adı", true], ["category", "Kategori (metin)", true], ["series", "Seri", false], ["sku", "SKU", false], ["capacity", "Kapasite", false], ["energyClass", "Enerji sınıfı", false], ["wifi", "Wi-Fi", false]];
@@ -21,7 +22,7 @@ export default function ProductForm({ product, brands, categories }: { product?:
   const router = useRouter();
   const editing = !!product;
   const [form, setForm] = useState<Form>(() => product
-    ? { name: product.name, slug: product.slug, category: product.category, brandId: product.brandId, categoryId: product.categoryId, series: product.series, sku: product.sku, capacity: product.capacity, energyClass: product.energyClass, wifi: product.wifi, price: product.price, stock: product.stock, saleMode: product.saleMode, status: product.status, description: product.description, imageUrl: product.imageUrl }
+    ? { name: product.name, slug: product.slug, category: product.category, brandId: product.brandId, categoryId: product.categoryId, series: product.series, sku: product.sku, capacity: product.capacity, energyClass: product.energyClass, wifi: product.wifi, price: product.price, stock: product.stock, saleMode: product.saleMode, deliveryClass: isDeliveryClass(product.deliveryClass) ? product.deliveryClass : DEFAULT_DELIVERY_CLASS, status: product.status, description: product.description, imageUrl: product.imageUrl }
     : empty);
   const [message, setMessage] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -107,6 +108,17 @@ export default function ProductForm({ product, brands, categories }: { product?:
           </FormField>
           <FormField label="Yayın durumu" htmlFor="p-status">
             <select id="p-status" className={selectClass} value={form.status} onChange={(e) => set("status", e.target.value)}><option value="draft">Taslak</option><option value="published">Yayında</option></select>
+          </FormField>
+        </div>
+      </Panel>
+
+      <Panel title="Teslimat">
+        <div className="grid max-w-xl gap-4">
+          {/* The class is one stored value; the server derives installation, shipping and the service area from it (lib/delivery.ts). Raw enum values are never shown. */}
+          <FormField label="Teslimat tipi" htmlFor="p-delivery-class" hint={deliveryClassDescriptions[form.deliveryClass]}>
+            <select id="p-delivery-class" className={selectClass} value={form.deliveryClass} onChange={(e) => { if (isDeliveryClass(e.target.value)) set("deliveryClass", e.target.value); }}>
+              {deliveryClasses.map((c) => <option key={c} value={c}>{deliveryClassLabels[c]}</option>)}
+            </select>
           </FormField>
         </div>
       </Panel>

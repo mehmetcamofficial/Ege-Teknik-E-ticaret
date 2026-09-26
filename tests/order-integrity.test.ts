@@ -117,7 +117,7 @@ const confirmationInput = {
 test("toOrderConfirmation exposes only real order data: no order/customer/address id, no idempotency key", () => {
   const confirmation = toOrderConfirmation(confirmationInput);
   assert.deepEqual(Object.keys(confirmation).sort(), ["delivery", "installationTotal", "items", "orderNumber", "shippingTotal", "status", "subtotal", "total", "vatTotal"]);
-  assert.deepEqual(Object.keys(confirmation.delivery).sort(), ["address", "city", "email", "installation", "name", "phone"]);
+  assert.deepEqual(Object.keys(confirmation.delivery).sort(), ["address", "city", "district", "email", "installation", "method", "name", "phone"]);
   for (const forbidden of ["id", "customerId", "addressId", "idempotencyKey", "requestFingerprint"]) {
     assert.equal(forbidden in confirmation, false, forbidden);
     assert.equal(forbidden in confirmation.delivery, false, forbidden);
@@ -131,7 +131,7 @@ test("toOrderConfirmation carries the real values through without inventing or d
   assert.equal(confirmation.subtotal, 10_000);
   assert.equal(confirmation.vatTotal, 2_000);
   assert.equal(confirmation.total, 12_000);
-  assert.deepEqual(confirmation.delivery, { name: "Ada Lovelace", phone: "05001112233", email: "ada@example.test", city: "İzmir", address: "Kuşadası Mahallesi 1 Sokak No 1", installation: "delivery_only" });
+  assert.deepEqual(confirmation.delivery, { name: "Ada Lovelace", phone: "05001112233", email: "ada@example.test", city: "İzmir", district: "", address: "Kuşadası Mahallesi 1 Sokak No 1", installation: "delivery_only", method: "" });
 });
 test("toOrderConfirmation copies its items array and each item, so mutating the input afterwards cannot change the response", () => {
   const items = [{ productName: "Airy 12000", quantity: 1, unitPrice: 12_000, lineTotal: 12_000 }];

@@ -121,9 +121,11 @@ test("changed quantity / product / customer data / payment provider => different
   assert.notEqual(fp({ paymentProvider: "PayTR" }), original);
 });
 
-test("changed installation preference or note => different fingerprint", () => {
+test("changed delivery preference, district or note => different fingerprint", () => {
   assert.notEqual(fp({ note: "Zile basmayın" }), fp());
-  assert.notEqual(fp({ installation: "survey_then_install" }), fp());
+  assert.notEqual(fp({ delivery: "shipping" }), fp());
+  assert.notEqual(fp({ delivery: "pickup" }), fp({ delivery: "shipping" }));
+  assert.notEqual(fp({ district: "Bornova" }), fp());
 });
 
 test("changed legal acceptance version => different fingerprint", () => {
@@ -164,13 +166,14 @@ test("notes are trimmed and control characters are stripped", () => {
   assert.equal(parse().note, "");
 });
 
-test("an unknown installation preference is rejected and installation is NOT pre-selected (default delivery_only)", () => {
-  assert.equal(orderRequestSchema.safeParse({ ...base, installation: "whatever" }).success, false);
-  assert.equal(parse().installation, "delivery_only");
+test("an unknown delivery method is rejected, and the retired installation choice is no longer a request field", () => {
+  assert.equal(orderRequestSchema.safeParse({ ...base, delivery: "whatever" }).success, false);
+  assert.equal(parse().delivery, undefined, "no delivery preference is pre-selected on the client's behalf");
+  assert.equal("installation" in parse({ installation: "survey_then_install" }), false, "standard installation is part of the product price; a client-sent value is stripped");
 });
 
-test("the note and installation preference are persisted on the order", () => {
-  assert.match(txBody, /installationPreference: parsed\.data\.installation, notes: parsed\.data\.note/);
+test("the note and the derived installation preference are persisted on the order", () => {
+  assert.match(txBody, /installationPreference: installationPreferenceFor\(plan\.installationIncluded\), notes: parsed\.data\.note/);
 });
 
 // ---- migration 0004 ----

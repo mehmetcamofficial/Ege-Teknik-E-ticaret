@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { readDeliverySnapshot } from "./order-delivery.ts";
 
 export const orderStatuses = ["pending_payment", "paid", "preparing", "shipped", "delivery", "delivered", "installation", "completed", "cancelled", "returned", "service"] as const;
 export type OrderStatus = typeof orderStatuses[number];
@@ -25,17 +26,31 @@ export function calculateLine(unitPrice: number, quantity: number, vatRateBps: n
  * The request body carries product ids and quantities only. Prices, VAT rates and totals are
  * never read from the client; they are derived here from the rows the server loaded.
  */
-export const installationPreferences = ["survey_then_install", "delivery_only"] as const;
+/**
+ * Legacy values of `orders.installation_preference` (Phase 3.4 replaced the optional-installation choice:
+ * standard installation is now part of the air-conditioner price). Orders created before that keep their
+ * old values, so historical rows stay readable; new orders only ever get the two below.
+ */
+export const legacyInstallationPreferences = ["survey_then_install", "delivery_only"] as const;
+export const installationPreferences = ["included_standard", "none", ...legacyInstallationPreferences] as const;
+export const installationPreferenceFor = (installationIncluded: boolean) => (installationIncluded ? "included_standard" : "none") as "included_standard" | "none";
+/** dealer = Ege Teknik delivery to the address; pickup = collected from the store; shipping = paid carrier (parts only). */
+export const deliveryMethods = ["dealer", "pickup", "shipping"] as const;
 export const orderRequestSchema = z.object({
   customerName: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(7).max(30),
   email: z.string().trim().email().max(150),
-  city: z.string().trim().min(2).max(100),
-  address: z.string().trim().min(8).max(500),
+  // The PROVINCE (il) and DISTRICT (ilçe, free text). The province is checked against the canonical list on the server
+  // (lib/delivery.ts); province and address are required by the server for every method except store pickup.
+  city: z.string().trim().max(100).default(""),
+  district: z.string().trim().max(100).default(""),
+  address: z.string().trim().max(500).default(""),
   paymentProvider: z.enum(["PayTR", "iyzico", "discovery"]),
   items: z.array(z.object({ productId: z.string().min(1).max(160), quantity: z.number().int().min(1).max(10) })).min(1).max(20),
-  // Installation is OPTIONAL and must never be pre-selected: an omitted value means no installation.
-  installation: z.enum(installationPreferences).default("delivery_only"),
+  // How the order is delivered. Only a PREFERENCE: the server derives what is allowed from the products' delivery
+  // classes and prices any shipping itself. Omitted = the server's default (dealer delivery, or pickup for parts only).
+  // Any `installation`/shipping/price field a client still sends is stripped by the schema and never read.
+  delivery: z.enum(deliveryMethods).optional(),
   // Free-text delivery note: trimmed, length-limited, control characters removed.
   note: z.string().trim().max(500).transform((value) => value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")).default(""),
   // Ids of the legal document versions the customer accepted. The server decides which versions are
@@ -86,7 +101,7 @@ export type PublicOrderConfirmation = {
   shippingTotal: number;
   installationTotal: number;
   total: number;
-  delivery: { name: string; phone: string; email: string; city: string; address: string; installation: string };
+  delivery: { name: string; phone: string; email: string; city: string; district: string; address: string; installation: string; method: string };
 };
 
 export function toPublicOrderItem(line: { product: { name: string }; quantity: number; lineTotal: number }, unitPrice: number): PublicOrderItem {
@@ -106,8 +121,10 @@ export function toOrderConfirmation(input: {
   phone: string;
   email: string;
   city: string;
+  district?: string;
   address: string;
   installation: string;
+  deliveryMethod?: string;
 }): PublicOrderConfirmation {
   return {
     orderNumber: input.orderNumber,
@@ -118,7 +135,7 @@ export function toOrderConfirmation(input: {
     shippingTotal: input.shippingTotal,
     installationTotal: input.installationTotal,
     total: input.total,
-    delivery: { name: input.customerName, phone: input.phone, email: input.email, city: input.city, address: input.address, installation: input.installation },
+    delivery: { name: input.customerName, phone: input.phone, email: input.email, city: input.city, district: input.district ?? "", address: input.address, installation: input.installation, method: input.deliveryMethod ?? "" },
   };
 }
 
@@ -127,10 +144,17 @@ export function toOrderConfirmation(input: {
  * Idempotency-Key replay can be told apart from a key re-used for a different request.
  * Canonical form: a fixed-order JSON array (never an object, so key order cannot vary), items sorted
  * by productId, legal version ids sorted. Client prices/totals and accepted_at are never part of it.
- * v2 adds the marketing channel choices. Bump the leading version number if the layout ever changes.
+ * v2 adds the marketing channel choices; v3 (Phase 3.4) replaces the installation choice with the district and the
+ * delivery preference. Bump the leading version number if the layout ever changes.
  */
 export function orderRequestFingerprint(data: OrderRequest, quantities: ReadonlyMap<string, number>): string {
   const items = [...quantities].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
-  const canonical = JSON.stringify([2, data.customerName, data.phone, data.email, data.city, data.address, data.paymentProvider, data.installation, data.note, items, [...data.legalAcceptances].sort(), marketingChannels(data.marketing)]);
+  const canonical = JSON.stringify([3, data.customerName, data.phone, data.email, data.city, data.district, data.address, data.paymentProvider, data.delivery ?? null, data.note, items, [...data.legalAcceptances].sort(), marketingChannels(data.marketing)]);
   return createHash("sha256").update(canonical, "utf8").digest("hex");
+}
+
+/** The delivery facts stored in `orders.shipping_address_snapshot`, read back defensively for the replay/confirmation. */
+export function deliverySummaryFromSnapshot(snapshot: unknown): { district: string; deliveryMethod: string } {
+  const { district, method } = readDeliverySnapshot(snapshot);
+  return { district, deliveryMethod: method };
 }

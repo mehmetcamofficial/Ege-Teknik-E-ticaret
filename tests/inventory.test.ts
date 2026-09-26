@@ -77,8 +77,8 @@ test("an out-of-stock throw aborts the whole transaction (no order, items, accep
 });
 
 // ---- nothing that fails validation may reach the stock write -----------------------------------
-test("replay, key conflict, legal, notice, pricing and charge failures all return BEFORE the transaction", () => {
-  for (const marker of ["IDEMPOTENCY_KEY_REUSED", "LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "CHARGES_UNDETERMINED", "PRICE_CHANGED", "orderRequestSchema.safeParse"]) {
+test("replay, key conflict, legal, notice, delivery-plan and pricing failures all return BEFORE the transaction", () => {
+  for (const marker of ["IDEMPOTENCY_KEY_REUSED", "LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "planDelivery(", "PRICE_CHANGED", "orderRequestSchema.safeParse"]) {
     assert.ok(beforeTx.includes(marker), `${marker} is checked before the transaction`);
   }
   assert.doesNotMatch(beforeTx, /update\(inventory\)/);

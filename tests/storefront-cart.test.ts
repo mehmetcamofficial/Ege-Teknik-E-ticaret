@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
+import { DEFAULT_CHARGES } from "./support/storefront-sandbox.ts";
 
 type CartEntry = { productId: string; quantity: number };
 type Product = { id: string; name: string; capacity: string; price: number; sale: boolean };
@@ -19,7 +20,7 @@ const products: Product[] = [
 ];
 
 // What GET /api/products actually returns: saleMode/energyClass, which loadCatalog maps.
-const apiProducts = products.map((p) => ({ ...p, saleMode: p.sale ? "online" : "quote", energyClass: "A++", wifi: "Dahili", sale: undefined }));
+const apiProducts = products.map((p) => ({ ...p, saleMode: p.sale ? "online" : "quote", energyClass: "A++", wifi: "Dahili", sale: undefined, deliveryClass: "installed_delivery" }));
 
 type StorefrontApi = {
   normalizeCartEntries: (raw: unknown, knownIds: Set<string> | null) => CartEntry[];
@@ -96,14 +97,14 @@ export const legalDocuments = [{ slug: "distance-sales", title: "PREVIEW TEST �
 const catalogFetch = (orderResponse?: () => Promise<unknown>) => (url: string) =>
   url === "/api/products" ? jsonResponse(200, { products: apiProducts })
     : url === "/api/legal/required" ? jsonResponse(200, { documents: legalDocuments })
-    : url === "/api/checkout/charges" ? jsonResponse(200, { delivery: { status: "configured", amount: 500, vatRateBps: 2000 }, installation: { status: "configured", amount: 1000, vatRateBps: 2000 } })
+    : url === "/api/checkout/charges" ? jsonResponse(200, DEFAULT_CHARGES)
     : (orderResponse ? orderResponse() : Promise.reject(new Error("offline")));
 
 const checkoutForm = (ticked: string[] = legalDocuments.map((d) => d.versionId)) => {
   const button = { disabled: false, textContent: "Siparişi tamamla" };
   const result = { textContent: "", innerHTML: "" };
   const form = {
-    fields: { customerName: "Ada Lovelace", phone: "05001112233", email: "ada@example.test", city: "İzmir", address: "Kuşadası 1 Sokak No 1", provider: "PayTR" },
+    fields: { customerName: "Ada Lovelace", phone: "05001112233", email: "ada@example.test", city: "İzmir", district: "Bornova", address: "Kuşadası 1 Sokak No 1", provider: "PayTR" },
     querySelector: (selector: string) => (selector === "button.primary" ? button : selector === "[data-order-result]" ? result : null),
     querySelectorAll: (selector: string) => (selector === "[data-legal-version]" ? legalDocuments.map((d) => ({ checked: ticked.includes(d.versionId), dataset: { legalVersion: d.versionId } })) : []),
   };
@@ -187,7 +188,7 @@ test("the order payload carries no price, VAT or total and only sellable items",
   const { ctx } = loadStorefront();
   const entries = ctx.normalizeCartEntries([{ productId: BACKEND_ID, quantity: 2 }, { productId: QUOTE_ID, quantity: 1 }], null);
   const payload = plain(ctx.buildOrderPayload({ customerName: "Ada", phone: "05001112233", email: "a@b.test", city: "İzmir", address: "Sokak No 1", paymentProvider: "PayTR" }, entries, products));
-  assert.deepEqual(Object.keys(payload).sort(), ["address", "city", "customerName", "email", "installation", "items", "legalAcceptances", "note", "paymentProvider", "phone"]);
+  assert.deepEqual(Object.keys(payload).sort(), ["address", "city", "customerName", "district", "email", "items", "legalAcceptances", "note", "paymentProvider", "phone"]);
   for (const forbidden of ["price", "unitPrice", "total", "subtotal", "vat", "vatTotal", "vatRateBps", "lineTotal"]) {
     assert.equal(forbidden in payload, false, `payload must not contain ${forbidden}`);
   }

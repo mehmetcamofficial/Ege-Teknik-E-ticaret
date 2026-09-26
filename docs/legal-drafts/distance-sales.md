@@ -1,5 +1,7 @@
 > **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
 > `[DOĞRULAMA BEKLİYOR: ...]` = doğrulanmamış bilgi; `{{...}}` = sipariş anında sistemce doldurulacak alan.
+> **TEKNİK TASLAK GÜNCELLEMESİ (Phase 3.4 iş modeli) — HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR:** Bu bölüm yalnızca yeni checkout iş modeline teknik olarak uyarlanmıştır (operatör talimatı: klima ürünlerinde Ege Teknik hizmet bölgesinde adrese teslim ve standart montaj ürün fiyatına dâhildir; yalnızca gönderime uygun yedek parça/aksesuar için mağazadan teslim veya ücretli kargo). Metin hukuken incelenmemiştir, onaylanmamıştır ve yayınlanamaz. Standart montaj paketinin kapsamı hâlâ doğrulanmamıştır.
+
 > `> İnceleme notu` blokları yayınlanacak metne alınmaz.
 
 # MESAFELİ SATIŞ SÖZLEŞMESİ
@@ -38,8 +40,8 @@ Alıcı, bu sözleşmede "ALICI" veya "TÜKETİCİ" olarak anılır. Fatura bilg
 ## 2. SÖZLEŞMENİN KONUSU VE KAPSAMI
 
 **2.1.** Bu sözleşmenin konusu, ALICI'nın Ege Teknik'e ait internet sitesi üzerinden elektronik ortamda siparişini verdiği,
-aşağıda nitelikleri ve satış bedeli belirtilen ürün(ler)in satışı ve teslimi ile isteğe bağlı olarak seçilmişse kurulum/montaj
-hizmetinin sunulmasıdır. Sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümlerine tabidir.
+aşağıda nitelikleri ve satış bedeli belirtilen ürün(ler)in satışı ve teslimi ile, klima ürünlerinde ürün bedeline dâhil standart
+montaj hizmetinin sunulmasıdır. Sözleşme, 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümlerine tabidir.
 
 **2.2.** Ön Bilgilendirme Formu bu sözleşmenin ayrılmaz bir parçasıdır (Yönetmelik m.5/2). ALICI, sipariş vermeden önce bu forma
 ilişkin bilgileri edindiğini ve teyit ettiğini kabul eder.
@@ -52,8 +54,9 @@ ilişkin bilgileri edindiğini ve teyit ettiğini kabul eder.
 | Sipariş tarihi | {{SIPARIS_TARIHI}} |
 | Ürün(ler) — ad, model, adet, birim fiyat (KDV dâhil) | {{URUN_SATIRLARI}} |
 | Ürünlerin toplam bedeli (KDV dâhil) | {{URUN_TOPLAMI}} |
-| Teslimat bedeli | {{TESLIMAT_BEDELI}} |
-| İsteğe bağlı kurulum/montaj (seçildiyse) ve bedeli | {{MONTAJ_SECIMI}} / {{MONTAJ_BEDELI}} |
+| Teslimat yöntemi | {{TESLIMAT_YONTEMI}} (Ege Teknik teslimatı / mağazadan teslim / kargo) |
+| Kargo ücreti (yalnızca gönderime uygun ürünlerde ve ALICI kargoyu seçtiyse) | {{KARGO_UCRETI}} |
+| Standart montaj (klima ürünlerinde) | Ürün bedeline dâhildir; ayrıca bedel alınmaz *(operatör talimatı; kapsam: [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı])* |
 | **Ödenecek toplam tutar (tüm vergiler dâhil)** | {{TOPLAM_TUTAR}} |
 
 Ürünlerin temel nitelikleri (marka, model, kapasite, enerji sınıfı vb.) sipariş özetinde ve ürün sayfasında gösterilir;
@@ -81,7 +84,7 @@ ilave ödeme yükümlülüğü doğuran seçenekler önceden seçili olarak sunu
 
 ## 6. TESLİMAT
 
-**6.1.** Teslimat, SATICI'nın kendi teslimat imkânlarıyla veya anlaşmalı kargo/taşıyıcı ile yapılabilir; seçenekler ve teslimat bedeli sipariş özetinde gösterilir. Kargo/taşıyıcı: [DOĞRULAMA BEKLİYOR: teslimat taşıyıcısı].
+**6.1.** Klima ürünleri SATICI'nın kendi teslimatıyla (gerektiğinde yetkili servis yönlendirmesiyle) yalnızca Ege Teknik hizmet bölgesindeki (Afyonkarahisar, Aydın, Balıkesir, Denizli, İzmir, Kütahya, Manisa, Muğla ve Uşak; bu illerin tüm ilçeleri dâhil) adreslere teslim edilir; bu teslimat ve standart montaj ürün bedeline dâhildir, kargo değildir ve ayrıca ücretlendirilmez. Aynı siparişteki yedek parçalar bu teslimatla birlikte gelir. Yalnızca gönderime uygun yedek parça/aksesuar içeren siparişlerde ALICI mağazadan teslim alabilir veya Türkiye geneline ücretli kargo seçebilir; kargo ücreti seçim sırasında ve sipariş özetinde gösterilir. Kargo/taşıyıcı: [DOĞRULAMA BEKLİYOR: teslimat taşıyıcısı].
 
 **6.2.** Sipariş onayından itibaren **hedeflenen** teslimat süresi yaklaşık 7 iş günüdür; stok, ürün ve teslimat adresine göre değişebilir ve sipariş özetinde ürün/adres için gösterilen süre esastır. Taahhüt edilen azami süre: [DOĞRULAMA BEKLİYOR: taahhüt edilen azami teslim süresi]. Mal satışlarında teslim süresi, siparişin SATICI'ya ulaştığı tarihten itibaren **her halükarda 30 günü geçemez**; SATICI edimini taahhüt ettiği süre içinde yerine getirmezse ALICI sözleşmeyi feshedebilir (Yönetmelik m.16).
 
@@ -91,9 +94,9 @@ ilave ödeme yükümlülüğü doğuran seçenekler önceden seçili olarak sunu
 
 **6.5.** Ayrıntılar için "Teslimat, İade ve Cayma Koşulları" metnine bakınız.
 
-## 7. İSTEĞE BAĞLI KURULUM / MONTAJ
+## 7. STANDART KURULUM / MONTAJ
 
-**7.1.** Kurulum/montaj **isteğe bağlıdır**; ALICI siparişte bu hizmeti seçmişse SATICI personeli tarafından yapılır. Standart kurulum paketinin kapsamı: [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı].
+**7.1.** Klima ürünlerinde standart kurulum/montaj **ürün bedeline dâhildir** ve SATICI personeli tarafından yapılır. Standart kurulum paketinin kapsamı: [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı].
 
 **7.2.** Standart kapsamın dışında kalan işler (ör. ek boru/kablo metrajı, elektrik tesisatı işleri, kırma/delme/karot, iskele-vinç gibi ekipman) yalnızca **sipariş öncesinde veya keşifte ALICI'ya yazılı olarak bildirilen bedelle ve ALICI'nın ayrıca açık onayı alındıktan sonra** yapılır ve ücretlendirilir; onay alınmadan hiçbir ek bedel tahsil edilmez (Yönetmelik m.19). Ek iş tarifesi: [DOĞRULAMA BEKLİYOR: ek iş/hizmet tarifesi].
 

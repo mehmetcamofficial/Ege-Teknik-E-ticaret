@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
+import { deliveryClassBadge } from "@/lib/delivery-classes";
 import { sendAdmin, useAdminJson, type Overview } from "@/components/admin/use-admin-data";
 import { publishLabel, publishTone, stockLabel, stockLevel, stockTone, tryCurrency } from "@/lib/admin-ui";
 
@@ -80,7 +81,7 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="max-w-[18rem] whitespace-normal"><p className="font-medium">{p.name}</p><p className="text-xs text-muted-foreground">{p.sku || p.slug}</p></TableCell>
-                      <TableCell>{p.category}</TableCell>
+                      <TableCell><span>{p.category}</span>{deliveryClassBadge(p.deliveryClass) && <div className="mt-1"><StatusBadge tone={p.deliveryClass === "shippable" ? "info" : "neutral"}>{deliveryClassBadge(p.deliveryClass)}</StatusBadge></div>}</TableCell>
                       <TableCell className="text-right tabular-nums">{tryCurrency(p.price)}</TableCell>
                       <TableCell><div className="flex items-center gap-2"><span className="tabular-nums">{p.stock}</span>{level !== "untracked" && <StatusBadge tone={stockTone[level]}>{stockLabel[level]}</StatusBadge>}</div></TableCell>
                       <TableCell><StatusBadge tone={publishTone[p.status] ?? "neutral"}>{publishLabel[p.status] ?? p.status}</StatusBadge></TableCell>

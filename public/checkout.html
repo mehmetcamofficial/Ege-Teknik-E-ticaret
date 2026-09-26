@@ -17,7 +17,6 @@
       <div class="summary-row"><span>Ara toplam</span><b data-confirmation-subtotal></b></div>
       <div class="summary-row"><span>KDV</span><b data-confirmation-vat></b></div>
       <div class="summary-row"><span>Teslimat</span><b data-confirmation-shipping></b></div>
-      <div class="summary-row" data-confirmation-installation-row hidden><span>Kurulum</span><b data-confirmation-installation></b></div>
       <div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-confirmation-total></b></div>
       <p class="notice" data-confirmation-payment-notice>Online kartla ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi. Ekibimiz ödeme yöntemini teyit etmek için sizinle iletişime geçecek.</p>
       <h3>Teslimat bilgileri</h3>
@@ -32,11 +31,12 @@
           <label class="field">Ad Soyad<input name="customerName" required autocomplete="name"></label>
           <label class="field">Telefon<input name="phone" required type="tel" autocomplete="tel"></label>
           <label class="field">E-posta<input name="email" required type="email" autocomplete="email"></label>
-          <label class="field">İl / İlçe<input name="city" required></label>
-          <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea name="address" required rows="3"></textarea></label>
-          <label class="field">Kurulum (isteğe bağlı)<select name="installation" data-installation aria-describedby="installation-help"><option value="delivery_only" selected>Kurulum yok</option><option value="survey_then_install">Kurulum istiyorum</option></select><small class="field-help" id="installation-help"><b>Kurulum yok:</b> ürün yalnızca teslim edilir. <b>Kurulum istiyorum:</b> montaj keşif sonrası yapılır ve ayrıca fiyatlandırılır. Kurulum bedeli sipariş özetinde gösterilir; bedel belirlenmeden sipariş onaylanamaz.</small></label>
+          <label class="field">İl<select name="city" data-province autocomplete="address-level1"><option value="">İl seçin</option></select></label>
+          <label class="field">İlçe<select name="district" data-district autocomplete="address-level2" disabled><option value="">Önce il seçin</option></select></label>
+          <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea name="address" rows="3" maxlength="500" autocomplete="street-address" aria-describedby="address-hint"></textarea><small class="field-help" id="address-hint" data-address-hint></small></label>
           <label class="field">Teslimat notu<input name="note" maxlength="500" placeholder="Varsa ekleyin"></label>
         </div>
+        <div data-delivery-options aria-live="polite"></div>
         <h2>Ödeme yöntemi</h2>
         <label class="pay-option"><input type="radio" name="provider" value="PayTR" disabled aria-describedby="payment-status"><span><b>PayTR ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
         <label class="pay-option"><input type="radio" name="provider" value="iyzico" disabled aria-describedby="payment-status"><span><b>iyzico ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>

@@ -239,7 +239,7 @@ export function toPublicProductDetail(product: Record<string, unknown> & { id: s
   const pick = (key: string) => product[key];
   return {
     id: product.id, slug: pick("slug"), name: pick("name"), category: pick("category"), series: pick("series"), sku: pick("sku"), capacity: pick("capacity"),
-    energyClass: pick("energyClass"), wifi: pick("wifi"), price: pick("price"), vatRateBps: pick("vatRateBps"), saleMode: pick("saleMode"), stock: stock ?? 0,
+    energyClass: pick("energyClass"), wifi: pick("wifi"), price: pick("price"), vatRateBps: pick("vatRateBps"), saleMode: pick("saleMode"), deliveryClass: pick("deliveryClass"), stock: stock ?? 0,
     imageUrl: pick("imageUrl"), shortDescription: pick("shortDescription") ?? null, description: sanitizePublicDescription(pick("description")),
     gallery: toPublicGallery(pick("gallery")), specifications: toPublicSpecifications(pick("specifications")),
     documents: toPublicDocuments(pick("documents")), warranty: toPublicWarranty(pick("manufacturerWarranty")),

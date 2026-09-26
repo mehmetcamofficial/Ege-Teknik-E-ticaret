@@ -1,4 +1,6 @@
 > **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
+> **TEKNİK TASLAK GÜNCELLEMESİ (Phase 3.4 iş modeli) — HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR:** Bu bölüm yalnızca yeni checkout iş modeline teknik olarak uyarlanmıştır (operatör talimatı: klima ürünlerinde Ege Teknik hizmet bölgesinde adrese teslim ve standart montaj ürün fiyatına dâhildir; yalnızca gönderime uygun yedek parça/aksesuar için mağazadan teslim veya ücretli kargo). Metin hukuken incelenmemiştir, onaylanmamıştır ve yayınlanamaz. Standart montaj paketinin kapsamı hâlâ doğrulanmamıştır.
+
 > `[DOĞRULAMA BEKLİYOR: ...]` = doğrulanmamış bilgi. Dayanak: Mesafeli Sözleşmeler Yönetmeliği (SOURCES.md S1–S4).
 
 # TESLİMAT, İADE VE CAYMA KOŞULLARI
@@ -12,8 +14,8 @@ Adres ve **iade adresi:** İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Ul
 
 ## 2. Olağan teslimat
 
-- **Yöntem:** kargo veya Ege Teknik'in kendi teslimatı; adresinize ve siparişinize uygun seçenekler sipariş özetinde gösterilir. Kargo/taşıyıcı: [DOĞRULAMA BEKLİYOR: teslimat taşıyıcısı].
-- **Ücret:** teslimat ücretlidir; tutar siparişi onaylamadan önce gösterilir: [DOĞRULAMA BEKLİYOR: teslimat ücreti tarifesi].
+- **Yöntem:** klima ürünlerinde Ege Teknik'in kendi teslimatı (yalnızca Ege Teknik hizmet bölgesi: Afyonkarahisar, Aydın, Balıkesir, Denizli, İzmir, Kütahya, Manisa, Muğla ve Uşak; bu illerin tüm ilçeleri dâhil); yalnızca gönderime uygun yedek parça/aksesuar siparişlerinde mağazadan teslim veya Türkiye geneline kargo. Kargo/taşıyıcı: [DOĞRULAMA BEKLİYOR: teslimat taşıyıcısı].
+- **Ücret:** klima ürünlerinde Ege Teknik teslimatı ve standart montaj ürün bedeline dâhildir (kargo değildir, ayrıca ücret alınmaz); kargo yalnızca gönderime uygun ürünlerde ve müşteri seçerse ücretlidir, tutar siparişi onaylamadan önce gösterilir: [DOĞRULAMA BEKLİYOR: kargo ücreti tarifesi].
 - **Süre:** hedeflenen süre yaklaşık **7 iş günü**; stok, ürün ve adrese göre değişebilir, sipariş özetindeki süre esastır. Taahhüt edilen azami süre: [DOĞRULAMA BEKLİYOR: taahhüt edilen azami teslim süresi].
   Mal satışında teslim süresi her halükarda siparişin bize ulaşmasından itibaren **30 günü geçemez**; süre aşılırsa ALICI sözleşmeyi feshedebilir ve ödemeler fesih bildiriminden itibaren 14 gün içinde kanuni faiziyle iade edilir (Yönetmelik m.16).
   Ürün stokta yoksa bu durum bizi teslim yükümlülüğünden kurtarmaz (m.16/4). Ürün teslimi imkânsızlaşırsa 3 gün içinde yazılı bildirim ve en geç 14 gün içinde iade yapılır.

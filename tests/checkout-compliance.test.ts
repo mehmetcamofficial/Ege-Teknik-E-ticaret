@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { CHECKOUT_TARIFFS, finalizeOrderTotals, priceCharges, publicTariffs, totalMatchesDisplayed, type CheckoutTariffs } from "../lib/checkout-charges.ts";
+import { CHECKOUT_TARIFFS, finalizeOrderTotals, priceShipping, publicTariffs, totalMatchesDisplayed, type CheckoutTariffs } from "../lib/checkout-charges.ts";
 import { CHECKOUT_NOTICE_SLUGS, missingNoticeSlugs } from "../lib/legal.ts";
 import { computeOrderTotals, marketingChannels, orderRequestFingerprint, orderRequestSchema, priceOrderLines } from "../lib/order-domain.ts";
 
@@ -9,49 +9,41 @@ const route = readFileSync("app/api/orders/route.ts", "utf8");
 const html = readFileSync("public/checkout.html", "utf8");
 const store = readFileSync("public/store.js", "utf8");
 const migration = readFileSync("drizzle-pg/0006_checkout_charges_and_marketing_consents.sql", "utf8");
-const configured = (delivery: number | null, installation: number | null): CheckoutTariffs => ({
-  delivery: delivery === null ? { status: "pending" } : { status: "configured", amount: delivery, vatRateBps: 2000 },
-  installation: installation === null ? { status: "pending" } : { status: "configured", amount: installation, vatRateBps: 2000 },
-});
+const configured = (shipping: number | null): CheckoutTariffs => ({ shipping: shipping === null ? { status: "pending" } : { status: "configured", amount: shipping, vatRateBps: 2000 } });
 const base = { customerName: "Test Kişi", phone: "05000000000", email: "test@example.test", city: "İzmir", address: "Test Mahallesi 1 Sokak No 1", paymentProvider: "discovery" as const, items: [{ productId: "p1", quantity: 1 }], expectedTotal: 1000 };
 const parse = (extra: Record<string, unknown> = {}) => { const r = orderRequestSchema.safeParse({ ...base, ...extra }); assert.equal(r.success, true); return r.success ? r.data : (undefined as never); };
 const fp = (extra: Record<string, unknown> = {}) => { const d = parse(extra); return orderRequestFingerprint(d, new Map(d.items.map((i) => [i.productId, i.quantity]))); };
 
-// ---- charge model -------------------------------------------------------------------------------
-test("no approved tariff is invented: every shipped tariff is pending", () => {
-  assert.deepEqual(CHECKOUT_TARIFFS, { delivery: { status: "pending" }, installation: { status: "pending" } });
-  assert.deepEqual(publicTariffs(), { delivery: { status: "pending" }, installation: { status: "pending" } });
+// ---- charge model (Phase 3.4) -------------------------------------------------------------------
+test("no approved tariff is invented: the only tariff, optional carrier shipping, is pending", () => {
+  assert.deepEqual(CHECKOUT_TARIFFS, { shipping: { status: "pending" } });
+  assert.deepEqual(publicTariffs(), { shipping: { status: "pending" } });
 });
-test("unknown mandatory shipping charge blocks the order (fail-closed), with or without installation", () => {
-  assert.deepEqual(priceCharges("delivery_only", configured(null, 100)), { ok: false, undetermined: ["delivery"] });
-  assert.deepEqual(priceCharges("survey_then_install", configured(null, 100)), { ok: false, undetermined: ["delivery"] });
-});
-test("unknown installation charge blocks only when installation is selected", () => {
-  assert.deepEqual(priceCharges("survey_then_install", configured(500, null)), { ok: false, undetermined: ["installation"] });
-  assert.equal(priceCharges("delivery_only", configured(500, null)).ok, true);
-  assert.deepEqual(priceCharges("survey_then_install", configured(null, null)), { ok: false, undetermined: ["delivery", "installation"] });
-});
-test("malformed tariffs are treated as undetermined, never as zero", () => {
-  const bad = (amount: unknown): CheckoutTariffs => ({ delivery: { status: "configured", amount: amount as number, vatRateBps: 2000 }, installation: { status: "pending" } });
-  for (const amount of [-1, 1.5, NaN, "500", undefined]) assert.equal(priceCharges("delivery_only", bad(amount)).ok, false, String(amount));
-  assert.equal(priceCharges("delivery_only", { delivery: { status: "configured", amount: 500, vatRateBps: 99_999 }, installation: { status: "pending" } }).ok, false);
-});
-test("known charges are added to the total; a configured zero is genuinely free", () => {
-  const withInstall = priceCharges("survey_then_install", configured(500, 1200));
-  assert.ok(withInstall.ok);
-  assert.equal(withInstall.chargesTotal, 1700);
-  const free = priceCharges("delivery_only", configured(0, null));
-  assert.ok(free.ok && free.chargesTotal === 0);
+test("there is no mandatory delivery or installation charge any more: the totals need no tariff at all", () => {
   const products = computeOrderTotals(priceOrderLines([{ id: "p", price: 12_000, vatRateBps: 2000 }], new Map([["p", 1]])));
-  const totals = finalizeOrderTotals(products, withInstall);
-  assert.equal(totals.total, 12_000 + 1700);
-  assert.equal(totals.shippingTotal, 500);
-  assert.equal(totals.installationTotal, 1200);
-  assert.equal(totals.subtotal, totals.total - totals.vatTotal);
+  const totals = finalizeOrderTotals(products, { amount: 0, vatAmount: 0 });
+  assert.equal(totals.total, 12_000);
+  assert.equal(totals.shippingTotal, 0);
+  assert.equal(totals.installationTotal, 0, "standard installation is part of the product price");
 });
-test("installation is not added when the customer did not choose it", () => {
-  const r = priceCharges("delivery_only", configured(500, 1200));
-  assert.ok(r.ok && r.installation.amount === 0 && r.chargesTotal === 500);
+test("a pending shipping tariff is undetermined (fail-closed), never zero", () => {
+  assert.deepEqual(priceShipping(configured(null)), { ok: false, reason: "pending" });
+});
+test("malformed shipping tariffs are treated as undetermined, never as zero", () => {
+  const bad = (amount: unknown): CheckoutTariffs => ({ shipping: { status: "configured", amount: amount as number, vatRateBps: 2000 } });
+  for (const amount of [-1, 1.5, NaN, "500", undefined]) assert.equal(priceShipping(bad(amount)).ok, false, String(amount));
+  assert.equal(priceShipping({ shipping: { status: "configured", amount: 500, vatRateBps: 99_999 } }).ok, false);
+});
+test("a configured shipping fee is added to the total with its own VAT; a configured zero is genuinely free", () => {
+  const paid = priceShipping(configured(600));
+  assert.ok(paid.ok && paid.charge.amount === 600 && paid.charge.vatAmount === 100);
+  const free = priceShipping(configured(0));
+  assert.ok(free.ok && free.charge.amount === 0);
+  const products = computeOrderTotals(priceOrderLines([{ id: "p", price: 12_000, vatRateBps: 2000 }], new Map([["p", 1]])));
+  const totals = finalizeOrderTotals(products, paid.ok ? paid.charge : { amount: 0, vatAmount: 0 });
+  assert.equal(totals.total, 12_600);
+  assert.equal(totals.shippingTotal, 600);
+  assert.equal(totals.subtotal, totals.total - totals.vatTotal);
 });
 test("the displayed total is only a guard: a mismatch is refused", () => {
   assert.equal(totalMatchesDisplayed(13_700, 13_700), true);
@@ -61,23 +53,23 @@ test("the displayed total is only a guard: a mismatch is refused", () => {
 
 // ---- server authority / tampering ----------------------------------------------------------------
 test("client shipping/installation/tax/total fields are stripped and never reach the parsed request", () => {
-  const parsed = parse({ shipping: 0, shippingTotal: 0, shippingAmount: 0, installationAmount: 0, installationPrice: 0, tax: 0, vatTotal: 0, subtotal: 1, total: 1, price: 1 }) as Record<string, unknown>;
-  for (const key of ["shipping", "shippingTotal", "shippingAmount", "installationAmount", "installationPrice", "tax", "vatTotal", "subtotal", "total", "price"]) assert.equal(key in parsed, false, key);
+  const parsed = parse({ shipping: 0, shippingFee: 0, shippingTotal: 0, shippingAmount: 0, installation: "survey_then_install", installationAmount: 0, installationPrice: 0, tax: 0, vatTotal: 0, subtotal: 1, total: 1, price: 1, deliveryClass: "shippable", installationIncluded: false }) as Record<string, unknown>;
+  for (const key of ["shipping", "shippingFee", "shippingTotal", "shippingAmount", "installation", "installationAmount", "installationPrice", "tax", "vatTotal", "subtotal", "total", "price", "deliveryClass", "installationIncluded"]) assert.equal(key in parsed, false, key);
 });
-test("the order route takes every amount from the server computation", () => {
-  assert.match(route, /priceCharges\(parsed\.data\.installation\)/);
-  assert.match(route, /finalizeOrderTotals\(computeOrderTotals\(lines\), charges\)/);
+test("the order route takes every amount and every delivery fact from the server", () => {
+  assert.match(route, /planDelivery\(\{ classes: rows\.map\(\(\{ product \}\) => product\.deliveryClass\)/, "the delivery class is read from the DB row");
+  assert.match(route, /finalizeOrderTotals\(computeOrderTotals\(lines\), plan\.shipping\)/);
   assert.match(route, /shippingTotal, installationTotal, total/);
-  assert.doesNotMatch(route, /parsed\.data\.(shipping|installationAmount|total|subtotal)/);
+  assert.doesNotMatch(route, /parsed\.data\.(shipping|installationAmount|total|subtotal|installation\b)/);
   assert.match(route, /totalMatchesDisplayed\(total, parsed\.data\.expectedTotal\)/);
 });
 test("every compliance refusal happens before the transaction (no order, no stock, no acceptance)", () => {
   const tx = route.indexOf("db.transaction");
-  for (const code of ["LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "CHARGES_UNDETERMINED", "PRICE_CHANGED"]) {
+  for (const code of ["LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "planDelivery(", "delivery.error.code", "PRICE_CHANGED"]) {
     const at = route.indexOf(code);
     assert.ok(at > 0 && at < tx, `${code} must be checked before the transaction`);
   }
-  assert.ok(route.indexOf("CHARGES_UNDETERMINED") < route.indexOf("tx.update(inventory)"), "charge check precedes inventory changes");
+  assert.ok(route.indexOf("planDelivery(") < route.indexOf("tx.update(inventory)"), "the delivery plan precedes inventory changes");
 });
 test("expectedTotal is required by the request schema", () => {
   const withoutTotal: Record<string, unknown> = { ...base };
@@ -85,14 +77,6 @@ test("expectedTotal is required by the request schema", () => {
   assert.equal(orderRequestSchema.safeParse(withoutTotal).success, false);
   assert.equal(orderRequestSchema.safeParse({ ...base, expectedTotal: -1 }).success, false);
   assert.equal(orderRequestSchema.safeParse({ ...base, expectedTotal: 10.5 }).success, false);
-});
-
-// ---- installation is optional and never pre-selected ---------------------------------------------
-test("installation defaults to none in the server schema and the checkout markup", () => {
-  assert.equal(parse().installation, "delivery_only");
-  assert.match(html, /<option value="delivery_only" selected>/);
-  assert.doesNotMatch(html, /<option value="survey_then_install" selected>/);
-  assert.match(store, /installation:fields\.installation\|\|'delivery_only'/);
 });
 
 // ---- marketing -----------------------------------------------------------------------------------

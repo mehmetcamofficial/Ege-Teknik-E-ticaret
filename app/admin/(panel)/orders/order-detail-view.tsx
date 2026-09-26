@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
 import { sendAdmin, useAdminJson, type Overview } from "@/components/admin/use-admin-data";
 import { orderStatusLabel, orderStatusTone, paymentStatusLabel, trDate, tryCurrency } from "@/lib/admin-ui";
+import { describeOrderDelivery } from "@/lib/order-delivery";
 
 const crumbs = [{ href: "/admin/orders", label: "Siparişler" }];
 
@@ -46,7 +47,9 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
   if (!order) return <><PageHeader title="Sipariş" breadcrumb={crumbs} /><EmptyState title="Sipariş bulunamadı" description="Bu ekran en son 100 siparişi gösterebilir; bağlantı hatalı ya da sipariş daha eski olabilir." /></>;
 
   const selected = nextStatus ?? order.status;
-  const totals: [string, number][] = [["Ara toplam", order.subtotal], ["KDV", order.vatTotal], ["Kargo", order.shippingTotal], ["Montaj", order.installationTotal]];
+  const delivery = describeOrderDelivery(order);
+  // Shipping and installation only appear when the order actually charged them (new orders include installation in the product price).
+  const totals: [string, number][] = [["Ara toplam", order.subtotal], ["KDV", order.vatTotal], ...(order.shippingTotal > 0 ? [["Kargo bedeli", order.shippingTotal] as [string, number]] : []), ...(order.installationTotal > 0 ? [["Montaj bedeli", order.installationTotal] as [string, number]] : [])];
 
   return (
     <>
@@ -57,13 +60,18 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
           <Panel title="Müşteri ve teslimat">
             <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
               <div><dt className="text-muted-foreground">Müşteri</dt><dd className="font-medium">{order.customerName}</dd></div>
-              <div><dt className="text-muted-foreground">Telefon</dt><dd><a className="text-primary underline-offset-4 hover:underline" href={`tel:${order.phone}`}>{order.phone}</a></dd></div>
-              <div><dt className="text-muted-foreground">E-posta</dt><dd className="break-all">{order.email ? <a className="text-primary underline-offset-4 hover:underline" href={`mailto:${order.email}`}>{order.email}</a> : "—"}</dd></div>
-              <div><dt className="text-muted-foreground">İl</dt><dd>{order.city}</dd></div>
-              <div className="sm:col-span-2"><dt className="text-muted-foreground">Adres</dt><dd className="whitespace-pre-line">{order.address}</dd></div>
-              {order.installationPreference && <div className="sm:col-span-2"><dt className="text-muted-foreground">Montaj tercihi</dt><dd>{order.installationPreference}</dd></div>}
+              <div><dt className="text-muted-foreground">Telefon</dt><dd><a className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline" href={`tel:${order.phone}`}>{order.phone}</a></dd></div>
+              <div><dt className="text-muted-foreground">E-posta</dt><dd className="break-all">{order.email ? <a className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline" href={`mailto:${order.email}`}>{order.email}</a> : "—"}</dd></div>
+              <div><dt className="text-muted-foreground">İl</dt><dd>{delivery.province}</dd></div>
+              <div><dt className="text-muted-foreground">İlçe</dt><dd>{delivery.district}</dd></div>
+              <div className="sm:col-span-2"><dt className="text-muted-foreground">Adres</dt><dd className="whitespace-pre-line">{order.address || "—"}</dd></div>
+              <div><dt className="text-muted-foreground">Teslimat yöntemi</dt><dd>{delivery.method}</dd></div>
+              <div><dt className="text-muted-foreground">Teslimat bölgesi</dt><dd>{delivery.region}</dd></div>
+              <div><dt className="text-muted-foreground">Kargo bedeli</dt><dd className="tabular-nums">{delivery.shippingFee === null ? "—" : tryCurrency(delivery.shippingFee)}</dd></div>
+              <div><dt className="text-muted-foreground">Montaj</dt><dd>{delivery.installation}</dd></div>
               {order.notes && <div className="sm:col-span-2"><dt className="text-muted-foreground">Sipariş notu</dt><dd className="whitespace-pre-line">{order.notes}</dd></div>}
             </dl>
+            {!delivery.hasSnapshot && <p className="mt-3 text-xs text-muted-foreground">Bu sipariş teslimat modeli güncellenmeden önce oluşturulmuş; yeni teslimat alanları kayıtlı değil.</p>}
           </Panel>
           <p className="text-sm text-muted-foreground">Sipariş kalemleri bu ekranda henüz listelenmiyor; mevcut yönetim verisi yalnızca sipariş özetini içeriyor.</p>
         </div>

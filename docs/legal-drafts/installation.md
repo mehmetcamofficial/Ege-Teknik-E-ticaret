@@ -1,16 +1,18 @@
 > **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
+> **TEKNİK TASLAK GÜNCELLEMESİ (Phase 3.4 iş modeli) — HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR:** Bu bölüm yalnızca yeni checkout iş modeline teknik olarak uyarlanmıştır (operatör talimatı: klima ürünlerinde Ege Teknik hizmet bölgesinde adrese teslim ve standart montaj ürün fiyatına dâhildir; yalnızca gönderime uygun yedek parça/aksesuar için mağazadan teslim veya ücretli kargo). Metin hukuken incelenmemiştir, onaylanmamıştır ve yayınlanamaz. Standart montaj paketinin kapsamı hâlâ doğrulanmamıştır.
+
 > Aday yapıdır. Standart paket kapsamı ve ek iş tarifesi işletme tarafından doğrulanmadan yayınlanamaz. **Hiçbir TL bedeli uydurulmamıştır.**
 
 # KURULUM VE MONTAJ BİLGİLENDİRMESİ
 
 ## 1. Genel
-- Kurulum/montaj **isteğe bağlıdır**; siparişte siz seçersiniz ve seçim önceden işaretli sunulmaz.
-- Kurulum, Ege Teknik personeli tarafından yapılır. Kurulumu seçmezseniz ürün yalnızca teslim edilir.
-- Kurulum hizmetinin bedeli ve kapsamı sipariş özetinde, **sipariş onayından önce** gösterilir.
+- Klima ürünlerinde **standart kurulum/montaj ürün bedeline dâhildir**; ayrıca standart montaj ücreti alınmaz. Bu, "ücretsiz montaj" değil, ürün fiyatının içindeki hizmettir.
+- Kurulum, Ege Teknik personeli (gerektiğinde yetkili servis yönlendirmesiyle) tarafından, Ege Teknik hizmet bölgesindeki adres teslimatı sırasında yapılır.
+- Kurulumun kapsamı ve standart dışı işler sipariş özetinde ve aşağıdaki şartlarla belirtilir.
 
 ## 2. Standart kurulum paketi
 Standart paketin kapsamı: [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı].
-Bu alanda operatör onayı gelmeden ürün fiyatına "montaj dâhil", "komple montaj" gibi ifadeler kullanılmamalıdır.
+Ürün fiyatına "standart montaj dâhil" ifadesi operatör iş modeli talimatına dayanır; paket kapsamı doğrulanmadan "komple montaj" gibi geniş ifadeler kullanılmamalıdır.
 Aşağıdaki kalemler, **operatör açıkça onaylamadıkça** standart pakete dâhil gösterilemez: elektrik tesisatı/sigorta/kablo işleri, kırma-delme-karot, standart metrajın üzerindeki boru/kablo/drenaj, iskele/vinç/lift ekipmanı, yüksekte çalışma, dış ünite taşıyıcı/konsol, mevcut cihazın sökümü.
 
 ## 3. Standart dışı (ek) işler ve ücretlendirme
