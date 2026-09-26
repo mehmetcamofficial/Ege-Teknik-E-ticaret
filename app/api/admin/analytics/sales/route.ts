@@ -1,5 +1,5 @@
 import { getAdminUser } from "@/lib/admin-auth";
-import { analyticsQuerySchema, resolveDateRange, resolvePreviousRange, trendGranularityFor } from "@/lib/analytics";
+import { analyticsQuerySchema, analyticsRangeErrorMessage, resolveDateRange, resolvePreviousRange, trendGranularityFor } from "@/lib/analytics";
 import { loadSalesSummary } from "@/lib/analytics-db";
 
 /**
@@ -29,11 +29,11 @@ export async function GET(request: Request) {
 
   const now = new Date();
   const resolved = resolveDateRange(query.data.range, now, query.data.from, query.data.to);
-  if (!resolved.ok) return Response.json({ error: resolved.error }, { status: 400 });
+  if (!resolved.ok) return Response.json({ error: analyticsRangeErrorMessage(resolved.error) }, { status: 400 });
   // Both windows come from the same preset and the same inputs under the same 400-day cap, so the
   // comparison period is always exactly the window immediately before the current one.
   const previous = resolvePreviousRange(query.data.range, now, query.data.from, query.data.to);
-  if (!previous.ok) return Response.json({ error: previous.error }, { status: 400 });
+  if (!previous.ok) return Response.json({ error: analyticsRangeErrorMessage(previous.error) }, { status: 400 });
 
   const summary = await loadSalesSummary(resolved.range, previous.range, trendGranularityFor(resolved.range));
   return Response.json(summary, { headers: { "cache-control": "no-store" } });

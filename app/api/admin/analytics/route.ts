@@ -1,5 +1,5 @@
 import { getAdminUser } from "@/lib/admin-auth";
-import { analyticsQuerySchema, resolveDateRange } from "@/lib/analytics";
+import { analyticsQuerySchema, analyticsRangeErrorMessage, resolveDateRange } from "@/lib/analytics";
 import { loadAnalyticsSummary } from "@/lib/analytics-db";
 
 /**
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   if (!query.success) return Response.json({ error: "Geçersiz sorgu." }, { status: 400 });
   const now = new Date();
   const resolved = resolveDateRange(query.data.range, now, query.data.from, query.data.to);
-  if (!resolved.ok) return Response.json({ error: resolved.error }, { status: 400 });
+  if (!resolved.ok) return Response.json({ error: analyticsRangeErrorMessage(resolved.error) }, { status: 400 });
   const summary = await loadAnalyticsSummary(resolved.range, now);
   return Response.json(summary, { headers: { "cache-control": "no-store" } });
 }

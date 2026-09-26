@@ -105,8 +105,10 @@ test("no hardcoded/demo numeric literal masquerades as data - every displayed co
   assert.doesNotMatch(adminUi, /value=\{?\d{2,}\}?/, "a suspicious multi-digit literal passed as a displayed value");
 });
 test("the date-range control is a real accessible control group with a pressed state, matching the existing admin filter pattern", () => {
-  assert.match(adminUi, /role="group" aria-label="Tarih aralığı"/);
-  assert.match(adminUi, /aria-pressed=\{r === range\}/);
+  // The one shared toolbar owns the control now (the traffic view is controlled by it).
+  const sharedToolbar = readFileSync("app/admin/analytics-range-toolbar.tsx", "utf8");
+  assert.match(sharedToolbar, /role="group" aria-label="Tarih aralığı"/);
+  assert.match(sharedToolbar, /aria-pressed=\{r === active\}/);
 });
 // Phase 3.3B moved the BarRow markup and the shared date-range toolbar out of analytics-admin.tsx
 // into the shared primitives, so these assertions follow the code to wherever it now lives. The

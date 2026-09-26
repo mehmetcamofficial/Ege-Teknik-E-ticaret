@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,10 @@ export function AnalyticsRangeToolbar({ query, onQueryChange, loading }: { query
   const [customFrom, setCustomFrom] = useState(params.get("from") ?? "");
   const [customTo, setCustomTo] = useState(params.get("to") ?? "");
 
+  // Below md the two date fields sit behind a disclosure so the toolbar does not push the data down the
+  // page; from md up they are always visible. The state only starts open when a custom range is active.
+  const [customOpen, setCustomOpen] = useState(active === "custom");
+
   const applyCustomRange = useCallback(() => {
     if (!customFrom || !customTo) return;
     onQueryChange(`range=custom&from=${customFrom}&to=${customTo}`);
@@ -51,10 +56,10 @@ export function AnalyticsRangeToolbar({ query, onQueryChange, loading }: { query
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="flex flex-col gap-3 rounded-xl border bg-card p-4 min-[1400px]:flex-row min-[1400px]:items-end min-[1400px]:justify-between">
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium" id="analytics-range-label">Tarih aralığı</p>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Tarih aralığı">
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap" role="group" aria-label="Tarih aralığı">
           {PICKABLE.map((r) => (
             <Button key={r} type="button" className="min-h-11" variant={r === active ? "default" : "outline"} aria-pressed={r === active} onClick={() => onQueryChange(`range=${r}`)}>
               {rangeLabel[r]}
@@ -63,12 +68,17 @@ export function AnalyticsRangeToolbar({ query, onQueryChange, loading }: { query
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-        <div className="grid gap-1.5">
+      <Button type="button" variant={active === "custom" ? "default" : "outline"} className="min-h-11 justify-start gap-2 md:hidden" aria-expanded={customOpen} aria-controls="analytics-custom-range" onClick={() => setCustomOpen((v) => !v)}>
+        <CalendarRange aria-hidden="true" className="size-4" />
+        Özel aralık
+      </Button>
+
+      <div id="analytics-custom-range" className={cn("flex-wrap items-end gap-2 md:flex", customOpen ? "flex" : "hidden")}>
+        <div className="grid w-40 gap-1.5">
           <Label htmlFor="analytics-from">Başlangıç</Label>
           <Input id="analytics-from" type="date" className="min-h-11" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
         </div>
-        <div className="grid gap-1.5">
+        <div className="grid w-40 gap-1.5">
           <Label htmlFor="analytics-to">Bitiş</Label>
           <Input id="analytics-to" type="date" className="min-h-11" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
         </div>
@@ -83,7 +93,7 @@ export function AnalyticsRangeToolbar({ query, onQueryChange, loading }: { query
         </Button>
       </div>
 
-      <p role="status" aria-live="polite" className={cn("text-sm text-muted-foreground", loading && "opacity-70")}>
+      <p role="status" aria-live="polite" className={loading ? "text-sm text-muted-foreground" : "sr-only"}>
         {loading ? "Güncelleniyor…" : ""}
       </p>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnalyticsRangeToolbar } from "@/app/admin/analytics-range-toolbar";
 import { SalesOverview } from "@/app/admin/analytics-sales";
 import AnalyticsAdmin from "@/app/admin/analytics-admin";
@@ -17,12 +17,28 @@ import AnalyticsAdmin from "@/app/admin/analytics-admin";
  * reviews, customers, finance and any funnel are deliberately NOT here - each needs data that either
  * does not exist yet or belongs to its own slice.
  */
-export default function AnalyticsV2() {
-  const [query, setQuery] = useState("range=7d");
+export default function AnalyticsV2({ initialQuery = "range=7d" }: { initialQuery?: string }) {
+  // The page sanitises the URL on the server (`sanitizeAnalyticsQuery`), so this only ever starts from a
+  // supported preset or a valid custom range. Later changes are mirrored back into the address bar with
+  // replaceState: the selection survives a reload and can be shared, without pushing history entries or
+  // adding a state-management layer.
+  const [query, setQuery] = useState(initialQuery);
+  // A URL the server had to correct (?range=bogus, an over-long custom range ...) is rewritten to the
+  // canonical state the page actually shows. replaceState, and only when they differ, so it cannot
+  // loop or add history entries.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).toString() !== initialQuery) {
+      window.history.replaceState(null, "", `${window.location.pathname}?${initialQuery}`);
+    }
+  }, [initialQuery]);
+  const changeQuery = (next: string) => {
+    setQuery(next);
+    window.history.replaceState(null, "", `${window.location.pathname}?${next}`);
+  };
 
   return (
     <div className="space-y-6">
-      <AnalyticsRangeToolbar query={query} onQueryChange={setQuery} />
+      <AnalyticsRangeToolbar query={query} onQueryChange={changeQuery} />
 
       <section aria-labelledby="sales-overview-heading">
         <h2 id="sales-overview-heading" className="mb-3 text-lg font-semibold">Satış Özeti</h2>

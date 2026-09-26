@@ -282,15 +282,20 @@ export type SalesSummary = {
 };
 
 /**
- * The comparison every KPI card shows. `percent` is null - never 0, never Infinity - when the
- * previous value is 0, because a percentage change from zero is undefined, not infinite; the UI
- * shows "no previous data" instead of inventing a number.
+ * The comparison every KPI card shows. `percent` is null - never Infinity - when the previous value
+ * is 0 and the current one is not, because a percentage change from zero is undefined, not infinite;
+ * the UI shows "no previous data" instead of inventing a number. The same holds for 0 -> 0.
  */
 export type SalesDelta = { current: number; previous: number; difference: number; percent: number | null };
 
 export function salesDelta(current: number, previous: number): SalesDelta {
   const difference = current - previous;
-  return { current, previous, difference, percent: previous === 0 ? null : (difference / Math.abs(previous)) * 100 };
+  // Both values must be real numbers. A NaN/Infinity input (or a bigint string that slipped past the
+  // data boundary) must never become a percentage on screen.
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) return { current, previous, difference: 0, percent: null };
+  // A previous value of 0 has no meaningful percentage (0 -> 0 and N -> from 0 alike): null, never Infinity.
+  const percent = previous === 0 ? null : (difference / Math.abs(previous)) * 100;
+  return { current, previous, difference, percent };
 }
 
 /** AOV is undefined, not 0, when there were no orders - an average of nothing is not zero. */
@@ -326,4 +331,179 @@ export function salesTotalsFrom(row: SalesAggregateRow): SalesTotals {
     cancelledCount: row.cancelledCount,
     cancellationRate: cancellationRate(row.cancelledCount, allOrders),
   };
+}
+
+
+// ---- data boundary: driver values -> the documented API contract (Phase 3.3B.3) ----------------------
+/**
+ * node-postgres returns `bigint` (and `numeric`) aggregates as STRINGS - `sum(...)::bigint` arrives as
+ * "1255800", not 1255800 - while `count(*)::int` arrives as a number. The documented API contract says
+ * every monetary/count field is a number, so the conversion happens exactly once, here, at the server
+ * boundary, and never in a React component. Anything that is not a finite, safe integer-or-decimal is
+ * rejected loudly: an aggregate that cannot be represented exactly must fail the request, not be
+ * rounded into a plausible-looking wrong figure.
+ */
+export type DbNumeric = string | number | bigint;
+
+export function toSafeNumber(value: DbNumeric | null | undefined, field = "value"): number {
+  if (value === null || value === undefined) throw new TypeError(`sales aggregate ${field} is missing`);
+  const n = typeof value === "number" ? value : typeof value === "bigint" ? Number(value) : /^-?\d+(\.\d+)?$/.test(value.trim()) ? Number(value.trim()) : Number.NaN;
+  if (!Number.isFinite(n)) throw new TypeError(`sales aggregate ${field} is not a finite number`);
+  if (Math.abs(n) > Number.MAX_SAFE_INTEGER) throw new RangeError(`sales aggregate ${field} exceeds the safe integer range`);
+  return n;
+}
+
+/** The raw shape the aggregate queries return from the driver. */
+export type RawSalesAggregate = {
+  orderValue: DbNumeric; netOrderValue: DbNumeric; vatTotal: DbNumeric;
+  orderCount: DbNumeric; cancelledCount: DbNumeric; unitsSold: DbNumeric;
+};
+export type RawTrendRow = { bucket: string; orderValue: DbNumeric; orderCount: DbNumeric };
+export type RawStatusRow = { status: string; count: DbNumeric; orderValue: DbNumeric };
+
+export function normalizeSalesAggregate(raw: RawSalesAggregate): SalesAggregateRow {
+  return {
+    orderValue: toSafeNumber(raw.orderValue, "orderValue"),
+    netOrderValue: toSafeNumber(raw.netOrderValue, "netOrderValue"),
+    vatTotal: toSafeNumber(raw.vatTotal, "vatTotal"),
+    orderCount: toSafeNumber(raw.orderCount, "orderCount"),
+    cancelledCount: toSafeNumber(raw.cancelledCount, "cancelledCount"),
+    unitsSold: toSafeNumber(raw.unitsSold, "unitsSold"),
+  };
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const utcDayKey = (d: Date) => `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+
+/**
+ * Every bucket key inside `range`, in Europe/Istanbul time (fixed UTC+3, the same rule the SQL uses to
+ * bucket), formatted exactly like the SQL keys: `YYYY-MM-DD` for day, the Monday `YYYY-MM-DD` for week
+ * (date_trunc('week') is ISO Monday), `YYYY-MM` for month. Bounded by the 400-day range cap.
+ */
+export function trendBucketKeys(range: ResolvedRange, granularity: TrendGranularity): string[] {
+  const start = new Date(range.start.getTime() + TR_OFFSET_MS);
+  const end = new Date(range.end.getTime() + TR_OFFSET_MS);
+  const keys: string[] = [];
+  if (granularity === "month") {
+    let y = start.getUTCFullYear(), m = start.getUTCMonth();
+    const ey = end.getUTCFullYear(), em = end.getUTCMonth();
+    while ((y < ey || (y === ey && m <= em)) && keys.length < 100) {
+      keys.push(`${y}-${pad2(m + 1)}`);
+      if (++m > 11) { m = 0; y++; }
+    }
+    return keys;
+  }
+  const step = granularity === "week" ? 7 : 1;
+  let cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  if (granularity === "week") cursor = addDays(cursor, -((cursor.getUTCDay() + 6) % 7));
+  const last = Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate());
+  while (cursor.getTime() <= last && keys.length < 500) { keys.push(utcDayKey(cursor)); cursor = addDays(cursor, step); }
+  return keys;
+}
+
+/**
+ * Fills the buckets that had no orders with explicit zeros, so a chart shows the quiet days as quiet
+ * instead of drawing a line between two isolated observations as if activity had been continuous.
+ * Buckets the database returned are kept as-is (and any that fall outside the generated grid are kept
+ * too, never silently dropped).
+ */
+export function fillTrendBuckets(rows: SalesTrendPoint[], range: ResolvedRange, granularity: TrendGranularity): SalesTrendPoint[] {
+  const byBucket = new Map(rows.map((r) => [r.bucket, r]));
+  const filled = trendBucketKeys(range, granularity).map((bucket) => byBucket.get(bucket) ?? { bucket, orderValue: 0, orderCount: 0 });
+  const known = new Set(filled.map((p) => p.bucket));
+  return [...filled, ...rows.filter((r) => !known.has(r.bucket))].sort((a, b) => (a.bucket < b.bucket ? -1 : a.bucket > b.bucket ? 1 : 0));
+}
+
+export type BuildSalesSummaryInput = {
+  range: ResolvedRange; previousRange: ResolvedRange; granularity: TrendGranularity;
+  current: RawSalesAggregate; previous: RawSalesAggregate; trend: RawTrendRow[]; statuses: RawStatusRow[];
+};
+
+/** The one place raw driver rows become the public SalesSummary: numbers only, buckets filled. */
+export function buildSalesSummary(input: BuildSalesSummaryInput): SalesSummary {
+  const current = normalizeSalesAggregate(input.current);
+  const trend = input.trend.map((r) => ({ bucket: r.bucket, orderValue: toSafeNumber(r.orderValue, "trend.orderValue"), orderCount: toSafeNumber(r.orderCount, "trend.orderCount") }));
+  return {
+    range: { start: input.range.start.toISOString(), end: input.range.end.toISOString() },
+    previousRange: { start: input.previousRange.start.toISOString(), end: input.previousRange.end.toISOString() },
+    granularity: input.granularity,
+    totals: salesTotalsFrom(current),
+    previous: salesTotalsFrom(normalizeSalesAggregate(input.previous)),
+    trend: fillTrendBuckets(trend, input.range, input.granularity),
+    statuses: input.statuses.map((r) => ({ status: r.status, count: toSafeNumber(r.count, "status.count"), orderValue: toSafeNumber(r.orderValue, "status.orderValue") })),
+    hasAnyOrders: current.orderCount + current.cancelledCount > 0,
+  };
+}
+
+const MONTHS_TR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+const MONTHS_TR_SHORT = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+
+/**
+ * Human labels for a bucket key: `short` for the axis, `full` for the tooltip/table. Formatted from the
+ * key itself (already an Istanbul calendar date), so it can never shift a day with the viewer's zone.
+ */
+export function formatTrendBucket(bucket: string, granularity: TrendGranularity): { short: string; full: string } {
+  const [y, m, d] = bucket.split("-").map(Number) as [number, number, number | undefined];
+  if (granularity === "month") return { short: `${MONTHS_TR_SHORT[m - 1]} ${y}`, full: `${MONTHS_TR[m - 1]} ${y}` };
+  const day = `${d} ${MONTHS_TR_SHORT[m - 1]}`;
+  if (granularity === "week") {
+    const end = addDays(new Date(Date.UTC(y, m - 1, d)), 6);
+    return { short: day, full: `${day} – ${end.getUTCDate()} ${MONTHS_TR_SHORT[end.getUTCMonth()]} ${end.getUTCFullYear()}` };
+  }
+  return { short: day, full: `${d} ${MONTHS_TR[m - 1]} ${y}` };
+}
+
+/**
+ * Axis/KPI money in plain Turkish: "300 bin", "1,2 milyon" instead of the compact "300 B" / "1,2 Mn"
+ * that Intl produces for tr-TR, which a reader has to decode.
+ */
+export function formatTryAxis(value: number): string {
+  const abs = Math.abs(value);
+  const f = (n: number) => new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(n);
+  if (abs >= 1_000_000) return `₺${f(value / 1_000_000)} milyon`;
+  if (abs >= 1_000) return `₺${f(value / 1_000)} bin`;
+  return `₺${f(value)}`;
+}
+
+/** Turkish, user-facing text for the range resolver's internal validation codes. Unknown codes fail closed to a generic message. */
+export function analyticsRangeErrorMessage(error: string): string {
+  switch (error) {
+    case "range too large": return "Özel tarih aralığı en fazla 400 gün olabilir.";
+    case "custom range requires from and to": return "Özel aralık için başlangıç ve bitiş tarihi seçin.";
+    case "invalid date": return "Geçersiz tarih. Lütfen tarihleri kontrol edin.";
+    case "from must not be after to": return "Başlangıç tarihi bitiş tarihinden sonra olamaz.";
+    default: return "Geçersiz tarih aralığı.";
+  }
+}
+
+const DATE_ONLY_QUERY = /^\d{4}-\d{2}-\d{2}$/;
+/**
+ * The query string the Analytics page initialises from a URL. Only a supported preset, or a custom
+ * range of two valid `YYYY-MM-DD` dates that the same resolver (and 400-day cap) accepts, survives;
+ * anything else falls back to the default `range=7d`. It never throws, and it rebuilds the string from
+ * validated parts rather than echoing user input.
+ */
+export function sanitizeAnalyticsQuery(input: { range?: unknown; from?: unknown; to?: unknown }, now: Date): string {
+  const first = (v: unknown) => (typeof v === "string" ? v : Array.isArray(v) && typeof v[0] === "string" ? v[0] : undefined);
+  const range = first(input.range);
+  if (!range || !(dateRangePresets as readonly string[]).includes(range)) return "range=7d";
+  if (range !== "custom") return `range=${range}`;
+  const from = first(input.from), to = first(input.to);
+  if (!from || !to || !DATE_ONLY_QUERY.test(from) || !DATE_ONLY_QUERY.test(to)) return "range=7d";
+  const current = resolveDateRange("custom", now, from, to);
+  const previous = resolvePreviousRange("custom", now, from, to);
+  return current.ok && previous.ok ? `range=custom&from=${from}&to=${to}` : "range=7d";
+}
+
+
+/**
+ * The traffic API returns only the days that had visits. Charting those alone would butt two isolated
+ * days together as if the days between them had been busy, so the quiet days are filled with explicit
+ * zeros here (same Istanbul day keys the SQL uses), exactly as the sales trend is.
+ */
+export function fillDailyVisitors(rows: AnalyticsSummary["dailyTrend"], range: ResolvedRange): AnalyticsSummary["dailyTrend"] {
+  const byDay = new Map(rows.map((r) => [r.date, r]));
+  const filled = trendBucketKeys(range, "day").map((date) => byDay.get(date) ?? { date, visitors: 0, pageViews: 0 });
+  const known = new Set(filled.map((r) => r.date));
+  return [...filled, ...rows.filter((r) => !known.has(r.date))].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 }

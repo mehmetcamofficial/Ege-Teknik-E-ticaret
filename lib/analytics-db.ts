@@ -1,7 +1,7 @@
 import { getDb } from "@/db";
 import { analyticsEvents, orderItems, orders, products } from "@/db/schema";
 import { and, between, count, countDistinct, desc, eq, gte, lt, ne, sql } from "drizzle-orm";
-import { classifyDevice, isBotUserAgent, normalizeEventPath, salesTotalsFrom, type AnalyticsSummary, type DeviceCategory, type ResolvedRange, type SalesAggregateRow, type SalesSummary, type TrendGranularity } from "@/lib/analytics";
+import { buildSalesSummary, classifyDevice, isBotUserAgent, normalizeEventPath, type AnalyticsSummary, type DeviceCategory, type RawSalesAggregate, type ResolvedRange, type SalesSummary, type TrendGranularity } from "@/lib/analytics";
 
 /**
  * Records one page/product view. Device and bot classification happen here, from the request's
@@ -143,14 +143,19 @@ export async function loadAnalyticsSummary(range: ResolvedRange, now: Date): Pro
 const inSalesRange = (r: ResolvedRange) => between(orders.createdAt, r.start, r.end);
 const notCancelled = ne(orders.status, "cancelled");
 
-/** Sums and counts over one window. Always exactly one row out, whatever the underlying volume. */
-async function aggregateWindow(range: ResolvedRange): Promise<SalesAggregateRow> {
+/**
+ * Sums and counts over one window, exactly as the driver returns them. Always exactly one row out,
+ * whatever the underlying volume. node-postgres hands `bigint` sums back as STRINGS, so this returns
+ * the RAW row and `buildSalesSummary` (lib/analytics.ts) is the single place that turns driver values
+ * into the numbers the API contract promises - never a Number(...) scattered into a component.
+ */
+async function aggregateWindow(range: ResolvedRange): Promise<RawSalesAggregate> {
   const db = getDb();
   const [money] = await db
     .select({
-      orderValue: sql<number>`coalesce(sum(${orders.total}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
-      netOrderValue: sql<number>`coalesce(sum(${orders.subtotal}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
-      vatTotal: sql<number>`coalesce(sum(${orders.vatTotal}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
+      orderValue: sql<string | number>`coalesce(sum(${orders.total}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
+      netOrderValue: sql<string | number>`coalesce(sum(${orders.subtotal}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
+      vatTotal: sql<string | number>`coalesce(sum(${orders.vatTotal}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
       orderCount: sql<number>`count(*) filter (where ${orders.status} <> 'cancelled')::int`,
       cancelledCount: sql<number>`count(*) filter (where ${orders.status} = 'cancelled')::int`,
     })
@@ -193,7 +198,7 @@ export async function loadSalesSummary(range: ResolvedRange, previousRange: Reso
     aggregateWindow(previousRange),
     db.select({
       bucket: sql<string>`${bucket}`.as("bucket"),
-      orderValue: sql<number>`coalesce(sum(${orders.total}), 0)::bigint`,
+      orderValue: sql<string | number>`coalesce(sum(${orders.total}), 0)::bigint`,
       orderCount: sql<number>`count(*)::int`,
     })
       .from(orders)
@@ -203,7 +208,7 @@ export async function loadSalesSummary(range: ResolvedRange, previousRange: Reso
     db.select({
       status: orders.status,
       count: sql<number>`count(*)::int`,
-      orderValue: sql<number>`coalesce(sum(${orders.total}), 0)::bigint`,
+      orderValue: sql<string | number>`coalesce(sum(${orders.total}), 0)::bigint`,
     })
       .from(orders)
       .where(inSalesRange(range))
@@ -211,14 +216,9 @@ export async function loadSalesSummary(range: ResolvedRange, previousRange: Reso
       .orderBy(desc(sql`count(*)`)),
   ]);
 
-  return {
-    range: { start: range.start.toISOString(), end: range.end.toISOString() },
-    previousRange: { start: previousRange.start.toISOString(), end: previousRange.end.toISOString() },
-    granularity,
-    totals: salesTotalsFrom(current),
-    previous: salesTotalsFrom(previous),
+  return buildSalesSummary({
+    range, previousRange, granularity, current, previous,
     trend: trend.map((r) => ({ bucket: r.bucket, orderValue: r.orderValue, orderCount: r.orderCount })),
     statuses: statuses.map((r) => ({ status: r.status, count: r.count, orderValue: r.orderValue })),
-    hasAnyOrders: current.orderCount + current.cancelledCount > 0,
-  };
+  });
 }
