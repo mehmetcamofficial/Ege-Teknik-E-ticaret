@@ -6,8 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BarRow } from "@/components/admin/analytics-primitives";
+import { rangeLabel, type AnalyticsRangePreset } from "@/app/admin/analytics-range-toolbar";
 
-type Range = "today" | "7d" | "30d" | "month" | "year" | "custom";
+type Range = AnalyticsRangePreset;
 type Summary = {
   range: { start: string; end: string };
   totals: { visitors: number; uniqueVisitors: number; pageViews: number; newVisitors: number; returningVisitors: number };
@@ -20,27 +22,9 @@ type Summary = {
   botEventsExcluded: number;
 };
 
-const rangeLabel: Record<Range, string> = { today: "Bugün", "7d": "Son 7 gün", "30d": "Son 30 gün", month: "Bu ay", year: "Bu yıl", custom: "Özel aralık" };
+const rangeLabelOrder: Range[] = ["today", "7d", "30d", "month", "year", "custom"];
 const n = (value: number) => new Intl.NumberFormat("tr-TR").format(value);
 const deviceLabel: Record<"mobile" | "tablet" | "desktop", string> = { mobile: "Mobil", tablet: "Tablet", desktop: "Masaüstü" };
-
-/** A labelled value next to a plain proportional bar. The bar is decorative (aria-hidden) - the
-    number beside it is the real, accessible value, so nothing here is conveyed by graphics alone. */
-function BarRow({ label, value, max, href }: { label: string; value: number; max: number; href?: string }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
-  const labelNode = href ? <a className="underline" href={href} target="_blank" rel="noreferrer">{label}</a> : <span>{label}</span>;
-  return (
-    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-1.5">
-      <div className="min-w-0">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-sm">{labelNode}</span>
-          <span className="shrink-0 text-sm font-semibold tabular-nums">{n(value)}</span>
-        </div>
-        <div aria-hidden="true" className="mt-1 h-1.5 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div>
-      </div>
-    </li>
-  );
-}
 
 function Kpi({ label, value }: { label: string; value: number }) {
   return <div className="rounded-lg border p-4"><p className="text-sm text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold tabular-nums">{n(value)}</p></div>;
@@ -53,21 +37,37 @@ async function fetchSummary(range: Range, from: string, to: string): Promise<Sum
   return r.ok ? ((await r.json()) as Summary) : null;
 }
 
-/** admin:read only (every authenticated admin role already has it). Read-only: no mutation, no export of raw events - only the same aggregates this component renders. */
-export default function AnalyticsAdmin() {
-  const [range, setRange] = useState<Range>("7d");
+/**
+ * First-party TRAFFIC analytics (Phase 6A) - preserved as-is by Phase 3.3B.
+ *
+ * It can run in two modes. Uncontrolled (no `query` prop) it owns its range state and renders its own
+ * toolbar, exactly as before. Controlled (`query` given) the shared Analytics V2 toolbar owns the
+ * period and this view renders no toolbar of its own, so sales and traffic can never be showing two
+ * different date ranges at once.
+ *
+ * admin:read only. Read-only: no mutation, no export of raw events - only the same aggregates this
+ * component renders.
+ */
+export default function AnalyticsAdmin({ query }: { query?: string } = {}) {
+  const controlled = query !== undefined;
+  const controlledParams = new URLSearchParams(query ?? "");
+  const controlledRange = (controlledParams.get("range") ?? "7d") as Range;
+  const [ownRange, setOwnRange] = useState<Range>("7d");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
   const [data, setData] = useState<Summary | null>(null);
   const [message, setMessage] = useState("Yükleniyor…");
+
+  const range = controlled ? controlledRange : ownRange;
+  const setRange = (next: Range) => { if (!controlled) setOwnRange(next); };
 
   const apply = useCallback((result: Summary | null) => {
     if (!result) { setData(null); setMessage("Analitik veriler yüklenemedi."); return; }
     setData(result); setMessage("");
   }, []);
 
-  // Custom range loads only on the explicit "Uygula" click (applyCustomRange), never automatically -
-  // an incomplete from/to pair would otherwise fire a request on every keystroke.
+  // In controlled mode the whole query string is the dependency, so a preset AND a custom range both
+  // reload from one place. In standalone mode this is the original preset-only effect, unchanged.
   useEffect(() => {
     if (range === "custom") return;
     let cancelled = false;
@@ -78,6 +78,23 @@ export default function AnalyticsAdmin() {
     })();
     return () => { cancelled = true; };
   }, [range, apply]);
+
+  // Controlled custom ranges are fetched here instead of in applyCustomRange, which only the
+  // standalone toolbar can call. A range that is still mid-edit is simply not applied.
+  useEffect(() => {
+    if (!controlled || range !== "custom") return;
+    const from = controlledParams.get("from");
+    const to = controlledParams.get("to");
+    if (!from || !to) return;
+    let cancelled = false;
+    void (async () => {
+      setMessage("Yükleniyor…");
+      const result = await fetchSummary("custom", from, to);
+      if (!cancelled) apply(result);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, controlled, apply]);
 
   async function applyCustomRange() {
     if (!customFrom || !customTo) return;
@@ -97,9 +114,10 @@ export default function AnalyticsAdmin() {
   return (
     <Card>
       <CardContent className="space-y-6">
+        {!controlled && (
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-wrap gap-2" role="group" aria-label="Tarih aralığı">
-            {(Object.keys(rangeLabel) as Range[]).filter((r) => r !== "custom").map((r) => (
+            {rangeLabelOrder.filter((r) => r !== "custom").map((r) => (
               <Button key={r} type="button" className="min-h-11" variant={r === range ? "default" : "outline"} aria-pressed={r === range} onClick={() => setRange(r)}>{rangeLabel[r]}</Button>
             ))}
           </div>
@@ -109,6 +127,7 @@ export default function AnalyticsAdmin() {
             <Button type="button" className="min-h-11" variant={range === "custom" ? "default" : "outline"} disabled={!customFrom || !customTo} onClick={() => { setRange("custom"); void applyCustomRange(); }}>Uygula</Button>
           </div>
         </div>
+        )}
         {message && <p role="status" className="text-sm text-muted-foreground">{message}</p>}
 
         {data && (

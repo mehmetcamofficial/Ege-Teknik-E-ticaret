@@ -161,6 +161,28 @@ test("month starts on the 1st of the current Istanbul month; year starts on Jan 
   if (rm.ok) assert.equal(rm.range.start.toISOString(), "2026-05-31T21:00:00.000Z"); // 2026-06-01 00:00 Istanbul
   if (ry.ok) assert.equal(ry.range.start.toISOString(), "2025-12-31T21:00:00.000Z"); // 2026-01-01 00:00 Istanbul
 });
+test("90d includes today and covers exactly 90 Istanbul calendar days, like 7d and 30d do", () => {
+  const r = resolveDateRange("90d", NOON_UTC);
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  // NOON_UTC is 2026-06-15 Istanbul; 90 calendar days earlier is 2026-03-17 00:00 Istanbul.
+  assert.equal(r.range.start.toISOString(), "2026-03-17T21:00:00.000Z");
+  assert.equal(r.range.end.getTime(), NOON_UTC.getTime());
+  // It must be strictly wider than 30d.
+  const r30 = resolveDateRange("30d", NOON_UTC);
+  assert.ok(r30.ok && r.range.start.getTime() < r30.range.start.getTime());
+});
+test("90d respects the Istanbul day boundary, not the UTC one", () => {
+  // 00:05 on the 15th in Istanbul is still the 15th, so the window is anchored to the 15th, not the 14th.
+  const justAfterMidnight = new Date("2026-06-14T21:05:00.000Z");
+  const r = resolveDateRange("90d", justAfterMidnight);
+  assert.equal(r.ok, true);
+  if (r.ok) assert.equal(r.range.start.toISOString(), "2026-03-17T21:00:00.000Z"); // 2026-03-17 00:00 Istanbul
+});
+test("90d is a valid preset accepted by the query schema, and an unknown preset is still rejected", () => {
+  assert.equal(analyticsQuerySchema.parse({ range: "90d" }).range, "90d");
+  assert.equal(analyticsQuerySchema.safeParse({ range: "60d" }).success, false);
+});
 test("custom range: requires both from and to, rejects invalid dates and from-after-to", () => {
   assert.equal(resolveDateRange("custom", NOON_UTC).ok, false);
   assert.equal(resolveDateRange("custom", NOON_UTC, "2026-01-01").ok, false);

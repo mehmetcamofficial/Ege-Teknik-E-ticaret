@@ -1,7 +1,7 @@
 import { getDb } from "@/db";
-import { analyticsEvents, products } from "@/db/schema";
-import { and, between, count, countDistinct, desc, eq, gte, lt, sql } from "drizzle-orm";
-import { classifyDevice, isBotUserAgent, normalizeEventPath, type AnalyticsSummary, type DeviceCategory, type ResolvedRange } from "@/lib/analytics";
+import { analyticsEvents, orderItems, orders, products } from "@/db/schema";
+import { and, between, count, countDistinct, desc, eq, gte, lt, ne, sql } from "drizzle-orm";
+import { classifyDevice, isBotUserAgent, normalizeEventPath, salesTotalsFrom, type AnalyticsSummary, type DeviceCategory, type ResolvedRange, type SalesAggregateRow, type SalesSummary, type TrendGranularity } from "@/lib/analytics";
 
 /**
  * Records one page/product view. Device and bot classification happen here, from the request's
@@ -121,5 +121,104 @@ export async function loadAnalyticsSummary(range: ResolvedRange, now: Date): Pro
     devices,
     referrers: referrerRows.filter((r) => r.host).map((r) => ({ host: r.host!, visits: r.n })),
     botEventsExcluded: botCount?.n ?? 0,
+  };
+}
+
+// ---- Sales analytics (Phase 3.3B) ---------------------------------------------------------------------
+// Every query below is an aggregate over `orders` / `order_items`. There is deliberately NO
+// `select *`, no order row and no customer column anywhere in this section: the browser receives
+// counts and sums only, so drawing a sales chart never requires personal data to reach the client.
+//
+// Money semantics (see lib/analytics.ts): orderValue is what customers were ASKED to pay
+// ("Sipariş Tutarı"), never collected cash. `orders.payment_status` is never read here - it is an
+// operator's manual dropdown, and treating it as cash would be a fabrication. Cancelled orders are
+// excluded from every money sum (a cancelled order is not a sale) but still counted in orderCount.
+
+// Indexing (measured, Phase 3.3B.1, Preview / PostgreSQL 18): every query here filters `orders` by a
+// created_at window. At the Preview volume the planner correctly picks sequential scans, and the
+// existing (status, created_at) index is planner-usable for these query shapes, so no standalone
+// orders(created_at) index is justified. Revisit only when meaningful production volume exists AND a
+// measured query-performance problem appears (EXPLAIN (ANALYZE, BUFFERS) on real data, not a guess).
+
+const inSalesRange = (r: ResolvedRange) => between(orders.createdAt, r.start, r.end);
+const notCancelled = ne(orders.status, "cancelled");
+
+/** Sums and counts over one window. Always exactly one row out, whatever the underlying volume. */
+async function aggregateWindow(range: ResolvedRange): Promise<SalesAggregateRow> {
+  const db = getDb();
+  const [money] = await db
+    .select({
+      orderValue: sql<number>`coalesce(sum(${orders.total}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
+      netOrderValue: sql<number>`coalesce(sum(${orders.subtotal}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
+      vatTotal: sql<number>`coalesce(sum(${orders.vatTotal}) filter (where ${orders.status} <> 'cancelled'), 0)::bigint`,
+      orderCount: sql<number>`count(*) filter (where ${orders.status} <> 'cancelled')::int`,
+      cancelledCount: sql<number>`count(*) filter (where ${orders.status} = 'cancelled')::int`,
+    })
+    .from(orders)
+    .where(inSalesRange(range));
+
+  // Units sold lives on the order LINES, not on the order, so it needs a join. It obeys the same
+  // range and the same cancelled-exclusion as the money sums, so the two can never disagree.
+  const [units] = await db
+    .select({ units: sql<number>`coalesce(sum(${orderItems.quantity}), 0)::int` })
+    .from(orderItems)
+    .innerJoin(orders, eq(orders.id, orderItems.orderId))
+    .where(and(inSalesRange(range), notCancelled));
+
+  return { ...money!, unitsSold: units?.units ?? 0 };
+}
+
+/**
+ * Bucketing happens in SQL against Europe/Istanbul (fixed UTC+3, the same expression the traffic
+ * analytics already uses) so an order lands in the Istanbul day it was actually created in,
+ * whatever time zone the database session runs in. `date_trunc` is chosen from a closed union
+ * below and is never built from request input.
+ */
+function bucketExpression(granularity: TrendGranularity) {
+  const istanbul = sql`(${orders.createdAt} at time zone 'UTC' + interval '3 hours')`;
+  if (granularity === "month") return sql`to_char(date_trunc('month', ${istanbul}), 'YYYY-MM')`;
+  if (granularity === "week") return sql`to_char(date_trunc('week', ${istanbul}), 'YYYY-MM-DD')`;
+  return sql`to_char(date_trunc('day', ${istanbul}), 'YYYY-MM-DD')`;
+}
+
+export async function loadSalesSummary(range: ResolvedRange, previousRange: ResolvedRange, granularity: TrendGranularity): Promise<SalesSummary> {
+  const db = getDb();
+  const bucket = bucketExpression(granularity);
+
+  // Three independent reads, issued together. The two windows are separate queries on purpose:
+  // folding them into one pass with a `CASE` bucket column would need a UNION over a second range
+  // and buys nothing at this scale, while risking a silent over-count if the two diverge later.
+  const [current, previous, trend, statuses] = await Promise.all([
+    aggregateWindow(range),
+    aggregateWindow(previousRange),
+    db.select({
+      bucket: sql<string>`${bucket}`.as("bucket"),
+      orderValue: sql<number>`coalesce(sum(${orders.total}), 0)::bigint`,
+      orderCount: sql<number>`count(*)::int`,
+    })
+      .from(orders)
+      .where(and(inSalesRange(range), notCancelled))
+      .groupBy(sql`1`)
+      .orderBy(sql`1`),
+    db.select({
+      status: orders.status,
+      count: sql<number>`count(*)::int`,
+      orderValue: sql<number>`coalesce(sum(${orders.total}), 0)::bigint`,
+    })
+      .from(orders)
+      .where(inSalesRange(range))
+      .groupBy(orders.status)
+      .orderBy(desc(sql`count(*)`)),
+  ]);
+
+  return {
+    range: { start: range.start.toISOString(), end: range.end.toISOString() },
+    previousRange: { start: previousRange.start.toISOString(), end: previousRange.end.toISOString() },
+    granularity,
+    totals: salesTotalsFrom(current),
+    previous: salesTotalsFrom(previous),
+    trend: trend.map((r) => ({ bucket: r.bucket, orderValue: r.orderValue, orderCount: r.orderCount })),
+    statuses: statuses.map((r) => ({ status: r.status, count: r.count, orderValue: r.orderValue })),
+    hasAnyOrders: current.orderCount + current.cancelledCount > 0,
   };
 }

@@ -4,6 +4,8 @@ import test from "node:test";
 
 const ingestRoute = readFileSync("app/api/analytics/event/route.ts", "utf8");
 const adminRoute = readFileSync("app/api/admin/analytics/route.ts", "utf8");
+// Phase 3.3B: sales aggregates live on their own route, deliberately separate from traffic.
+const salesRoute = readFileSync("app/api/admin/analytics/sales/route.ts", "utf8");
 const dbModule = readFileSync("lib/analytics-db.ts", "utf8");
 const lib = readFileSync("lib/analytics.ts", "utf8");
 const adminUi = readFileSync("app/admin/analytics-admin.tsx", "utf8");
@@ -72,10 +74,14 @@ test("every aggregate query excludes bot-classified events (the raw exclusion co
 
 // ---- admin endpoint: gated, no public bypass, no raw-event export -------------------------------
 test("the admin analytics endpoint requires an authenticated admin session before touching the database", () => {
-  const auth = adminRoute.indexOf("getAdminUser()");
-  const load = adminRoute.indexOf("loadAnalyticsSummary(");
-  assert.ok(auth >= 0 && auth < load, "auth must be checked before the summary is loaded");
-  assert.match(adminRoute, /if \(!admin\) return Response\.json\(\{ error: "Yetkisiz erişim" \}, \{ status: 403 \}\)/);
+  // Phase 3.3B made the permission argument explicit on BOTH analytics routes. The check is the
+  // same admin:read gate every dashboard endpoint already uses; only the call site is more precise.
+  for (const [route, load] of [[adminRoute, "loadAnalyticsSummary("], [salesRoute, "loadSalesSummary("]] as const) {
+    const auth = route.indexOf('getAdminUser("admin:read")');
+    const at = route.indexOf(load);
+    assert.ok(auth >= 0 && auth < at, `auth must be checked before ${load} is called`);
+    assert.match(route, /if \(!admin\) return Response\.json\(\{ error: "Yetkisiz erişim" \}, \{ status: 403 \}\)/);
+  }
 });
 test("the admin endpoint returns only the aggregated summary shape - no raw analytics_events rows, no visitor ids, no internal ids", () => {
   assert.doesNotMatch(adminRoute, /analyticsEvents\b/, "the admin route must go through loadAnalyticsSummary, never query the raw table itself");
@@ -102,16 +108,23 @@ test("the date-range control is a real accessible control group with a pressed s
   assert.match(adminUi, /role="group" aria-label="Tarih aralığı"/);
   assert.match(adminUi, /aria-pressed=\{r === range\}/);
 });
+// Phase 3.3B moved the BarRow markup and the shared date-range toolbar out of analytics-admin.tsx
+// into the shared primitives, so these assertions follow the code to wherever it now lives. The
+// guarantees being checked are unchanged - only the file they are read from moved.
+const primitives = readFileSync("components/admin/analytics-primitives.tsx", "utf8");
+const toolbar = readFileSync("app/admin/analytics-range-toolbar.tsx", "utf8");
+
 test("every bar visualisation is paired with its real number as text, and the bar itself is decorative (aria-hidden)", () => {
-  assert.match(adminUi, /aria-hidden="true"[^>]*><div className="h-full rounded-full bg-primary"/);
-  assert.match(adminUi, /\{n\(value\)\}/);
+  assert.match(primitives, /aria-hidden="true"[^>]*><div className="h-full rounded-full bg-primary"/);
+  assert.match(primitives, /tabular-nums/);
 });
 test("the date-range preset buttons, the custom-range date inputs and the Uygula button all meet the 44px touch-target minimum (min-h-11), matching the h-11 convention already used elsewhere (e.g. app/admin/login/page.tsx)", () => {
-  const presetButton = adminUi.slice(adminUi.indexOf('{(Object.keys(rangeLabel)'), adminUi.indexOf('{(Object.keys(rangeLabel)') + 300);
+  const presetButton = toolbar.slice(toolbar.indexOf("{PICKABLE.map((r) => ("), toolbar.indexOf("{PICKABLE.map((r) => (") + 300);
   assert.match(presetButton, /className="min-h-11"/);
-  assert.match(adminUi, /id="analytics-from" type="date" className="min-h-11"/);
-  assert.match(adminUi, /id="analytics-to" type="date" className="min-h-11"/);
-  assert.match(adminUi, /className="min-h-11" variant=\{range === "custom"[\s\S]{0,260}>Uygula</);
+  assert.match(toolbar, /id="analytics-from" type="date" className="min-h-11"/);
+  assert.match(toolbar, /id="analytics-to" type="date" className="min-h-11"/);
+  assert.match(toolbar, /className="min-h-11"\s*\n\s*variant=\{active === "custom"/, "the Uygula button carries min-h-11 next to its custom-range variant");
+  assert.match(toolbar, />\s*Uygula\s*</, "the Uygula button carries min-h-11 next to its custom-range variant");
 });
 test("the daily trend additionally offers a plain data table, not only the bar rows", () => {
   assert.match(adminUi, /Tablo olarak gör/);

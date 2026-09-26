@@ -73,7 +73,7 @@ test("requireAdminPage: no session -> login, missing permission -> dashboard, on
 });
 test("every admin API route is registered explicitly: Phase 6D.1 adds only the privileged governance routes", () => {
   assert.deepEqual(globSync("app/api/admin/**/route.ts").sort(), [
-    "app/api/admin/analytics/route.ts", "app/api/admin/audit/route.ts", "app/api/admin/blog/[id]/route.ts", "app/api/admin/blog/route.ts",
+    "app/api/admin/analytics/route.ts", "app/api/admin/analytics/sales/route.ts", "app/api/admin/audit/route.ts", "app/api/admin/blog/[id]/route.ts", "app/api/admin/blog/route.ts",
     "app/api/admin/catalog/import/route.ts", "app/api/admin/integrations/route.ts",
     "app/api/admin/legal/documents/[slug]/versions/route.ts", "app/api/admin/legal/documents/route.ts", "app/api/admin/legal/versions/[id]/preview/route.ts",
     "app/api/admin/legal/versions/[id]/publish/route.ts", "app/api/admin/legal/versions/[id]/route.ts", "app/api/admin/media/route.ts",
