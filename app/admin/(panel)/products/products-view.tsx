@@ -74,7 +74,7 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
         ) : (
           <div className="px-1 pb-2 sm:px-2">
             <Table>
-              <TableHeader><TableRow><TableHead>Ürün</TableHead><TableHead>Kategori</TableHead><TableHead className="text-right">Fiyat</TableHead><TableHead>Stok</TableHead><TableHead>Durum</TableHead>{canWrite && <TableHead><span className="sr-only">İşlem</span></TableHead>}</TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Ürün</TableHead><TableHead>Kategori</TableHead><TableHead className="text-right">Fiyat</TableHead><TableHead>Stok</TableHead><TableHead>Durum</TableHead>{canWrite && <TableHead className="sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.18)]"><span className="sr-only">İşlem</span></TableHead>}</TableRow></TableHeader>
               <TableBody>
                 {rows.map((p) => {
                   const level = stockLevel(p);
@@ -85,7 +85,7 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
                       <TableCell className="text-right tabular-nums">{tryCurrency(p.price)}</TableCell>
                       <TableCell><div className="flex items-center gap-2"><span className="tabular-nums">{p.stock}</span>{level !== "untracked" && <StatusBadge tone={stockTone[level]}>{stockLabel[level]}</StatusBadge>}</div></TableCell>
                       <TableCell><StatusBadge tone={publishTone[p.status] ?? "neutral"}>{publishLabel[p.status] ?? p.status}</StatusBadge></TableCell>
-                      {canWrite && <TableCell className="text-right"><Button asChild variant="outline" size="sm"><Link href={`/admin/products/${p.id}`} aria-label={`${p.name} ürününü düzenle`}>Düzenle</Link></Button></TableCell>}
+                      {canWrite && <TableCell className="text-right sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.18)]"><Button asChild variant="outline" size="sm"><Link href={`/admin/products/${p.id}`} aria-label={`${p.name} ürününü düzenle`}>Düzenle</Link></Button></TableCell>}
                     </TableRow>
                   );
                 })}

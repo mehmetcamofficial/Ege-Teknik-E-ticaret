@@ -165,9 +165,9 @@ test("the public product detail carries the delivery class (the same stored valu
 });
 test("product-page delivery notes follow the stored class: installed delivery includes standard installation, the retired 'optional installation' wording is gone", () => {
   const notes = loadStorefront().fn<(p: unknown, sale: boolean) => string[]>("deliveryNotes");
-  assert.deepEqual([...notes({ deliveryClass: "installed_delivery" }, true)], ["Standart montaj ürün fiyatına dahildir.", "Ege Teknik hizmet bölgesinde adrese teslim edilir; ayrıca teslimat ücreti alınmaz."]);
-  assert.deepEqual([...notes({ deliveryClass: "shippable" }, true)], ["Mağazadan teslim alabilirsiniz.", "Kargo seçeneği, tarifesi aktif olduğunda ödeme adımında sunulur."]);
-  assert.deepEqual([...notes({ deliveryClass: "local_delivery" }, true)], ["Ürün Ege Teknik hizmet bölgesinde bayi teslimatıyla gönderilir.", "Standart montaj kapsamı ürün tipine göre uygulanır."]);
+  assert.deepEqual([...notes({ deliveryClass: "installed_delivery" }, true)], ["Standart montaj dahil.", "Ege Teknik hizmet bölgesinde adrese teslim."]);
+  assert.deepEqual([...notes({ deliveryClass: "shippable" }, true)], ["Mağazadan teslim alabilirsiniz.", "Kargo seçeneği henüz aktif değil."]);
+  assert.deepEqual([...notes({ deliveryClass: "local_delivery" }, true)], ["Ürün Ege Teknik hizmet bölgesinde bayi teslimatıyla gönderilir."]);
   for (const unknown of [undefined, "", "klima", null]) assert.deepEqual([...notes({ deliveryClass: unknown }, true)], ["Teslimat ve montaj bilgisi ödeme adımında gösterilir."], String(unknown));
   assert.deepEqual([...notes({ deliveryClass: "installed_delivery" }, false)], ["Teslimat ve montaj koşulları teklif sürecinde netleşir."], "a quote-priced product promises nothing");
   const all = ["installed_delivery", "shippable", "local_delivery", "x"].flatMap((c) => [...notes({ deliveryClass: c }, true)]).join(" ");
@@ -176,7 +176,7 @@ test("product-page delivery notes follow the stored class: installed delivery in
 });
 
 test("product detail install/delivery card follows the delivery class and never says installation is optional or separately priced", async () => {
-  for (const [deliveryClass, expected] of [["installed_delivery", /Standart montaj ürün fiyatına dahildir/], ["shippable", /Kargo tarifesi aktif olduğunda/], ["local_delivery", /bayi teslimatıyla/]] as const) {
+  for (const [deliveryClass, expected] of [["installed_delivery", /Yetkili servis yönlendirmesi ile standart montaj/], ["shippable", /Kargo tarifesi aktif olduğunda/], ["local_delivery", /hizmet bölgesinde olmalıdır/]] as const) {
     const root = fakeElement();
     const store = loadStorefront({ path: "product.html", search: "?id=p1", elements: { "[data-product-page]": root }, api: { products: [apiProduct({ id: "p1", name: "Test Ürün", stock: 1, deliveryClass })] } });
     await store.fn<() => Promise<void>>("loadCatalog")();
@@ -189,4 +189,32 @@ test("product detail install/delivery card follows the delivery class and never 
 test("admin order detail contact links keep a 44px touch target", () => {
   const src = readFileSync(new URL("../app/admin/(panel)/orders/order-detail-view.tsx", import.meta.url), "utf8");
   for (const scheme of ["tel:", "mailto:"]) assert.match(src, new RegExp(`min-h-11[^>]*href=\\{\`${scheme}`));
+});
+
+test("product detail: every delivery sentence has exactly one home (top notes vs. detail card), and the card depends only on deliveryClass", async () => {
+  const render = async (over: Record<string, unknown>) => {
+    const root = fakeElement();
+    const store = loadStorefront({ path: "product.html", search: "?id=p1", elements: { "[data-product-page]": root }, api: { products: [apiProduct({ id: "p1", name: "Test Ürün", stock: 1, ...over })] } });
+    await store.fn<() => Promise<void>>("loadCatalog")();
+    return root.innerHTML;
+  };
+  const sentences = (html: string) => [...html.matchAll(/<(?:span|p)>([^<]{12,})<\/(?:span|p)>/g)].map((m) => m[1].trim().toLowerCase().replace(/[.\s]+$/, ""));
+  for (const deliveryClass of ["installed_delivery", "shippable", "local_delivery"]) {
+    const list = sentences(await render({ deliveryClass }));
+    assert.equal(new Set(list).size, list.length, `${deliveryClass}: a sentence is repeated`);
+  }
+  const installed = await render({ deliveryClass: "installed_delivery" });
+  assert.match(installed, /Standart montaj dahil\./);
+  assert.match(installed, /Ege Teknik hizmet bölgesinde adrese teslim\./);
+  assert.match(installed, /Yetkili servis yönlendirmesi ile standart montaj/);
+  assert.doesNotMatch(installed, /ürün fiyatına dahildir/, "the old duplicate top+card wording is gone");
+  const part = await render({ deliveryClass: "shippable", name: "Klima Ürün Filtresi", category: "Duvar Tipi" });
+  assert.doesNotMatch(part, /montaj|borulama/i, "no installation wording on a shippable product, whatever its name or category says");
+  assert.match(part, /Kargo seçeneği henüz aktif değil/);
+  assert.doesNotMatch(part, /[Üü]cretsiz|[Bb]edava/);
+  const quote = await render({ saleMode: "quote", deliveryClass: "installed_delivery" });
+  assert.doesNotMatch(quote, /Standart montaj dahil/, "a quote-priced product promises nothing");
+  const unknown = await render({ deliveryClass: "x" });
+  assert.doesNotMatch(unknown, /Standart montaj|borulama/);
+  assert.doesNotMatch(await render({ deliveryClass: "installed_delivery" }), /Kurulum isteğe bağlıdır|ayrıca fiyatlandırılır/);
 });
