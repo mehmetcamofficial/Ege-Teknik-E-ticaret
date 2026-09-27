@@ -59,7 +59,7 @@ ile paylaşılabilir veya ilgili hizmetin sunulması kapsamında erişilebilir h
 
 Mevcut teknik yapıda Vercel barındırma/deployment, Neon PostgreSQL veritabanı ve Clerk müşteri hesabı/kimlik doğrulama amacıyla kullanılmaktadır. Sentry ise hata izleme ve teknik teşhis amacıyla **geçici deneme** kapsamında kullanılmaktadır; deneme sona erdiğinde kaldırılabilir.
 
-Public storefront kaynak kodu denetiminde Google Fonts ve Tailwind CSS CDN gibi üçüncü taraf statik kaynaklara tarayıcı tarafından otomatik ağ istekleri yapıldığı tespit edilmiştir. Bu tür isteklerde ilgili üçüncü taraf altyapıya IP adresi, User-Agent ve bağlantının kurulması için gerekli standart HTTP/ağ bilgileri ulaşabilir. Bu kaynaklar V1 öncesi mümkün olduğu ölçüde self-host/build-time çözümlere taşınmazsa yurt dışı aktarım değerlendirmesinde ayrıca ele alınmalıdır.
+V1 hardening kapsamında önceki storefront sürümlerinde bulunan Google Fonts, Tailwind Play CDN ve Google-hosted temsili görsel bağımlılıkları runtime sayfa yükleme yolundan kaldırılmıştır. Ana sayfa stilleri build-time üretilmekte ve temsili görseller first-party local asset olarak sunulmaktadır. Bu nedenle bu kaynaklar bakımından sırf sayfa yüklenmesiyle Google Fonts, Tailwind CDN veya Googleusercontent adreslerine otomatik ağ isteği gönderilmesi amaçlanan Production davranışı değildir.
 
 Bazı teknik hizmet sağlayıcılarının altyapısı veya operasyonları Türkiye dışında bulunabilir. Böyle bir aktarım varsa, aktarımın hukuki şartları ayrıca KVKK Aydınlatma Metni kapsamında değerlendirilir; bu politika tek başına yurt dışı aktarım için izin veya açık rıza anlamına gelmez.
 
@@ -69,7 +69,7 @@ Kod tabanında Ege Teknik'e ait first-party ziyaret/ürün görüntüleme analyt
 
 Analytics tablosunda ham IP veya ham User-Agent saklanmaz; ziyaretçi kimliği IP/User-Agent'tan türetilmez ve cross-site takip amacıyla tasarlanmamıştır.
 
-**V1 güvenli varsayılanı:** analytics toplama `ANALYTICS_ENABLED=true` açıkça etkinleştirilmedikçe kapalıdır. Kapalı durumda analytics endpoint'i olay kaydetmez ve analytics ziyaretçi çerezi oluşturmaz. Yeniden etkinleştirilmeden önce gerekli hukuki sebep ile çerez tercihi/onay gereksinimi yeniden değerlendirilir.
+Analytics iki kapılıdır: global `ANALYTICS_ENABLED=true` anahtarının açık olması ve ilgili ziyaretçinin `ege_analytics_consent=1` tercihinin bulunması gerekir. Bu iki koşuldan biri yoksa analytics olayı kaydedilmez ve `ege_vid` ziyaretçi kimliği oluşturulmaz. Ziyaretçi analitik tercihini kapattığında mevcut `ege_vid` sunucu tarafından silinir.
 
 ## 6. Ne kadar süre saklarız?
 
