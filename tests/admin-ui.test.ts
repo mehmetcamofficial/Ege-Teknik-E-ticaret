@@ -12,7 +12,7 @@ const read = (f: string) => readFileSync(f, "utf8");
 
 // ---- navigation: permission-aware, driven by the existing RBAC -----------------------------------
 test("super_admin sees every module, including the new Users & Permissions entry; the deferred Customers module is not in the nav at all", () => {
-  assert.deepEqual(hrefsFor("super_admin"), ["/admin", "/admin/orders", "/admin/service-requests", "/admin/products", "/admin/second-hand", "/admin/catalog-taxonomy", "/admin/inventory", "/admin/blog", "/admin/reviews", "/admin/legal", "/admin/analytics", "/admin/users", "/admin/settings"]);
+  assert.deepEqual(hrefsFor("super_admin"), ["/admin", "/admin/orders", "/admin/service-requests", "/admin/products", "/admin/second-hand", "/admin/catalog-taxonomy", "/admin/inventory", "/admin/blog", "/admin/reviews", "/admin/legal", "/admin/analytics", "/admin/finance", "/admin/users", "/admin/settings"]);
   const all = ADMIN_NAV.flatMap((s) => s.items.map((i) => i.href));
   assert.ok(!all.some((h) => /customers/.test(h)), "no nav entry for a module without an existing safe read path");
   assert.ok(all.includes("/admin/users"), "Phase 6D.1 ships the users module with a real read route");
@@ -72,13 +72,13 @@ test("requireAdminPage: no session -> login, missing permission -> dashboard, on
   assert.match(guard, /if \(!admin\) redirect\("\/admin\/login"\)/);
   assert.match(guard, /if \(!roleHasPermission\(admin\.role, permission\)\) redirect\("\/admin"\)/);
 });
-test("every admin API route is registered explicitly: Phase 6D.1 adds only the privileged governance routes", () => {
+test("every admin API route is registered explicitly: Phase 3.3A adds only the finance and order-ledger routes", () => {
   assert.deepEqual(globSync("app/api/admin/**/route.ts").sort(), [
     "app/api/admin/analytics/route.ts", "app/api/admin/analytics/sales/route.ts", "app/api/admin/audit/route.ts", "app/api/admin/blog/[id]/route.ts", "app/api/admin/blog/route.ts",
-    "app/api/admin/catalog/import/route.ts", "app/api/admin/integrations/route.ts",
+    "app/api/admin/catalog/import/route.ts", "app/api/admin/finance/route.ts", "app/api/admin/integrations/route.ts",
     "app/api/admin/legal/documents/[slug]/versions/route.ts", "app/api/admin/legal/documents/route.ts", "app/api/admin/legal/versions/[id]/preview/route.ts",
     "app/api/admin/legal/versions/[id]/publish/route.ts", "app/api/admin/legal/versions/[id]/route.ts", "app/api/admin/media/route.ts",
-    "app/api/admin/orders/[id]/route.ts", "app/api/admin/overview/route.ts", "app/api/admin/products/[id]/image/route.ts", "app/api/admin/products/[id]/route.ts",
+    "app/api/admin/orders/[id]/payments/route.ts", "app/api/admin/orders/[id]/refunds/route.ts", "app/api/admin/orders/[id]/route.ts", "app/api/admin/overview/route.ts", "app/api/admin/products/[id]/image/route.ts", "app/api/admin/products/[id]/route.ts",
     "app/api/admin/products/route.ts", "app/api/admin/reviews/[id]/route.ts", "app/api/admin/reviews/route.ts", "app/api/admin/second-hand/[id]/route.ts",
     "app/api/admin/second-hand/route.ts", "app/api/admin/service-requests/[id]/route.ts", "app/api/admin/taxonomy/route.ts",
     "app/api/admin/users/[id]/grants/route.ts", "app/api/admin/users/[id]/role/route.ts", "app/api/admin/users/[id]/status/route.ts",

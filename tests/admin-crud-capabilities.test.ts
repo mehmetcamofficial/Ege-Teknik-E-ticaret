@@ -34,8 +34,11 @@ test("Blog DELETE endpoint supports both archive and hard delete", () => {
 test("Orders endpoint disallows hard delete and enforces state machine", () => {
   const code = read("app/api/admin/orders/[id]/route.ts");
   assert.doesNotMatch(code, /export async function DELETE/);
-  assert.match(code, /canTransitionOrder/);
-  assert.match(code, /status:\s*409/);
+  // Phase 3.3A: the transition check runs inside the locked finance transaction the route delegates to.
+  assert.match(code, /changeOrderStatus/);
+  const guarded = read("lib/finance-db.ts");
+  assert.match(guarded, /canTransitionOrder/);
+  assert.match(guarded, /refused\(409, "INVALID_TRANSITION"/);
 });
 
 test("Products endpoint preserves FK integrity by soft-archiving instead of hard-deleting", () => {

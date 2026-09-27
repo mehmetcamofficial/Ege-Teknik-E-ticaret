@@ -8,7 +8,7 @@ import { roleHasPermission, type AdminPermission } from "./security-policy.ts";
  */
 export type NavItem = { href: string; label: string; icon: NavIcon; permission: AdminPermission };
 export type NavSection = { title: string | null; items: NavItem[] };
-export type NavIcon = "dashboard" | "orders" | "service" | "products" | "secondHand" | "taxonomy" | "inventory" | "blog" | "reviews" | "legal" | "analytics" | "settings" | "users";
+export type NavIcon = "dashboard" | "orders" | "service" | "products" | "secondHand" | "taxonomy" | "inventory" | "blog" | "reviews" | "legal" | "analytics" | "finance" | "settings" | "users";
 
 export const ADMIN_NAV: readonly NavSection[] = [
   { title: null, items: [{ href: "/admin", label: "Genel Bakış", icon: "dashboard", permission: "admin:read" }] },
@@ -28,7 +28,10 @@ export const ADMIN_NAV: readonly NavSection[] = [
     { href: "/admin/reviews", label: "Yorumlar", icon: "reviews", permission: "content:write" },
     { href: "/admin/legal", label: "Hukuki Belgeler", icon: "legal", permission: "legal:write" },
   ] },
-  { title: "Raporlama", items: [{ href: "/admin/analytics", label: "Analitik", icon: "analytics", permission: "admin:read" }] },
+  { title: "Raporlama", items: [
+    { href: "/admin/analytics", label: "Analitik", icon: "analytics", permission: "admin:read" },
+    { href: "/admin/finance", label: "Finans", icon: "finance", permission: "admin:read" },
+  ] },
   // Phase 6D.1: only super_admin holds users:read, so this section is invisible to every other role.
   { title: "Sistem", items: [
     { href: "/admin/users", label: "Kullanıcılar & Yetkiler", icon: "users", permission: "users:read" },
@@ -72,8 +75,17 @@ export const orderStatusTone: Record<string, Tone> = {
   pending_payment: "warning", paid: "info", preparing: "info", shipped: "info", delivery: "info", delivered: "success",
   installation: "info", completed: "success", cancelled: "danger", returned: "danger", service: "warning",
 };
-/** Only values the checkout actually writes are named; anything else is shown verbatim, never guessed. */
-export const paymentStatusLabel: Record<string, string> = { pending: "Bekliyor", paid: "Ödendi", failed: "Başarısız", refunded: "İade edildi" };
+/**
+ * Payment status vocabulary = lib/finance.ts orderPaymentStatuses (derived from the payment ledger). Anything else is
+ * shown verbatim, never guessed.
+ */
+export const paymentStatusLabel: Record<string, string> = {
+  pending: "Bekliyor", partially_paid: "Kısmen ödendi", paid: "Ödendi", failed: "Başarısız", cancelled: "İptal",
+  refunded: "İade edildi", partially_refunded: "Kısmen iade edildi",
+};
+export const paymentStatusTone: Record<string, Tone> = {
+  pending: "warning", partially_paid: "info", paid: "success", failed: "danger", cancelled: "neutral", refunded: "neutral", partially_refunded: "info",
+};
 
 export const serviceStatuses = ["new", "contacted", "scheduled", "completed", "cancelled"] as const;
 export const serviceStatusLabel: Record<string, string> = { new: "Yeni", contacted: "Arandı", scheduled: "Planlandı", completed: "Tamamlandı", cancelled: "İptal" };
