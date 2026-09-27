@@ -1,19 +1,18 @@
-// This file configures the initialization of Sentry on the server.
-// The config you add here will be used whenever the server handles a request.
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+// Temporary Sentry trial configuration for server-side observability.
+// Keep telemetry intentionally minimal; the integration can be removed after the trial.
 
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: "https://8a1603bc521177540d632d596ec6d092@o4512132103077888.ingest.de.sentry.io/4512132371644496",
+  dsn: process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN,
+  enabled: Boolean(process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN),
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+  // Sample only a small portion of performance traces in production.
+  tracesSampleRate: 0.1,
 
+  // Do not intentionally attach user information or HTTP request bodies.
   dataCollection: {
-    // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#dataCollection
-    // userInfo: false,
-    // httpBodies: [],
+    userInfo: false,
+    httpBodies: [],
   },
 });
