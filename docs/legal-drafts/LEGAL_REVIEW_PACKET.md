@@ -104,7 +104,7 @@ Visitor analytics artık iki kapılıdır:
 
 Satış/sipariş istatistikleri gerçek `orders` verisinden gelir ve visitor analytics consent'ine bağlı değildir. Visitor/page/product/referrer/device ölçümleri yalnız analytics izni veren ziyaretçiler için toplanır.
 
-Google Fonts / Tailwind Play CDN mevcut storefront'ta otomatik üçüncü taraf ağ isteği oluşturabildiğinden self-host/build-time dönüşümü tercih edilir; aksi durumda yurt dışı aktarım incelemesine dahil edilmelidir.
+V1 hardening kapsamında Google Fonts, Tailwind Play CDN ve Google-hosted temsili görseller runtime storefront yükleme yolundan kaldırılmıştır. Ana sayfa CSS'i build-time üretilir ve temsili görseller first-party local asset olarak sunulur. Buna rağmen Production browser/network smoke ile bu davranış son kez doğrulanmalıdır; aktif Vercel/Neon/Clerk/Sentry veri akışları ise KVKK yurt dışı aktarım incelemesinde ayrı değerlendirilmeye devam eder.
 
 ## 8. ETBİS / İYS / VERBİS
 
