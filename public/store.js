@@ -34,5 +34,5 @@
   document.addEventListener('DOMContentLoaded',()=>{showBanner();ensureSettingsButton()});
 
   /* Load the existing storefront synchronously so its DOMContentLoaded listeners remain intact. */
-  document.write('<script src="/store-core.js"><\\/script>');
+  document.write('<script src="/store-core.js"></'+'script>');
 })();
