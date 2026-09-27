@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { loadStorefront } from "./support/storefront-sandbox.ts";
 
-const storeJs = readFileSync("public/store.js", "utf8");
+const storeCoreJs = readFileSync("public/store-core.js", "utf8");
 
 test("a plain page view sends only the path - no visitor id, ip, user agent, or referrer when there is none", async () => {
   const store = loadStorefront({ path: "catalog.html" });
@@ -58,18 +58,16 @@ test("a page with no product context and a hostile-looking path still sends clea
   assert.deepEqual(store.analyticsBodies[0].body, JSON.parse(JSON.stringify(store.analyticsBodies[0].body))); // plain, already-serializable JSON, nothing exotic
   assert.equal((store.analyticsBodies[0].body as { path: string }).path, "/article.html");
 });
-test("the event fires from every public page store.js loads on (it is registered unconditionally, not gated behind a specific page's markup)", () => {
+test("the event function exists in the storefront core loaded by the consent bootstrap", () => {
   const store = loadStorefront({ path: "index.html" });
   assert.equal(typeof store.fn("sendAnalyticsEvent"), "function");
-  // scheduleAnalyticsEvent is a `const`, so - like other consts in this file - it is not exposed on the
-  // sandbox's global context by design; its existence and wiring are verified via source text below instead.
 });
 test("collection is deferred via requestIdleCallback when available, and never via a bare synchronous call that could compete with catalog/product/checkout fetches", () => {
-  assert.match(storeJs, /scheduleAnalyticsEvent\(sendAnalyticsEvent\)/);
-  assert.match(storeJs, /typeof requestIdleCallback==='function'\?requestIdleCallback:\(cb=>setTimeout\(cb,300\)\)/);
+  assert.match(storeCoreJs, /scheduleAnalyticsEvent\(sendAnalyticsEvent\)/);
+  assert.match(storeCoreJs, /typeof requestIdleCallback==='function'\?requestIdleCallback:\(cb=>setTimeout\(cb,300\)\)/);
 });
 test("a fetch/analytics failure cannot break page rendering - the storefront never awaits or depends on the analytics call's result", () => {
-  const fn = storeJs.slice(storeJs.indexOf("function sendAnalyticsEvent"), storeJs.indexOf("const scheduleAnalyticsEvent"));
+  const fn = storeCoreJs.slice(storeCoreJs.indexOf("function sendAnalyticsEvent"), storeCoreJs.indexOf("const scheduleAnalyticsEvent"));
   assert.doesNotMatch(fn, /\bawait\b/, "sendAnalyticsEvent must not await its own fetch");
   assert.match(fn, /\.catch\(\(\)=>\{\}\)/);
 });
