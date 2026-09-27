@@ -7,7 +7,7 @@
 
 Ege Teknik, sitenin çalışması için gerekli teknolojiler ile kullanıcının talep ettiği işlevleri sağlayan depolama mekanizmalarını veri minimizasyonu prensibiyle kullanır.
 
-Zorunlu olmayan analitik, reklam veya yeniden hedefleme teknolojileri geçerli mevzuatın gerektirdiği tercih/onay mekanizması kurulmadan varsayılan olarak çalıştırılmamalıdır.
+Zorunlu olmayan analitik, reklam veya yeniden hedefleme teknolojileri geçerli mevzuatın gerektirdiği tercih/onay mekanizması kurulmadan varsayılan olarak çalıştırılmaz.
 
 Bu metin, çerezlerin yanında `localStorage` ve `sessionStorage` gibi çerez olmayan tarayıcı depolama teknolojilerini de şeffaflık amacıyla ayrıca açıklar.
 
@@ -17,6 +17,7 @@ Bu metin, çerezlerin yanında `localStorage` ve `sessionStorage` gibi çerez ol
 |---|---|---|---|---|
 | `ege_admin_session` | yalnız yönetim paneline giriş yapan yetkili kullanıcılar | admin oturumunun güvenli şekilde sürdürülmesi | Zorunlu | en çok 8 saat; güvenlik kurallarına göre yenilenebilir/sona erdirilebilir |
 | Clerk oturum çerezleri | müşteri hesabı (`/account`) giriş/oturum akışı | kimlik doğrulama ve müşteri oturumu | Hesap özelliği için zorunlu | Clerk'in aktif yapılandırmasına ve oturum politikasına göre |
+| `ege_analytics_consent` | storefront ziyaretçisi | ziyaretçinin analitik tercihini hatırlamak ve tercihi her sayfada tekrar sormamak | Tercih / gerekli işlev | en çok 365 gün; kullanıcı tercih ekranından değiştirebilir |
 
 Clerk çerez adları ve süreleri sağlayıcı yapılandırmasına göre değişebileceğinden, sabit olmayan teknik ayrıntılar bu politikada gerçeğe aykırı kesin değer olarak yazılmaz.
 
@@ -32,15 +33,32 @@ Clerk çerez adları ve süreleri sağlayıcı yapılandırmasına göre değiş
 
 Bu tarayıcı depoları reklam profili oluşturma amacıyla kullanılmaz.
 
-## 4. First-party analytics — V1'de varsayılan kapalı
+## 4. First-party ziyaretçi analitiği — yalnız tercih ile
 
-Kod tabanında Ege Teknik'e ait first-party analytics altyapısı bulunmaktadır. Bu sistem etkinleştirildiğinde sunucu rastgele bir ziyaretçi kimliği üretir ve `ege_vid` adlı first-party, `HttpOnly`, `SameSite=Strict` çerezi en fazla 180 gün süreyle kullanabilir. Bu tanımlayıcı IP adresi veya User-Agent bilgisinden türetilmez.
+Kod tabanında Ege Teknik'e ait first-party analytics altyapısı bulunmaktadır. Sistem iki ayrı kapı ile çalışır:
 
-Analytics etkin olduğunda olay tablosunda ham IP adresi veya ham User-Agent saklanmaz; User-Agent yalnız kaba cihaz sınıflandırması için işlenir ve harici referrer tam URL yerine yalnız hostname'e indirgenir.
+1. operasyonel/global anahtar olan `ANALYTICS_ENABLED` açıkça `true` olmalıdır,
+2. ilgili ziyaretçinin `ege_analytics_consent` tercihi analitiğe izin vermelidir.
 
-**V1 güvenli varsayılanı:** `ANALYTICS_ENABLED` açıkça `true` yapılmadıkça analytics endpoint'i veri kaydetmez ve `ege_vid` çerezi oluşturmaz. Analytics yeniden etkinleştirilmeden önce gerekli hukuki sebep, çerez tercihi/onay gereksinimi ve bu politika yeniden değerlendirilmelidir.
+Bu iki koşuldan biri sağlanmıyorsa analytics endpoint'i ziyaret olayını kaydetmez ve analytics ziyaretçi kimliği oluşturmaz.
 
-## 5. Otomatik üçüncü taraf ağ istekleri
+Ziyaretçi analitiğe izin verdiğinde sunucu rastgele bir ziyaretçi kimliği üretir ve `ege_vid` adlı first-party, `HttpOnly`, `SameSite=Strict` çerezi en fazla 180 gün süreyle kullanabilir. Bu tanımlayıcı IP adresi veya User-Agent bilgisinden türetilmez.
+
+Analytics etkin olduğunda olay tablosunda ham IP adresi veya ham User-Agent saklanmaz; User-Agent yalnız kaba cihaz sınıflandırması için işlenir ve harici referrer tam URL yerine yalnız hostname'e indirgenir. Bu yapı ziyaretçi sayısı, yeni/geri dönen ziyaretçi, sayfa görüntüleme, ürün görüntüleme, cihaz kategorisi ve yönlendiren kaynak gibi toplu istatistikler üretmek için kullanılır.
+
+Ziyaretçi analitik iznini daha sonra kapatırsa, tercih `ege_analytics_consent=0` olarak güncellenir ve mevcut `ege_vid` analytics kimliği sunucu tarafından silinir. Bundan sonraki sayfa görüntülemeleri analitik olay olarak kaydedilmez.
+
+## 5. Tercih ekranı
+
+İlk ziyarette analitik için önceden seçili kabul uygulanmaz. Kullanıcıya en az şu seçenekler sunulur:
+
+- **Yalnızca gerekli** — analitik kapalı kalır,
+- **Tercihler** — analitik seçeneği ayrı olarak yönetilebilir,
+- **Tümünü kabul et** — analitik tercih açık hale gelir.
+
+Tercihler daha sonra sitedeki **Çerez Tercihleri** kontrolünden yeniden değiştirilebilir. Analitik tercihi sipariş vermenin, müşteri hesabı açmanın veya servis talebi oluşturmanın koşulu değildir.
+
+## 6. Otomatik üçüncü taraf ağ istekleri
 
 Kaynak kod denetiminde public storefront'un bazı statik sayfalarında aşağıdaki harici kaynakların tarayıcı tarafından otomatik istekle yüklendiği tespit edilmiştir:
 
@@ -53,24 +71,11 @@ V1 yayını öncesinde tercih edilen teknik çözüm bu statik bağımlılıklar
 
 WhatsApp gibi dış bağlantılar kullanıcı tıklamasıyla açılır; sırf sayfanın yüklenmesi nedeniyle WhatsApp'a otomatik istek gönderildiği varsayılmaz.
 
-## 6. Diğer teknik sağlayıcılar
+## 7. Diğer teknik sağlayıcılar
 
 Mevcut mimaride Vercel barındırma/deployment, Neon PostgreSQL veritabanı ve Clerk müşteri hesabı/kimlik doğrulama hizmetleri kullanılmaktadır. Sentry geçici hata izleme/teşhis denemesi kapsamındadır ve kaldırılabilir.
 
 YouTube, Meta Pixel, Google Analytics veya benzeri gömülü/ölçüm servisleri ileride devreye alınırsa, bunların fiili veri ve çerez davranışı incelenmeden zorunlu olarak sınıflandırılmaz ve gerekli tercih/onay altyapısı kurulmadan varsayılan açık hale getirilmez.
-
-## 7. Çerez tercihleri
-
-Yayın anında yalnız zorunlu/işlevsel teknolojiler kullanılıyorsa gereksiz bir pazarlama onayı talep edilmez.
-
-Zorunlu olmayan analitik veya pazarlama teknolojileri devreye alınırsa tercih ekranı en az şu prensipleri sağlamalıdır:
-
-- zorunlu olmayan teknolojiler varsayılan olarak kapalı,
-- "yalnızca gerekli" seçeneği kolay erişilebilir,
-- kabul ve ret seçenekleri karşılaştırılabilir görünürlükte,
-- tercihler sonradan değiştirilebilir,
-- verilen tercih teknik olarak kaydedilebilir,
-- pazarlama tercihi sipariş vermenin koşulu yapılamaz.
 
 ## 8. Tarayıcı üzerinden kontrol
 
@@ -82,4 +87,4 @@ Yeni analitik, reklam, gömülü üçüncü taraf içerik veya benzeri teknoloji
 
 ---
 
-**Yayın öncesi teknik kontrol:** Production üzerinde aktif cookie/localStorage/sessionStorage anahtarları, Clerk oturum davranışı, public storefront'un harici ağ istekleri ve Sentry'nin fiili durumu tarayıcı DevTools üzerinden son kez doğrulanmalıdır.
+**Yayın öncesi teknik kontrol:** Production üzerinde `ege_analytics_consent` ve `ege_vid` davranışı; izin verilmeden analytics olayının kaydedilmediği; izin kaldırıldığında `ege_vid` çerezinin silindiği; Clerk oturum davranışı; public storefront'un harici ağ istekleri ve Sentry'nin fiili durumu tarayıcı DevTools üzerinden son kez doğrulanmalıdır.
