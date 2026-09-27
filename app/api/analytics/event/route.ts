@@ -6,6 +6,12 @@ const noStore = { "cache-control": "no-store" };
 /** One reply for every accepted event, whatever it turned out to be (new/returning, bot or not) - nothing about the classification is ever observable by the client. */
 const ACCEPTED = { ok: true };
 
+function analyticsEnabled() {
+  // Privacy-safe default for V1: analytics collection stays OFF unless deliberately enabled
+  // after the cookie/KVKK review and any required preference/consent mechanism is in place.
+  return process.env.ANALYTICS_ENABLED === "true";
+}
+
 function visitorCookieHeader(value: string, secure: boolean) {
   return `${VISITOR_COOKIE_NAME}=${value}; Max-Age=${VISITOR_COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Strict; HttpOnly${secure ? "; Secure" : ""}`;
 }
@@ -15,8 +21,15 @@ function visitorCookieHeader(value: string, secure: boolean) {
  * module doc for the full privacy model (no raw IP, no raw UA, no fingerprinting, no cross-site
  * cookie). Rate-limited the same way review/order submission is; a failure here is always a
  * 4xx/5xx the storefront already treats as "best effort, ignore and move on" (see public/store.js).
+ *
+ * V1 privacy gate: when ANALYTICS_ENABLED is not explicitly "true", this endpoint records
+ * nothing and sets no visitor cookie. The storefront keeps working normally.
  */
 async function ingest(request: Request) {
+  if (!analyticsEnabled()) {
+    return new Response(null, { status: 204, headers: noStore });
+  }
+
   await rateLimit(request, "analytics-event", 120, 10 * 60_000);
   const parsed = analyticsEventSchema.safeParse(await readJson(request, 2_000));
   if (!parsed.success) return Response.json({ error: "Geçersiz istek." }, { status: 400, headers: noStore });
