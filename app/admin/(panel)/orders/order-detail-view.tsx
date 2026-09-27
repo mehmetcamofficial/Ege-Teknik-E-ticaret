@@ -7,8 +7,9 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
 import { sendAdmin, useAdminJson, type Overview } from "@/components/admin/use-admin-data";
-import { orderStatusLabel, orderStatusTone, paymentStatusLabel, trDate, tryCurrency } from "@/lib/admin-ui";
+import { orderStatusLabel, orderStatusTone, trDate, tryCurrency } from "@/lib/admin-ui";
 import { describeOrderDelivery } from "@/lib/order-delivery";
+import OrderPaymentsPanel from "./order-payments-panel";
 
 const crumbs = [{ href: "/admin/orders", label: "Siparişler" }];
 
@@ -80,15 +81,16 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
             <dl className="grid gap-2 text-sm">
               {totals.map(([label, value]) => <div key={label} className="flex justify-between gap-3"><dt className="text-muted-foreground">{label}</dt><dd className="tabular-nums">{tryCurrency(value)}</dd></div>)}
               <div className="mt-1 flex justify-between gap-3 border-t pt-2 font-semibold"><dt>Toplam</dt><dd className="tabular-nums">{tryCurrency(order.total)}</dd></div>
-              <div className="flex justify-between gap-3 pt-1"><dt className="text-muted-foreground">Ödeme durumu</dt><dd>{paymentStatusLabel[order.paymentStatus] ?? order.paymentStatus}</dd></div>
             </dl>
           </Panel>
+          <OrderPaymentsPanel orderId={order.id} canWrite={canWrite} onChanged={reload} />
           {canWrite && (
             <Panel title="Durumu güncelle">
               <div className="grid gap-3">
                 <FormField label="Sipariş durumu" htmlFor="order-next-status">
                   <select id="order-next-status" className={selectClass} value={selected} onChange={(e) => setNextStatus(e.target.value)}>{Object.entries(orderStatusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
                 </FormField>
+                <p className="text-xs text-muted-foreground">&quot;Ödendi&quot; yalnızca tutarın tamamı için tahsilat kaydı varsa seçilebilir. Tahsilatı olan sipariş iptal edilmeden önce iade kaydedilmelidir; iptal, ayrılan stoğu geri verir.</p>
                 <div className="flex flex-col gap-2">
                   <Button type="button" onClick={() => void saveStatus()} disabled={selected === order.status}>Durumu kaydet</Button>
                   {order.status !== "cancelled" && order.status !== "delivered" && (

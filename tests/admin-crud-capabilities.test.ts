@@ -37,6 +37,11 @@ test("Orders endpoint disallows hard delete and enforces state machine", () => {
   assert.match(code, /transitionOrder/);
   assert.match(read("lib/order-transition.ts"), /canTransitionOrder/);
   assert.match(code, /status:\s*409/);
+  // Phase 3.3A finance guards run inside the same locked transaction as the compare-and-set (lib/order-transition.ts).
+  const guarded = read("lib/order-transition.ts");
+  assert.match(guarded, /ledgerCoversOrder/);
+  assert.match(guarded, /cancellationBlockedByCollection/);
+  assert.match(code, /expectedStatus/);
 });
 
 test("Products endpoint preserves FK integrity by soft-archiving instead of hard-deleting", () => {
