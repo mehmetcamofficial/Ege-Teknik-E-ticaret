@@ -29,32 +29,47 @@
     else if(!previouslyAllowed)recordCurrentPageAfterOptIn();
   }
 
+  const COPY_REPLACEMENTS=[
+    ['İkinci El & Revizyonlu Ürünler','Spot Ürünler'],
+    ['İkinci El & Outlet','Spot Ürünler'],
+    ['EGE TEKNİK OUTLET & YENİLENMİŞ DEPARTMANI','EGE TEKNİK SPOT ÜRÜNLER'],
+    ['Tüm Revizyonlu Klimaları ve İkinci El Kataloğunu Gör','Tüm Spot Ürünleri Gör'],
+    ['İkinci El Ekspertiz','Spot Ürün Ekspertizi'],
+    ['İkinci El Klima Alırken Nelere Dikkat Edilmeli?','Spot Klima Alırken Nelere Dikkat Edilmeli?'],
+    ['İkinci El Klima Alınır mı?','Spot Klima Alınır mı?'],
+    ['İkinci el stok bilgisi','Spot Ürün stok bilgisi'],
+    ['ikinci el stok bilgisi','Spot Ürün stok bilgisi'],
+    ['kontrol edilmiş ikinci el ürünler','kontrol edilmiş Spot Ürünler'],
+    ['tekil stoklu ikinci el ürünler','tekil stoklu Spot Ürünler'],
+    ['yayında ikinci el ürün bulunmuyor','yayında Spot Ürün bulunmuyor'],
+    ['Güncel durum için ikinci el sayfasını','Güncel durum için Spot Ürünler sayfasını'],
+    ['2. El İnverter Klimalar','Spot İnverter Klimalar'],
+    ['Revizyonlu Beyaz Eşya','Spot Beyaz Eşya'],
+    ['✓ Yetkili servis yönlendirmesi','✓ Gerektiğinde uygun servis yönlendirmesi'],
+    ['Ege Teknik veya ilgili GREE servis organizasyonu ürünü adresinize getirir; ayrıca teslimat ücreti alınmaz.','Ege Teknik hizmet bölgesinde adrese teslim sağlanır; doğrudan hizmet verilemeyen durumlarda uygun servis yönlendirmesi yapılabilir.'],
+    ['Yetkili servis yönlendirmesi ile standart montaj yapılır.','Standart montaj geçerli ürün koşullarına göre uygulanır; gerektiğinde uygun servis yönlendirmesi yapılabilir.']
+  ];
+  let normalizing=false;
   function normalizeStorefrontCopy(){
-    const exact=new Map([
-      ['İkinci El & Outlet','Spot Ürünler'],
-      ['EGE TEKNİK OUTLET & YENİLENMİŞ DEPARTMANI','EGE TEKNİK SPOT ÜRÜNLER'],
-      ['İkinci El & Revizyonlu Ürünler','Spot Ürünler'],
-      ['Kondisyonu, test sonucu ve garanti durumu açıkça belirtilen tekil stoklu ikinci el ürünler.','Kondisyonu, test sonucu ve garanti durumu açıkça belirtilen tekil stoklu Spot Ürünler.'],
-      ['İkinci el stok bilgisi yükleniyor…','Spot Ürün stok bilgisi yükleniyor…'],
-      ['Tüm Revizyonlu Klimaları ve İkinci El Kataloğunu Gör','Tüm Spot Ürünleri Gör'],
-      ['İkinci El Ekspertiz','Spot Ürün Ekspertizi'],
-      ['İkinci El Klima Alırken Nelere Dikkat Edilmeli?','Spot Klima Alırken Nelere Dikkat Edilmeli?'],
-      ['GREE klima satış, montaj ve servis; kontrol edilmiş ikinci el ürünler.','GREE klima satış, montaj ve servis; kontrol edilmiş Spot Ürünler.'],
-      ['2. El İnverter Klimalar','Spot İnverter Klimalar'],
-      ['Revizyonlu Beyaz Eşya','Spot Beyaz Eşya']
-    ]);
+    if(normalizing||!document.body)return;
+    normalizing=true;
     const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
     let node;
     while((node=walker.nextNode())){
-      const raw=node.nodeValue||'';
-      const trimmed=raw.trim();
-      const replacement=exact.get(trimmed);
-      if(!replacement)continue;
-      const start=raw.indexOf(trimmed);
-      node.nodeValue=raw.slice(0,start)+replacement+raw.slice(start+trimmed.length);
+      let next=node.nodeValue||'';
+      for(const [from,to] of COPY_REPLACEMENTS)if(next.includes(from))next=next.replaceAll(from,to);
+      if(next!==node.nodeValue)node.nodeValue=next;
     }
     if(document.title.includes('İkinci El Outlet'))document.title=document.title.replace('İkinci El Outlet','Spot Ürünler');
     if(document.title.includes('İkinci El Klima ve Outlet'))document.title=document.title.replace('İkinci El Klima ve Outlet','Spot Ürünler');
+    normalizing=false;
+  }
+  function watchStorefrontCopy(){
+    let queued=false;
+    const queue=()=>{if(queued)return;queued=true;queueMicrotask(()=>{queued=false;normalizeStorefrontCopy()})};
+    const observer=new MutationObserver(queue);
+    observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+    normalizeStorefrontCopy();
   }
 
   document.addEventListener('click',e=>{
@@ -66,7 +81,7 @@
     else if(t.matches('[data-cookie-close]'))document.querySelector('[data-cookie-modal]')?.remove();
   });
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelector('[data-cookie-modal]')?.remove()});
-  document.addEventListener('DOMContentLoaded',()=>{showBanner();ensureSettingsButton();setTimeout(normalizeStorefrontCopy,0)});
+  document.addEventListener('DOMContentLoaded',()=>{showBanner();ensureSettingsButton();setTimeout(watchStorefrontCopy,0)});
 
   /* Load the existing storefront synchronously so its DOMContentLoaded listeners remain intact. */
   document.write('<script src="/store-core.js"></'+'script>');
