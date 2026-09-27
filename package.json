@@ -8,7 +8,7 @@
   "scripts": {
     "install:ci": "bash scripts/install-pnpm.sh",
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/build-home-css.mjs && next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
