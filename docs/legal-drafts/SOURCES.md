@@ -1,23 +1,135 @@
-> **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
+# EGE TEKNİK — RESMÎ LEGAL KAYNAKLAR
 
-# Kaynaklar — DRAFT — LEGAL REVIEW REQUIRED
+> **INTERNAL · Eylül 2026 · LEGAL REVIEW REQUIRED**
+>
+> Bu dosya müşteri-facing legal metin değildir. Amaç, release candidate metinlerde kullanılan başlıca resmî kaynakları ve hangi noktalarda ayrıca hukukçu/işletme doğrulaması gerektiğini kaydetmektir. Random sözleşme şablonları kaynak olarak kullanılmaz.
 
-Erişim bağlamı: Eylül 2026. Etiketler: **[RESMÎ METİN]** = tam metin okundu; **[ARAMA ÖZETİ]** = resmî sitenin
-arama sonucu özetinden (tam metin okunamadı); **[ÖNERİ]** = taslak yazarı.
+## 1. Mesafeli satış / tüketici
 
-| # | Kaynak | Durum | Etkilediği taslaklar |
-|---|---|---|---|
-| S1 | Mesafeli Sözleşmeler Yönetmeliği, RG 27.11.2014/29188 (2022 değişiklikleri işlenmiş güncel metin), Ticaret Bakanlığı — https://tuketici.ticaret.gov.tr/data/5e819a8e13b876a1b04c7a4a/Mesafeli%20S%C3%B6zle%C5%9Fmeler%20Y%C3%B6netmeli%C4%9Fi.pdf ; mevzuat: https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=20237&MevzuatTur=7&MevzuatTertip=5 | **[RESMÎ METİN]** (PDF okundu; mevzuat.gov.tr sertifika hatası verdi) | distance-sales, pre-information, delivery-returns, installation, terms |
-| S2 | Aynı Yönetmelik, m.5 (ön bilgilendirme içeriği; b: unvan + MERSİS **veya** vergi kimlik no; d: toplam fiyat/nakliye; f: teslim süresi; g: iade taşıyıcısı; k: Hakem Heyeti/Mahkeme), m.6 (12 punto, ödeme öncesi (a)(d)(g)(h)), m.7 (teyit), m.8 (ödeme yükümlülüğü bildirimi) | **[RESMÎ METİN]** | pre-information, distance-sales |
-| S3 | Aynı Yönetmelik, m.9–15 (14 gün cayma; başlangıç; bildirim; 14 gün iade; ödeme aracına uygun tek seferde iade; m.12/3 ve m.13/3 iade masrafı; m.13/1 malın 10 gün içinde geri gönderilmesi; m.15 istisnalar, özellikle 15/1-k kurulum/montaj ve 15/1-h) | **[RESMÎ METİN]** | distance-sales, delivery-returns, installation |
-| S4 | Aynı Yönetmelik, m.16 (teslim: taahhüt edilen süre, mal satışında en çok 30 gün; fesih; imkânsızlık; stok yokluğu imkânsızlık sayılmaz), m.17 (teslime kadar riskin satıcıda olması), m.19 (ilave ödemeler için ayrı açık onay), m.20 (3 yıl saklama) | **[RESMÎ METİN]** | distance-sales, delivery-returns, installation, kvkk |
-| S5 | 6502 sayılı Tüketicinin Korunması Hakkında Kanun (ayıplı mal m.8 vd., Hakem Heyeti/Mahkeme) — Yönetmelik içinde atıf yoluyla; **Kanun metni okunamadı** | **[ÖNERİ]/atıf** — avukat doğrulamalı | warranty, delivery-returns, terms |
-| S6 | Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ, RG 10.03.2018/30356 — https://www.kvkk.gov.tr/Icerik/4108/Aydinlatma-Yukumlulugunun-Yerine-Getirilmesinde-Uyulacak-Usul-ve-Esaslar-Hakkinda-Teblig-Resmi-Gazetede-yayinlanmistir | **[ARAMA ÖZETİ]** (sayfa metni alınamadı) | kvkk, privacy |
-| S7 | KVKK Kurul Kararı 2018/90 (aydınlatma ve açık rıza ayrı) — https://www.kvkk.gov.tr/Icerik/5420/2018-90 | **[ARAMA ÖZETİ]** | kvkk, marketing-consent |
-| S8 | 6698 sayılı KVKK m.5, 6, 9, 10, 11, 13 — https://mevzuat.gov.tr/MevzuatMetin/1.5.6698.pdf | **Metin okunamadı** (zaman aşımı); m.9'un 01.06.2024 tarihli değişikliği KVKK sitesinde doğrulandı **[ARAMA ÖZETİ]** — https://www.kvkk.gov.tr/Icerik/2053/Yurtdisina-Aktarim | kvkk, privacy |
-| S9 | Kişisel Verilerin Yurt Dışına Aktarılmasına İlişkin Usul ve Esaslar Hakkında Yönetmelik, RG 10.07.2024 — https://www.resmigazete.gov.tr/eskiler/2024/07/20240710-2.htm ; Yurt Dışına Aktarım Rehberi https://kvkk.gov.tr/Icerik/8142/Kisisel-Verilerin-Yurt-Disina-Aktarilmasi-Rehberi | **[ARAMA ÖZETİ]** | kvkk, privacy |
-| S10 | Ticari İletişim ve Ticari Elektronik İletiler Hakkında Yönetmelik (RG 15.07.2015) — https://www.resmigazete.gov.tr/eskiler/2015/07/20150715-4.htm ; İYS: https://ticaret.gov.tr/ic-ticaret/ticari-elektronik-iletiler/ileti-yonetim-sistemi-iys | **[ARAMA ÖZETİ]** (ön izin; ret hakkı; İYS; tacir/esnaf alıcı istisnası — tüketici için geçerli değil) | marketing-consent |
-| S11 | ETBİS: https://ticaret.gov.tr/ic-ticaret/bilgi-sistemleri/elektronik-ticaret-bilgi-sistemi-etbis-ve-e-ticaret-bilgi-platformu (kayıt: MERSİS/vergi kimlik no, alan adı) | **[ARAMA ÖZETİ]** | VERIFICATION_REQUIRED |
+### S1 — Ticaret Bakanlığı, “Mesafeli Sözleşmeler Hakkında Bilgilendirme”
 
-**Sınırlama:** S5–S10 için madde numaraları ve metinler tam olarak birincil kaynaktan okunamamıştır; taslaklar bu
-noktalarda madde numarası vermez veya "[HUKUKİ İNCELEME]" notu taşır. Random şablon siteleri kaynak olarak **kullanılmamıştır**.
+- Kurum: T.C. Ticaret Bakanlığı, Tüketicinin Korunması ve Piyasa Gözetimi Genel Müdürlüğü
+- Güncelleme: **17 Ağustos 2026**
+- URL: https://tuketici.ticaret.gov.tr/yayinlar/tuketici-bilgi-rehberi/mesafeli-sozlesmeler-hakkinda-bilgilendirme
+
+RC'lerde kullanılan güncel noktalar:
+
+- Genel cayma hakkı 14 gün.
+- Mal teslim edilmeden önce de cayma bildirimi yapılabilir.
+- Cayma bildirimi yazılı veya kalıcı veri saklayıcısıyla yapılabilir.
+- Tüketici cayma bildirimini yönelttikten sonra malı **14 gün içinde** geri göndermek zorundadır.
+- Satıcı/sağlayıcı cayma halinde mevzuattaki koşullara göre ödemeleri 14 gün içinde iade eder.
+- Ön bilgilendirmede iade taşıyıcısı belirtilmemişse tüketici herhangi bir taşıyıcıyla iade ettiğinde iade masrafından sorumlu tutulamaz.
+- Sipariş için taahhüt edilen süre yoksa mal satışında genel azami süre 30 gündür; Ege Teknik bundan daha kısa **1–7 gün** taahhüdü vermektedir.
+- Siparişten önce gösterilmeyen ek masraflar tüketiciden talep edilemez.
+- Kurulum gibi ana bedel dışındaki ilave ödemeler için tüketicinin açık onayı gerekir.
+
+**Önemli düzeltme:** Eski taslak notlarında geçen “cayma bildirimi sonrası malı 10 gün içinde geri gönderme” bilgisi güncel 17.08.2026 Bakanlık rehberiyle uyumlu değildir ve kullanılmamalıdır. RC setinde **14 gün** esas alınmıştır.
+
+### S2 — Mesafeli Sözleşmeler Yönetmeliği / 6502 çerçevesi
+
+- Yönetmelik ve Kanun için Ticaret Bakanlığı/Resmî Gazete/mevzuat.gov.tr güncel metinleri esas alınır.
+- 6502 sayılı Kanun ve Mesafeli Sözleşmeler Yönetmeliği; ön bilgilendirme, cayma, teslim, ek ödeme, risk, uyuşmazlık ve diğer emredici tüketici haklarının temel kaynağıdır.
+
+RC'lerde yıllık değişebilen Tüketici Hakem Heyeti parasal sınırı gibi değerler hard-code edilmemiştir; yürürlükteki yetki/sınır uygulanır.
+
+## 2. KVKK / aydınlatma / açık rıza
+
+### S3 — KVKK Aydınlatma Yükümlülüğü
+
+- Kurum: Kişisel Verileri Koruma Kurumu
+- URL: https://www.kvkk.gov.tr/Icerik/2033/Aydinlatma-Yukumlulugu-
+
+Aydınlatmada veri sorumlusu kimliği, amaçlar, aktarım/alıcı grupları, toplama yöntemi-hukuki sebep ve ilgili kişi haklarının açıklanması temel alınır.
+
+### S4 — KVKK Kurulu 18.02.2026 tarihli 2026/347 İlke Kararı
+
+- URL: https://www.kvkk.gov.tr/Icerik/8710/veri-sorumlulari-tarafindan-acik-riza-ve-aydinlatma-metinlerinin-ayri-ayri-duzenlenmesi-gerektigi-hakkinda-kisisel-verileri-koruma-kurulunun-18-02-2026-tarihli-ve-2026-347-sayili-ilke-kararina-iliskin-kamuoyu-duyurusu
+
+RC tasarımına etkisi:
+
+- Aydınlatma ile açık rıza birbirinden ayrıdır.
+- Aydınlatma metni için “onay/rıza” talep edilmez.
+- Metinler veri sorumlusunun gerçek faaliyetine uyarlanmalıdır.
+- Açık, anlaşılır ve sade dil kullanılmalıdır.
+- Gerçekte olmayan veri işleme/aktarımı varmış gibi gösterilmemelidir.
+- Gereksiz uzun ve karmaşık metinlerden kaçınılmalıdır.
+
+Bu nedenle KVKK checkout'ta bilgi notice olarak sunulur; marketing/analytics gibi rıza gerektiren ayrı faaliyetler ayrı mekanizmaya sahiptir.
+
+## 3. Çerezler / analytics
+
+### S5 — KVKK “Çerez Uygulamaları Hakkında Rehber”
+
+- URL: https://www.kvkk.gov.tr/Icerik/7353/Cerez-Uygulamalari-Hakkinda-Rehber
+
+RC yaklaşımı:
+
+- Zorunlu/işlevsel teknolojiler ile zorunlu olmayan analytics/marketing teknolojileri ayrılır.
+- Zorunlu olmayan analytics için kullanıcı tercihi aktif bir hareketle alınır; varsayılan açık model kullanılmaz.
+- Ege Teknik visitor analytics'i için `ANALYTICS_ENABLED` global kill-switch ve ayrıca ziyaretçi consent gate uygulanmaktadır.
+
+## 4. KVKK yurt dışı aktarım
+
+### S6 — KVKK “Yurt Dışına Aktarım”
+
+- URL: https://www.kvkk.gov.tr/Icerik/2053/Yurtdisina-Aktarim
+
+### S7 — KVKK Standart Sözleşme Bildirim Modülü duyurusu
+
+- URL: https://www.kvkk.gov.tr/Icerik/8043/Standart-Sozlesme-Bildirim-Modulu-Hakkinda-Kamuoyu-Duyurusu
+
+Aktif vendor için yalnız privacy/KVKK metninde “yurt dışı aktarım olabilir” demek yeterli kabul edilmez. Gerçek rol, bölge, DPA, alt işleyenler ve KVKK m.9 mekanizması ayrıca değerlendirilir. Standart sözleşme ilgili mekanizma ise imzalı sözleşmenin Kuruma bildirim süresi **5 iş günü** olarak takip edilir.
+
+## 5. Ticari elektronik ileti / İYS
+
+### S8 — Ticaret Bakanlığı, Ticari Elektronik İletiler / İYS
+
+- https://ticaret.gov.tr/ic-ticaret/ticari-elektronik-iletiler
+- https://ticaret.gov.tr/ic-ticaret/ticari-elektronik-iletiler/ileti-yonetim-sistemi-iys
+
+RC/operasyon yaklaşımı:
+
+- Marketing onayı siparişin koşulu değildir.
+- Kanal/purpose consent ve ret mekanizması ayrı yürütülür.
+- İYS hazır olmadan promosyon otomasyonu Production'da açılmaz.
+
+## 6. ETBİS
+
+### S9 — ETBİS / e-Ticaret Bilgi Platformu
+
+- https://etbis.ticaret.gov.tr/
+- https://ticaret.gov.tr/ic-ticaret/bilgi-sistemleri/elektronik-ticaret-bilgi-sistemi-etbis-ve-e-ticaret-bilgi-platformu
+
+Kendi e-ticaret ortamı üzerinden faaliyet gösteren hizmet sağlayıcılar açısından gerçek şirket/domain kayıt durumu operasyonel olarak doğrulanmalıdır. `egeteknik.tr` için kayıt **henüz tamamlandı kabul edilmemiştir**.
+
+Eski ETBİS QR kod uygulaması 2025'te sonlandırıldığından go-live checklistinde QR kod şartı tutulmaz.
+
+## 7. VERBİS
+
+### S10 — Veri Sorumluları Sicili / güncel istisna kriterleri
+
+VERBİS kayıt yükümlülüğü şirket tipi üzerinden tahmin edilmez. 2025 mali bilanço toplamı, yıllık çalışan sayısı ve veri işleme faaliyeti gibi güncel Kurul kriterleri mali müşavir/hukukçu ile doğrulanır.
+
+Ege Teknik için bu değerlendirme Pazartesi alınacak gerçek şirket verileri sonrasında kapatılacaktır.
+
+## 8. GREE/TLC montaj ve garanti
+
+### S11 — GREE Montaj Standartları
+
+- https://www.gree.com.tr/sayfa/montaj-standartlari
+
+RC'lerde duvar tipi split klima için güncel resmî montaj standardına bağlı temel kapsam ve standart dışı işler referans alınmıştır. Sabit TL/km veya dönemsel kampanya/ulaşım bedeli legal çekirdek metne hard-code edilmemiştir.
+
+### S12 — GREE Garanti Şartları / ürün-kampanya sayfaları
+
+- https://www.gree.com.tr/sayfa/garanti-sartlari
+
+Garanti süresi/kampanya tek bir evrensel değer olarak genellenmez. Ürün/model/satın alma tarihi ve geçerli kampanya/garanti belgesi esas alınır.
+
+## 9. Kaynak kullanma kuralı
+
+- Mevzuat veya resmî rehber değişirse yeni legal version değerlendirilir.
+- Public legal metinlere araştırma notu, `[DOĞRULAMA BEKLİYOR]`, `TBD` veya hukukçu iç notu taşınmaz.
+- Resmî kaynak ile işletmenin fiili operasyonu çelişirse operasyon düzeltilmeden metin “uyumlu” ilan edilmez.
+- Hukukçu review, bu source register'ın yerini almaz; özellikle KVKK aktarım, VERBİS, ETBİS, ürün bazlı cayma istisnası ve garanti uygulaması için gerçek operasyon/kontrat/belgeler ayrıca incelenir.
