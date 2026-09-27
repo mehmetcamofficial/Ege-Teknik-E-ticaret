@@ -1,55 +1,153 @@
-> **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
-> **TEKNİK TASLAK GÜNCELLEMESİ (Phase 3.4 iş modeli) — HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR:** Bu bölüm yalnızca yeni checkout iş modeline teknik olarak uyarlanmıştır (operatör talimatı: klima ürünlerinde Ege Teknik hizmet bölgesinde adrese teslim ve standart montaj ürün fiyatına dâhildir; yalnızca gönderime uygun yedek parça/aksesuar için mağazadan teslim veya ücretli kargo). Metin hukuken incelenmemiştir, onaylanmamıştır ve yayınlanamaz. Standart montaj paketinin kapsamı hâlâ doğrulanmamıştır.
+> **RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED**
+> Bu metin Ön Bilgilendirme Formu ve Mesafeli Satış Sözleşmesi ile birlikte okunur. Çelişki hâlinde emredici mevzuat ve tüketici lehine uygulanması gereken hükümler saklıdır.
 
-> `[DOĞRULAMA BEKLİYOR: ...]` = doğrulanmamış bilgi. Dayanak: Mesafeli Sözleşmeler Yönetmeliği (SOURCES.md S1–S4).
+# TESLİMAT, MONTAJ, İADE VE CAYMA KOŞULLARI
 
-# TESLİMAT, İADE VE CAYMA KOŞULLARI
+## 1. Satıcı ve iletişim
 
-Bu metin ön bilgilendirme ve mesafeli satış sözleşmesiyle birlikte okunmalıdır; çelişki hâlinde ALICI lehine olan ve emredici mevzuata uygun hüküm geçerlidir.
+**Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi**
 
-## 1. Satıcı ve iade adresi
+- Ticari ad: Ege Teknik
+- Adres / iade adresi: İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+- Vergi dairesi: Kuşadası
+- E-posta: info@egeteknik.tr
+- Telefon: 0542 795 75 60
+- Web: egeteknik.tr
 
-Ege Teknik (işletme sahibi Levent Karakoyun *(operatör beyanı)*; tam unvan: [DOĞRULAMA BEKLİYOR: tam unvan (vergi levhası)]).
-Adres ve **iade adresi:** İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın · info@egeteknik.tr · 0542 795 75 60.
+## 2. Teslimat modeli
 
-## 2. Olağan teslimat
+### 2.1 Klima ve montajlı ürünler
 
-- **Yöntem:** klima ürünlerinde Ege Teknik'in kendi teslimatı (yalnızca Ege Teknik hizmet bölgesi: Afyonkarahisar, Aydın, Balıkesir, Denizli, İzmir, Kütahya, Manisa, Muğla ve Uşak; bu illerin tüm ilçeleri dâhil); yalnızca gönderime uygun yedek parça/aksesuar siparişlerinde mağazadan teslim veya Türkiye geneline kargo. Kargo/taşıyıcı: [DOĞRULAMA BEKLİYOR: teslimat taşıyıcısı].
-- **Ücret:** klima ürünlerinde Ege Teknik teslimatı ve standart montaj ürün bedeline dâhildir (kargo değildir, ayrıca ücret alınmaz); kargo yalnızca gönderime uygun ürünlerde ve müşteri seçerse ücretlidir, tutar siparişi onaylamadan önce gösterilir: [DOĞRULAMA BEKLİYOR: kargo ücreti tarifesi].
-- **Süre:** hedeflenen süre yaklaşık **7 iş günü**; stok, ürün ve adrese göre değişebilir, sipariş özetindeki süre esastır. Taahhüt edilen azami süre: [DOĞRULAMA BEKLİYOR: taahhüt edilen azami teslim süresi].
-  Mal satışında teslim süresi her halükarda siparişin bize ulaşmasından itibaren **30 günü geçemez**; süre aşılırsa ALICI sözleşmeyi feshedebilir ve ödemeler fesih bildiriminden itibaren 14 gün içinde kanuni faiziyle iade edilir (Yönetmelik m.16).
-  Ürün stokta yoksa bu durum bizi teslim yükümlülüğünden kurtarmaz (m.16/4). Ürün teslimi imkânsızlaşırsa 3 gün içinde yazılı bildirim ve en geç 14 gün içinde iade yapılır.
-- **Kontrol:** Teslimde paketi kontrol ediniz; hasar/eksiklik varsa taşıyıcıya tutanak tutturup bize derhal bildiriniz. Teslime kadar oluşan kayıp/hasar riski bizdedir (m.17); tarafınızca başka bir taşıyıcı istenirse taşıyıcıya tesliminden sonraki risk size geçer.
-- Teslimde kimlik/imza alınabilir; teslimat adresi ve kişi bilgisi sipariş anında doğru girilmelidir.
+Klima ürünlerinde teslimat ve standart montaj, ürün/sipariş sayfasında dahil olduğu belirtilmişse ürün bedeline dahildir. Ege Teknik'in hizmet verdiği bölgelerde teslimat ve montaj Ege Teknik tarafından gerçekleştirilebilir; doğrudan hizmet sağlanamayan durumlarda müşteri, ürün ve bölge için uygun yetkili servise yönlendirilebilir.
 
-## 3. Cayma hakkı
+Hizmet bölgesi uygulaması checkout sırasında il/ilçe bazında kontrol edilir. Sipariş özetinde müşteriye sunulmayan bir teslimat veya montaj bedeli sonradan tek taraflı olarak eklenmez.
 
-1. **Süre:** malı teslim aldığınız günden itibaren 14 gün (mal ve hizmet birlikte ise mal teslimi esas — m.9); teslimden önce de kullanılabilir.
-2. **Bildirim:** info@egeteknik.tr veya yukarıdaki adres; yazılı/kalıcı veri saklayıcısı. Sitede yer alacak cayma formu ve/veya açık beyan yeterlidir (m.11). Bildirimin ulaştığı teyit edilir.
-3. **İade süresi:** biz geri alma teklif etmedikçe, bildirimden itibaren 10 gün içinde ürün gönderilir (m.13/1).
-4. **Ürün durumu:** ürünü işleyişine, teknik özelliklerine ve kullanma talimatına uygun kullanmanız hâlinde oluşan değişikliklerden sorumlu değilsiniz (m.13/2). Ürünü tam ve orijinal ambalajı/aksesuarlarıyla göndermeniz beklenir.
-5. **Geri ödeme:** bildirimin bize ulaşmasından itibaren 14 gün içinde, teslimat masrafı dâhil tahsil edilen tüm ödemeler, ödeme yönteminize uygun şekilde ve masrafsız, tek seferde iade edilir (m.12).
-6. **Cayma hakkının istisnaları (m.15; aksi kararlaştırılmadıkça):** müşteriye özel hazırlanan ürünler; koruyucu ambalajı açılmış olup hijyen/sağlık açısından iadesi uygun olmayanlar; cayma süresi bitmeden onayla ifasına başlanan hizmetler; kılavuzunda kurulumun satıcı/yetkili servis tarafından yapılacağı belirtilen ve kurulumu yapılmış ürünler.
-   Kurulum seçilmediyse veya yapılmadıysa bu son istisna uygulanmaz. [DOĞRULAMA BEKLİYOR: ürün kılavuzunda kurulumun satıcı/yetkili servis tarafından yapılacağı ifadesi]
+### 2.2 Gönderime uygun ürünler
 
-## 4. İade lojistiği ve masrafı
+Yalnız sistemde `shippable` olarak tanımlanan gönderime uygun yedek parça/aksesuar ürünlerinde mağazadan teslim veya, kargo gerçekten aktif hale getirildiğinde, kargo seçeneği sunulabilir.
 
-- **İade taşıyıcısı:** [DOĞRULAMA BEKLİYOR: iade taşıyıcısı]. Bu alan **yayından önce zorunlu olarak doldurulmalıdır**; taşıyıcı belirtilmezse iade masrafı tüketiciden talep edilemez (m.12/3).
-- Cayma hâlinde belirttiğimiz taşıyıcı ile gönderirseniz iade masrafından sorumlu tutulmazsınız. Belirtilen taşıyıcının bulunduğunuz yerde şubesi yoksa ürünü ilave masraf almaksızın adresinizden aldırırız (m.12/3).
-- **Ayıplı/hatalı ürün** iadesinde iade masrafı hiçbir hâlde size yüklenemez (m.13/3).
-- İade edilecek ürün için lütfen önce info@egeteknik.tr veya 0542 795 75 60 üzerinden bilgi veriniz ve siparişin numarasını belirtiniz.
+Kargo firması ve kargo bedeli kesinleşmeden müşteriye belirli bir taşıyıcı veya ücret vaat edilmez. Kargo seçeneği pasifse müşteriye seçilebilir bir teslimat yöntemi gibi gösterilmez.
 
-> **İnceleme notu (işletme kararı):** m.13/3 uyarınca, ön bilgilendirmede açıkça belirtilirse ve iade satıcının öngördüğü taşıyıcıyla yapılırsa iade masrafı teslim masraflarını geçmemek üzere tüketiciye yüklenebilir. Bu taslak masrafı tüketiciye **yüklemez**; karar operatöre ve avukata aittir. "İade kargo ücreti her zaman müşteriye aittir" ifadesi mevzuata aykırı olabileceğinden **yazılmamıştır**.
+## 3. Teslimat süresi
 
-## 5. Ayıplı / uygunsuz ürün (cayma dışı haklar)
+Sipariş konusu ürünler, aksi ürün veya sipariş özelinde açıkça belirtilmedikçe, **siparişin onaylanmasından itibaren hedef olarak 1–7 gün içerisinde** teslim edilir.
 
-Ürün ayıplı veya sözleşmeye uygun değilse 6502 sayılı Kanun'daki seçimlik haklarınız (sözleşmeden dönme, bedel indirimi, ücretsiz onarım veya ayıpsız misli ile değiştirme) cayma süresinden bağımsız olarak saklıdır. Ayrıntı: "Garanti Bilgilendirme". [HUKUKİ İNCELEME: hak ve süre ifadeleri Kanun metninden teyit edilmeli]
+Siparişe özel farklı bir teslimat süresi varsa bu bilgi sipariş verilmeden önce açıkça gösterilir. Stokta bulunmama tek başına teslim yükümlülüğünden kurtulma veya belirsiz süre uzatma gerekçesi olarak kullanılmaz.
 
-## 6. Bedel iadesi zamanlaması — özet
+Mevzuattan doğan azami ifa ve fesih hakları saklıdır.
 
-| Olay | İade süresi (kaynak) |
-|---|---|
-| Cayma | bildirimin ulaşmasından itibaren 14 gün (m.12/1) |
-| Teslim süresinde ifa edilmedi, fesih | fesih bildiriminden itibaren 14 gün + kanuni faiz (m.16/3) |
-| Teslim imkânsızlaştı | bildirimden itibaren en geç 14 gün (m.16/4) |
-| Ayıplı mal | Kanun'daki seçimlik hakka göre; avukat teyidi |
+## 4. Standart klima montajı
+
+Duvar tipi split klima ürünlerinde, ürün/sipariş sayfasında montajın dahil olduğu belirtilmişse standart montaj GREE/TLC'nin ilgili ürün için geçerli montaj standartları ve Ege Teknik'in fiili hizmet modeli çerçevesinde gerçekleştirilir.
+
+Standart kapsam, ürün ve geçerli teknik koşullara göre genel olarak şunları içerebilir:
+
+- iç ve dış ünitenin standart kurulumu,
+- 4 metreye kadar yalıtımlı bakır boru tesisatı,
+- iç-dış ünite iletişim bağlantısı,
+- standart drenaj hattı,
+- dış ünite L konsolu ve titreşim takozları,
+- standart sabitleme ve devreye alma işlemleri.
+
+Aşağıdakiler standart montaj kapsamı dışında olabilir:
+
+- elektrik besleme hattı, pano/sigorta veya elektrik tesisatı işleri,
+- standart metrajı aşan ilave boru/kablo/drenaj,
+- özel drenaj pompası veya özel tesisat,
+- kırma, sıva, boya, dekorasyon veya diğer inşai işler,
+- karot, özel platform, iskele, vinç, manlift veya benzeri özel ekipman,
+- standart kurulum koşullarının dışındaki özel uygulamalar.
+
+Standart kapsam dışında ilave işlem veya bedel gerekirse işlem ve bedel müşteriye açıklanır; gerekli açık onay alınmadan ilave ücret tahsil edilmez.
+
+## 5. Teslim sırasında hasar veya eksiklik
+
+Müşterinin ürünü teslim sırasında mümkün olduğu ölçüde kontrol etmesi ve görünür hasar/eksikliği teslimat görevlisine ve Ege Teknik'e bildirmesi önerilir.
+
+Hasar tutanağı düzenlenmesi ispat açısından faydalı olabilir; ancak tutanak bulunmaması tek başına tüketicinin emredici mevzuattan doğan haklarının otomatik olarak ortadan kalktığı anlamına gelmez.
+
+Ürünün müşteriye veya müşterinin belirlediği kişiye teslimine kadar, mevzuatın öngördüğü kayıp ve hasar sorumluluğu kuralları uygulanır.
+
+## 6. Cayma hakkı
+
+Mevzuatta düzenlenen istisnalar saklı olmak üzere tüketici, **14 gün içinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin** cayma hakkını kullanabilir.
+
+Mal satışlarında süre tüketicinin veya tüketicinin belirlediği üçüncü kişinin malı teslim aldığı gün başlar. Tüketici, mal teslim edilmeden önce de cayma hakkını kullanabilir.
+
+Cayma bildirimi:
+
+- info@egeteknik.tr adresine,
+- yukarıdaki şirket adresine yazılı olarak,
+- varsa sitede sunulan cayma/iade talep kanalı üzerinden
+
+mevzuata uygun biçimde iletilebilir.
+
+## 7. Cayma sonrası ürünün geri gönderilmesi
+
+Tüketici, cayma bildirimini yönelttiği tarihten itibaren **14 gün içerisinde** cayma hakkına konu malı geri göndermekle yükümlüdür; satıcının malı kendisinin geri almayı teklif ettiği durumlar saklıdır.
+
+İade taşıyıcısı kargo anlaşması kesinleşmeden bu metinde uydurulmaz. Ön bilgilendirmede iade için belirli bir taşıyıcı gösterilmemişse, yürürlükteki mevzuata göre tüketici iade masrafından sorumlu tutulamaz.
+
+İade taşıyıcısı daha sonra belirlenirse bu belge yeni sürümle güncellenir; geçmiş siparişlerin kabul ettiği sürüm geriye dönük değiştirilmez.
+
+## 8. Geri ödeme
+
+Geçerli bir cayma halinde geri ödeme, yürürlükteki Mesafeli Sözleşmeler Yönetmeliği ve ilgili mevzuata uygun şekilde yapılır.
+
+Mal iadesinin hangi taşıyıcıyla yapıldığına ve ürünün henüz teslim edilip edilmediğine göre iade süresinin başlangıcı mevzuattaki güncel kurallara göre belirlenir. İade, kullanılan ödeme aracına uygun şekilde ve tüketiciye ilave masraf yüklemeyecek biçimde gerçekleştirilir.
+
+## 9. Cayma hakkı istisnaları
+
+Cayma hakkı yalnızca yürürlükteki mevzuatta öngörülen istisnaların somut siparişe uygulanabildiği durumlarda sınırlandırılabilir.
+
+Özellikle:
+
+- tüketicinin istekleri veya kişisel ihtiyaçları doğrultusunda özel hazırlanan ürünler,
+- iadesi sağlık veya hijyen açısından uygun olmayan ve koruyucu unsurları teslimden sonra açılan belirli ürünler,
+- mevzuattaki şartları sağlamak kaydıyla ifasına tüketicinin onayıyla başlanmış hizmetler,
+- tanıtma ve kullanma kılavuzunda kurulumunun satıcı veya yetkili servis tarafından yapılacağı belirtilen ve kurulumu gerçekleştirilmiş mallar
+
+gibi istisnalar ancak ilgili şartlar gerçekten oluşmuşsa uygulanır.
+
+Bir ürünün yalnızca **"Spot Ürün"**, "ambalajı açılmış" veya "montajlı" olarak etiketlenmesi tek başına bütün tüketici haklarını ortadan kaldırmaz.
+
+## 10. Spot Ürünler
+
+Spot Ürünlerin satın alma kararını etkileyebilecek bilinen durumları ürün sayfasında satıştan önce açıkça belirtilir. Bunlara, ürüne göre:
+
+- kozmetik izler,
+- kullanım durumu,
+- eksik aksesuarlar,
+- ambalaj durumu,
+- bilinen çizik/hasar,
+- teknik kontrolde tespit edilmiş ve satışa engel olmayan açıklanması gereken hususlar
+
+dahil olabilir.
+
+Sipariş anındaki ürün durumu/açıklaması mümkün olduğu ölçüde sipariş snapshot'ında korunur.
+
+Spot Ürün niteliği, ayıplı mala ilişkin emredici tüketici haklarını veya uygulanabilir cayma haklarını kendiliğinden ortadan kaldırmaz.
+
+## 11. Ayıplı mal ve sözleşmeye aykırılık
+
+Cayma hakkı ile ayıplı mala ilişkin haklar birbirinden ayrıdır. Cayma süresinin sona ermiş olması tüketicinin ayıplı mala ilişkin kanuni haklarının sona erdiği anlamına gelmez.
+
+Ayıplı veya sözleşmeye uygun olmayan üründe 6502 sayılı Kanun ve ilgili mevzuatta tanınan seçimlik haklar saklıdır. İade/kargo masrafı tüketiciye hukuka aykırı biçimde yüklenmez.
+
+## 12. Garanti ve yetkili servis
+
+Garanti süresi ve satış sonrası hizmetler ürün/model ve geçerli üretici/ithalatçı koşullarına göre değerlendirilir. Geçici kampanya koşulları, kampanya bitiş tarihinden sonra kalıcı sözleşme taahhüdü gibi sunulmaz.
+
+Ege Teknik'in doğrudan hizmet veremediği bölgelerde uygun yetkili servise yönlendirme yapılabilir; başka bir servisin randevu, ücret veya müsaitliği doğrulanmadan Ege Teknik tarafından kesin taahhüt edilmiş kabul edilmez.
+
+## 13. İade ve cayma için iletişim
+
+İade/cayma talebinde sipariş numaranızı ve talebinizi açıkça belirtmeniz işlemin daha hızlı yürütülmesini sağlar.
+
+- E-posta: info@egeteknik.tr
+- Telefon: 0542 795 75 60
+- Adres: İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+
+---
+
+**Sürüm notu:** Bu Release Candidate; 1–7 gün teslimat politikası, mevcut Ege Teknik hizmet bölgesi modeli, GREE/TLC standart montaj yaklaşımı, 14 günlük cayma ve geri gönderim süresi ile Spot Ürün politikasına göre güncellenmiştir. İade/kargo taşıyıcısı kesinleştiğinde yeni sürüm yayımlanmalıdır.
