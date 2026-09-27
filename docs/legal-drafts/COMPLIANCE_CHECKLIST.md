@@ -92,7 +92,8 @@ Without both, analytics event ingestion returns without recording and no `ege_vi
 | Consent granted behavior | PENDING TECH | Verify event recorded and dashboard updates when global switch is true. |
 | Consent withdrawal | PENDING TECH | Verify `ege_vid` deletion and no further event ingestion. |
 | Production `ANALYTICS_ENABLED` | PENDING DEPLOY DECISION | Set true only after preference UI/code is the deployed production version. |
-| Google Fonts / Tailwind CDN | PENDING TECH/LEGAL | Prefer self-host/build-time; otherwise include in transfer assessment. |
+| Google Fonts / Tailwind Play CDN | DONE TECH | Runtime third-party font/Tailwind dependencies removed from deployed storefront path; Tailwind now builds locally and CSP no longer needs those origins. |
+| Google-hosted representative images | DONE TECH | Homepage representative images are localized to first-party assets at build time. |
 | Clerk cookies/storage | PENDING TECH | Browser/network audit against real Production configuration. |
 
 Sales/order analytics sourced from real orders are not dependent on the visitor analytics consent cookie; visitor behavior metrics are.
