@@ -17,6 +17,8 @@ Sorumlu kısaltmaları: **İŞ** işletme · **MM** mali müşavir · **AV** huk
 - Güncel Ticaret Bakanlığı 17.08.2026 rehberine göre cayma bildirimi sonrasında malın geri gönderim süresi: **14 gün**.
 - GREE/TLC montaj standardının temel kapsamı ve standart dışı iş ayrımı güncel resmî GREE montaj standardına göre RC'lere işlendi.
 - Public storefront için first-party analytics artık global kill-switch + ziyaretçi tercihi olmak üzere iki kapılı consent modeline sahiptir.
+- Google Fonts ve Tailwind Play CDN runtime bağımlılıkları storefront deploy yolundan kaldırıldı; Tailwind build-time çalışır.
+- Ana sayfadaki Google-hosted temsili görseller first-party local asset'lere taşındı.
 
 ## B. Şirket / sicil / muhasebe — Pazartesi teyidi
 
@@ -83,7 +85,8 @@ Kargo henüz aktif değilken legal metinlerde belirli taşıyıcı adı uydurulm
 | G4 | Clerk aktarım/DPA/cookie listesi | PENDING LEGAL/TECH | Gerçek Production davranışı ve DPA/subprocessor incele |
 | G5 | Sentry | TEMPORARY / PENDING | Trial sürüyorsa aktarım/DPA değerlendirmesi; bitince kapat ve metni versionla |
 | G6 | Analytics consent UI | IMPLEMENTED ON BRANCH | Production env + browser/network testi yapılmalı |
-| G7 | Google Fonts / Tailwind CDN | PENDING TECH/LEGAL | Tercihen self-host/build-time; kalırsa yurt dışı aktarım değerlendirmesine dahil et |
+| G7 | Google Fonts / Tailwind Play CDN | DONE TECH | Runtime bağımlılıkları kaldırıldı; build-time/local asset modeli kullanılıyor |
+| G8 | Google-hosted temsili görseller | DONE TECH | Ana sayfa first-party local asset'lere geçirildi |
 
 ## H. İYS / pazarlama
 
