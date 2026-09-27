@@ -1,18 +1,15 @@
 /**
  * Two script policies, because the deployment serves two different kinds of document.
  *
- * - "static": the legacy storefront shipped from public/*.html. Its inline scripts are
- *   fixed file content, so they are allowlisted by sha256 hash and need no 'unsafe-inline'.
- *   It still loads the Tailwind Play CDN, which is an explicit external script source.
+ * - "static": the storefront shipped from public/*.html. Its fixed inline scripts are
+ *   allowlisted by sha256 hash and external runtime script CDNs are not required.
  * - "app": Next.js-rendered documents (/admin). Next emits per-request inline bootstrap
  *   scripts whose content varies, so those carry a per-request nonce instead.
  *
- * style-src keeps 'unsafe-inline': the Tailwind Play CDN injects generated <style> blocks at
- * runtime, so removing it would break the storefront's styling. This is a real remaining gap,
- * not a solved one - see the Phase 3A.1 report.
+ * style-src still keeps 'unsafe-inline' because the current storefront contains inline
+ * style attributes / style blocks. Google Fonts origins remain temporarily because the
+ * homepage still uses Material Symbols; those will be removed in a separate controlled step.
  */
-
-export const TAILWIND_CDN_ORIGIN = "https://cdn.tailwindcss.com";
 
 const sharedDirectives = [
   "default-src 'self'",
@@ -28,7 +25,7 @@ const sharedDirectives = [
 ];
 
 export function staticContentSecurityPolicy(scriptHashes: readonly string[]): string {
-  const sources = ["'self'", TAILWIND_CDN_ORIGIN, ...scriptHashes.map((hash) => `'${hash}'`)];
+  const sources = ["'self'", ...scriptHashes.map((hash) => `'${hash}'`)];
   return [`script-src ${sources.join(" ")}`, ...sharedDirectives].join("; ");
 }
 
