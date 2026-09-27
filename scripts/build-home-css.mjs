@@ -259,7 +259,10 @@ let outputHtml = replaceMaterialSymbols(html)
   .replace(/<link crossorigin="" href="https:\/\/fonts\.gstatic\.com" rel="preconnect">\s*/g, "")
   .replace(/<link href="https:\/\/fonts\.googleapis\.com\/css2\?family=[^"]+" rel="stylesheet">\s*/g, "")
   .replace(/<script src="https:\/\/cdn\.tailwindcss\.com"><\/script>\s*/g, "")
-  .replace(/<script id="tailwind-config">[\s\S]*?<\/script>\s*/g, "");
+  .replace(/<script id="tailwind-config">[\s\S]*?<\/script>\s*/g, "")
+  .replace("https://lh3.googleusercontent.com/aida-public/AB6AXuAPXAQVcmh9ZnQt48l2CH1dbn8QkO6Mjoa2eW9ToEezm-6606zJBlMutbIYDMOOEhdsfcOupa_5ea39hZ4IT_KA8BC_Xm5L9dBDcAARNgxxOMs0ygxcL1aV2QoDNjmF5wyazqzH3-EolNpVcx5pvGYu_ol4QPzW4FE6goOCe_v6LEpgfn0PnpjmQZ3DLH3wsXND7DYWKFhc3SuVUThP3dYdtu9SBk3jNXvIw1y0sl-pk_HYQYbEjYtg5g", "assets/home/hero-aegean-ac.svg")
+  .replace("https://lh3.googleusercontent.com/aida-public/AB6AXuBZVBqUxIRbwQqYAQBrJyaBMAz7RZeagfkZ_6F-7T9ONyi4O3txjOolQIgvteRrHbVVZRq2U9WQM-h3tXqs3RdsokANxslKFxPchrQ9zb_eqm5n0UwG694BpIpvUl0AMtS8lD46qXFG2PW6BgdB_jCn2xEJy4QDoqy8qIiX8--pKNUEa8sMg60aND5W66eJdW22ed9fCt5YvS4_PKFaKDeZ4fODl5LWlmPrvjwWWhaJy3hA7QyLj_L6ZA", "assets/home/gree-airy-representative.svg")
+  .replace("https://lh3.googleusercontent.com/aida-public/AB6AXuCX18xwY2nPCBBIZaMd9TcLW5oRueGb7CGCgnjpNyYbTYRuQh74maMMcvBJY6AGQRautRF71sUE9wHwAzLHcK0CrRCDkAJKfuPuUEK2mY5E9NmXdvHd3h2amAYJ5UguVZ-4Bf8pIw7b_XXW66MewNNC0pPFewzovTaH8yX4JYAnvZCkJ4HK4OfNCXu-RHBEPH_UW0iwkgy17BEBcfc83Wc7km9Cu01F45e7s5N4BDmQVMU94uRDO_GWuQ", "assets/home/gree-fairy-representative.svg");
 
 if (!outputHtml.includes('href="home.css"')) {
   outputHtml = outputHtml.replace("</head>", '<link rel="stylesheet" href="home.css"></head>');
