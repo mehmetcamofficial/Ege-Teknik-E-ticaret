@@ -28,6 +28,35 @@
     if(!allow)void revokeAnalyticsId();
     else if(!previouslyAllowed)recordCurrentPageAfterOptIn();
   }
+
+  function normalizeStorefrontCopy(){
+    const exact=new Map([
+      ['İkinci El & Outlet','Spot Ürünler'],
+      ['EGE TEKNİK OUTLET & YENİLENMİŞ DEPARTMANI','EGE TEKNİK SPOT ÜRÜNLER'],
+      ['İkinci El & Revizyonlu Ürünler','Spot Ürünler'],
+      ['Kondisyonu, test sonucu ve garanti durumu açıkça belirtilen tekil stoklu ikinci el ürünler.','Kondisyonu, test sonucu ve garanti durumu açıkça belirtilen tekil stoklu Spot Ürünler.'],
+      ['İkinci el stok bilgisi yükleniyor…','Spot Ürün stok bilgisi yükleniyor…'],
+      ['Tüm Revizyonlu Klimaları ve İkinci El Kataloğunu Gör','Tüm Spot Ürünleri Gör'],
+      ['İkinci El Ekspertiz','Spot Ürün Ekspertizi'],
+      ['İkinci El Klima Alırken Nelere Dikkat Edilmeli?','Spot Klima Alırken Nelere Dikkat Edilmeli?'],
+      ['GREE klima satış, montaj ve servis; kontrol edilmiş ikinci el ürünler.','GREE klima satış, montaj ve servis; kontrol edilmiş Spot Ürünler.'],
+      ['2. El İnverter Klimalar','Spot İnverter Klimalar'],
+      ['Revizyonlu Beyaz Eşya','Spot Beyaz Eşya']
+    ]);
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    let node;
+    while((node=walker.nextNode())){
+      const raw=node.nodeValue||'';
+      const trimmed=raw.trim();
+      const replacement=exact.get(trimmed);
+      if(!replacement)continue;
+      const start=raw.indexOf(trimmed);
+      node.nodeValue=raw.slice(0,start)+replacement+raw.slice(start+trimmed.length);
+    }
+    if(document.title.includes('İkinci El Outlet'))document.title=document.title.replace('İkinci El Outlet','Spot Ürünler');
+    if(document.title.includes('İkinci El Klima ve Outlet'))document.title=document.title.replace('İkinci El Klima ve Outlet','Spot Ürünler');
+  }
+
   document.addEventListener('click',e=>{
     const t=e.target.closest('[data-cookie-accept],[data-cookie-reject],[data-cookie-preferences],[data-cookie-save],[data-cookie-close],[data-cookie-settings]');if(!t)return;
     if(t.matches('[data-cookie-accept]'))saveChoice(true);
@@ -37,7 +66,7 @@
     else if(t.matches('[data-cookie-close]'))document.querySelector('[data-cookie-modal]')?.remove();
   });
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelector('[data-cookie-modal]')?.remove()});
-  document.addEventListener('DOMContentLoaded',()=>{showBanner();ensureSettingsButton()});
+  document.addEventListener('DOMContentLoaded',()=>{showBanner();ensureSettingsButton();setTimeout(normalizeStorefrontCopy,0)});
 
   /* Load the existing storefront synchronously so its DOMContentLoaded listeners remain intact. */
   document.write('<script src="/store-core.js"></'+'script>');
