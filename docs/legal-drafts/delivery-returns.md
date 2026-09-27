@@ -30,7 +30,7 @@ Kargo firması ve kargo bedeli kesinleşmeden müşteriye belirli bir taşıyıc
 
 ## 3. Teslimat süresi
 
-Sipariş konusu ürünler, aksi ürün veya sipariş özelinde açıkça belirtilmedikçe, **siparişin onaylanmasından itibaren hedef olarak 1–7 gün içerisinde** teslim edilir.
+Sipariş konusu ürünler, aksi ürün veya sipariş özelinde açıkça belirtilmedikçe, **siparişin onaylanmasından itibaren 1–7 gün içerisinde teslim edilir.**
 
 Siparişe özel farklı bir teslimat süresi varsa bu bilgi sipariş verilmeden önce açıkça gösterilir. Stokta bulunmama tek başına teslim yükümlülüğünden kurtulma veya belirsiz süre uzatma gerekçesi olarak kullanılmaz.
 
