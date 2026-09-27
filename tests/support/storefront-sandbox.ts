@@ -1,8 +1,12 @@
 /**
- * Runs the real public/store.js in a node:vm sandbox that models the parts of a browser
- * the storefront touches (URL, location, fetch, storage, a selector registry), so tests
- * assert against the exact file the browser receives. Classic-script `function`
- * declarations land on the sandbox global; `const` bindings deliberately do not.
+ * Runs the real public/store-core.js in a node:vm sandbox that models the parts of a browser
+ * the storefront core touches (URL, location, fetch, storage, a selector registry), so tests
+ * assert against the exact core storefront file loaded by public/store.js after the consent
+ * bootstrap. Classic-script `function` declarations land on the sandbox global; `const`
+ * bindings deliberately do not.
+ *
+ * Consent-bootstrap behavior in public/store.js is tested separately; this sandbox intentionally
+ * targets the legacy storefront core rather than emulating document.write/script loading.
  *
  * Not a *.test.ts file, so the test runner's glob does not execute it on its own.
  */
@@ -201,7 +205,7 @@ export function loadStorefront(options: {
     },
   };
   vm.createContext(context);
-  vm.runInContext(readFileSync("public/store.js", "utf8"), context, { filename: "public/store.js" });
+  vm.runInContext(readFileSync("public/store-core.js", "utf8"), context, { filename: "public/store-core.js" });
 
   return {
     // The sandbox's own functions, looked up by name; each test casts to the signature it calls.
