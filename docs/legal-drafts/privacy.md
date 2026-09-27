@@ -59,37 +59,47 @@ ile paylaşılabilir veya ilgili hizmetin sunulması kapsamında erişilebilir h
 
 Mevcut teknik yapıda Vercel barındırma/deployment, Neon PostgreSQL veritabanı ve Clerk müşteri hesabı/kimlik doğrulama amacıyla kullanılmaktadır. Sentry ise hata izleme ve teknik teşhis amacıyla **geçici deneme** kapsamında kullanılmaktadır; deneme sona erdiğinde kaldırılabilir.
 
+Public storefront kaynak kodu denetiminde Google Fonts ve Tailwind CSS CDN gibi üçüncü taraf statik kaynaklara tarayıcı tarafından otomatik ağ istekleri yapıldığı tespit edilmiştir. Bu tür isteklerde ilgili üçüncü taraf altyapıya IP adresi, User-Agent ve bağlantının kurulması için gerekli standart HTTP/ağ bilgileri ulaşabilir. Bu kaynaklar V1 öncesi mümkün olduğu ölçüde self-host/build-time çözümlere taşınmazsa yurt dışı aktarım değerlendirmesinde ayrıca ele alınmalıdır.
+
 Bazı teknik hizmet sağlayıcılarının altyapısı veya operasyonları Türkiye dışında bulunabilir. Böyle bir aktarım varsa, aktarımın hukuki şartları ayrıca KVKK Aydınlatma Metni kapsamında değerlendirilir; bu politika tek başına yurt dışı aktarım için izin veya açık rıza anlamına gelmez.
 
-## 5. Ne kadar süre saklarız?
+## 5. First-party analytics
+
+Kod tabanında Ege Teknik'e ait first-party ziyaret/ürün görüntüleme analytics altyapısı bulunmaktadır. Sistem etkinleştirildiğinde rastgele oluşturulan bir ziyaretçi kimliği, ziyaret edilen site içi path, görüntülenen ürün kimliği, harici yönlendiren sitenin yalnız hostname bilgisi ve kaba cihaz sınıflandırması gibi sınırlı veriler işlenebilir.
+
+Analytics tablosunda ham IP veya ham User-Agent saklanmaz; ziyaretçi kimliği IP/User-Agent'tan türetilmez ve cross-site takip amacıyla tasarlanmamıştır.
+
+**V1 güvenli varsayılanı:** analytics toplama `ANALYTICS_ENABLED=true` açıkça etkinleştirilmedikçe kapalıdır. Kapalı durumda analytics endpoint'i olay kaydetmez ve analytics ziyaretçi çerezi oluşturmaz. Yeniden etkinleştirilmeden önce gerekli hukuki sebep ile çerez tercihi/onay gereksinimi yeniden değerlendirilir.
+
+## 6. Ne kadar süre saklarız?
 
 Kişisel veriler, ilgili işleme amacı için gerekli olan ve mevzuatın öngördüğü süre boyunca saklanır. Sipariş, fatura, muhasebe, sözleşme kabulü, güvenlik ve hata teşhis kayıtlarının saklama süreleri aynı değildir.
 
 Saklama süresinin sona ermesi ve verinin işlenmesini gerektiren başka bir hukuki sebebin bulunmaması halinde veriler mevzuata uygun şekilde silinir, yok edilir veya anonim hale getirilir.
 
-## 6. Çerezler ve tarayıcı depolaması
+## 7. Çerezler ve tarayıcı depolaması
 
 Sepet, favoriler, karşılaştırma ve bazı oturum/güvenlik işlevlerinde çerez veya tarayıcı depolama teknolojileri kullanılabilir. Hangi teknolojilerin kullanıldığı, ne amaçla kullanıldığı ve mevcut tercih seçenekleri ayrı **Çerez ve Tarayıcı Depolama Bilgilendirmesi**nde açıklanır.
 
 Zorunlu olmayan analitik veya pazarlama teknolojileri devreye alınırsa bunlar, geçerli mevzuatın gerektirdiği tercih/onay mekanizmaları kurulmadan varsayılan olarak çalıştırılmamalıdır.
 
-## 7. Bilgi güvenliği
+## 8. Bilgi güvenliği
 
 Ege Teknik uygun teknik ve idari tedbirlerle kişisel verilerin güvenliğini sağlamayı hedefler. Admin ve müşteri erişimleri birbirinden ayrıdır; yetkilendirme kontrolleri sunucu tarafında uygulanır. Güvenlik, rate-limit ve audit kayıtlarında gereksiz hassas içerik tutulmaması esastır.
 
 Hiçbir internet sistemi mutlak güvenlik garantisi vermez. Şüpheli bir güvenlik olayı fark ederseniz info@egeteknik.tr üzerinden bildirebilirsiniz.
 
-## 8. Haklarınız
+## 9. Haklarınız
 
 KVKK kapsamındaki haklarınız ve başvuru usulü ayrı **KVKK Aydınlatma Metni**nde açıklanır. Başvuru kanalları:
 
 - info@egeteknik.tr
 - İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
 
-## 9. Değişiklikler
+## 10. Değişiklikler
 
 Bu politika, veri akışı veya kullanılan hizmetler değiştiğinde güncellenebilir. Yeni sürüm yayımlandığında yürürlük tarihi ve sürüm bilgisiyle saklanır; geçmiş siparişlere ilişkin hukuki kayıtlar geriye dönük olarak sessizce değiştirilmez.
 
 ---
 
-**Sürüm notu:** Bu Release Candidate, mevcut Ege Teknik teknik mimarisi ve doğrulanmış şirket bilgileriyle uyumlu olacak şekilde hazırlanmıştır. MERSİS/KEP, ödeme kuruluşu, e-belge sağlayıcısı ve teslimat/kargo sağlayıcısı kesinleştiğinde ilgili alanlar yeni sürümde güncellenmelidir.
+**Sürüm notu:** Bu Release Candidate, mevcut Ege Teknik teknik mimarisi ve doğrulanmış şirket bilgileriyle uyumlu olacak şekilde hazırlanmıştır. MERSİS/KEP, ödeme kuruluşu, e-belge sağlayıcısı, teslimat/kargo sağlayıcısı ve yurt dışı aktarım mekanizmaları kesinleştiğinde ilgili alanlar yeni sürümde güncellenmelidir.
