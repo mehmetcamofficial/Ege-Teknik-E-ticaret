@@ -3,30 +3,31 @@ import { analyticsEventSchema, extractReferrerHost, isValidVisitorId, readCookie
 import { recordEvent } from "@/lib/analytics-db";
 
 const noStore = { "cache-control": "no-store" };
-/** One reply for every accepted event, whatever it turned out to be (new/returning, bot or not) - nothing about the classification is ever observable by the client. */
 const ACCEPTED = { ok: true };
+const ANALYTICS_CONSENT_COOKIE_NAME = "ege_analytics_consent";
 
 function analyticsEnabled() {
-  // Privacy-safe default for V1: analytics collection stays OFF unless deliberately enabled
-  // after the cookie/KVKK review and any required preference/consent mechanism is in place.
+  // Global emergency/operations switch. Production should set this to true only when
+  // the preference UI is deployed; per-visitor collection is still gated separately.
   return process.env.ANALYTICS_ENABLED === "true";
 }
 
-function visitorCookieHeader(value: string, secure: boolean) {
-  return `${VISITOR_COOKIE_NAME}=${value}; Max-Age=${VISITOR_COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Strict; HttpOnly${secure ? "; Secure" : ""}`;
+function analyticsConsentGranted(request: Request) {
+  return readCookie(request.headers.get("cookie"), ANALYTICS_CONSENT_COOKIE_NAME) === "1";
+}
+
+function visitorCookieHeader(value: string, secure: boolean, maxAge = VISITOR_COOKIE_MAX_AGE_SECONDS) {
+  return `${VISITOR_COOKIE_NAME}=${value}; Max-Age=${maxAge}; Path=/; SameSite=Strict; HttpOnly${secure ? "; Secure" : ""}`;
 }
 
 /**
- * Public, unauthenticated, first-party page/product-view collection. See lib/analytics.ts's
- * module doc for the full privacy model (no raw IP, no raw UA, no fingerprinting, no cross-site
- * cookie). Rate-limited the same way review/order submission is; a failure here is always a
- * 4xx/5xx the storefront already treats as "best effort, ignore and move on" (see public/store.js).
- *
- * V1 privacy gate: when ANALYTICS_ENABLED is not explicitly "true", this endpoint records
- * nothing and sets no visitor cookie. The storefront keeps working normally.
+ * Public, unauthenticated, first-party page/product-view collection.
+ * Two gates must both be open: the global ANALYTICS_ENABLED kill-switch and the
+ * visitor's explicit analytics preference cookie. Without either, nothing is recorded
+ * and no analytics visitor id is created.
  */
 async function ingest(request: Request) {
-  if (!analyticsEnabled()) {
+  if (!analyticsEnabled() || !analyticsConsentGranted(request)) {
     return new Response(null, { status: 204, headers: noStore });
   }
 
@@ -42,9 +43,16 @@ async function ingest(request: Request) {
   await recordEvent({ visitorId, path: parsed.data.path, productId: parsed.data.productId, referrerHost, userAgent: request.headers.get("user-agent") });
 
   const response = Response.json(ACCEPTED, { status: 202, headers: noStore });
-  // Only a freshly-minted id needs to be written back; an id the browser already sent us is already stored.
   if (!hadValidCookie) response.headers.set("Set-Cookie", visitorCookieHeader(visitorId, process.env.NODE_ENV === "production"));
   return response;
 }
 
+/** Clearing the HttpOnly analytics id must be server-side; JS cannot delete it directly. */
+async function revokeAnalytics(request: Request) {
+  const response = new Response(null, { status: 204, headers: noStore });
+  response.headers.set("Set-Cookie", visitorCookieHeader("", new URL(request.url).protocol === "https:", 0));
+  return response;
+}
+
 export const POST = publicRoute(ingest);
+export const DELETE = publicRoute(revokeAnalytics);
