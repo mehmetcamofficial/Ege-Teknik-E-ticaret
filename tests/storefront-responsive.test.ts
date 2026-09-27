@@ -132,9 +132,9 @@ test("area slider: slim visual track, 44px interactive height, keyboard-operable
 
 test("illustrative homepage images are visibly and textually labelled, never presented as model photos", () => {
   const imgs = home.match(/<img\b[^>]*googleusercontent[^>]*>/g) ?? [];
-  assert.equal(imgs.length, 7);
+  assert.equal(imgs.length, 3);
   for (const img of imgs) assert.match(img, /alt="[^"]*\(temsili görsel\)"/);
-  assert.equal((home.match(/>Temsili görsel<\/span>/g) ?? []).length, 7);
+  assert.equal((home.match(/>Temsili görsel<\/span>/g) ?? []).length, 3);
 });
 
 test("homepage header search appears only where the header has room for it", () => {

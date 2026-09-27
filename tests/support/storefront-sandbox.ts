@@ -216,6 +216,8 @@ export function loadStorefront(options: {
       createTextNode: (text: string) => ({ textContent: String(text) }),
     },
   };
+  context.window = { addEventListener: () => {} };
+  context.history = { replaceState: () => {} };
   vm.createContext(context);
   vm.runInContext(storefrontCoreSource(), context, { filename: STOREFRONT_CORE });
 

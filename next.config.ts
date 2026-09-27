@@ -55,6 +55,13 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
+  // Local verification can compile without sending source maps or build telemetry.
+  // Deployment behavior is unchanged unless this explicit opt-out is set.
+  ...(process.env.LOCAL_BUILD_NO_UPLOAD === "1" ? {
+    telemetry: false,
+    sourcemaps: { disable: true },
+    release: { create: false, finalize: false },
+  } : {}),
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
