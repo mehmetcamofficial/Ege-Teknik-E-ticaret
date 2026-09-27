@@ -1,92 +1,107 @@
-> **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
-> `[DOĞRULAMA BEKLİYOR: ...]` = doğrulanmamış bilgi; `{{...}}` = sipariş anında sistemce doldurulacak alan.
-> **TEKNİK TASLAK GÜNCELLEMESİ (Phase 3.4 iş modeli) — HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR:** Bu bölüm yalnızca yeni checkout iş modeline teknik olarak uyarlanmıştır (operatör talimatı: klima ürünlerinde Ege Teknik hizmet bölgesinde adrese teslim ve standart montaj ürün fiyatına dâhildir; yalnızca gönderime uygun yedek parça/aksesuar için mağazadan teslim veya ücretli kargo). Metin hukuken incelenmemiştir, onaylanmamıştır ve yayınlanamaz. Standart montaj paketinin kapsamı hâlâ doğrulanmamıştır.
-
+> **RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED**
+> `{{...}}` alanları sipariş anında sistem tarafından doldurulur. MERSİS/KEP ve VKN'nin açık yazımı yayın öncesi şirket kayıtlarından son kez doğrulanacaktır.
 
 # ÖN BİLGİLENDİRME FORMU
 
-Bu form, siparişinizi vermeden ve ödeme yükümlülüğü altına girmeden önce Mesafeli Sözleşmeler Yönetmeliği m.5 uyarınca
-size sunulan bilgileri içerir. Bilgiler mesafeli satış sözleşmesinin ayrılmaz parçasıdır ve taraflar aksini açıkça kararlaştırmadıkça
-değiştirilemez (m.5/2).
-
-> **Uygulama notu (yayınlanmaz):** Metin en az 12 punto ve okunabilir sunulmalıdır (m.6/1). (a) ürün nitelikleri, (d) toplam fiyat/ek masraflar,
-> (g) cayma şartları ve iade taşıyıcısı, (h) cayma istisnaları bilgileri, ödeme yükümlülüğünden **hemen önce** bir bütün olarak ayrıca
-> gösterilmelidir (m.6/2-a); ayrıca ön bilgilerin edinildiğinin teyidi alınmalı (m.7) ve sipariş butonu ödeme yükümlülüğünü açıkça belirtmelidir (m.8/1).
-> Bkz. [IMPLEMENTATION_DEPENDENCIES.md](IMPLEMENTATION_DEPENDENCIES.md).
+Bu form, sipariş verilmeden ve ödeme yükümlülüğü doğmadan önce tüketicinin ürün, satıcı, toplam bedel, teslimat, montaj, cayma ve başvuru yolları hakkında bilgilendirilmesi amacıyla sunulur. Sipariş anındaki ürün, fiyat, vergi, teslimat ve diğer işlem bilgileri sipariş kaydıyla birlikte korunur.
 
 ## 1. Sipariş bilgileri
 
 | | |
 |---|---|
 | Sipariş numarası / tarihi | {{SIPARIS_NO}} / {{SIPARIS_TARIHI}} |
-| **Ürün(ler) ve temel nitelikleri** (marka, model, kapasite, enerji sınıfı, adet) | {{URUN_SATIRLARI}} |
+| Ürün(ler) ve temel nitelikleri | {{URUN_SATIRLARI}} |
 | Ürün fiyatı (KDV dâhil) | {{URUN_TOPLAMI}} |
 | Teslimat yöntemi | {{TESLIMAT_YONTEMI}} |
-| Kargo ücreti (yalnızca gönderime uygun ürünlerde ve kargo seçildiyse) | {{KARGO_UCRETI}} |
-| Standart montaj (klima ürünlerinde) | Ürün bedeline dâhildir; ayrıca bedel alınmaz |
+| Kargo ücreti (yalnız aktif ve seçilmişse) | {{KARGO_UCRETI}} |
+| Standart montaj | İlgili klima ürününde ürün/sipariş sayfasında dâhil olduğu belirtilmişse ürün bedeline dâhildir |
 | Diğer ek masraflar | {{DIGER_EK_MASRAFLAR}} |
 | **Tüm vergiler dâhil toplam ödenecek tutar** | **{{TOPLAM_TUTAR}}** |
 
-Sipariş özetinde gösterilmeyen hiçbir ek bedel sizden talep edilemez (m.5/3). **Kurulum/montaj kapsamındaki ek işler siparişten sonra
-kendiliğinden eklenemez**: standart kapsam dışı bir iş gerekirse bedeli size önceden bildirilir ve yalnızca ayrıca açık onayınız
-alındıktan sonra yapılır/ücretlendirilir (m.19). Ek iş onayı vermemeniz hâlinde sözleşmenin kapsamı değişmez.
+Sipariş özetinde gösterilmeyen ek bedel tüketiciden talep edilmez. Standart kapsam dışında ilave montaj veya hizmet gerekirse işlem ve bedel önceden açıklanır; tüketicinin ayrıca onayı olmadan ilave ücret uygulanmaz.
 
 ## 2. Satıcı bilgileri
 
 | | |
 |---|---|
-| Satıcı | Ege Teknik — işletme sahibi Levent Karakoyun *(operatör beyanı)* |
-| Vergi levhasındaki tam unvan | [DOĞRULAMA BEKLİYOR: tam unvan (vergi levhası)] |
-| MERSİS no **veya** vergi kimlik no | [DOĞRULAMA BEKLİYOR: MERSİS numarası] / [DOĞRULAMA BEKLİYOR: vergi kimlik numarası] |
-| Vergi dairesi | [DOĞRULAMA BEKLİYOR: vergi dairesi] |
-| Açık adres | İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın |
+| Ticaret unvanı | Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi |
+| Ticari ad | Ege Teknik |
+| Şirket sahibi | Levent Karakoyun |
+| Vergi dairesi | Kuşadası |
+| VKN | Yayın öncesi vergi levhasındaki kayıt sisteme aynen işlenecektir |
+| Adres | İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın |
 | Telefon / WhatsApp | 0542 795 75 60 |
 | E-posta | info@egeteknik.tr |
-| KEP (varsa) | [DOĞRULAMA BEKLİYOR: KEP adresi] |
-| Şikâyet iletişimi (farklıysa) | Yukarıdaki iletişim bilgileri; [DOĞRULAMA BEKLİYOR: şikâyet yönetim süreci ve yanıt süresi] |
+| Web | egeteknik.tr |
 
-## 3. Ödeme
+MERSİS ve KEP bilgileri doğrulandığında ilgili belge sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
 
-Kabul edilen ödeme yöntemleri: [DOĞRULAMA BEKLİYOR: yayın tarihinde aktif ödeme yöntemleri (kartlı ödeme / banka havalesi)].
-Banka havalesi bilgileri: [DOĞRULAMA BEKLİYOR: banka havalesi bilgileri (hesap sahibi, banka, IBAN)]. Kart bilgileriniz Ege Teknik
-tarafından görülmez ve saklanmaz. Siparişi onayladığınızda **ödeme yükümlülüğü altına girdiğiniz** ayrıca belirtilir.
+## 3. Ödeme ve fatura
+
+Sipariş için kullanılabilen ödeme yöntemleri yalnız checkout ekranında gerçekten aktif olan seçeneklerdir. Aktif olmayan bir sanal POS veya ödeme kuruluşu bu formda vaat edilmez.
+
+Kartlı ödeme aktif edildiğinde kart numarası ve CVV gibi kart doğrulama bilgileri Ege Teknik uygulama veritabanında saklanacak şekilde tasarlanmamıştır; ödeme, yetkili ödeme hizmeti sağlayıcısının güvenli altyapısı üzerinden yürütülür.
+
+Fatura ve diğer mali belgeler yürürlükteki mevzuata ve Ege Teknik'in tabi olduğu elektronik belge uygulamalarına uygun düzenlenir. e-Fatura/e-Arşiv ve entegratör bilgileri mali müşavir doğrulaması sonrasında operasyon kayıtlarına eklenir.
 
 ## 4. Teslimat
 
-Teslimat yöntemi: kargo veya Ege Teknik'in kendi teslimatı (siparişinize/adresinize göre seçenekler gösterilir) — Kargo/taşıyıcı: [DOĞRULAMA BEKLİYOR: teslimat taşıyıcısı].
-Teslimat ücretlidir; adresinize ilişkin tutar sipariş özetinde gösterilir: [DOĞRULAMA BEKLİYOR: teslimat ücreti tarifesi].
-**Hedeflenen** teslim süresi yaklaşık 7 iş günüdür; stok, ürün ve adrese göre değişebilir ve sipariş özetindeki süre esastır.
-Taahhüt edilen azami süre: [DOĞRULAMA BEKLİYOR: taahhüt edilen azami teslim süresi]. Mal satışında teslim süresi hiçbir hâlde
-siparişin bize ulaşmasından itibaren 30 günü geçemez (m.16); süre aşılırsa sözleşmeyi feshedebilirsiniz. Ürünün stokta bulunmaması bu süreyi uzatma gerekçesi veya teslim yükümlülüğünden kurtulma sebebi değildir (m.16/4).
+Sipariş konusu ürünler, **siparişin onaylanmasından itibaren 1–7 gün içerisinde** teslim edilir. Sipariş veya ürün için tüketiciye satın alma öncesinde açıkça farklı ve geçerli bir süre gösterilmişse o bilgi esas alınır. Mevzuattaki emredici azami teslim süreleri saklıdır.
 
-## 5. Kurulum / montaj (seçtiyseniz)
+Klima ve montajlı ürünlerin teslimatı Ege Teknik'in operasyon planına göre gerçekleştirilir. Ege Teknik'in doğrudan hizmet veremediği bölgelerde, ürün ve bölge koşulları uygunsa tüketici ilgili yetkili servise yönlendirilebilir. Başka bir servisin randevu veya müsaitliği Ege Teknik tarafından ayrıca garanti edilmiş sayılmaz.
 
-Klima ürünlerinde standart kurulum ürün bedeline dâhildir ve Ege Teknik personelince yapılır. Standart paket kapsamı: [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı].
-Kapsam dışı işlerin ücreti önceden bildirilir ve ayrıca onayınıza tabidir: [DOĞRULAMA BEKLİYOR: ek iş/hizmet tarifesi]. Ayrıntı: "Kurulum ve Montaj Bilgilendirmesi".
+Yalnız gönderime uygun ürünlerde kargo seçeneği, taşıyıcı ve ücret koşulları checkout'ta aktif ve açıkça gösterildiğinde kullanılabilir. Taşıyıcı henüz belirlenmemişse kargolu satış seçeneği aktif edilmiş sayılmaz.
 
-## 6. Cayma hakkı (Yönetmelik m.9–15)
+## 5. Standart klima montajı
 
-- Malı teslim aldığınız günden itibaren **14 gün** içinde gerekçe göstermeden ve cezai şart ödemeden cayabilirsiniz; teslimden önce de cayabilirsiniz.
-- **Cayma bildirimi:** yazılı veya kalıcı veri saklayıcısıyla — info@egeteknik.tr veya yukarıdaki adres. Cayma formunu kullanabilir ya da cayma kararınızı açıkça bildirebilirsiniz.
-- Malı, bildirimden itibaren 10 gün içinde geri gönderirsiniz (biz geri alacağımızı teklif etmedikçe). **İade için belirlediğimiz taşıyıcı:** [DOĞRULAMA BEKLİYOR: iade taşıyıcısı]. **İade adresi:** yukarıdaki Ege Teknik adresi.
-- **İade masrafı:** Belirlediğimiz taşıyıcı ile göndermeniz hâlinde iade masrafından sorumlu tutulamazsınız; iade için taşıyıcı belirtilmemişse sizden iade masrafı istenemez; ayıplı mal iadesinde iade masrafı size ait olamaz (m.12/3, m.13/3).
-- Bedel iadesi: cayma bildiriminin bize ulaşmasından itibaren **14 gün** içinde, teslimat masrafı dâhil, ödeme yönteminize uygun şekilde ve tek seferde yapılır (m.12).
-- **Cayma hakkının kullanılamayacağı / kaybedileceği durumlar (m.15; taraflarca aksi kararlaştırılmadıkça):** istek ve ihtiyaçlarınıza göre hazırlanan ürünler; koruyucu ambalajı açılmış olup iadesi hijyen/sağlık açısından uygun olmayan ürünler; cayma süresi bitmeden onayınızla ifasına başlanan hizmetler; kılavuzunda kurulumu satıcı/yetkili servis tarafından yapılacağı belirtilen ve **kurulumu yapılmış** ürünler. Bunlardan ilgili olanlar ürün ve siparişinizde ayrıca belirtilir. [DOĞRULAMA BEKLİYOR: ürün kılavuzunda kurulumun satıcı/yetkili servis tarafından yapılacağı ifadesi]
+Duvar tipi split klima ürününde standart montajın dâhil olduğu belirtilmişse kapsam, ürün için geçerli GREE/TLC montaj standartlarına göre uygulanır. Güncel standart kapsamında genel olarak:
 
-## 7. Ayıplı mal, garanti ve servis
+- iç ve dış ünitenin montajı,
+- 4 metreye kadar yalıtımlı bakır borulama ve iletişim hattı,
+- spiral drenaj hortumu,
+- standart dış ünite L konsolu ve titreşim önleyici takoz,
+- tesisat geçiş deliğinin geçici kapatılması,
+- elektrikçi tarafından hazırlanmış enerji besleme kablosunun cihaz klemensine bağlantısı,
+- test, devreye alma ve kullanıcı bilgilendirmesi
 
-Ayıplı mal hâlinde yasal haklarınız (6502 sayılı Kanun) her zaman saklıdır. Ticari garanti süresi ve koşulları ürüne/modele/kampanyaya göre değişir; geçerli bilgi ürün sayfasında, sipariş özetinde ve garanti belgesindedir. Tüm ürünler için tek bir garanti süresi taahhüt edilmemektedir.
+yer alabilir.
 
-## 8. Şikâyet ve uyuşmazlık
+Standart kapsamın dışında; 4 metreyi aşan tesisat, gerektiğinde ilave soğutucu akışkan, özel drenaj, kablo kanalı, sıva altı/kırım/karot gibi inşai işler, elektrik hattı/sigorta/kaçak akım rölesi ve forklift, iskele, manlift veya vinç gibi özel ekipmanlar için ek işlem gerekebilir. Bu işler tüketiciye açıklanır ve ayrıca onaylanmadan ücretlendirilmez.
 
-Şikâyetlerinizi info@egeteknik.tr veya 0542 795 75 60 üzerinden iletebilirsiniz. Uyuşmazlıklarda **Tüketici Hakem Heyeti'ne veya Tüketici Mahkemesi'ne** başvurabilirsiniz (m.5/1-k; parasal sınırlar ve yetki güncel mevzuata göre).
+Ürünün garanti veya kampanya koşulları yetkili servis montajını gerektiriyorsa ilgili GREE/TLC koşulları uygulanır. Garanti süresi ürün/model ve satın alma tarihindeki geçerli garanti/kampanya koşullarına göre gösterilir; tüm ürünler için değişmez tek bir kampanya süresi vaat edilmez.
 
-## 9. Kişisel veriler
+## 6. Cayma hakkı ve iade
 
-Kişisel verileriniz ayrı "KVKK Aydınlatma Metni"nde açıklandığı şekilde işlenir. Bu formu onaylamak, pazarlama iletisi izni vermek anlamına **gelmez**; pazarlama izni tamamen ayrı, isteğe bağlıdır ve siparişin koşulu değildir.
+Tüketici, mevzuatta düzenlenen istisnalar saklı olmak üzere, malı teslim aldığı tarihten itibaren **14 gün** içinde gerekçe göstermeden ve cezai şart ödemeden cayma hakkını kullanabilir; mal teslim edilmeden önce de cayma bildirimi yapılabilir.
 
-## 10. Teyit
+Cayma bildirimi yazılı olarak veya kalıcı veri saklayıcısıyla info@egeteknik.tr adresine ya da Satıcı'nın yukarıdaki adresine iletilebilir.
 
-Yukarıdaki ön bilgileri okuduğumu ve elektronik ortamda edindiğimi teyit ederim. *(Kabul zamanı ve sürüm bilgisi sipariş kaydıyla saklanır.)*
+Cayma bildiriminin ardından tüketici, Satıcı malı kendisinin geri alacağını teklif etmedikçe, caymaya konu malı **14 gün içerisinde** geri gönderir.
 
-> **İnceleme notu:** Ön bilgi formunun ayrı bir onay kutusuyla mı yoksa "bilgi + teyit" olarak mı sunulacağı, ve şu anki ödeme ekranının "Montaj/kargo keşifte netleşir" ifadesiyle m.5/1-(d) toplam fiyat şartını nasıl karşılayacağı hukuki incelemeye tabidir.
+İade için anlaşmalı taşıyıcı henüz kesinleşmemiştir. Ön bilgilendirmede iade için bir taşıyıcı belirtilmemiş olması halinde tüketici iadeye ilişkin masraflardan sorumlu tutulmaz. Taşıyıcı kesinleştiğinde bu metin yeni sürümle güncellenir.
+
+Geri ödeme, yürürlükteki mevzuatta öngörülen süre ve yöntemle, tüketicinin satın alma sırasında kullandığı ödeme aracına uygun ve tüketiciye ilave masraf yüklemeyecek şekilde yapılır.
+
+Cayma hakkının bulunmadığı haller yürürlükteki mevzuata göre değerlendirilir. Özellikle tanıtma ve kullanma kılavuzunda satıcı veya yetkili servis tarafından kurulum/montaj yapılacağı belirtilen ve kurulumu/montajı gerçekleştirilmiş mallarda mevzuattaki cayma hakkı istisnası uygulanabilir. Ürün özelindeki durum satın alma öncesinde tüketiciye gösterilir.
+
+## 7. Spot Ürünler
+
+Sitede "Spot Ürün" olarak sunulan ürünlerin bilinen kullanım ve kozmetik durumu, eksikleri, aksesuar durumu ve satın alma kararını etkileyebilecek diğer özellikleri ürün sayfasında açıklanır. Spot Ürün etiketi tek başına tüketicinin kanuni haklarını ortadan kaldırmaz. Sipariş anındaki ürün açıklaması ve gerekli ürün/fiyat bilgileri sipariş kaydıyla korunur.
+
+## 8. Ayıplı mal ve garanti
+
+Cayma hakkı ile ayıplı mala ilişkin kanuni haklar birbirinden ayrıdır. Cayma süresinin sona ermesi tüketicinin ayıplı mala ilişkin kanuni haklarını kendiliğinden ortadan kaldırmaz.
+
+Garanti ve satış sonrası servis koşulları ürün/model ve satın alma tarihindeki geçerli üretici/ithalatçı koşulları ile kanuni haklar çerçevesinde uygulanır.
+
+## 9. Şikâyet ve uyuşmazlık
+
+Talepler info@egeteknik.tr veya 0542 795 75 60 üzerinden Ege Teknik'e iletilebilir. Tüketicinin yürürlükteki mevzuat kapsamında Tüketici Hakem Heyeti veya Tüketici Mahkemesine başvuru hakları saklıdır.
+
+## 10. Kişisel veriler ve pazarlama
+
+Kişisel veriler ayrı KVKK Aydınlatma Metni'nde açıklanan esaslarla işlenir. Ön Bilgilendirme Formu'nun teyidi ticari elektronik ileti/pazarlama izni anlamına gelmez. Pazarlama tercihi ayrı ve isteğe bağlıdır; verilmemesi siparişi engellemez.
+
+## 11. Teyit
+
+Tüketici, siparişi tamamlamadan önce bu ön bilgilerin kendisine elektronik ortamda sunulduğunu teyit eder. Kabul/teyit zamanı ile belge sürümü sipariş kaydıyla ilişkilendirilir.
