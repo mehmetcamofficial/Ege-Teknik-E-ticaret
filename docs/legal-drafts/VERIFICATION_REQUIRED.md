@@ -1,80 +1,116 @@
-> **DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT**
+# EGE TEKNİK — DOĞRULAMA GEREKTİREN ALANLAR
 
-# ⚠️ DRAFT — LEGAL REVIEW REQUIRED — Doğrulama Gerektiren Alanlar Kaydı
+> **INTERNAL · LEGAL REVIEW REQUIRED · NOT CUSTOMER-FACING**
+>
+> Bu kayıt yalnızca halen çözülmemiş işletme, muhasebe, teknik ve hukuki doğrulamaları izler. Daha önce doğrulanmış bilgiler yeniden “bekliyor” olarak gösterilmez; eski şahıs işletmesi/7 iş günü/10 gün gibi varsayımlar geçersizdir.
 
-Taslaklardaki **her** `[DOĞRULAMA BEKLİYOR: …]` alanı aşağıdadır. Bu alanlar çözülmeden hiçbir metin yayınlanmamalıdır.
-Sorumlu: **İŞ** = işletme sahibi/operatör · **MM** = mali müşavir · **AV** = avukat · **TEK** = teknik/uygulama · **RESMÎ** = resmî belge (vergi levhası, sicil, ETBİS, GREE/TLC belgesi).
+Sorumlu kısaltmaları: **İŞ** işletme · **MM** mali müşavir · **AV** hukukçu/KVKK danışmanı · **TEK** teknik · **RESMÎ** resmî kayıt/sağlayıcı belgesi.
 
-## A. Kimlik ve sicil
+## A. Doğrulanmış ve artık açık olmayan bilgiler
 
-| # | Alan (yer tutucudaki ad) | Etkilenen belgeler | Neden gerekli | Kim doğrular |
-|---|---|---|---|---|
-| A1 | tam unvan (vergi levhası) | distance-sales, pre-information, kvkk, privacy, delivery-returns, terms | Satıcı adı/unvanı zorunlu ön bilgi (Yönetmelik m.5/1-b); veri sorumlusu kimliği | İŞ + MM (vergi levhası) |
-| A2 | vergi dairesi | distance-sales, pre-information | Satıcı kimliği/fatura | MM (vergi levhası) |
-| A3 | vergi kimlik numarası | distance-sales, pre-information | m.5/1-b: MERSİS **veya** vergi kimlik no zorunlu | MM (vergi levhası) |
-| A4 | MERSİS numarası (varsa) | distance-sales, pre-information | m.5/1-b alternatifi; ETBİS kaydı | İŞ/RESMÎ |
-| A5 | ticaret sicil numarası (varsa) | distance-sales | Kimlik bilgisi; sicile kayıtlı ise | İŞ/RESMÎ |
-| A6 | KEP adresi (varsa) | distance-sales, pre-information, kvkk | Resmî bildirim/KVKK başvuru kanalı; yoksa "yok" yazılacak | İŞ |
-| A7 | GREE/TLC yetkili bayi ve servis belgesi | distance-sales, terms, warranty, installation | "Yetkili bayi/servis" iddiası belgeli olmalı; garanti/kurulum şartlarını etkiler | İŞ + RESMÎ (GREE/TLC belgesi) |
-| A8 | **ETBİS kayıt durumu** *(taslaklarda yer tutucu olarak geçmiyor; yayın önkoşulu)* | (sitede ETBİS bilgisi verilecekse tüm satış metinleri/alt bilgi) | Elektronik ticaret faaliyeti için ETBİS kaydı (S11); kayıt için MERSİS/vergi no ve alan adı gerekir | İŞ + MM + AV |
+- Satıcı/veri sorumlusu: **Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi**.
+- Ticari ad: Ege Teknik.
+- Vergi dairesi: Kuşadası.
+- İşletme adresi ve `info@egeteknik.tr` / 0542 795 75 60 iletişim bilgileri legal RC'lere işlendi.
+- Teslimat taahhüdü: sipariş onayından itibaren **1–7 gün**; “iş günü” değildir.
+- Genel cayma süresi: 14 gün.
+- Güncel Ticaret Bakanlığı 17.08.2026 rehberine göre cayma bildirimi sonrasında malın geri gönderim süresi: **14 gün**.
+- GREE/TLC montaj standardının temel kapsamı ve standart dışı iş ayrımı güncel resmî GREE montaj standardına göre RC'lere işlendi.
+- Public storefront için first-party analytics artık global kill-switch + ziyaretçi tercihi olmak üzere iki kapılı consent modeline sahiptir.
 
-## B. Satış, ödeme, fatura
+## B. Şirket / sicil / muhasebe — Pazartesi teyidi
 
-| # | Alan | Etkilenen belgeler | Neden | Kim doğrular |
-|---|---|---|---|---|
-| B1 | yayın tarihinde aktif ödeme yöntemleri (kartlı ödeme / banka havalesi) | distance-sales, pre-information | Yalnızca gerçekten aktif yöntemler yazılır (PayTR şu an aktif değil) | İŞ + TEK |
-| B2 | ödeme kuruluşu sözleşmesi ve yayın tarihi | distance-sales, kvkk, privacy | Alıcı/veri işleyen olarak kuruluş adı | İŞ |
-| B3 | banka havalesi bilgileri (hesap sahibi, banka, IBAN) | distance-sales, pre-information | Havale ödemesi için; **uydurulamaz** | İŞ (banka belgesi) |
-| B4 | e-Arşiv / e-Fatura mükellefiyet durumu | distance-sales, kvkk | Fatura düzenleme yöntemi iddiası | MM |
-| B5 | fatura bilgisi toplamanın devreye alınma tarihi | kvkk | Fatura verisi henüz toplanmıyor; hangi tarihte başlayacağı | TEK + MM |
+| # | Alan | Durum | Kim / kanıt |
+|---|---|---|---|
+| B1 | MERSİS numarası | PENDING | MM/şirket kayıtları |
+| B2 | KEP adresi | PENDING | MM/şirket kayıtları; yoksa “yok” olarak teyit |
+| B3 | Ticaret sicil no / oda bilgisi gerekiyorsa | PENDING | MM/RESMÎ |
+| B4 | e-Fatura / e-Arşiv statüsü | PENDING | MM |
+| B5 | e-belge özel entegratörü / muhasebe yazılımı | PENDING | MM |
+| B6 | 2025 yıllık mali bilanço toplamı 100 milyon TL altında mı? | PENDING | MM |
+| B7 | Yıllık çalışan sayısı 50'den az mı? | PENDING | MM/İŞ |
+| B8 | VERBİS kayıt/istisna sonucu | PENDING LEGAL/ACCOUNTANT | B6+B7 ve güncel Kurul kriterleriyle kesinleştir |
 
-## C. Teslimat ve iade
+**Public repo kuralı:** VKN gibi şirket kimlik numaralarının açık değeri bu repository'ye yazılmaz. Production legal version için gerekliyse doğrulanmış resmî kaynaktan kontrollü olarak eklenir.
 
-| # | Alan | Etkilenen belgeler | Neden | Kim doğrular |
-|---|---|---|---|---|
-| C1 | teslimat taşıyıcısı | distance-sales, pre-information, delivery-returns, kvkk, privacy | Ön bilgi ve veri alıcısı | İŞ |
-| C2 | iade taşıyıcısı | distance-sales, pre-information, delivery-returns | m.5/1-g: iade taşıyıcısı ön bilgide belirtilmeli; belirtilmezse iade masrafı tüketiciden istenemez (m.12/3) | İŞ + AV |
-| C3 | teslimat ücreti tarifesi | pre-information, delivery-returns | Toplam fiyat/ek masraf (m.5/1-d); checkout'ta hesaplanmalı | İŞ + TEK |
-| C4 | taahhüt edilen azami teslim süresi | distance-sales, pre-information, delivery-returns | m.16: taahhüt edilen süre; en çok 30 gün; hedef ≈7 iş günü | İŞ |
-| C5 | şikâyet yönetim süreci ve yanıt süresi | distance-sales, pre-information | m.5/1-f şikâyet çözüm yöntemleri | İŞ |
+## C. ETBİS
 
-## D. Kurulum ve garanti
+| # | Alan | Durum | Eylem |
+|---|---|---|---|
+| C1 | `egeteknik.tr` ETBİS kaydı | BLOCKER | e-Devlet/ETBİS üzerinden şirket/domain kaydı oluştur veya doğrula |
+| C2 | ETBİS kimlik/domain eşleşmesi | PENDING | Şirket unvanı, MERSİS/VKN ve alan adını karşılaştır |
+| C3 | ETBİS kayıt kanıtı | PENDING | İç kayıt olarak ekran görüntüsü/PDF/tarih sakla |
 
-| # | Alan | Etkilenen belgeler | Neden | Kim doğrular |
-|---|---|---|---|---|
-| D1 | standart montaj paketi kapsamı | distance-sales, pre-information, installation | "Standart" tanımı olmadan fiyat/ek iş ayrımı yapılamaz | İŞ |
-| D2 | ek iş/hizmet tarifesi | distance-sales, pre-information, installation | Ek iş ücretlerinin önceden bildirilmesi (m.19) | İŞ |
-| D3 | kurulum yapılamama durumunda işleyiş | installation | Bedel iadesi/mahsup kuralı | İŞ + AV |
-| D4 | ürün kılavuzunda kurulumun satıcı/yetkili servis tarafından yapılacağı ifadesi | distance-sales, pre-information, delivery-returns, installation | m.15/1-k istisnasının uygulanabilmesi ürün kılavuzuna bağlı | İŞ (GREE kılavuzu) + AV |
-| D5 | ürün bazlı garanti bilgisi kaynağı | warranty | Garanti süresi/şartı ürün/kampanya bazlı ve resmî kaynaktan | İŞ (GREE/TLC) |
+Eski ETBİS karekod şartı kullanılmaz; güncel checklist `COMPLIANCE_CHECKLIST.md` içindedir.
 
-## E. Kişisel veri, çerez, pazarlama
+## D. Ödeme ve fatura
 
-| # | Alan | Etkilenen belgeler | Neden | Kim doğrular |
-|---|---|---|---|---|
-| E1 | veri saklama süreleri | kvkk, privacy | Amaç/mevzuata göre süreler; şu an uygulamada silme mekanizması yok | İŞ + AV + TEK |
-| E2 | barındırma/veri tabanı bölgeleri ve aktarım mekanizması | kvkk, privacy | Yurt dışı aktarım rejimi (KVKK m.9); Vercel/Neon/Clerk/Sentry bölgeleri | TEK + AV |
-| E3 | KVKK başvuru kanalı (e-posta çalışır durumda ve başvuru adresi olarak kullanılacak) | kvkk | info@egeteknik.tr operatör beyanıdır; posta kutusunun çalıştığı ve izlendiği teyit edilmeli | İŞ + TEK |
-| E4 | Clerk çerez listesi ve süreleri | cookies | Clerk çerez adları kodda görünmüyor; gerçek liste ölçülmeli | TEK |
-| E5 | İYS üyeliği ve marka kaydı | marketing-consent | SMS/e-posta ticari ileti gönderimi için İYS uyumu | İŞ + AV |
+| # | Alan | Durum | Eylem |
+|---|---|---|---|
+| D1 | Production'da aktif ödeme yöntemi | NOT ACTIVE / PENDING | PayTR/iyzico vb. sağlayıcı onaylanmadan legal metne isim sabitleme |
+| D2 | Ödeme kuruluşu sözleşmesi / veri akışı | PENDING | Sağlayıcı gerçekten aktif olduğunda AV+TEK incelemesi |
+| D3 | Havale hesabı/IBAN | PENDING IF USED | Yalnız aktif yöntem olacaksa banka belgesiyle doğrula |
+| D4 | Kart verisi mimarisi | DONE DESIGN RULE | PAN/CVV/expiry Ege Teknik DB/loglarında tutulmaz |
 
-## F. Okuyucuya görünmeyen taslak yer tutucuları (açıklama amaçlı)
+## E. Teslimat / kargo / iade
 
-`[DOĞRULAMA BEKLİYOR: ...]` ve `[DOĞRULAMA BEKLİYOR: alan]` yalnızca banner/README'deki **açıklama** örnekleridir; gerçek alan değildir.
+| # | Alan | Durum | Eylem |
+|---|---|---|---|
+| E1 | Production taşıyıcısı | PENDING | Gerçek kargo firması kesinleşince yeni legal version |
+| E2 | İade taşıyıcısı | PENDING | Ön bilgilendirmeye kesin taşıyıcı koşulu eklenmeden masraf varsayımı yapma |
+| E3 | Kargo tarifesi | PENDING | Checkout'ta kesin bedel gösterilmeden shipping açma |
+| E4 | Şikâyet/iadeye operasyonel yanıt akışı | PENDING OWNER | Kim cevaplıyor, kanal ve SLA'yı iç operasyon olarak belirle |
 
-## G. Operatör beyanı olarak kullanılan, resmî belgeyle henüz doğrulanmamış bilgiler
+Kargo henüz aktif değilken legal metinlerde belirli taşıyıcı adı uydurulmaz.
 
-| Bilgi | Kullanıldığı belgeler | Doğrulama |
-|---|---|---|
-| İşletme türü: şahıs işletmesi; sahibi Levent Karakoyun | tüm | vergi levhası/sicil (A1–A3) |
-| Adres = işletme/kayıtlı adres | tüm | vergi levhası/ticaret sicil |
-| info@egeteknik.tr | tüm | posta kutusu çalışıyor mu (E3) |
-| 0542 795 75 60 | tüm | — |
-| Teslimat ücretli; hedef ≈7 iş günü; kargo veya kendi teslimatı | teslimat/satış/ön bilgi | C1–C4 |
-| Klimada standart montaj + Ege teslimatı ürün fiyatına dâhil (operatör talimatı, Phase 3.4); kendi personeli; kargo yalnızca opsiyonel/parça | installation, satış, ön bilgi, teslimat | D1–D2 |
-| PayTR ve havale planlı, PayTR **aktif değil** | satış, ön bilgi | B1–B3 |
+## F. Montaj / garanti
 
-## H. Site ile tutarsızlık (metinlerden önce giderilmeli)
+| # | Alan | Durum | Eylem |
+|---|---|---|---|
+| F1 | GREE/TLC standart montaj kapsamı | VERIFIED SOURCE / RC | Güncel resmî GREE standardı esas alındı; sabit fiyat/km uydurulmadı |
+| F2 | Standart dışı işlerin gerçek fiyat tarifesi | PENDING OWNER | Fiyatlar varsa müşteri onayından önce gösterilecek operasyon oluştur |
+| F3 | Ege Teknik'in GREE/TLC bayi/servis yetki belgesi | PENDING EVIDENCE | Yetki iddiasının kapsamını belgeyle doğrula |
+| F4 | Ürün/model bazlı garanti süresi ve kampanya | PENDING PRODUCT DATA | Genel tek garanti süresi yazma; ürün kaynağıyla doğrula |
+| F5 | Montaj sonrası cayma istisnasının ürün bazında uygulanması | PENDING LEGAL | Kılavuz ve somut ürün koşullarıyla değerlendir; tüm klimalara genelleme yapma |
 
-Ana sayfa alt bilgisinde **`oncoconnect2@gmail.com`** destek e-postası ve **`trendklima.com.tr`** telif satırı bulunuyor (3B.4 denetimi). Bunlar bu taslaklardaki kimlik/e-posta ile **çelişir**;
-yayın öncesinde site tarafında düzeltilmeli/doğrulanmalıdır (bu fazda kod değiştirilmedi).
+## G. KVKK / çerez / sağlayıcılar
+
+| # | Alan | Durum | Eylem |
+|---|---|---|---|
+| G1 | Saklama ve silme matrisi | PENDING LEGAL/TECH | Sipariş, fatura, legal acceptance, güvenlik, servis ve marketing için ayrı süre/işlem belirle |
+| G2 | Vercel aktarım/DPA/region | PENDING LEGAL | Gerçek hesap/kontrat/subprocessor incele |
+| G3 | Neon aktarım/DPA/region | PENDING LEGAL | Production bölgesi + kontrat/subprocessor incele |
+| G4 | Clerk aktarım/DPA/cookie listesi | PENDING LEGAL/TECH | Gerçek Production davranışı ve DPA/subprocessor incele |
+| G5 | Sentry | TEMPORARY / PENDING | Trial sürüyorsa aktarım/DPA değerlendirmesi; bitince kapat ve metni versionla |
+| G6 | Analytics consent UI | IMPLEMENTED ON BRANCH | Production env + browser/network testi yapılmalı |
+| G7 | Google Fonts / Tailwind CDN | PENDING TECH/LEGAL | Tercihen self-host/build-time; kalırsa yurt dışı aktarım değerlendirmesine dahil et |
+
+## H. İYS / pazarlama
+
+| # | Alan | Durum | Eylem |
+|---|---|---|---|
+| H1 | İYS hizmet sağlayıcı kaydı | PENDING OWNER | Gerçek şirket/marka durumunu kontrol et |
+| H2 | Marketing automation | NOT ACTIVE | İYS/consent/ret akışı tamamlanmadan açma |
+| H3 | Marketing consent metni | DRAFT | AV incelemesi sonrası sürümle |
+| H4 | Kanal bazlı onay/ret senkronizasyonu | BLOCKER FOR MARKETING | SMS/e-posta/WhatsApp promosyonu öncesi tamamla |
+
+## I. Yayın blokajları
+
+Production'da gerçek ticari sipariş açılmadan önce en az şu kanıtlar tamamlanmalıdır:
+
+1. ETBİS şirket/domain kaydı.
+2. Gerekli checkout legal belgelerinin hukukçu/işletme review'u ve Production publish'i.
+3. `/api/legal/required` başarılı ve checkout acceptance/version kaydı test edilmiş olmalı.
+4. Aktif ödeme ve teslimat yöntemleri gerçek operasyonla birebir eşleşmeli.
+5. KVKK aktif vendor yurt dışı aktarım mekanizması hukukçu tarafından değerlendirilmiş olmalı.
+6. Pazarlama özelliği, İYS hazır değilse kapalı kalmalı.
+
+## J. Artık geçersiz eski notlar
+
+Aşağıdaki eski varsayımlar kaynak olarak kullanılmamalıdır:
+
+- “şahıs işletmesi” → geçersiz; şirket Limited Şirket.
+- “≈7 iş günü” → geçersiz; işletme taahhüdü 1–7 gün.
+- “cayma sonrası 10 gün içinde geri gönderim” → güncel 17.08.2026 Bakanlık rehberine göre 14 gün.
+- “standart montaj kapsamı bilinmiyor” → temel resmî GREE montaj standardı doğrulandı; yalnız işletme fiyat tarifesi/yetki/ürün bazlı koşullar hâlâ ayrıca doğrulanır.
+- Eski `oncoconnect2@gmail.com` / `trendklima.com.tr` kimliği legal satıcı kimliği değildir; Production storefront'ta rastlanırsa ayrıca temizlenmelidir.
