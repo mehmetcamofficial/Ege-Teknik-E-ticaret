@@ -1,329 +1,156 @@
 # EGE TEKNİK — LEGAL REVIEW PACKET
 
-> **RELEASE CANDIDATE REVIEW PACKET — NOT YET PUBLISHED**
+> **RELEASE CANDIDATE REVIEW PACKET · NOT YET PUBLISHED**
 >
-> Bu dosya, Ege Teknik e‑ticaret sitesinin Production legal yayını öncesinde hukukçu/mali müşavir tarafından hızlı ve odaklı inceleme yapılabilmesi için hazırlanmıştır. Bu dosyanın kendisi son kullanıcıya gösterilecek bir legal metin değildir.
+> Bu dosya hukukçu/mali müşavir için tek giriş noktasıdır. Müşteriye gösterilecek legal metin değildir.
 
-## 1. Amaç
+## 1. İncelenecek RC belgeler
 
-Bu paket şu soruya cevap vermek için hazırlanmıştır:
+- `pre-information.md` — Ön Bilgilendirme Formu
+- `distance-sales.md` — Mesafeli Satış Sözleşmesi
+- `kvkk.md` — KVKK Aydınlatma Metni
+- `privacy.md` — Gizlilik Politikası
+- `cookies.md` — Çerez ve Tarayıcı Depolama Bilgilendirmesi
+- `delivery-returns.md` — Teslimat / Montaj / Cayma / İade
+- `terms.md` — İnternet Sitesi Kullanım Koşulları
+- `installation.md` — Kurulum ve Montaj Bilgilendirmesi
 
-**Ege Teknik'in e‑ticaret faaliyeti, sipariş/teslimat/montaj/iade/KVKK/çerez/pazarlama süreçleri ve teknik veri akışı mevcut mevzuatla uyumlu biçimde yayına alınabilir mi; hangi açık noktalar yayından önce kesin olarak tamamlanmalıdır?**
+`marketing-consent.md` henüz **DRAFT / FEATURE OFF**, `warranty.md` ise **DRAFT PRODUCT MODEL** olarak tutulur.
 
-Amaç, belirsiz bilgileri tahmin etmek değil; doğrulanmış bilgiler ile doğrulama bekleyen işletme/uyum konularını kesin biçimde ayırmaktır.
+## 2. Doğrulanmış satıcı/veri sorumlusu
 
-## 2. İncelenecek Production legal belgeleri
+**Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi**
 
-Aşağıdaki dosyalar Release Candidate seviyesindedir:
+Ticari ad: Ege Teknik  
+Adres: İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın  
+Vergi dairesi: Kuşadası  
+E-posta: info@egeteknik.tr  
+Telefon: 0542 795 75 60  
+Web: egeteknik.tr
 
-1. `pre-information.md` — Ön Bilgilendirme Formu
-2. `distance-sales.md` — Mesafeli Satış Sözleşmesi
-3. `kvkk.md` — KVKK Aydınlatma Metni
-4. `privacy.md` — Gizlilik Politikası
-5. `cookies.md` — Çerez ve Tarayıcı Depolama Bilgilendirmesi
-6. `delivery-returns.md` — Teslimat, Montaj, İade ve Cayma Koşulları
-7. `COMPLIANCE_CHECKLIST.md` — ETBİS / İYS / KVKK aktarım / VERBİS / e-belge / go-live checklisti
+Public repository içine VKN açık değeri yazılmaz. Production legal kayıtta gerekliyse doğrulanmış resmî belgeden kontrollü eklenmelidir.
 
-Bu belgeler Production'da henüz yayımlanmamıştır.
+## 3. Pazartesi kapanacak şirket/muhasebe maddeleri
 
-## 3. Doğrulanmış şirket bilgileri
+- MERSİS
+- KEP (varsa)
+- ticaret sicil/oda bilgisi gerekirse
+- e-Fatura/e-Arşiv statüsü
+- e-belge sağlayıcısı / muhasebe yazılımı
+- 2025 yıllık mali bilanço toplamı
+- yıllık çalışan sayısı
+- varsa mevcut VERBİS/ETBİS/İYS kayıtları
 
-**Veri sorumlusu / satıcı:**
+VERBİS sonucu şirket tipiyle tahmin edilmeyecek; gerçek 2025 finansal/çalışan verisi ve güncel Kurul kriteriyle kapatılacaktır.
 
-Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi
+## 4. E-ticaret iş modeli
 
-**Ticari ad:** Ege Teknik
+### Teslimat
 
-**Adres:** İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+İşletme taahhüdü: **Sipariş konusu ürünler siparişin onaylanmasından itibaren 1–7 gün içerisinde teslim edilir.** “İş günü” değildir.
 
-**Vergi dairesi:** Kuşadası
+Kargoya uygun ürünlerde shipping ancak gerçek taşıyıcı, tarife ve iade koşulları checkout'ta aktif/şeffaf olduğunda açılır. Taşıyıcı kesinleşmeden belirli firma adı legal metne sabitlenmez.
 
-**Telefon:** 0542 795 75 60
+### Klima / montaj
 
-**E-posta:** info@egeteknik.tr
+Ürün/sipariş sayfasında standart montajın dahil olduğu belirtilen duvar tipi split klima için güncel GREE/TLC montaj standardı referans alınır. RC seti, 4 metreye kadar standart tesisat ve standart montaj malzemeleri gibi güncel resmî kapsamı; elektrik hattı, standart dışı ilave tesisat, özel inşai işler ve özel erişim ekipmanları gibi kapsam dışı kalemlerden ayırır.
 
-**Web:** egeteknik.tr
+Ek iş/bedel müşteriye önceden açıklanmadan ve ayrıca onay alınmadan ücretlendirilmemelidir.
 
-**Şirket sahibi:** Levent Karakoyun (işletme tarafından doğrulanmış bilgi; veri sorumlusu olarak şirket esas alınmaktadır)
+Ege Teknik'in doğrudan hizmet veremediği durumda uygun yetkili servis yönlendirmesi yapılabilir; üçüncü taraf servisin müsaitliği/ücreti/randevusu Ege Teknik tarafından otomatik garanti edilmiş sayılmaz.
 
-### Yayından önce ayrıca doğrulanması gereken şirket/sicil bilgileri
+### Spot Ürün
 
-- MERSİS numarası
-- Ticaret sicil numarası (gerekiyorsa yayın alanında)
-- KEP adresi (varsa)
-- ETBİS kayıt durumu ve `egeteknik.tr` alan adı eşleşmesi
-- VERBİS kayıt yükümlülüğü veya geçerli muafiyet durumu
+“Spot Ürün” etiketi tek başına tüketicinin emredici haklarını kaldırmaz. Bilinen kondisyon, kullanım izi, kozmetik durum, eksik aksesuar veya kusur satın alma öncesinde açıkça gösterilmelidir.
 
-Doğrulanmamış bilgi müşteriye placeholder olarak gösterilmemelidir.
+### Ödeme
 
-## 4. İş modeli — legal metinlerin dayandığı gerçek operasyon
+PayTR/iyzico vb. bir kuruluş sözleşmeli ve aktif olmadan legal metne kesin provider adı konulmaz. Kart PAN/CVV/expiry Ege Teknik uygulama DB/loglarına alınmaz.
 
-### 4.1 Klima ve montajlı ürünler
+## 5. Cayma / iade / ayıplı mal
 
-Klima ürünlerinde teslimat ve montaj birlikte planlanabilir. Ege Teknik doğrudan hizmet verebildiği bölgelerde montajı kendi operasyonuyla gerçekleştirebilir. Doğrudan hizmet veremediği bölgelerde tüketici uygun yetkili servise yönlendirilebilir.
+RC setinde güncel resmî Bakanlık rehberine göre:
 
-Başka bir yetkili servisin randevu, kapasite, ücret veya müsaitliği Ege Teknik tarafından garanti edilmiş gibi sunulmamalıdır.
+- genel cayma süresi 14 gün,
+- teslimden önce de cayma bildirimi mümkündür,
+- bildirimin yazılı/kalıcı veri saklayıcısıyla yapılabilmesi öngörülür,
+- cayma bildirimi sonrası malın geri gönderim süresi **14 gün**,
+- iade taşıyıcısı ön bilgilendirmede belirtilmemişse tüketici aleyhine otomatik iade kargo masrafı varsayımı yapılmaz,
+- ayıplı mala ilişkin kanuni haklar cayma hakkından ayrı tutulur.
 
-### 4.2 Teslimat taahhüdü
+Klima montajı sonrası cayma istisnası bütün klima ürünlerine genellenmemiştir; ilgili ürünün kılavuzu, kurulum şartı ve yürürlükteki istisnanın somut koşulları hukukçu tarafından teyit edilmelidir.
 
-İşletme kararı:
+## 6. KVKK / veri akışı
 
-**Sipariş konusu ürünler, siparişin onaylanmasından itibaren 1–7 gün içerisinde teslim edilir.**
+Ana teknik sağlayıcılar:
 
-Bu ifade "iş günü" değildir.
+- Vercel — hosting/runtime/deployment
+- Neon — PostgreSQL
+- Clerk — müşteri hesabı/kimlik doğrulama
+- Sentry — geçici observability trial
 
-Mevzuatın emredici azami süreleri ve ifa edilememe halinde tüketici hakları ayrıca korunur.
+Her provider için gerçek hesap/region/DPA/subprocessor/rol/aktarım mekanizması incelenmelidir. Privacy/KVKK metninde sağlayıcıyı anmak aktarımı tek başına hukuka uygun hale getirmez.
 
-### 4.3 Standart klima montajı
+Standart sözleşme uygulanacak mekanizma ise doğru controller/processor senaryosu kullanılmalı ve resmî bildirim süresi/kanıtı işletme dosyasında tutulmalıdır.
 
-GREE/TLC'nin yayımladığı güncel montaj standardı referans alınmıştır. Duvar tipi split klima için geçerli koşullara göre standart kapsam; belirli metraja kadar bakır boru tesisatı, haberleşme kablosu, drenaj, konsol/takoz, montaj işçiliği ve devreye alma gibi kalemleri içerebilir.
+## 7. Analytics / çerez mimarisi
 
-Elektrik besleme hattı/sigorta, standart kapsam dışı ilave boru veya özel tesisat, dekorasyon/inşaat işleri, vinç/iskele/manlift ve benzeri özel ekipmanlar standart kapsam dışında olabilir.
+Visitor analytics artık iki kapılıdır:
 
-**Kural:** Standart kapsam dışında ek iş/bedel gerekirse müşteriye işlem ve bedel önceden açıklanmalı ve açık onay alınmadan ek ücret tahsil edilmemelidir.
+1. Production global `ANALYTICS_ENABLED=true`,
+2. ziyaretçi `ege_analytics_consent=1` tercihi.
 
-### 4.4 Spot ürünler
+İkisi birlikte yoksa event kaydı ve `ege_vid` oluşturma yapılmaz. Ziyaretçi analytics iznini geri çekerse HttpOnly `ege_vid` server-side silinir.
 
-Sitedeki "ikinci el/outlet" terminolojisi zamanla **Spot Ürün** olarak standardize edilecektir.
+Satış/sipariş istatistikleri gerçek `orders` verisinden gelir ve visitor analytics consent'ine bağlı değildir. Visitor/page/product/referrer/device ölçümleri yalnız analytics izni veren ziyaretçiler için toplanır.
 
-Bir ürünün spot, açılmış, teşhir veya ikinci el olması tek başına tüketicinin emredici haklarını otomatik olarak ortadan kaldıran genel bir hüküm olarak kullanılmamalıdır.
+Google Fonts / Tailwind Play CDN mevcut storefront'ta otomatik üçüncü taraf ağ isteği oluşturabildiğinden self-host/build-time dönüşümü tercih edilir; aksi durumda yurt dışı aktarım incelemesine dahil edilmelidir.
 
-Bilinen kusur, kondisyon ve eksiklikler sipariş öncesinde açıkça gösterilmelidir.
+## 8. ETBİS / İYS / VERBİS
 
-### 4.5 Kargo
+**ETBİS:** `egeteknik.tr` için gerçek şirket/domain kaydı henüz kanıtlanmadı; gerçek ticari launch blokajıdır.
 
-Kargo/taşıyıcı henüz kesinleşmemiştir.
+**İYS:** promosyon SMS/e-posta/WhatsApp otomasyonu hazır değilken kapalı kalmalıdır. Marketing izni siparişten bağımsız ve isteğe bağlıdır.
 
-Bu nedenle:
+**VERBİS:** güncel istisna kriteri gerçek bilanço/çalışan sayısıyla uygulanacak; istisna varsa dahi diğer KVKK yükümlülükleri devam eder.
 
-- belirli bir kargo şirketi legal metinlere kalıcı olarak yazılmamıştır,
-- kargo veya iade taşıyıcısı kesinleştiğinde yeni legal version yayımlanmalıdır,
-- taşıyıcı belirtilmeden tüketiciden iade kargo masrafı talep edilip edilemeyeceği güncel mevzuata göre değerlendirilmiştir ve metinler tüketici aleyhine varsayım yapmayacak şekilde hazırlanmıştır.
+## 9. Teknik legal ispat modeli
 
-### 4.6 Ödeme
-
-PayTR/iyzico gibi sağlayıcılar henüz aktif ödeme yöntemi olarak legal metne sabitlenmemiştir.
-
-Legal metinler yalnızca sipariş anında gerçekten aktif ödeme yöntemlerinin gösterileceği model üzerine kuruludur.
-
-Kart verisi için temel sistem kuralı:
-
-- PAN / CVV / kart son kullanma bilgisi Ege Teknik uygulama veritabanında saklanmaz.
-- Kartlı ödeme devreye girdiğinde güvenli ödeme kuruluşu akışı kullanılır.
-
-### 4.7 Fatura / e-belge
-
-E-fatura/e-arşiv statüsü ve kullanılan özel entegratör/muhasebe yazılımı muhasebeciden doğrulanacaktır.
-
-Bu bilgi doğrulanmadan belirli bir sağlayıcı legal metne yazılmamalıdır.
-
-## 5. Cayma, iade ve ayıplı mal yaklaşımı
-
-Release Candidate belgelerde aşağıdaki prensipler uygulanmıştır:
-
-- genel cayma süresi: 14 gün,
-- teslimden önce de cayma mümkündür,
-- cayma bildirimi kalıcı veri saklayıcısı ile yapılabilir,
-- güncel mevzuattaki iade süresi esas alınır,
-- iade taşıyıcısı belirtilmemişse tüketici aleyhine otomatik kargo masrafı varsayımı yapılmaz,
-- ayıplı mal hakları cayma hakkından ayrı tutulur,
-- "orijinal kutu yoksa hiçbir hak yoktur" gibi genel ve tüketici aleyhine mutlak hükümler kullanılmaz,
-- teslim sırasında tutanak tutulmaması kanuni hakları otomatik ortadan kaldıran koşul olarak yazılmaz.
-
-### Hukukçunun özellikle doğrulaması gereken konu
-
-Klima montajı sonrasında cayma hakkı istisnasının uygulanması yalnızca ilgili ürünün ve güncel mevzuatın şartları gerçekten oluştuğunda ele alınmalıdır. Tüm klima ürünleri için otomatik/genel bir "montaj yapıldıysa cayma yok" kuralı kullanılmamalıdır.
-
-## 6. KVKK ve veri akışı
-
-### Veri sorumlusu
-
-Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi.
-
-### Fiilen kullanılan ana teknik sağlayıcılar
-
-- **Vercel** — hosting/deployment
-- **Neon** — PostgreSQL veritabanı
-- **Clerk** — müşteri hesabı ve kimlik doğrulama
-- **Sentry** — geçici hata izleme/observability denemesi
-
-### Clerk veri minimizasyonu
-
-Müşteri hesabı tarafında yalnız gerekli hesap bilgileri kullanılmalıdır. Uygulama tarafına ihtiyaç olmayan üçüncü taraf hesap/kimlik verileri kopyalanmamalıdır.
-
-### First-party analytics
-
-Uygulamanın kendi analytics yaklaşımı rastgele oluşturulan first-party visitor identifier kullanır. Ham IP veya ham User-Agent analytics profili amacıyla saklanmamalıdır.
-
-### Sentry
-
-Sentry kalıcı iş modeli bağımlılığı değildir; geçici trial olarak değerlendirilmiştir.
-
-Teknik hardening:
-
-- DSN source code'dan çıkarılarak environment variable'a taşınmıştır,
-- DSN yoksa entegrasyon devre dışı kalır,
-- performans tracing örnekleme oranı azaltılmıştır,
-- kullanıcı bilgisinin ve HTTP body içeriğinin telemetry'ye kasıtlı eklenmesi kapatılmıştır.
-
-Trial bitince Sentry kapatılabilir ve ilgili legal metin yeni version olarak güncellenir.
-
-## 7. Yurt dışına veri aktarımı
-
-Vercel, Neon, Clerk ve geçici Sentry gibi sağlayıcıların hizmetleri kapsamında yurt dışına aktarım ihtimali bulunmaktadır.
-
-Yalnız aydınlatma metnine "yurt dışı aktarım olabilir" yazılması hukuki aktarım mekanizmasının yerine geçmez.
-
-Hukukçu tarafından her sağlayıcı için aşağıdakiler netleştirilmelidir:
-
-- aktarım gerçekten gerçekleşiyor mu,
-- veri sorumlusu → veri işleyen veya veri işleyen → alt işleyen rolü nedir,
-- hangi ülke/bölge söz konusudur,
-- yeterlilik kararı / standart sözleşme / BŞK / arızi aktarım veya başka hangi hukuki mekanizma uygulanır,
-- standart sözleşme kullanılacaksa doğru template ve taraf rolleri hangisidir,
-- imza sonrasında Kurum'a 5 iş günü içinde bildirim yükümlülüğünün yerine getirileceği operasyon kimdedir,
-- sözleşme, bildirim ve sağlayıcı DPA kayıtları nerede saklanacaktır.
-
-## 8. ETBİS
-
-`egeteknik.tr` için ETBİS kayıt durumu kesin olarak teyit edilmelidir.
-
-Kontrol edilmesi gerekenler:
-
-- tüzel kişi şirket bilgilerinin doğru eşleşmesi,
-- MERSİS/VKN bilgilerinin doğru olması,
-- alan adının kayda eklenmiş olması,
-- ödeme/teslimat gibi ETBİS bilgilerinin fiili operasyonla uyumlu olması,
-- eski ETBİS karekod uygulamasının artık kullanılmaması.
-
-## 9. Ticari elektronik ileti / İYS
-
-Sipariş, KVKK aydınlatması ve ticari elektronik ileti izni üç ayrı konudur.
-
-**Kural:** Pazarlama/SMS/e-posta/WhatsApp izni siparişin zorunlu koşulu değildir.
-
-Hukuk/operasyon kontrolü:
-
-- İYS hizmet sağlayıcı kaydı,
-- onay alma metni ve kanal bazlı kapsam,
-- onay/ret kayıtlarının İYS ile senkronizasyonu,
-- reddetmenin kolay ve ücretsiz olması,
-- ticari ileti içeriğinde zorunlu tanıtıcı bilgiler,
-- onay-ret bildiriminin mevzuattaki süre içinde İYS'ye kaydedilmesi,
-- operasyonel ve hizmet amaçlı mesajların pazarlama mesajlarından ayrılması.
-
-Pazarlama sistemi hazır değilse pazarlama özelliği kapalı kalmalıdır.
-
-## 10. Çerezler ve benzer teknolojiler
-
-Release Candidate çerez metni şu prensiplere dayanır:
-
-- zorunlu oturum/güvenlik çerezleri ayrı,
-- localStorage/sessionStorage ayrı,
-- first-party analytics ayrı,
-- pazarlama/reklam tracking aktif değilse varmış gibi gösterilmez,
-- gelecekte zorunlu olmayan tracking eklenirse consent yönetimi önce devreye alınır,
-- tercihlerin varsayılan olarak kapalı ve reddetmenin kabul kadar kolay olması hedeflenir.
-
-Production yayını öncesi tarayıcı/network seviyesinde cookie ve üçüncü taraf istek audit'i yapılmalıdır.
-
-## 11. Legal versioning ve ispat
-
-Uygulama legal belgeleri versiyonlu tutacak şekilde tasarlanmıştır.
-
-Checkout için gerekli legal belgeler:
+Checkout için required acceptance slugs:
 
 - `pre-information`
 - `distance-sales`
 
-KVKK checkout'ta bilgilendirme notice olarak sunulur; KVKK metni açık rıza checkbox'ına dönüştürülmemelidir.
+KVKK bilgi notice'dır, rıza değildir.
 
-Sipariş kaydında:
+Sipariş ispatı şu üç parçadan oluşur:
 
-- kabul edilen legal version ID'leri,
-- kabul zamanı,
-- sipariş snapshot bilgileri
+**published legal version + order snapshot + server-side acceptance timestamp/version IDs**.
 
-saklanır.
+Yayımlanmış legal version geriye dönük sessizce değiştirilmemelidir; yeni metin gerekiyorsa yeni version oluşturulmalıdır.
 
-Yayımlanmış legal sürümler veritabanı seviyesinde immutable olacak şekilde korunmaktadır. Yeni bir hukuki/operasyonel değişiklik yeni version ile yayımlanmalıdır; eski sipariş geçmişi geriye dönük değiştirilmemelidir.
+## 10. Hukukçudan istenen final görüşler
 
-## 12. Hukukçudan beklenen nihai kararlar
+1. RC'lerdeki satıcı kimliği/ön bilgilendirme unsurları yeterli mi?
+2. 1–7 günlük teslim taahhüdü ve ifa/iadeye ilişkin hükümler doğru mu?
+3. Klima montajı sonrası cayma istisnası hangi ürün/kılavuz şartlarında uygulanabilir?
+4. Spot Ürün açıklamaları tüketici hakları açısından yeterli mi?
+5. KVKK aydınlatma amaç/hukuki sebep/alıcı grubu/yurt dışı aktarım bölümleri gerçek veri akışıyla uyumlu mu?
+6. Vercel/Neon/Clerk/Sentry için hangi m.9 aktarım mekanizması uygulanmalı?
+7. ETBİS/VERBİS/İYS tarafında şirkete özel hangi tamamlamalar zorunlu?
+8. Marketing consent DRAFT'ı İYS aktivasyonu öncesi nasıl sonlandırılmalı?
+9. Kargo/iade taşıyıcısı ve payment provider aktif olduğunda hangi maddeler yeni version gerektirir?
+10. Production publish öncesinde değiştirilmesi gereken tüketici aleyhine, muğlak veya gereksiz uzun herhangi bir ifade var mı?
 
-Lütfen aşağıdaki maddeleri `ONAY / DÜZELT / EK BİLGİ GEREKİYOR` şeklinde işaretleyiniz:
+## 11. Publish gate
 
-1. Ön Bilgilendirme Formu'nun zorunlu unsurları ve checkout'taki gösterim şekli
-2. Mesafeli Satış Sözleşmesi'nin taraf/bedel/teslimat/montaj/cayma hükümleri
-3. Klima montajı ve cayma istisnasının doğru sınırı
-4. Spot ürünlere ilişkin bilinen kusur ve cayma/ayıplı mal ayrımı
-5. İade taşıyıcısı belirlenmediğinde masraf düzeni
-6. KVKK aydınlatma metninin işleme amaçları/hukuki sebepler/alıcı grupları
-7. Yurt dışı veri aktarım mekanizmaları ve standart sözleşme ihtiyacı
-8. VERBİS yükümlülüğü veya muafiyeti
-9. ETBİS kaydı ve sitede bulunması gereken e-ticaret tanıtıcı bilgiler
-10. İYS/pazarlama onayı metni ve kayıt süreci
-11. Çerez/analytics consent modeli
-12. Saklama-imha süreleri ve olası saklama politikası ihtiyacı
-13. MERSİS/KEP/ticaret sicili bilgilerinin hangi legal sayfalarda gösterilmesi gerektiği
-14. e-Fatura/e-Arşiv ve ödeme sağlayıcısı aktif olduğunda metinde yapılması gereken değişiklikler
+Production legal publish ancak:
 
-## 13. Muhasebeciden istenecek bilgiler
+- Pazartesi şirket/muhasebe bilgileri kapatıldıktan,
+- ETBİS ve aktif vendor aktarım blokajları ele alındıktan,
+- hukukçu final review tamamlandıktan,
+- gerçek aktif ödeme/teslimat modeline göre son metinler kontrol edildikten
 
-- MERSİS numarası
-- KEP adresi (varsa)
-- e-Fatura / e-Arşiv durumu
-- kullanılan özel entegratör / muhasebe sistemi
-- e-belge müşteri iletişim akışı
-- şirketin ETBİS için kullanılacak güncel sicil bilgilerinin teyidi
+sonra yapılmalıdır.
 
-## 14. İşletmeden kesinleştirilecek bilgiler
-
-- kargo/teslimat taşıyıcısı
-- iade taşıyıcısı
-- kargo ücret politikası
-- klima standart dışı ek iş fiyatlama prosedürü
-- tüm ürün kategorileri için gerçek garanti/servis süreçleri
-- aktif ödeme yöntemleri
-- pazarlama kanal ve süreçlerinin açılıp açılmayacağı
-
-## 15. Production publish için geçiş kriterleri
-
-Legal publish yapılmadan önce:
-
-- hukukçu tarafından kritik metinler incelenmiş olmalı,
-- şirket kimliği/sicil açıkları kapatılmalı,
-- ETBİS/VERBİS/İYS yükümlülüklerinin durumu belirlenmeli,
-- yurt dışı aktarım için uygulanacak mekanizma kararlaştırılmalı,
-- kargo/ödeme gibi aktif olmayan hizmetler varmış gibi gösterilmemeli,
-- Production network/cookie audit tamamlanmalı,
-- legal versioning ve acceptance API testleri geçmeli.
-
-Yayın sonrası ayrıca doğrulanmalıdır:
-
-- `/api/legal/required` başarılı cevap veriyor,
-- checkout güncel required version ID'lerini yüklüyor,
-- eksik/eski legal version ile order oluşturulamıyor,
-- kabul zamanları ve version ID'leri siparişle birlikte kaydoluyor,
-- yayımlanmış legal version değiştirilemiyor,
-- eski siparişler kabul ettikleri eski legal version'a erişebiliyor.
-
-## 16. Resmî kaynak seti — inceleme başlangıç noktaları
-
-Hukukçu güncel mevzuat metnini ayrıca kontrol etmelidir. Teknik ekip tarafından kullanılan ana resmî kaynak kategorileri:
-
-- T.C. Ticaret Bakanlığı — Mesafeli Sözleşmeler Hakkında Bilgilendirme
-- 6502 sayılı Tüketicinin Korunması Hakkında Kanun
-- Mesafeli Sözleşmeler Yönetmeliği
-- T.C. Ticaret Bakanlığı — ETBİS
-- T.C. Ticaret Bakanlığı — Ticari Elektronik İletiler / İYS
-- 6698 sayılı KVKK
-- Kişisel Verileri Koruma Kurumu — Aydınlatma yükümlülüğü
-- Kişisel Verileri Koruma Kurumu — Çerez Uygulamaları Hakkında Rehber
-- Kişisel Verileri Koruma Kurumu — Yurt Dışına Aktarım / Standart Sözleşmeler
-- GREE/TLC resmî montaj ve garanti koşulları
-
-## 17. Yayın kararı
-
-Bu dosyanın hazırlanması **Production legal publish onayı değildir**.
-
-Final yayın, doğrulama bekleyen işletme/sicil/uyum alanları tamamlandıktan ve gerekli profesyonel hukuki/mali inceleme yapıldıktan sonra kontrollü şekilde gerçekleştirilmelidir.
+Publish sonrası `/api/legal/required`, exact-version link, stale-version rejection, checkout acceptance ve `order_legal_acceptances` kayıtları Production smoke ile doğrulanmalıdır.
