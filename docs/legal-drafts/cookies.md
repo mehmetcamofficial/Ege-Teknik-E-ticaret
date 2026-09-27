@@ -60,16 +60,11 @@ Tercihler daha sonra sitedeki **Çerez Tercihleri** kontrolünden yeniden deği�
 
 ## 6. Otomatik üçüncü taraf ağ istekleri
 
-Kaynak kod denetiminde public storefront'un bazı statik sayfalarında aşağıdaki harici kaynakların tarayıcı tarafından otomatik istekle yüklendiği tespit edilmiştir:
+V1 hardening kapsamında storefront'un önceki sürümlerinde bulunan Google Fonts, Tailwind Play CDN ve Google-hosted temsili görseller için otomatik tarayıcı istekleri kaldırılmıştır. Ana sayfa stilleri build-time üretilir; kullanılan temsili görseller first-party local asset olarak sunulur.
 
-- Google Fonts / Google Fonts static kaynakları (`fonts.googleapis.com`, `fonts.gstatic.com`),
-- Tailwind CSS CDN (`cdn.tailwindcss.com`).
+Bu nedenle bu kaynaklar bakımından sırf sayfa yüklenmesiyle `fonts.googleapis.com`, `fonts.gstatic.com`, `cdn.tailwindcss.com` veya `lh3.googleusercontent.com` adreslerine otomatik istek gönderilmesi amaçlanan Production davranışı değildir.
 
-Bu istekler çerez bırakmasa dahi kullanıcının IP adresi, User-Agent gibi standart ağ/HTTP bilgilerinin ilgili üçüncü taraf altyapısına ulaşmasına neden olabilir. Bu nedenle söz konusu kaynaklar yalnız "çerez yok" gerekçesiyle kişisel veri veya yurt dışı aktarım değerlendirmesinin dışında kabul edilmez.
-
-V1 yayını öncesinde tercih edilen teknik çözüm bu statik bağımlılıkların mümkün olduğu ölçüde self-host / build-time kaynaklara taşınmasıdır. Taşınmadıkları sürece KVKK yurt dışı aktarım değerlendirmesinde ayrıca ele alınmalıdır.
-
-WhatsApp gibi dış bağlantılar kullanıcı tıklamasıyla açılır; sırf sayfanın yüklenmesi nedeniyle WhatsApp'a otomatik istek gönderildiği varsayılmaz.
+Bununla birlikte Vercel, Neon, Clerk ve geçici Sentry gibi aktif teknik sağlayıcıların gerçek veri akışı ayrıca değerlendirilmelidir. WhatsApp gibi dış bağlantılar kullanıcı tıklamasıyla açılır; sırf sayfanın yüklenmesi nedeniyle WhatsApp'a otomatik istek gönderildiği varsayılmaz.
 
 ## 7. Diğer teknik sağlayıcılar
 
