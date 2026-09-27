@@ -6,6 +6,7 @@
   const analyticsAllowed=()=>cookieValue()==='1';
   const setConsentCookie=value=>{document.cookie=`${CONSENT_COOKIE}=${value?'1':'0'}; Max-Age=${CONSENT_MAX_AGE}; Path=/; SameSite=Lax${location.protocol==='https:'?'; Secure':''}`};
   const revokeAnalyticsId=()=>fetch('/api/analytics/event',{method:'DELETE',keepalive:true}).catch(()=>{});
+  const recordCurrentPageAfterOptIn=()=>{try{if(typeof window.sendAnalyticsEvent==='function')window.sendAnalyticsEvent()}catch{}};
 
   function removeUi(){document.querySelector('[data-cookie-banner]')?.remove();document.querySelector('[data-cookie-modal]')?.remove()}
   function ensureSettingsButton(){if(document.querySelector('[data-cookie-settings]'))return;const b=document.createElement('button');b.type='button';b.className='cookie-settings-trigger';b.dataset.cookieSettings='';b.textContent='Çerez Tercihleri';document.body.appendChild(b)}
@@ -21,7 +22,12 @@
     box.innerHTML=`<div class="cookie-banner-copy"><b>Gizlilik tercihlerinizi siz belirlersiniz</b><p>Gerekli teknolojiler siteyi çalıştırır. Ziyaretçi analitiği yalnız izin verirseniz kullanılır.</p><a href="policies.html#privacy">Ayrıntılı bilgi</a></div><div class="cookie-banner-actions"><button type="button" class="cookie-btn secondary" data-cookie-reject>Yalnızca gerekli</button><button type="button" class="cookie-btn secondary" data-cookie-preferences>Tercihler</button><button type="button" class="cookie-btn primary" data-cookie-accept>Tümünü kabul et</button></div>`;
     document.body.appendChild(box);
   }
-  function saveChoice(allow){setConsentCookie(allow);removeUi();ensureSettingsButton();if(!allow)void revokeAnalyticsId()}
+  function saveChoice(allow){
+    const previouslyAllowed=analyticsAllowed();
+    setConsentCookie(allow);removeUi();ensureSettingsButton();
+    if(!allow)void revokeAnalyticsId();
+    else if(!previouslyAllowed)recordCurrentPageAfterOptIn();
+  }
   document.addEventListener('click',e=>{
     const t=e.target.closest('[data-cookie-accept],[data-cookie-reject],[data-cookie-preferences],[data-cookie-save],[data-cookie-close],[data-cookie-settings]');if(!t)return;
     if(t.matches('[data-cookie-accept]'))saveChoice(true);
