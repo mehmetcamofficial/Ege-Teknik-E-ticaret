@@ -1,4 +1,39 @@
 import { readFile, writeFile } from "node:fs/promises";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import {
+  ArrowLeftRight,
+  ArrowRight,
+  Award,
+  BadgeCheck,
+  Building2,
+  Calculator,
+  CalendarDays,
+  CircleDot,
+  Cog,
+  Fan,
+  Gauge,
+  Grid2X2,
+  Hammer,
+  Headphones,
+  Heart,
+  Info,
+  MapPin,
+  MessageCircle,
+  Network,
+  Package,
+  Phone,
+  Ruler,
+  Search,
+  Shield,
+  ShieldCheck,
+  ShoppingBag,
+  Snowflake,
+  Sparkles,
+  Truck,
+  User,
+  Wrench,
+} from "lucide-react";
 import { compile } from "tailwindcss";
 
 const INDEX_PATH = new URL("../public/index.html", import.meta.url);
@@ -22,6 +57,66 @@ function collectCandidates(source) {
     }
   }
   return [...candidates];
+}
+
+const materialToLucide = {
+  ac_unit: Snowflake,
+  apartment: Building2,
+  arrow_forward: ArrowRight,
+  award_star: Award,
+  build: Wrench,
+  build_circle: Wrench,
+  calculate: Calculator,
+  calendar_month: CalendarDays,
+  calendar_today: CalendarDays,
+  call: Phone,
+  chat: MessageCircle,
+  favorite: Heart,
+  grid_view: Grid2X2,
+  handyman: Hammer,
+  headset_mic: Headphones,
+  home_repair_service: Wrench,
+  hub: Network,
+  hvac: Fan,
+  info: Info,
+  inventory_2: Package,
+  local_shipping: Truck,
+  location_on: MapPin,
+  person: User,
+  precision_manufacturing: Cog,
+  sanitizer: Sparkles,
+  search: Search,
+  shield: Shield,
+  shopping_bag: ShoppingBag,
+  speed: Gauge,
+  straightening: Ruler,
+  straighten: Ruler,
+  support_agent: Headphones,
+  swap_horiz: ArrowLeftRight,
+  verified: BadgeCheck,
+  verified_user: ShieldCheck,
+};
+
+function replaceMaterialSymbols(source) {
+  return source.replace(
+    /<span\s+class="material-symbols-outlined([^\"]*)"([^>]*)>([^<]+)<\/span>/g,
+    (_match, extraClasses, extraAttributes, rawName) => {
+      const name = rawName.trim();
+      const Icon = materialToLucide[name] ?? CircleDot;
+      const className = extraClasses.trim();
+      const svg = renderToStaticMarkup(
+        createElement(Icon, {
+          "aria-hidden": "true",
+          focusable: "false",
+          size: "1em",
+          strokeWidth: 2,
+          className: className || undefined,
+        }),
+      );
+      if (!extraAttributes.includes("aria-label")) return svg;
+      return svg.replace("<svg", `<svg${extraAttributes}`);
+    },
+  );
 }
 
 const [themeCss, preflightCss, utilitiesCss] = await Promise.all([
@@ -159,8 +254,10 @@ const generated = compiler.build(collectCandidates(html));
 
 await writeFile(OUTPUT_PATH, generated, "utf8");
 
-let outputHtml = html
-  .replace(/<link href="https:\/\/fonts\.googleapis\.com\/css2\?family=Plus\+Jakarta[^>]+>\s*/g, "")
+let outputHtml = replaceMaterialSymbols(html)
+  .replace(/<link href="https:\/\/fonts\.googleapis\.com" rel="preconnect">\s*/g, "")
+  .replace(/<link crossorigin="" href="https:\/\/fonts\.gstatic\.com" rel="preconnect">\s*/g, "")
+  .replace(/<link href="https:\/\/fonts\.googleapis\.com\/css2\?family=[^"]+" rel="stylesheet">\s*/g, "")
   .replace(/<script src="https:\/\/cdn\.tailwindcss\.com"><\/script>\s*/g, "")
   .replace(/<script id="tailwind-config">[\s\S]*?<\/script>\s*/g, "");
 
@@ -169,4 +266,4 @@ if (!outputHtml.includes('href="home.css"')) {
 }
 
 await writeFile(INDEX_PATH, outputHtml, "utf8");
-console.log(`Compiled homepage CSS with ${collectCandidates(html).length} candidates.`);
+console.log(`Compiled homepage CSS with ${collectCandidates(html).length} candidates and localized Material Symbols.`);
