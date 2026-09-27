@@ -7,8 +7,8 @@
  *   scripts whose content varies, so those carry a per-request nonce instead.
  *
  * style-src still keeps 'unsafe-inline' because the current storefront contains inline
- * style attributes / style blocks. Google Fonts origins remain temporarily because the
- * homepage still uses Material Symbols; those will be removed in a separate controlled step.
+ * style attributes / style blocks. Storefront fonts/icons are now local/system-based, so
+ * Google Fonts origins are no longer required by CSP.
  */
 
 const sharedDirectives = [
@@ -17,8 +17,8 @@ const sharedDirectives = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   "img-src 'self' data: https:",
   "connect-src 'self'",
   "upgrade-insecure-requests",
