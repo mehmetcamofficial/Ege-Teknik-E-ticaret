@@ -1,46 +1,58 @@
-# ⚠️ DRAFT — LEGAL REVIEW REQUIRED
-# NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT
+# EGE TEKNİK — LEGAL RELEASE CANDIDATES
 
-Bu klasördeki dosyalar **yalnızca inceleme amaçlı aday taslaklardır**. Avukat onaylı nihai metin **değildir**,
-hukuki tavsiye niteliği taşımaz ve yayınlanmamıştır. Uygulama koduna, veritabanına, Preview veya Production
-ortamına **bağlı değildir**; hiçbir dosya çalışma zamanında okunmaz.
+> **LEGAL REVIEW REQUIRED · NOT YET PUBLISHED**
+>
+> Bu klasördeki müşteri-facing metinler Production yayını öncesi hazırlanmış release candidate veya kontrollü taslaklardır. Avukat/hukuk danışmanı incelemesi tamamlanmadan ve açık operasyonel blokajlar çözülmeden Production legal version olarak yayınlanmazlar.
 
-## Dosyalar
+## Belge durumu
 
-| Dosya | Slug (ileride) | Türü (3B.4 sınıflaması) |
+| Dosya | Durum | Amaç |
 |---|---|---|
-| [distance-sales.md](distance-sales.md) | `distance-sales` | Checkout kabulü |
-| [pre-information.md](pre-information.md) | `pre-information` | Checkout kabulü / bilgilendirme |
-| [kvkk.md](kvkk.md) | `kvkk` | Aydınlatma (onay kutusu değil) |
-| [privacy.md](privacy.md) | `privacy` | Site bilgilendirmesi |
-| [cookies.md](cookies.md) | `cookies` | Site bilgilendirmesi (koşullu) |
-| [delivery-returns.md](delivery-returns.md) | `delivery-returns` | Checkout bilgilendirmesi + site sayfası |
-| [terms.md](terms.md) | `terms` | Site bilgilendirmesi |
-| [marketing-consent.md](marketing-consent.md) | (ayrı, isteğe bağlı) | Ayrı isteğe bağlı izin |
-| [installation.md](installation.md) | (checkout bilgilendirmesi) | Koşullu bilgilendirme |
-| [warranty.md](warranty.md) | (ürün bazlı model) | Bilgilendirme modeli |
-| [VERIFICATION_REQUIRED.md](VERIFICATION_REQUIRED.md) | — | **Çözülmemiş tüm alanların kaydı** |
-| [IMPLEMENTATION_DEPENDENCIES.md](IMPLEMENTATION_DEPENDENCIES.md) | — | Yayından önce uygulamada gerekenler |
-| [SOURCES.md](SOURCES.md) | — | Kullanılan resmî kaynaklar ve kısıtlar |
+| `pre-information.md` | RC | Ön Bilgilendirme Formu / checkout kabulü |
+| `distance-sales.md` | RC | Mesafeli Satış Sözleşmesi / checkout kabulü |
+| `kvkk.md` | RC | KVKK Aydınlatma Metni; açık rıza değildir |
+| `privacy.md` | RC | Gizlilik Politikası |
+| `cookies.md` | RC | Çerez ve tarayıcı depolama bilgilendirmesi |
+| `delivery-returns.md` | RC | Teslimat, montaj, cayma ve iade koşulları |
+| `terms.md` | RC | İnternet sitesi kullanım koşulları |
+| `installation.md` | RC | Kurulum ve montaj bilgilendirmesi |
+| `marketing-consent.md` | DRAFT / FEATURE OFF | Ayrı, isteğe bağlı ticari elektronik ileti izni |
+| `warranty.md` | DRAFT MODEL | Ürün/model bazlı garanti bilgisi modeli |
+| `COMPLIANCE_CHECKLIST.md` | INTERNAL | ETBİS, İYS, VERBİS, KVKK aktarım ve go-live kontrolü |
+| `VERIFICATION_REQUIRED.md` | INTERNAL | Kalan doğrulama maddeleri |
+| `LEGAL_REVIEW_PACKET.md` | INTERNAL | Hukukçu/mali müşavir inceleme paketi |
+| `IMPLEMENTATION_DEPENDENCIES.md` | INTERNAL | Teknik/operasyonel yayın bağımlılıkları |
+| `SOURCES.md` | INTERNAL | Resmî kaynak kaydı |
 
-## Yer tutucu kuralları
+## Yayın kuralları
 
-- `[DOĞRULAMA BEKLİYOR: alan]` — doğrulanmamış işletme/hukuki bilgi. **Yayından önce mutlaka çözülmelidir.**
-  Hiçbir yer tutucu gerçekçi görünen sahte bir değerle doldurulmamıştır.
-- `{{SIPARIS_NO}}` gibi çift süslü parantezler — sipariş anında sistem tarafından doldurulacak çalışma zamanı alanları.
-  Doğrulama yer tutucularından farklıdır ve taslaklarda örnek değer içermez.
-- `> **İnceleme notu:**` — avukat/işletme sahibi için not; yayınlanacak metne **alınmamalıdır**.
+1. `{{...}}` alanları sipariş anında sunucu tarafından doldurulan dinamik sipariş alanlarıdır; hata/placeholder değildir.
+2. Doğrulanmamış MERSİS, KEP, kargo şirketi, ödeme kuruluşu, e-belge sağlayıcısı veya başka işletme bilgisi müşteriye uydurularak gösterilmez.
+3. VKN gibi hassas/işletme kimlik bilgileri public repository içine açık değer olarak yazılmaz; gerekiyorsa kontrollü Production legal kayıt oluşturulurken doğrulanmış resmî kaynaktan eklenir.
+4. Checkout'ta `pre-information` ve `distance-sales` kabulü sürüm kimliğiyle kaydedilir. KVKK aydınlatması bilgi verme metnidir; açık rıza checkbox'ına dönüştürülmez.
+5. Yayımlanan legal version geriye dönük sessizce değiştirilmez; değişiklik gerekiyorsa yeni version oluşturulur.
+6. Sipariş anındaki ürün/fiyat/vergi/teslimat bilgileri order snapshot ile korunur; genel legal metin her sipariş için yeniden versiyonlanmaz.
+7. Pazarlama izni satış sözleşmesi, ön bilgilendirme ve KVKK aydınlatmasından ayrıdır ve siparişin koşulu değildir.
 
-## Bilgi kaynağı ayrımı
+## Sabitlenmiş iş kararları
 
-- **Operatör beyanı:** işletme sahibinin bildirdiği bilgiler (marka, sahip, adres, e-posta, telefon, iş modeli).
-  Sicil/vergi belgesiyle henüz doğrulanmamıştır.
-- **Resmî kaynak:** Mesafeli Sözleşmeler Yönetmeliği'nin Ticaret Bakanlığı'nın yayımladığı güncel metni (madde
-  numaraları taslaklarda belirtilmiştir). KVKK ve ticari ileti kuralları için bkz. [SOURCES.md](SOURCES.md).
-- **Öneri:** taslak yazarının tasarım tercihi; hukuki incelemeye tabidir.
+- Satıcı/veri sorumlusu: **Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi**.
+- Teslimat taahhüdü: siparişin onaylanmasından itibaren **1–7 gün**; “iş günü” değildir.
+- Klima/kurulum metinleri, ürün için geçerli GREE/TLC montaj standardı ve sipariş ekranındaki gerçek kapsama bağlıdır.
+- Standart kapsam dışı iş/bedel müşteriye önceden açıklanır; ayrıca onay olmadan ek ücret uygulanmaz.
+- “Spot Ürün” etiketi tek başına tüketicinin emredici haklarını ortadan kaldırmaz.
+- Genel cayma süresi 14 gündür; uygulanabilir kanuni istisnalar ürün/hizmet özelinde değerlendirilir.
+- Cayma bildirimi sonrası tüketicinin malı geri gönderme süresi güncel resmî Ticaret Bakanlığı rehberinde **14 gün** olarak açıklanmaktadır.
+- Ödeme sağlayıcısı, taşıyıcı veya e-belge sağlayıcısı aktif/teyitli olmadan isim olarak sabitlenmez.
 
-## Yayın yolu (henüz uygulanmayacak)
+## Hâlâ açık olan işletme/uyum maddeleri
 
-Onaylanan metinler ileride yalnızca Faz 3B.3 yönetim akışıyla (taslak → yayın) ve yalnızca doğrulanmış
-alanlar doldurulduktan sonra yayınlanabilir. Preview'daki test belgeleri (`PREVIEW TEST`, `PHASE 3B.3 ...`)
-ile bu taslaklar **karıştırılmamalı**; Production'a hiçbir test içeriği taşınmamalıdır.
+Pazartesi/mali müşavir teyidi bekleyenler: MERSİS, KEP, e-Fatura/e-Arşiv durumu, e-belge sağlayıcısı, 2025 bilanço/çalışan sayısı üzerinden VERBİS istisna değerlendirmesi.
+
+Operasyonel olarak ayrıca ETBİS kaydı, kargo/iade taşıyıcısı, aktif ödeme kuruluşu ve aktif vendor yurt dışı aktarım mekanizmaları kesinleştirilmelidir. Ayrıntılar `COMPLIANCE_CHECKLIST.md` ve `VERIFICATION_REQUIRED.md` içindedir.
+
+## Production yayın yolu
+
+RC → hukukçu/işletme doğrulaması → açık blokajların kapatılması → admin legal publish → `/api/legal/required` doğrulaması → checkout acceptance testi → order legal acceptance/version kayıt testi → Production smoke test.
+
+Repository'deki markdown dosyalarının varlığı Production'da legal belgelerin yayımlandığı anlamına gelmez.
