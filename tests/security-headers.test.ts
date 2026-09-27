@@ -18,11 +18,12 @@ test("neither script policy allows unsafe-inline or unsafe-eval", () => {
   }
 });
 
-test("no script source is a wildcard or bare scheme", () => {
+test("no script source is a wildcard, bare scheme, or runtime Tailwind CDN", () => {
   for (const csp of [staticCsp, appCsp]) {
     for (const source of scriptSrc(csp).split(" ").slice(1)) {
       assert.equal(source === "*" || source.endsWith("*") || source === "https:" || source === "data:", false, `unsafe script source: ${source}`);
     }
+    assert.equal(scriptSrc(csp).includes("cdn.tailwindcss.com"), false);
   }
 });
 
@@ -39,16 +40,24 @@ test("every inline script in every static page is covered by a hash", () => {
   assert.ok(inlineScripts > 0, "expected at least one inline script to be hashed");
 });
 
-test("the static policy carries hashes and the Tailwind CDN the storefront loads", () => {
+test("the static policy carries hashes without an external runtime script CDN", () => {
   assert.ok(hashes.length > 0);
   for (const hash of hashes) assert.ok(staticCsp.includes(`'${hash}'`));
-  assert.ok(scriptSrc(staticCsp).includes("https://cdn.tailwindcss.com"));
+  assert.equal(scriptSrc(staticCsp).includes("https://cdn.tailwindcss.com"), false);
 });
 
 test("the app policy is nonce-based and carries no static hashes", () => {
   assert.ok(scriptSrc(appCsp).includes("'nonce-testnonce'"));
   assert.equal(scriptSrc(appCsp).includes("sha256-"), false);
   assert.equal(scriptSrc(appCsp).includes("cdn.tailwindcss.com"), false);
+});
+
+test("Google Fonts origins are absent after fonts and icons were localized", () => {
+  for (const csp of [staticCsp, appCsp]) {
+    assert.equal(csp.includes("fonts.googleapis.com"), false);
+    assert.equal(csp.includes("fonts.gstatic.com"), false);
+    assert.ok(csp.includes("font-src 'self'"));
+  }
 });
 
 test("both policies lock down framing, objects, base URI and form targets", () => {
