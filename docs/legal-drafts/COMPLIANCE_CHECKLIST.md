@@ -1,197 +1,140 @@
 # EGE TEKNİK — GO-LIVE COMPLIANCE CHECKLIST
 
-> **STATUS:** Operational/legal checklist. This file is not customer-facing legal text and must not be published as a legal document.
-> **Scope:** ETBİS, İYS/commercial electronic messages, KVKK international transfers, and related go-live evidence.
-> **Rule:** Unknown facts stay `PENDING`; do not invent registration, provider, region, contract, or approval details.
+> **STATUS:** Internal operational/legal checklist. Not customer-facing.
+> **Scope:** ETBİS, İYS/commercial electronic messages, KVKK international transfers, VERBİS, analytics/cookies and related go-live evidence.
+> **Rule:** Unknown facts stay `PENDING`; registration, provider, region, contract or approval details are never invented.
 
 ## Status legend
 
 - `DONE` — verified with evidence.
-- `PENDING OWNER` — business owner/accountant must provide/complete.
-- `PENDING LEGAL` — requires lawyer/privacy counsel review.
-- `PENDING TECH` — requires technical verification.
-- `BLOCKER` — order acceptance or feature activation must remain disabled until resolved.
-- `NOT ACTIVE` — feature is intentionally not in use; no production processing should occur through that feature.
-
----
+- `PENDING OWNER` — business/accountant must provide or complete.
+- `PENDING LEGAL` — lawyer/privacy review required.
+- `PENDING TECH` — technical verification required.
+- `BLOCKER` — relevant production capability must remain disabled until resolved.
+- `NOT ACTIVE` — feature intentionally disabled.
 
 ## 1. ETBİS
 
-### Current legal/operational position
-
-Ege Teknik accepts/orders goods through its own e-commerce domain `egeteknik.tr`. Under the Ministry of Trade's ETBİS guidance, service providers operating in their own electronic-commerce environment are within the ETBİS registration scope and registration is expected before e-commerce activity begins.
-
-For legal entities, ETBİS registration uses company identity information including MERSİS and tax identity information together with the e-commerce domain/application information.
-
-### Checklist
+Ege Teknik plans to accept orders through its own e-commerce domain `egeteknik.tr`. The current ETBİS registration for the company/domain has not been evidenced yet.
 
 | Item | Status | Required evidence / action |
 |---|---|---|
-| Confirm Ege Teknik's current MERSİS number | PENDING OWNER | Obtain from accountant/company records; do not guess. |
-| Confirm VKN used in ETBİS identity record | PENDING OWNER | Use official company document; never derive or guess. |
-| Confirm `egeteknik.tr` ETBİS registration exists | BLOCKER | Check ETBİS/e-Devlet company account and record evidence. |
-| Confirm company name/address/domain match current legal identity | PENDING OWNER | Compare ETBİS record with legal pack. |
-| Record ETBİS registration date / record evidence internally | PENDING OWNER | Screenshot/PDF or account record. |
-| ETBİS QR code | NOT REQUIRED | Ministry announced the ETBİS QR-code application was terminated in September 2025; do not add a legacy QR-code requirement to the site. |
-
-### Go-live rule
-
-Do not mark ETBİS as complete until the actual company record for `egeteknik.tr` is verified. Do not treat an ETBİS registration as a general security/trust certification; it is a regulatory registration record.
-
----
+| MERSİS number | PENDING OWNER | Obtain from accountant/company records. |
+| VKN used in ETBİS identity | PENDING OWNER | Use official company record; do not place the number in this public repository. |
+| `egeteknik.tr` ETBİS registration | BLOCKER | Complete/verify company + domain record through official ETBİS/e-Devlet flow. |
+| Company/domain identity match | PENDING OWNER | Compare official record with legal pack. |
+| ETBİS evidence | PENDING OWNER | Retain screenshot/PDF/date internally. |
+| ETBİS QR code | NOT REQUIRED | Legacy QR-code application was terminated in 2025; do not create a false go-live requirement. |
 
 ## 2. Commercial electronic messages / İYS
 
-### Current product rule
-
-Marketing consent remains completely separate from checkout, distance-sales acceptance and KVKK disclosure. A customer must be able to place an order without consenting to promotional SMS, e-mail, telephone or WhatsApp marketing.
-
-Ege Teknik must not send a commercial electronic message merely to ask the recipient for marketing consent.
-
-Business/merchant-recipient exceptions and other statutory exceptions must not be generalized to ordinary consumers; any automated rule must be legally reviewed before implementation.
-
-### Checklist
+Marketing remains separate from checkout, distance-sales acceptance and KVKK disclosure. The customer must be able to order without promotional consent.
 
 | Item | Status | Required evidence / action |
 |---|---|---|
-| Promotional SMS/e-mail/WhatsApp automation enabled | NOT ACTIVE | Keep disabled for V1 unless compliance flow is complete. |
-| İYS service-provider registration/status | PENDING OWNER | Verify company record and brand/service-provider details in İYS. |
-| Marketing checkbox separate from legal checkout acceptance | DONE | Product/legal design rule. Must remain optional and unchecked by default. |
-| Consent text identifies channel/purpose sufficiently | PENDING LEGAL | Review final marketing-consent wording before activation. |
-| Consent evidence retained | PENDING TECH | Store source, time, channel, consent version and state where applicable. |
-| İYS consent synchronization | BLOCKER FOR MARKETING | Required before production marketing workflow is enabled where applicable. |
-| Rejection/withdrawal path | BLOCKER FOR MARKETING | Provide practical opt-out and reflect withdrawal in marketing suppression. |
-| Suppression after withdrawal | PENDING TECH | Marketing jobs must check current permission state before send. |
-| Order/service transactional messages separated from promotions | PENDING LEGAL/TECH | Classify templates; do not add advertising to service/order notices by default. |
+| Promotional SMS/e-mail/WhatsApp automation | NOT ACTIVE | Keep disabled for V1 until compliance flow is complete. |
+| İYS service-provider registration/status | PENDING OWNER | Verify real company/brand record. |
+| Marketing choices separate from checkout legal acceptance | DONE DESIGN | Must remain optional and unchecked by default. |
+| Final marketing-consent text | PENDING LEGAL | Review `marketing-consent.md` before activation. |
+| Consent evidence retention | PENDING TECH | Retain source, timestamp, channel, text/version and state. |
+| İYS consent synchronization | BLOCKER FOR MARKETING | Complete before promotional workflow activation. |
+| Rejection/withdrawal path | BLOCKER FOR MARKETING | Easy and free opt-out + suppression. |
+| Transactional vs promotional templates | PENDING LEGAL/TECH | Keep order/service notices separate from advertising. |
 
-### Go-live rule
-
-Core commerce may launch with promotional communications disabled. Marketing automation must stay off until the İYS/consent/withdrawal flow is verified end to end.
-
----
+Core commerce may launch with marketing automation disabled.
 
 ## 3. KVKK — international transfers
 
-### Current architecture requiring review
+Current active/possible technical providers include Vercel, Neon, Clerk and temporary Sentry. Disclosure alone does not establish a lawful transfer mechanism.
 
-Current technical architecture includes services such as:
-
-- Vercel — hosting/deployment/runtime,
-- Neon — PostgreSQL database,
-- Clerk — customer authentication/account service,
-- Sentry — temporary error/observability trial.
-
-The fact that a vendor is named in the privacy/KVKK text does **not** itself make an international transfer lawful. The actual data flow, processing role, hosting/processing regions, sub-processors, contractual mechanism and applicable KVKK Article 9 transfer mechanism must be assessed separately.
-
-### Data-minimization status already implemented
-
-For the temporary Sentry trial:
-
-- hard-coded DSN was removed from source,
-- SDK activation depends on environment configuration,
-- `userInfo: false` is configured,
-- HTTP request-body collection is disabled,
-- performance trace sampling is limited to 10%,
-- Sentry is documented as removable after the trial.
-
-This reduces collection but does not by itself resolve the legal basis for any international transfer.
-
-### Vendor-by-vendor checklist
-
-| Provider | Purpose | Current status | Required before final compliance sign-off |
+| Provider | Purpose | Current status | Required before compliance sign-off |
 |---|---|---|---|
-| Vercel | hosting/runtime/deployment | PENDING LEGAL | Verify account region options, DPA, subprocessors, actual personal-data categories, international-transfer mechanism. |
-| Neon | PostgreSQL database | PENDING LEGAL | Verify production region, DPA, subprocessors, backup/replica locations, processor role and transfer mechanism. |
-| Clerk | customer authentication | PENDING LEGAL | Verify data fields used, storage/processing regions, DPA, subprocessors and transfer mechanism. |
-| Sentry | temporary diagnostics | PENDING LEGAL | Verify DPA/region/transfer mechanism while trial remains enabled; remove from active-data-flow register when fully disabled and no longer processing new data. |
-| Future payment provider | payment | NOT ACTIVE | Review only when provider is actually contracted/activated. Never write hypothetical provider facts into the final register. |
-| Future e-invoice/e-archive provider | fiscal document service | PENDING OWNER | Identify provider after accountant confirmation, then assess data flow. |
-| Future carrier | shipping/returns | PENDING OWNER | Identify actual carrier before adding provider-specific statements. |
+| Vercel | hosting/runtime/deployment | PENDING LEGAL | Verify account configuration, regions, DPA, subprocessors, role and KVKK m.9 mechanism. |
+| Neon | PostgreSQL | PENDING LEGAL | Verify Production region, backup/replica locations, DPA, subprocessors and transfer mechanism. |
+| Clerk | customer authentication | PENDING LEGAL | Verify fields, cookies/storage, processing regions, DPA/subprocessors and transfer mechanism. |
+| Sentry | temporary diagnostics | PENDING LEGAL / TEMPORARY | Verify while trial remains active; remove from active register when disabled and no new data is processed. |
+| Future payment provider | payment | NOT ACTIVE | Review when contracted/activated. |
+| Future e-document provider | fiscal documents | PENDING OWNER | Identify after accountant confirmation. |
+| Future carrier | shipping/returns | PENDING OWNER | Identify before provider-specific legal statements. |
 
-### Standard-contract rule
+If a KVKK standard contract is the applicable safeguard, use the correct controller/processor scenario and retain signature + Authority notification evidence. The official KVKK notification guidance specifies notification within **five business days** after signing.
 
-KVKK Article 9 provides standard contracts as one possible appropriate safeguard for international transfers. If a standard contract is the applicable mechanism, the signed standard contract must be notified to the Personal Data Protection Authority within **five business days** through an allowed notification method, including the Authority's Standard Contract Notification Module.
+## 4. VERBİS
 
-Do not assume that one standard-contract type fits every vendor. The correct controller/processor transfer scenario and official standard-contract text must be selected based on the real data flow and reviewed before signature/notification.
+Current official KVKK criteria must be applied to Ege Teknik's **real 2025 figures**, not assumed from company type.
 
-### Required evidence folder / register
+For a real/tüzel data controller whose **main activity is not processing special-category personal data**, the current exemption includes entities with **annual employee count below 50 AND annual balance-sheet total below 100 million TL**. The criteria are cumulative for balance-sheet-basis entities. The 25.12.2025 decision also clarifies the approach for entities not keeping books on a balance-sheet basis.
 
-For every active vendor processing personal data, retain internally:
+Ege Teknik's HVAC sales/service activity is not being classified in this checklist as a special-category-data core business without a legal review; the accountant/lawyer must confirm the real position.
 
-1. vendor legal entity and service name,
-2. purpose and data categories,
-3. controller/processor role mapping,
-4. processing/storage region(s),
-5. subprocessor list/reference,
-6. DPA/data-processing terms and date/version,
-7. international-transfer mechanism relied upon,
-8. if standard contract is used: signed copy, signing date, correct scenario/template and Authority notification evidence/date,
-9. retention/deletion controls,
-10. vendor termination/offboarding procedure.
+| Item | Status | Evidence |
+|---|---|---|
+| 2025 annual balance-sheet total < 100M TL? | PENDING OWNER/ACCOUNTANT | Accountant-confirmed 2025 financial statement. |
+| Annual employee count < 50? | PENDING OWNER/ACCOUNTANT | Payroll/employee-count evidence per current VERBİS calculation rules. |
+| Main activity special-category-data processing? | PENDING LEGAL | Confirm business classification. |
+| Final VERBİS registration/exemption conclusion | PENDING LEGAL/ACCOUNTANT | Record legal basis/evidence internally. |
 
-### Go-live rule
+A VERBİS exemption does **not** exempt the company from KVKK obligations such as disclosure, data security, data-subject rights, minimization or transfer compliance.
 
-International-transfer compliance remains `PENDING LEGAL` until active production vendors are reviewed using their actual account configuration and contractual documents. The public KVKK text may accurately disclose categories and transfer possibility, but disclosure is not a substitute for completing the required transfer mechanism.
+## 5. Analytics / cookies
 
----
+The visitor-analytics design now uses two gates:
 
-## 4. VERBİS / data-controller registry
+1. global server-side `ANALYTICS_ENABLED` kill-switch, and
+2. per-visitor `ege_analytics_consent=1` preference.
 
-`PENDING LEGAL / ACCOUNTANT` — determine whether Ege Teknik is currently subject to VERBİS registration or benefits from an applicable exemption based on the company's actual legal/economic/employment facts and current Board criteria. Do not infer exemption solely from company type.
+Without both, analytics event ingestion returns without recording and no `ege_vid` visitor identifier is created. Revoking analytics preference triggers server-side deletion of the HttpOnly analytics identifier.
 
-If registration is required, the inventory and public KVKK text must remain consistent with the registered processing inventory.
+| Item | Status | Required action |
+|---|---|---|
+| Cookie preference UI | IMPLEMENTED ON BRANCH | Verify visual/accessibility behavior in Preview/Production candidate. |
+| Analytics consent gate | IMPLEMENTED ON BRANCH | Verify no-consent → no event/no `ege_vid`. |
+| Consent granted behavior | PENDING TECH | Verify event recorded and dashboard updates when global switch is true. |
+| Consent withdrawal | PENDING TECH | Verify `ege_vid` deletion and no further event ingestion. |
+| Production `ANALYTICS_ENABLED` | PENDING DEPLOY DECISION | Set true only after preference UI/code is the deployed production version. |
+| Google Fonts / Tailwind CDN | PENDING TECH/LEGAL | Prefer self-host/build-time; otherwise include in transfer assessment. |
+| Clerk cookies/storage | PENDING TECH | Browser/network audit against real Production configuration. |
 
----
+Sales/order analytics sourced from real orders are not dependent on the visitor analytics consent cookie; visitor behavior metrics are.
 
-## 5. Company / accountant facts still needed
+## 6. Company / accountant facts still needed
 
-Ask the accountant/company records for the following as one batch:
+Obtain in one batch on Monday:
 
 - MERSİS number,
 - KEP address, if active,
-- trade-registry number and chamber information if needed for site/legal disclosures,
+- trade-registry/chamber information if required,
 - e-Fatura/e-Arşiv status,
-- active e-document integrator/provider,
-- ETBİS registration status for `egeteknik.tr`,
-- VERBİS status / prior registration or exemption assessment,
-- current commercial electronic-message / İYS service-provider status.
+- active e-document integrator/accounting software,
+- 2025 balance-sheet total,
+- annual employee count,
+- existing VERBİS status if any,
+- existing ETBİS record if any,
+- current İYS service-provider status if any.
 
-Do not block drafting on unknown optional identifiers, but do not publish a fabricated placeholder to customers.
+## 7. Feature gates
 
----
+**Orders:** required checkout legal documents must be published and `/api/legal/required` must succeed. ETBİS/company readiness is a separate business launch gate.
 
-## 6. Feature gates
+**Marketing:** promotional automation stays disabled until İYS/consent/withdrawal compliance is complete.
 
-### Orders
+**Payment:** no card flow until the provider is contracted, customer-facing method/legal text matches reality, and callback/security controls are complete.
 
-Production order acceptance may be enabled only after the required checkout legal documents are published and the current required-document API succeeds. ETBİS/company regulatory readiness must be separately confirmed before commercial launch.
+**Shipping:** no carrier shipping until carrier + fee/return conditions are real and shown before order confirmation.
 
-### Marketing
+## 8. Final evidence-based sign-off
 
-Keep automated promotional communications disabled until İYS/consent/withdrawal compliance is complete.
-
-### Sentry
-
-May remain temporarily enabled for the trial only with data-minimization controls. Remove SDK/environment configuration and update the active data-flow/legal documentation when the trial ends.
-
-### Payment
-
-Do not activate a card-payment flow until the contracted payment provider, legal disclosures, callback/security controls and actual payment method shown to the customer are aligned.
-
----
-
-## 7. Evidence-based final sign-off
-
-Final go-live compliance sign-off should be evidence-driven, not a checkbox assertion. Required evidence includes:
+Required evidence includes:
 
 - ETBİS company/domain record,
-- final legal-document versions and effective dates,
-- checkout acceptance evidence design,
-- actual active payment/delivery methods,
+- final legal-document versions/effective dates,
+- checkout acceptance + exact-version evidence,
+- active payment/delivery methods,
 - marketing/İYS state,
-- vendor privacy/DPA/transfer review,
-- accountant-confirmed company/e-document facts,
-- lawyer/privacy review of final texts and transfer mechanism,
-- technical production smoke test after publication.
+- vendor DPA/region/subprocessor/transfer assessment,
+- accountant-confirmed company/e-document/VERBİS facts,
+- analytics consent browser/network test,
+- lawyer/privacy review,
+- Production smoke after legal publication.
 
-Until those items are evidenced, use precise statuses (`PENDING`, `NOT ACTIVE`, `BLOCKER`) rather than claiming full legal compliance.
+Until evidenced, keep precise statuses (`PENDING`, `NOT ACTIVE`, `BLOCKER`) rather than claiming full legal compliance.
