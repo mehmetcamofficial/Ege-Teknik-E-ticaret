@@ -18,7 +18,7 @@
       <div class="summary-row"><span>KDV</span><b data-confirmation-vat></b></div>
       <div class="summary-row"><span>Teslimat</span><b data-confirmation-shipping></b></div>
       <div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-confirmation-total></b></div>
-      <p class="notice" data-confirmation-payment-notice>Online kartla ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi. Ekibimiz ödeme yöntemini teyit etmek için sizinle iletişime geçecek.</p>
+      <p class="notice" data-confirmation-payment-notice>Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi. Ekibimiz kullanılabilir ödeme yöntemini teyit etmek için sizinle iletişime geçecek.</p>
       <h3>Teslimat bilgileri</h3>
       <p data-confirmation-delivery></p>
       <div class="notice" data-confirmation-account>İleride siparişlerinizi kolayca takip etmek isterseniz <a href="/account">hesap oluşturabilirsiniz</a>. Bu tamamen isteğe bağlıdır ve siparişinizi etkilemez; bu misafir siparişi hesabınıza otomatik eklenmez.</div>
@@ -38,11 +38,8 @@
         </div>
         <div data-delivery-options aria-live="polite"></div>
         <h2>Ödeme yöntemi</h2>
-        <label class="pay-option"><input type="radio" name="provider" value="PayTR" disabled aria-describedby="payment-status"><span><b>PayTR ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
-        <label class="pay-option"><input type="radio" name="provider" value="iyzico" disabled aria-describedby="payment-status"><span><b>iyzico ile kartla ödeme</b><br><small>Henüz aktif değil</small></span></label>
-        <label class="pay-option"><input type="radio" name="provider" value="bank_transfer" disabled aria-describedby="payment-status"><span><b>Banka havalesi / EFT</b><br><small>Yapılandırma bekleniyor; henüz kullanılamıyor</small></span></label>
-        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Ödeme yöntemi teyit edilir; bu sırada yukarıda gösterilen tutarın dışında ek bir bedel istenmez. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
-        <div class="notice" id="payment-status">Online kartla ödeme henüz aktif değil; bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Siparişiniz “ödeme bekliyor” durumuyla kaydedilir, ardından sizinle iletişime geçilir.</div>
+        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Aktif ödeme yöntemi sipariş sonrasında teyit edilir. Bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
+        <div class="notice" id="payment-status">Online ödeme henüz aktif değildir. Sözleşmesi tamamlanmamış veya Production'da aktif olmayan bir ödeme kuruluşu müşteriye kullanılabilir seçenek olarak gösterilmez.</div>
       </section>
       <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>KDV (ara toplama dahil)</span><b data-vat>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
         <p class="notice" data-kvkk-notice></p>
