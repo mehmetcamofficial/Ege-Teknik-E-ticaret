@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { availableUnits, reserveUnits, type InventoryRow } from "../lib/inventory.ts";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const route = readFileSync("app/api/orders/route.ts", "utf8");
 const tx = route.slice(route.indexOf("db.transaction"));
@@ -77,8 +78,8 @@ test("an out-of-stock throw aborts the whole transaction (no order, items, accep
 });
 
 // ---- nothing that fails validation may reach the stock write -----------------------------------
-test("replay, key conflict, legal, notice, delivery-plan and pricing failures all return BEFORE the transaction", () => {
-  for (const marker of ["IDEMPOTENCY_KEY_REUSED", "LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "planDelivery(", "PRICE_CHANGED", "orderRequestSchema.safeParse"]) {
+test("replay, key conflict, marketing opt-in, legal, notice, delivery-plan and pricing failures all return BEFORE the transaction", () => {
+  for (const marker of ["IDEMPOTENCY_KEY_REUSED", "MARKETING_CONSENT_DISABLED", "LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "planDelivery(", "PRICE_CHANGED", "orderRequestSchema.safeParse"]) {
     assert.ok(beforeTx.includes(marker), `${marker} is checked before the transaction`);
   }
   assert.doesNotMatch(beforeTx, /update\(inventory\)/);
@@ -93,7 +94,7 @@ test("customer-visible and admin-visible stock is on_hand, matching availability
   const publicApi = readFileSync("app/api/products/route.ts", "utf8");
   const adminOverview = readFileSync("app/api/admin/overview/route.ts", "utf8");
   for (const src of [publicApi, adminOverview]) { assert.match(src, /stock: inventory\.onHand/); assert.doesNotMatch(src, /reserved/); }
-  assert.match(readFileSync("public/store.js", "utf8"), /p\.stock>0\?`Stok: \$\{p\.stock\}`/);
+  assert.match(storefrontCoreSource(), /p\.stock>0\?`Stok: \$\{p\.stock\}`/);
 });
 test("admin writes set on_hand directly; nothing else writes reserved except order creation", () => {
   const files = ["app/api/admin/products/route.ts", "app/api/admin/products/[id]/route.ts", "lib/catalog-service.ts"];

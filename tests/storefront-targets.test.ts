@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 /**
  * Phase 3.5: the storefront navigation/action controls keep a 44px touch target on every viewport.
@@ -28,7 +29,7 @@ test("the mobile menu button, cart link, icon links and the checkout back link s
   assert.ok(minHeight(".store-nav>.menu-toggle") >= 44 || /menu-toggle\{display:inline-flex;align-items:center;min-height:44px/.test(css));
   assert.ok(minHeight(".store-nav .header-tools .ghost") >= 44);
   assert.match(css, /\.header-icon\{display:inline-grid;place-items:center;width:44px;height:44px/);
-  const js = readFileSync(new URL("../public/store.js", import.meta.url), "utf8");
+  const js = storefrontCoreSource();
   for (const label of ["Favoriler", "Karşılaştır"]) assert.match(js, new RegExp(`class="header-icon"[^>]*aria-label="${label}"`));
   // the checkout header's "Mağazaya dön" is a .nav-links link, which the 44px rule above covers
   assert.match(readFileSync(new URL("../public/checkout.html", import.meta.url), "utf8"), /<div class="nav-links"><a href="catalog.html">Mağazaya dön<\/a><\/div>/);

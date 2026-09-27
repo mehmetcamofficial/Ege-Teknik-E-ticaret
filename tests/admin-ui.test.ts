@@ -4,6 +4,7 @@ import test from "node:test";
 import { ADMIN_NAV, LOW_STOCK_THRESHOLD, activeNavHref, orderStatusLabel, orderStatusTone, serviceStatuses, stockLevel, visibleNav } from "../lib/admin-ui.ts";
 import { orderStatuses } from "../lib/order-domain.ts";
 import { adminRoles } from "../lib/security-policy.ts";
+import { STOREFRONT_BOOTSTRAP, STOREFRONT_CORE } from "./support/storefront-sandbox.ts";
 
 const PANEL = "app/admin/(panel)";
 const hrefsFor = (role: string) => visibleNav(role).flatMap((s) => s.items.map((i) => i.href));
@@ -109,7 +110,7 @@ test("stock is only tracked for published online-sale products (matching store.j
   assert.equal(stockLevel({ stock: 0, status: "published", saleMode: "online" }), "out");
   assert.equal(stockLevel({ stock: LOW_STOCK_THRESHOLD, status: "published", saleMode: "online" }), "low");
   assert.equal(stockLevel({ stock: LOW_STOCK_THRESHOLD + 1, status: "published", saleMode: "online" }), "ok");
-  assert.match(read("public/store.js"), /sale:p\.saleMode==='online'/, "the rule mirrors the storefront");
+  assert.match(read(STOREFRONT_CORE), /sale:p\.saleMode==='online'/, "the rule mirrors the storefront");
 });
 
 // ---- shell accessibility -------------------------------------------------------------------------
@@ -155,5 +156,5 @@ test("login never distinguishes which credential was wrong; only rate limiting g
   assert.doesNotMatch(login, /parola yanlış|e-posta bulunamadı|kullanıcı bulunamadı/i);
 });
 test("the storefront still exposes no admin entry point", () => {
-  for (const f of [...globSync("public/*.html"), "public/store.js"]) assert.doesNotMatch(read(f), /href=["']\/admin|['"]\/admin(\/|['"])/, f);
+  for (const f of [...globSync("public/*.html"), STOREFRONT_BOOTSTRAP, STOREFRONT_CORE]) assert.doesNotMatch(read(f), /href=["']\/admin|['"]\/admin(\/|['"])/, f);
 });

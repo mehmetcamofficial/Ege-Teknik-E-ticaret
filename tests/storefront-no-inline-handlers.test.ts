@@ -13,11 +13,11 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import test from "node:test";
-import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront, shippedStorefrontSources, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public");
 const pages = readdirSync(PUBLIC_DIR).filter((entry) => entry.endsWith(".html"));
-const storeJsSource = readFileSync(path.join(PUBLIC_DIR, "store.js"), "utf8");
+const storeJsSource = storefrontCoreSource();
 
 const INLINE_HANDLER_ATTR = /<[a-z][a-z0-9]*\b[^>]*\son[a-z]+="[^"]*"/i;
 
@@ -35,8 +35,10 @@ test("public/store.js contains no on*=\"...\" attribute in any generated-HTML te
   // A JS-assigned `el.onclick = fn` property is fine (not CSP-restricted) and must not
   // false-positive here; neither should prose in a comment - only text shaped like an
   // actual HTML tag attribute (<tag ... on*="...) is checked, same as INLINE_HANDLER_ATTR.
-  const match = storeJsSource.match(INLINE_HANDLER_ATTR);
-  assert.equal(match, null, `store.js still emits an inline event-handler attribute into generated HTML: ${match?.[0]}`);
+  for (const [file, src] of shippedStorefrontSources()) {
+    const match = src.match(INLINE_HANDLER_ATTR);
+    assert.equal(match, null, `${file} still emits an inline event-handler attribute into generated HTML: ${match?.[0]}`);
+  }
 });
 
 test("store.js defines exactly one delegated click listener wired to a named, testable handler", () => {

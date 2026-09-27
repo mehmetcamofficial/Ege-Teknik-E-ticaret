@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
-import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront, shippedStorefrontSources, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
-const js = readFileSync("public/store.js", "utf8");
+const js = storefrontCoreSource();
 const css = readFileSync("public/product-detail.css", "utf8");
 const zero = { summary: { count: 0, average: null, distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }, reviews: [], nextCursor: null };
 const review = (over: Record<string, unknown> = {}) => ({ id: "r1", rating: 4, displayName: "Ayşe K.", body: "Sessiz ve hızlı soğutuyor.", date: "2026-09-01", verifiedPurchase: false, ...over });
@@ -166,7 +166,7 @@ test("responsive rules: 44px controls, stacked summary on mobile, safe wrapping,
   assert.doesNotMatch(css, /(html|body)[^{]*\{[^}]*overflow-x\s*:\s*(hidden|clip)/);
 });
 test("no fake ratings or reviews: every star, count and average comes from the API summary; no literals are shipped", () => {
-  assert.doesNotMatch(js, /average\s*[:=]\s*[1-5](\.\d)?[,;}]|count\s*[:=]\s*[1-9]\d*[,;}]|"?rating"?\s*:\s*[1-5][,}]/);
+  assert.doesNotMatch(shippedStorefrontSources().map(([, s]) => s).join("\n"), /average\s*[:=]\s*[1-5](\.\d)?[,;}]|count\s*[:=]\s*[1-9]\d*[,;}]|"?rating"?\s*:\s*[1-5][,}]/);
   assert.match(js, /if\(!s\|\|!s\.count\)return `<p class="review-empty">Bu ürün için henüz müşteri yorumu bulunmuyor\.<\/p>/);
   assert.match(js, /function reviewHeroMarkup\(\)\{const s=reviewState\.summary;return s&&s\.count>0&&s\.average!=null\?/);
 });

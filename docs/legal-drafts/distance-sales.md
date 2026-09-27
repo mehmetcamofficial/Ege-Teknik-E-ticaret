@@ -1,5 +1,6 @@
 > **RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED**
 > `{{...}}` alanları sipariş anında sistem tarafından doldurulur. MERSİS/KEP ve VKN'nin açık yazımı yayın öncesi şirket kayıtlarından son kez doğrulanacaktır.
+> `[DOĞRULAMA BEKLİYOR: ...]` = henüz doğrulanmamış bilgi; yayından önce doğrulanmalıdır.
 
 # MESAFELİ SATIŞ SÖZLEŞMESİ
 
@@ -70,6 +71,8 @@ Yalnız gönderime uygun ürünlerde kargo seçeneği, taşıyıcı ve ücret ch
 Ürün Alıcı'ya veya Alıcı'nın belirlediği kişiye teslim edilene kadar, mevzuatta aksi düzenlenen haller dışında, teslim sürecindeki kayıp ve hasara ilişkin Satıcı'nın kanuni sorumluluğu devam eder. Teslim sırasında görülebilir hasarın kayıt altına alınması uyuşmazlığın çözümünü kolaylaştırır; tutanak bulunmaması tüketicinin emredici kanuni haklarını kendiliğinden ortadan kaldırmaz.
 
 ## 6. Standart kurulum / montaj
+
+> [DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı] — Bu bölümdeki standart kapsam listesi ve 4 metre sınırı henüz iş tarafından ve hukuken doğrulanmamıştır; yayından önce teyit edilmelidir.
 
 Duvar tipi split klima ürününde standart montajın dâhil olduğu belirtilmişse montaj, ürün için geçerli GREE/TLC montaj standartlarına göre uygulanır. Güncel standart kapsam genel olarak iç/dış ünite montajını, 4 metreye kadar yalıtımlı bakır borulama ve iletişim hattını, spiral drenaj hortumunu, standart L konsolu ve titreşim önleyici takozu, tesisat geçiş deliğinin geçici kapatılmasını, elektrikçi tarafından hazırlanmış besleme kablosunun cihaz klemensine bağlantısını, test/devreye alma ve kullanıcı bilgilendirmesini kapsayabilir.
 

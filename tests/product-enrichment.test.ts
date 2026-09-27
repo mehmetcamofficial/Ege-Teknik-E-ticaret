@@ -6,6 +6,7 @@ import {
   toCatalogListItem, toPublicProductDetail, toPublicSpecifications, toPublicWarranty, warrantySchema, WRITABLE_COLUMNS, type EnrichmentDataset, type PlanEntry, type ProductRow,
 } from "../lib/product-enrichment.ts";
 import { PRODUCT_SLUG_REDIRECTS, resolveProductIdentifier } from "../lib/product-slugs.ts";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const dataset: EnrichmentDataset = datasetSchema.parse(JSON.parse(readFileSync("data/catalog-enrichment/catalog-enrichment.v1.json", "utf8")));
 const eligible = dataset.decisions.filter((d) => d.importStatus.startsWith("READY_"));
@@ -267,7 +268,7 @@ test("slug support is not wired into any route, changes no id or slug column, an
   assert.equal((WRITABLE_COLUMNS as Record<string, string>).slug, undefined);
   for (const file of ["app/api/products/route.ts", "app/api/products/[id]/route.ts", "app/api/orders/route.ts"]) assert.doesNotMatch(readFileSync(file, "utf8"), /product-slugs|PRODUCT_SLUG_REDIRECTS/, file);
   // carts and orders keep referencing the immutable id: the cart stores productId and the order route reads products by id
-  assert.match(readFileSync("public/store.js", "utf8"), /productId/);
+  assert.match(storefrontCoreSource(), /productId/);
 });
 
 test("idempotency survives jsonb key reordering (Postgres does not preserve object key order)", () => {

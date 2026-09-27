@@ -73,6 +73,18 @@ export function marketingChannels(marketing: OrderRequest["marketing"]): Marketi
   return marketingChannelList.filter((channel) => marketing[channel] === true);
 }
 
+/**
+ * Marketing permission is NOT collected through checkout until the İYS / izin-ret flow is ready.
+ * The `marketing` shape stays in the request (the storefront still sends all-false choices, and the
+ * marketing_consents table stays for the future İYS integration), but an explicit `true` for any
+ * channel is refused with this error - never silently dropped - and the order route writes no
+ * marketing_consents row at all.
+ */
+export const MARKETING_CONSENT_DISABLED = { status: 422, code: "MARKETING_CONSENT_DISABLED", error: "Pazarlama izni şu anda sipariş üzerinden alınmıyor. Lütfen sayfayı yenileyip siparişinizi tekrar gönderin." } as const;
+export function marketingConsentRequested(marketing: OrderRequest["marketing"]): boolean {
+  return marketingChannels(marketing).length > 0;
+}
+
 export type PricedProduct = { id: string; price: number; vatRateBps: number };
 
 export function priceOrderLines<T extends PricedProduct>(products: readonly T[], quantities: ReadonlyMap<string, number>) {

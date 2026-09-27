@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { legalVersionPath, resolvePublicLegalVersion, selectCurrentLegalVersions, selectRequiredLegalVersions, type PublicLegalVersion } from "../lib/legal.ts";
 import { renderLegalBody, renderLegalPage } from "../lib/legal-render.ts";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const now = new Date("2026-09-24T00:00:00Z");
 const day = (d: string) => new Date(`${d}T00:00:00Z`);
@@ -44,13 +45,13 @@ test("public index lists only current versions, metadata only", () => {
 });
 test("checkout link carries the exact version id", () => {
   assert.equal(legalVersionPath("distance-sales", "a b/1"), "/legal/distance-sales?version=a%20b%2F1");
-  const js = readFileSync("public/store.js", "utf8");
+  const js = storefrontCoreSource();
   assert.match(js, /function legalVersionHref\(d\)\{return '\/legal\/'\+encodeURIComponent\(d\.slug\)\+'\?version='\+encodeURIComponent\(d\.versionId\)\}/);
   assert.match(js, /href="\$\{esc\(legalVersionHref\(d\)\)\}"/);
   assert.doesNotMatch(js.slice(js.indexOf("function renderLegalConsents"), js.indexOf("function acceptedLegalVersionIds")), /policies\.html/);
 });
 test("links stay unchecked and opening a link creates no acceptance", () => {
-  const js = readFileSync("public/store.js", "utf8");
+  const js = storefrontCoreSource();
   const tpl = js.slice(js.indexOf("function renderLegalConsents"), js.indexOf("function acceptedLegalVersionIds"));
   assert.doesNotMatch(tpl, /\bchecked\b/);
   const route = readFileSync("app/legal/[slug]/route.ts", "utf8");

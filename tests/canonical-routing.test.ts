@@ -15,10 +15,11 @@
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import test from "node:test";
+import { shippedStorefrontSources, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const nextConfig = readFileSync("next.config.ts", "utf8");
 const homepage = readFileSync("public/index.html", "utf8");
-const storeJs = readFileSync("public/store.js", "utf8");
+const storeCore = storefrontCoreSource();
 
 type Redirect = { source: string; destination: string; permanent?: boolean; has?: Array<{ type: string; value: string }> };
 
@@ -80,13 +81,13 @@ test("homepage ships canonical https://egeteknik.tr/", () => {
 });
 
 test("storefront self-links point at / instead of index.html", () => {
-  for (const [name, src] of [["public/index.html", homepage], ["public/store.js", storeJs]] as const) {
+  for (const [name, src] of [["public/index.html", homepage], ...shippedStorefrontSources()] as const) {
     assert.equal(src.includes('href="index.html"'), false, `${name} still links to index.html`);
     assert.equal(src.includes("href='/index.html'"), false, `${name} still links to index.html`);
     assert.equal(src.includes('href="/index.html"'), false, `${name} still links to /index.html`);
   }
   assert.ok(homepage.includes('href="/"'), "homepage brand link should point at /");
-  assert.ok(storeJs.includes('href="/"'), "shared header/footer should point at /");
+  assert.ok(storeCore.includes('href="/"'), "shared header/footer should point at /");
 });
 
 test("robots.txt and sitemap.xml use the canonical apex host", () => {

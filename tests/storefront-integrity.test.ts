@@ -6,10 +6,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { LIVE_HANDLER_ATTR, ORIGIN, apiProduct, confirmationBox, fakeElement, featuredCard, loadStorefront } from "./support/storefront-sandbox.ts";
+import { LIVE_HANDLER_ATTR, ORIGIN, apiProduct, confirmationBox, fakeElement, featuredCard, loadStorefront, shippedStorefrontSources, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const homepage = readFileSync("public/index.html", "utf8");
-const storeJs = readFileSync("public/store.js", "utf8");
 const withoutScripts = (html: string) => html.replace(/<script[\s\S]*?<\/script>/g, "");
 const TRY_AMOUNT = /\d{1,3}(?:\.\d{3})+\s*₺|₺\s*\d/;
 const money = (n: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(n);
@@ -24,8 +23,10 @@ test("the homepage ships no price figure - every ₺ amount it shows comes from 
 });
 
 test("store.js carries no bundled product/price list that could drift from the served catalog", () => {
-  assert.doesNotMatch(storeJs, /\bprice\s*:\s*\d/, "a numeric price literal in store.js is a second price source");
-  assert.doesNotMatch(storeJs, /\bconst\s+seed\b/);
+  for (const [file, src] of shippedStorefrontSources()) {
+    assert.doesNotMatch(src, /\bprice\s*:\s*\d/, `a numeric price literal in ${file} is a second price source`);
+    assert.doesNotMatch(src, /\bconst\s+seed\b/, file);
+  }
 });
 
 test("every homepage product reference (featured card, product link, favorite button) names one of the featured catalog products", () => {
@@ -257,7 +258,7 @@ test("homepage featured fields are written as text, so a hostile product name st
 
 test("region pages cover exactly the 9 service provinces and use service-area wording", () => {
   const provinces = ["İzmir", "Aydın", "Muğla", "Manisa", "Denizli", "Uşak", "Kütahya", "Afyonkarahisar", "Balıkesir"];
-  const src = readFileSync(new URL("../public/store.js", import.meta.url), "utf8");
+  const src = storefrontCoreSource();
   const listed = [...(/const regions=\[(.*?)\];/.exec(src)?.[1] ?? "").matchAll(/\['[a-z]+','([^']+)'\]/g)].map((m) => m[1]);
   assert.deepEqual([...listed].sort(), [...provinces].sort());
   const slugs = [...(/const regions=\[(.*?)\];/.exec(src)?.[1] ?? "").matchAll(/\['([a-z]+)','([^']+)'\]/g)].map((m) => [m[1], m[2]]);

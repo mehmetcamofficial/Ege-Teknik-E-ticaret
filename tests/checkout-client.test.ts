@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { CONFIGURED_SHIPPING, DEFAULT_CHARGES, LIVE_HANDLER_ATTR, apiProduct, confirmationBox, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
+import { CONFIGURED_SHIPPING, DEFAULT_CHARGES, LIVE_HANDLER_ATTR, apiProduct, confirmationBox, fakeElement, loadStorefront, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 /**
  * Phase 3.4B: the storefront checkout shows the delivery model; the SERVER stays authoritative (tests/delivery.test.ts).
@@ -80,7 +80,7 @@ test("every service-area province is accepted with one of its own districts, and
     await submit(store, form({ city: province, district: DEFAULT_CHARGES.locations[province][0] }).f);
     assert.equal(store.orderBodies.length, 1, province);
   }
-  const js = readFileSync("public/store.js", "utf8");
+  const js = storefrontCoreSource();
   const logic = js.slice(js.indexOf("let checkoutConfig"), js.indexOf("function renderChargeSummary"));
   for (const name of ["İzmir", "Aydın", "Muğla", "Denizli", "Manisa", "Balıkesir", "Bornova", "Bodrum"]) assert.equal(logic.includes(`'${name}'`) || logic.includes(`"${name}"`), false, `${name} must not be hard-coded in the checkout logic`);
 });
@@ -178,7 +178,7 @@ test("the KVKK notice reuses the exact-version link builder", () => {
 
 // ---- what the page shows -------------------------------------------------------------------------------
 const checkoutHtml = readFileSync("public/checkout.html", "utf8");
-const storeJs = readFileSync("public/store.js", "utf8");
+const storeJs = storefrontCoreSource();
 function checkoutPage(opts: { cart?: unknown[]; charges?: Record<string, unknown>; products?: Record<string, unknown>[]; city?: string; district?: string; delivery?: string } = {}) {
   const submitButton = { disabled: /data-submit-order disabled/.test(checkoutHtml), textContent: "" }; // starts exactly as the shipped HTML does
   const elements = { "[data-submit-order]": submitButton, "[data-cart-items]": fakeElement(), "[data-subtotal]": fakeElement(), "[data-vat]": fakeElement(), "[data-charge-summary]": fakeElement(), "[data-total]": fakeElement(), "[data-charge-notice]": { ...fakeElement(), hidden: true }, "[data-delivery-options]": fakeElement(), "[name=city]": { value: opts.city ?? "İzmir" }, "[name=district]": { value: opts.district ?? "Bornova", required: false }, "[data-district]": { ...fakeElement(), disabled: true, value: "" }, "[data-province]": { ...fakeElement(), value: opts.city ?? "İzmir" }, "[name=address]": { value: "" }, "[name=delivery]:checked": opts.delivery ? { value: opts.delivery } : null, "[data-address-hint]": fakeElement() } as unknown as Record<string, ReturnType<typeof fakeElement>>;
@@ -262,11 +262,11 @@ test("the province, district and address become required for dealer delivery and
   assert.equal((pickup.elements["[name=address]"] as unknown as { required: boolean }).required, false);
 });
 
-test("no legal or marketing checkbox is ever preselected", () => {
+test("no legal checkbox is ever preselected, and checkout offers no marketing checkbox until the İYS flow is ready", () => {
   const boxes = [...checkoutHtml.matchAll(/<input type="checkbox"[^>]*>/g), ...storeJs.matchAll(/<input type="checkbox"[^>]*>/g)].map((m) => m[0]);
-  assert.ok(boxes.length >= 4);
+  assert.ok(boxes.some((box) => /data-legal-version=/.test(box)), "the generated legal acceptance checkbox exists");
   for (const box of boxes) assert.doesNotMatch(box, /\bchecked\b/, box);
-  assert.equal((checkoutHtml.match(/data-marketing-channel="(sms|email|whatsapp)"/g) ?? []).length, 3);
+  assert.doesNotMatch(checkoutHtml, /data-marketing-channel|data-marketing-consents/, "marketing consent stays closed until the İYS/consent flow is ready");
 });
 
 // ---- unit price and VAT are shown, not just a line total ------------------------------------------
@@ -358,5 +358,5 @@ test("hostile product names and delivery details in the server response are show
 
 test("no online payment was actually taken: the confirmation states this honestly", () => {
   assert.match(checkoutHtml, /data-confirmation-payment-notice/);
-  assert.match(checkoutHtml, /Online kartla ödeme henüz aktif değil.*ödeme tahsil edilmedi/);
+  assert.match(checkoutHtml, /Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi/);
 });

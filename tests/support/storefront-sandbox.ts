@@ -16,6 +16,18 @@ import { DISTRICTS_BY_PROVINCE, EGE_TEKNIK_SERVICE_PROVINCES, publicDeliveryTrai
 
 export const ORIGIN = "https://shop.test";
 
+/**
+ * The storefront ships as two scripts: every page loads the consent bootstrap (public/store.js),
+ * which document.write()s the storefront core (public/store-core.js). Storefront logic - cart,
+ * checkout, rendering, header/footer - lives in the core, so behavioural and source assertions
+ * about that logic read STOREFRONT_CORE. Anything that must hold for everything shipped to the
+ * browser (no inline handlers, no admin links, no unverified claims) checks both files.
+ */
+export const STOREFRONT_BOOTSTRAP = "public/store.js";
+export const STOREFRONT_CORE = "public/store-core.js";
+export const storefrontCoreSource = () => readFileSync(STOREFRONT_CORE, "utf8");
+export const shippedStorefrontSources = () => [STOREFRONT_BOOTSTRAP, STOREFRONT_CORE].map((file) => [file, readFileSync(file, "utf8")] as const);
+
 /** What GET /api/checkout/charges serves today: shipping tariff pending, the service-area provinces, the province -> district dataset and the delivery-class trait table (all from lib/delivery.ts). */
 export const DEFAULT_CHARGES = { shipping: { status: "pending" }, serviceProvinces: [...EGE_TEKNIK_SERVICE_PROVINCES], locations: DISTRICTS_BY_PROVINCE, deliveryTraits: publicDeliveryTraits };
 export const CONFIGURED_SHIPPING = { ...DEFAULT_CHARGES, shipping: { status: "configured", amount: 600, vatRateBps: 2000 } };
@@ -205,7 +217,7 @@ export function loadStorefront(options: {
     },
   };
   vm.createContext(context);
-  vm.runInContext(readFileSync("public/store-core.js", "utf8"), context, { filename: "public/store-core.js" });
+  vm.runInContext(storefrontCoreSource(), context, { filename: STOREFRONT_CORE });
 
   return {
     // The sandbox's own functions, looked up by name; each test casts to the signature it calls.

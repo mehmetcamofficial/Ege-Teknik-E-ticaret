@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront, shippedStorefrontSources, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const storeCss = readFileSync("public/store.css", "utf8");
 const home = readFileSync("public/index.html", "utf8");
-const js = readFileSync("public/store.js", "utf8");
+const js = storefrontCoreSource();
+const shipped = shippedStorefrontSources().map(([, s]) => s).join("\n");
 const customerPages = ["index", "catalog", "product", "favorites", "compare", "checkout", "second-hand", "policies", "contact", "services", "blog", "article", "regions", "region", "selector"].map((p) => [p, readFileSync(`public/${p}.html`, "utf8")] as const);
 
 test("store header: menu button precedes the panel it controls, reports state and labels icon links", () => {
@@ -61,12 +62,12 @@ test("empty states offer a real next action", async () => {
 });
 
 test("contact form failures are announced inline, never through alert()", () => {
-  assert.doesNotMatch(js, /\balert\(/);
+  assert.doesNotMatch(shipped, /\balert\(/);
   assert.match(js, /status\.setAttribute\('role','alert'\)/);
 });
 
 test("customer-facing identity: only the verified e-mail, no stale addresses or domains", () => {
-  const all = customerPages.map(([, html]) => html).join("\n") + js;
+  const all = customerPages.map(([, html]) => html).join("\n") + shipped;
   assert.doesNotMatch(all, /oncoconnect2@gmail\.com|trendklima/i);
   assert.match(js, /email:'info@egeteknik\.tr'/);
   assert.match(home, /href="mailto:info@egeteknik\.tr"/);

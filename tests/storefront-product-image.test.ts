@@ -1,16 +1,13 @@
 /**
- * Exercises the real public/store.js file (loaded via node:vm, not re-implemented
+ * Exercises the real storefront core, public/store-core.js (loaded via node:vm, not re-implemented
  * here) so these assertions stay tied to what actually ships to the browser.
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 import test from "node:test";
 import vm from "node:vm";
+import { STOREFRONT_CORE, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
-const storeJsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public", "store.js");
-const storeJsSource = readFileSync(storeJsPath, "utf8");
+const storeJsSource = storefrontCoreSource();
 
 type FakeElement = { innerHTML: string; querySelector: () => null };
 function fakeElement(): FakeElement {
@@ -43,7 +40,7 @@ function loadStore(options: { registerSelectors?: Record<string, FakeElement>; f
     },
   };
   vm.createContext(context);
-  new vm.Script(storeJsSource, { filename: "store.js" }).runInContext(context);
+  new vm.Script(storeJsSource, { filename: STOREFRONT_CORE }).runInContext(context);
   return context;
 }
 

@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { datasetSchema, sanitizePublicDescription, toPublicProductDetail, toPublicWarranty } from "../lib/product-enrichment.ts";
-import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront, shippedStorefrontSources, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const dataset = datasetSchema.parse(JSON.parse(readFileSync("data/catalog-enrichment/catalog-enrichment.v1.json", "utf8")));
 const css = readFileSync("public/product-detail.css", "utf8");
-const js = readFileSync("public/store.js", "utf8");
+const js = storefrontCoreSource();
 
 const full = apiProduct({
   id: "full-1",
@@ -196,5 +196,5 @@ test("design tokens are defined once, mobile rules stack specs and related produ
   assert.match(css, /\.related-section \.product-grid\{display:grid;grid-template-columns:none;grid-auto-flow:column;[^}]*overflow-x:auto/);
   assert.doesNotMatch(css + readFileSync("public/store.css", "utf8"), /(^|[;{}])\s*(html|body)[^{]*\{[^}]*overflow-x\s*:\s*hidden/);
   assert.match(readFileSync("public/store.css", "utf8"), /\.product-visual \.product-image\{[^}]*height:100%[^}]*object-fit:contain/);
-  for (const banned of [/indirim/, /eski fiyat/, /stokta son|son \d+ (adet|ürün)/, /popüler/, /en çok satan/, /randevu/, /yapay zeka/, /bugün \d+ kişi/]) assert.doesNotMatch(js.toLocaleLowerCase("tr"), banned);
+  for (const banned of [/indirim/, /eski fiyat/, /stokta son|son \d+ (adet|ürün)/, /popüler/, /en çok satan/, /randevu/, /yapay zeka/, /bugün \d+ kişi/]) assert.doesNotMatch(shippedStorefrontSources().map(([, s]) => s).join("\n").toLocaleLowerCase("tr"), banned);
 });

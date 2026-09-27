@@ -49,7 +49,11 @@ test("the visitor cookie is HttpOnly, SameSite=Strict, first-party (Path=/), and
   assert.match(ingestRoute, /HttpOnly/);
   assert.match(ingestRoute, /SameSite=Strict/);
   assert.match(ingestRoute, /Path=\//);
-  assert.match(ingestRoute, /Max-Age=\$\{VISITOR_COOKIE_MAX_AGE_SECONDS\}/);
+  // One header builder serves both paths: issuing uses the bounded default, revoking clears (0).
+  assert.match(ingestRoute, /function visitorCookieHeader\(value: string, secure: boolean, maxAge = VISITOR_COOKIE_MAX_AGE_SECONDS\)/);
+  assert.match(ingestRoute, /Max-Age=\$\{maxAge\}/);
+  assert.match(ingestRoute, /visitorCookieHeader\(visitorId, process\.env\.NODE_ENV === "production"\)\)/, "issuing never overrides the bounded default");
+  assert.match(ingestRoute, /visitorCookieHeader\("", new URL\(request\.url\)\.protocol === "https:", 0\)/, "revoking expires the cookie immediately");
 });
 test("the cookie is Secure in production (never sent over plain HTTP once deployed)", () => {
   assert.match(ingestRoute, /process\.env\.NODE_ENV === "production"/);

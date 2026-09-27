@@ -223,13 +223,16 @@ test("the public checkout config exposes the shipping tariff, the service provin
 test("the checkout legal drafts describe the new model as a TECHNICAL draft and never claim legal approval", () => {
   for (const file of ["distance-sales", "pre-information", "installation", "delivery-returns"]) {
     const md = read(`docs/legal-drafts/${file}.md`);
-    assert.match(md, /NOT PUBLISHED/, `${file} stays unpublished`);
+    assert.match(md, /NOT (YET )?PUBLISHED/, `${file} stays unpublished`);
     assert.doesNotMatch(md, /hukuken onaylan(dı|mıştır)|hukuki onay(ı)? (alındı|verildi)|onaylı metin/i, `${file} must not claim approval`);
   }
   const sales = read("docs/legal-drafts/distance-sales.md");
-  assert.match(sales, /TEKNİK TASLAK GÜNCELLEMESİ[\s\S]*HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR/);
-  assert.match(sales, /standart\s+montaj hizmetinin sunulmasıdır/);
-  assert.match(sales, /kargo değildir/, "delivery included in the price is not called shipping");
+  assert.match(sales, /HUKUKİ İNCELEME VE ONAY YAPILMAMIŞTIR|LEGAL REVIEW REQUIRED/, "the draft says plainly that legal review is still outstanding");
+  assert.match(sales, /dâhil olduğu belirtilmişse standart klima montajının sunulmasına/, "standard installation is part of the subject only where the product/order page says it is included");
+  const acDelivery = sales.match(/^Klima ve montajlı ürünlerin teslimatı[^\n]*$/m)?.[0] ?? "";
+  assert.ok(acDelivery, "air-conditioner delivery is described on its own");
+  assert.doesNotMatch(acDelivery, /kargo/i, "delivery included in the price is not called shipping");
+  assert.match(sales, /Yalnız gönderime uygun ürünlerde kargo seçeneği/, "shipping is only for shippable products");
   assert.doesNotMatch(sales, /ücretsiz (kargo|montaj)|bedava/i);
   assert.match(sales, /\[DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı\]/, "the unverified package scope stays flagged");
 });

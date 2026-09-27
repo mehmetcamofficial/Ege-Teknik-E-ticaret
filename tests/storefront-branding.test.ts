@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const PUBLIC_DIR = "public";
 const homepage = readFileSync(join(PUBLIC_DIR, "index.html"), "utf8");
-const storeJs = readFileSync(join(PUBLIC_DIR, "store.js"), "utf8");
+const storeJs = storefrontCoreSource();
 const publicSources = readdirSync(PUBLIC_DIR)
   .filter((entry) => /\.(?:html|js|css)$/.test(entry))
   .map((entry) => readFileSync(join(PUBLIC_DIR, entry), "utf8"));

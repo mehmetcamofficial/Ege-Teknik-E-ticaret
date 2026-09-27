@@ -11,6 +11,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
+import { shippedStorefrontSources } from "./support/storefront-sandbox.ts";
 
 const UNVERIFIED = [
   { name: "dealer/authorisation status", pattern: /yetkili\s+(bayi|satıcı|satış|servis|iklimlendirme)|resmi\s+(gree|satış|distribüt)|distribütör/i },
@@ -62,35 +63,35 @@ test("store.js templates make none of those claims either", () => {
   // Excluded on purpose: the editorial guide list (`const articles=[...]`), whose titles explain
   // topics such as "A++ ve A+++ Arasındaki Fark" rather than claim anything about our products,
   // and URL attribute values (e.g. "Yedek%20Parça" is URL encoding, not a percentage).
-  const source = readFileSync("public/store.js", "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/const articles=\[[\s\S]*?\]\];/, "")
-    .replace(/\bhref="[^"]*"/g, "");
-  assert.ok(!/const articles=/.test(source), "the guide list moved - update this exclusion rather than dropping coverage");
-  const literals = withoutApproved([...source.matchAll(/`[^`]*`|'[^'\n]*'/g)].map((m) => m[0]).join("\n"));
-  for (const { name, pattern } of UNVERIFIED) {
-    const hit = literals.match(pattern);
-    assert.equal(hit, null, `store.js: unverified ${name}: "${hit?.[0]}"`);
+  for (const [file, raw] of shippedStorefrontSources()) {
+    const source = raw
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/const articles=\[[\s\S]*?\]\];/, "")
+      .replace(/\bhref="[^"]*"/g, "");
+    assert.ok(!/const articles=/.test(source), "the guide list moved - update this exclusion rather than dropping coverage");
+    const literals = withoutApproved([...source.matchAll(/`[^`]*`|'[^'\n]*'/g)].map((m) => m[0]).join("\n"));
+    for (const { name, pattern } of UNVERIFIED) {
+      const hit = literals.match(pattern);
+      assert.equal(hit, null, `${file}: unverified ${name}: "${hit?.[0]}"`);
+    }
   }
 });
 
 test("checkout does not present an inactive card payment as selectable or working", () => {
-  // PayTR/iyzico are not live (see public/policies.html). The only enabled choice is the
-  // confirm-later option, it is the default, and the page says plainly that no card payment is taken.
+  // PayTR/iyzico/bank transfer are not live, so they are hidden entirely rather than shown disabled.
+  // The only choice is the confirm-later option, it is the default, and the page says plainly that
+  // no online payment is taken.
   const html = readFileSync("public/checkout.html", "utf8");
   const radios = [...html.matchAll(/<input\b[^>]*name="provider"[^>]*>/g)].map((m) => m[0]);
-  assert.equal(radios.length, 4); // PayTR, iyzico and bank transfer are disabled; only confirm-later is live
-  for (const radio of radios) {
-    const live = /value="discovery"/.test(radio);
-    assert.equal(/\sdisabled\b/.test(radio), !live, `${radio} enabled state`);
-    assert.equal(/\schecked\b/.test(radio), live, `${radio} default state`);
-  }
-  assert.match(html, /kartla ödeme henüz aktif değil/i);
+  assert.equal(radios.length, 1);
+  assert.match(radios[0], /value="discovery"/);
+  assert.match(radios[0], /\schecked\b/, "confirm-later is the default");
+  assert.doesNotMatch(radios[0], /\sdisabled\b/);
+  assert.match(html, /Online ödeme henüz aktif değil/i);
   assert.doesNotMatch(customerFacingText(html), /3D Secure|güvenli ödeme|ödeme bağlantısı/i);
 });
 
 test("customer-facing placeholders say what is missing instead of promising supplier content", () => {
-  const source = readFileSync("public/store.js", "utf8");
-  assert.doesNotMatch(source, /Bayiden eklenecek|bayi görselleri/i);
+  for (const [file, source] of shippedStorefrontSources()) assert.doesNotMatch(source, /Bayiden eklenecek|bayi görselleri/i, file);
   assert.doesNotMatch(readFileSync("public/second-hand.html", "utf8"), /şablon/i);
 });

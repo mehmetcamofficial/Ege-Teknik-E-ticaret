@@ -4,10 +4,11 @@ import test from "node:test";
 import { CHECKOUT_TARIFFS, finalizeOrderTotals, priceShipping, publicTariffs, totalMatchesDisplayed, type CheckoutTariffs } from "../lib/checkout-charges.ts";
 import { CHECKOUT_NOTICE_SLUGS, missingNoticeSlugs } from "../lib/legal.ts";
 import { computeOrderTotals, marketingChannels, orderRequestFingerprint, orderRequestSchema, priceOrderLines } from "../lib/order-domain.ts";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const route = readFileSync("app/api/orders/route.ts", "utf8");
 const html = readFileSync("public/checkout.html", "utf8");
-const store = readFileSync("public/store.js", "utf8");
+const store = storefrontCoreSource();
 const migration = readFileSync("drizzle-pg/0006_checkout_charges_and_marketing_consents.sql", "utf8");
 const configured = (shipping: number | null): CheckoutTariffs => ({ shipping: shipping === null ? { status: "pending" } : { status: "configured", amount: shipping, vatRateBps: 2000 } });
 const base = { customerName: "Test Kişi", phone: "05000000000", email: "test@example.test", city: "İzmir", address: "Test Mahallesi 1 Sokak No 1", paymentProvider: "discovery" as const, items: [{ productId: "p1", quantity: 1 }], expectedTotal: 1000 };
@@ -93,21 +94,19 @@ test("a different marketing choice is a different request (idempotency conflict)
   assert.notEqual(fp({ marketing: { sms: true } }), fp({ marketing: { email: true } }));
   assert.equal(fp({ marketing: { sms: false, email: false, whatsapp: false } }), fp());
 });
-test("marketing permission rows are written only for ticked channels, in the same transaction, after the customer exists", () => {
+test("the order route writes no marketing permission until the İYS flow is ready: an opt-in is refused before any write", () => {
   const tx = route.slice(route.indexOf("db.transaction"));
-  assert.match(tx, /if \(channels\.length\) await tx\.insert\(marketingConsents\)/);
-  assert.ok(tx.indexOf("tx.insert(customers)") < tx.indexOf("tx.insert(marketingConsents)"));
-  assert.match(tx, /granted: true/);
+  assert.doesNotMatch(route, /marketingConsents|granted: true/, "the route neither imports nor writes marketing_consents");
+  assert.match(route, /if \(marketingConsentRequested\(parsed\.data\.marketing\)\) return Response\.json\(\{ error: MARKETING_CONSENT_DISABLED\.error, code: MARKETING_CONSENT_DISABLED\.code \}, \{ status: MARKETING_CONSENT_DISABLED\.status \}\)/);
+  assert.ok(route.indexOf("marketingConsentRequested(") < route.indexOf("db.transaction"), "refused before the transaction");
+  assert.ok(route.indexOf("await replay()") < route.indexOf("marketingConsentRequested("), "an idempotent replay of an existing order is still answered first");
+  assert.match(tx, /tx\.insert\(orderLegalAcceptances\)/, "legal acceptances are still recorded");
 });
-test("checkout markup: three separate, unchecked, optional marketing boxes outside the legal block", () => {
+test("checkout markup: no marketing consent is collected until the İYS/consent flow is ready", () => {
   const legal = html.match(/<fieldset[^>]*data-legal-consents[^>]*>[\s\S]*?<\/fieldset>/)![0];
   assert.doesNotMatch(legal, /marketing/i);
-  const marketing = html.match(/<fieldset[^>]*data-marketing-consents[^>]*>[\s\S]*?<\/fieldset>/)![0];
-  const inputs = [...marketing.matchAll(/<input\b[^>]*>/g)].map((m) => m[0]);
-  assert.equal(inputs.length, 3);
-  for (const input of inputs) assert.doesNotMatch(input, /\bchecked\b|\brequired\b/);
-  assert.match(marketing, /isteğe bağlı/i);
-  assert.match(marketing, /gerekli değildir/i);
+  assert.doesNotMatch(html, /data-marketing-consents|data-marketing-channel/, "no marketing boxes are rendered");
+  assert.match(html, /Tanıtım ve pazarlama izinleri V1 sipariş akışında alınmaz\. Pazarlama özelliği İYS\/izin\/ret süreci tamamlanana kadar kapalıdır\./, "the page says plainly that marketing is closed");
 });
 test("the client sends only explicitly ticked marketing channels", () => {
   assert.match(store, /function marketingChoices\(boxes\)\{const choices=\{sms:false,email:false,whatsapp:false\}/);
@@ -138,12 +137,12 @@ test("/api/legal/required is unchanged: exactly the two acceptance documents, no
 });
 
 // ---- payment methods -----------------------------------------------------------------------------
-test("bank transfer is shown as unavailable with no account details; PayTR stays disabled", () => {
+test("inactive payment providers are hidden entirely: no PayTR, iyzico or bank-transfer option and no account details", () => {
   const radios = [...html.matchAll(/<input\b[^>]*name="provider"[^>]*>/g)].map((m) => m[0]);
-  assert.match(radios.find((r) => /bank_transfer/.test(r))!, /\sdisabled\b/);
-  assert.match(radios.find((r) => /PayTR/.test(r))!, /\sdisabled\b/);
+  assert.deepEqual(radios.map((r) => r.match(/value="([^"]+)"/)![1]), ["discovery"], "only the confirm-later option is offered");
+  assert.doesNotMatch(html, /PayTR|iyzico|bank_transfer|havale/i, "an inactive provider is not shown, not even disabled");
   assert.doesNotMatch(html, /\bTR\d{2}[ 0-9]{10,}|IBAN\s*:/i);
-  assert.match(html, /Yapılandırma bekleniyor/);
+  assert.match(html, /Online ödeme henüz aktif değildir\./);
 });
 
 // ---- checkout page copy --------------------------------------------------------------------------

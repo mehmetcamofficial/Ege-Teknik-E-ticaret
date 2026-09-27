@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
-import { DEFAULT_CHARGES } from "./support/storefront-sandbox.ts";
+import { DEFAULT_CHARGES, STOREFRONT_CORE, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 type CartEntry = { productId: string; quantity: number };
 type Product = { id: string; name: string; capacity: string; price: number; sale: boolean };
@@ -57,8 +56,9 @@ function makeStore(data: Record<string, string> = {}) {
 }
 
 /**
- * Loads the shipped public/store.js into a sandbox, so these assertions run against the exact
- * file the browser receives rather than a copy of its logic. Classic-script function
+ * Loads the shipped storefront core (public/store-core.js, which the public/store.js consent
+ * bootstrap pulls in) into a sandbox, so these assertions run against the exact file the
+ * browser receives rather than a copy of its logic. Classic-script function
  * declarations land on the sandbox global; const/arrow bindings deliberately do not.
  */
 function loadStorefront(options: { fetch?: (url: string, init?: { headers?: Record<string, string>; body?: string }) => Promise<unknown>; cart?: unknown } = {}) {
@@ -88,7 +88,7 @@ function loadStorefront(options: { fetch?: (url: string, init?: { headers?: Reco
     },
   };
   vm.createContext(context);
-  vm.runInContext(readFileSync("public/store.js", "utf8"), context);
+  vm.runInContext(storefrontCoreSource(), context, { filename: STOREFRONT_CORE });
   return { ctx: context as unknown as StorefrontApi, localStorage, sessionStorage, calls };
 }
 

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { CHECKOUT_LEGAL_SLUGS, checkLegalAcceptance, selectRequiredLegalVersions, type LegalVersionRow } from "../lib/legal.ts";
 import { computeOrderTotals, orderRequestFingerprint, orderRequestSchema, priceOrderLines } from "../lib/order-domain.ts";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const NOW = new Date("2026-09-25T12:00:00Z");
 const past = new Date("2026-09-01T00:00:00Z");
@@ -190,18 +191,15 @@ const html = readFileSync("public/checkout.html", "utf8");
 test("checkout.html has a legal consent container and never pre-checks anything", () => {
   assert.match(html, /data-legal-consents/);
   assert.doesNotMatch(html, /type="checkbox"[^>]*\bchecked\b/i);
-  const storeJs = readFileSync("public/store.js", "utf8");
+  const storeJs = storefrontCoreSource();
   const template = storeJs.slice(storeJs.indexOf("function renderLegalConsents"), storeJs.indexOf("function acceptedLegalVersionIds"));
   assert.match(template, /type="checkbox"/);
   assert.doesNotMatch(template, /\bchecked\b/, "generated checkboxes must be unchecked by default");
 });
 
-test("optional marketing consent is separate from the legal acceptance UI, unchecked and not required", () => {
+test("the mandatory legal block holds no marketing consent, and checkout offers none until the İYS flow is ready", () => {
   const legalFieldset = html.match(/<fieldset[^>]*data-legal-consents[^>]*>[\s\S]*?<\/fieldset>/)![0];
-  assert.doesNotMatch(legalFieldset, /marketing|pazarlama|tanıtım/i, "marketing lives outside the mandatory legal block");
-  const marketing = html.match(/<fieldset[^>]*data-marketing-consents[^>]*>[\s\S]*?<\/fieldset>/)![0];
-  const boxes = [...marketing.matchAll(/<input\b[^>]*>/g)].map((m) => m[0]);
-  assert.deepEqual(boxes.map((b) => b.match(/data-marketing-channel="(\w+)"/)![1]), ["sms", "email", "whatsapp"]);
-  for (const box of boxes) { assert.doesNotMatch(box, /\bchecked\b|\brequired\b/); assert.match(box, /type="checkbox"/); }
+  assert.doesNotMatch(legalFieldset, /marketing|pazarlama|tanıtım/i, "marketing never enters the mandatory legal block");
+  assert.doesNotMatch(html, /data-marketing-consents|data-marketing-channel/, "no marketing checkbox is offered while the İYS flow is not ready");
   assert.doesNotMatch(html, /hepsini kabul|accept all/i);
 });

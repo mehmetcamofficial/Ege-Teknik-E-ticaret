@@ -9,7 +9,7 @@ import {
 import * as delivery from "../lib/delivery.ts";
 import { deliverySummaryFromSnapshot } from "../lib/order-domain.ts";
 import { describeOrderDelivery, readDeliverySnapshot } from "../lib/order-delivery.ts";
-import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront, shippedStorefrontSources } from "./support/storefront-sandbox.ts";
 
 /** Phase 3.4C: the admin side of the delivery domain (product class, list badge, order detail), with legacy orders left intact. */
 const read = (f: string) => readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
@@ -172,7 +172,7 @@ test("product-page delivery notes follow the stored class: installed delivery in
   assert.deepEqual([...notes({ deliveryClass: "installed_delivery" }, false)], ["Teslimat ve montaj koşulları teklif sürecinde netleşir."], "a quote-priced product promises nothing");
   const all = ["installed_delivery", "shippable", "local_delivery", "x"].flatMap((c) => [...notes({ deliveryClass: c }, true)]).join(" ");
   assert.doesNotMatch(all, /isteğe bağlı|ayrıca seçilir ve fiyatlandırılır|[Üü]cretsiz|[Bb]edava/);
-  assert.doesNotMatch(read("public/store.js"), /Kurulum isteğe bağlıdır/);
+  for (const [file, src] of shippedStorefrontSources()) assert.doesNotMatch(src, /Kurulum isteğe bağlıdır/, file);
 });
 
 test("product detail install/delivery card follows the delivery class and never says installation is optional or separately priced", async () => {

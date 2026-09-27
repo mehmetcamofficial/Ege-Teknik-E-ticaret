@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
-import { CONFIGURED_SHIPPING, DEFAULT_CHARGES, apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
+import { CONFIGURED_SHIPPING, DEFAULT_CHARGES, STOREFRONT_CORE, apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
 import {
   DISTRICTS_BY_PROVINCE, EGE_TEKNIK_SERVICE_PROVINCES, SERVICE_AREA_MESSAGE, TURKEY_PROVINCES, canonicalDistrict, canonicalProvince, foldTr, planDelivery, type ProvinceName,
 } from "../lib/delivery.ts";
@@ -135,11 +135,11 @@ test("the service area is a business coverage list, not the geographic Ege regio
     ["docs distance-sales", read("docs/legal-drafts/distance-sales.md")], ["docs delivery-returns", read("docs/legal-drafts/delivery-returns.md")],
     ["docs pre-information", read("docs/legal-drafts/pre-information.md")], ["docs installation", read("docs/legal-drafts/installation.md")],
   ];
-  const js = read("public/store.js");
+  const js = read(STOREFRONT_CORE);
   deliveryTexts.push(["store.js checkout delivery block", js.slice(js.indexOf("let checkoutConfig"), js.indexOf("function marketingChoices"))]);
   deliveryTexts.push(["store.js product delivery notes", js.slice(js.indexOf("function deliveryNotes"), js.indexOf("function relatedProductsFor"))]);
   for (const [name, text] of deliveryTexts) assert.doesNotMatch(text, /Ege Bölgesi/, `${name} still claims the Ege Region`);
-  assert.match(read("public/store.js"), /Ege Teknik hizmet bölgesinde adrese teslim/);
+  assert.match(read(STOREFRONT_CORE), /Ege Teknik hizmet bölgesinde adrese teslim/);
 });
 
 // ---- server route ----------------------------------------------------------------------------------------------------
@@ -190,13 +190,13 @@ test("changing the province clears the previously selected district", async () =
   store.fn<() => void>("onProvinceChange")();
   assert.equal(d.value, "", "the old district is cleared");
   assert.ok(d.innerHTML.includes(">Bodrum</option>") && !d.innerHTML.includes(">Bornova</option>"));
-  assert.match(read("public/store.js"), /if\(t\.matches\('\[name=city\]'\)\)onProvinceChange\(\)/, "the province select's change event is wired to it");
+  assert.match(read(STOREFRONT_CORE), /if\(t\.matches\('\[name=city\]'\)\)onProvinceChange\(\)/, "the province select's change event is wired to it");
 });
 test("the province select is filled from the API's dataset (81 options), never from a list in store.js", async () => {
   const { elements } = await checkout("");
   const html = (elements["[data-province]"] as unknown as { innerHTML: string }).innerHTML;
   assert.equal((html.match(/<option value="[^"]+"/g) ?? []).length, 81);
-  assert.match(read("public/store.js"), /Object\.keys\(checkoutConfig\.locations\)/);
+  assert.match(read(STOREFRONT_CORE), /Object\.keys\(checkoutConfig\.locations\)/);
 });
 test("the API response carries the service provinces and the location dataset, and the server module is the only place they come from", () => {
   assert.equal(DEFAULT_CHARGES.serviceProvinces.length, 9);

@@ -4,6 +4,7 @@ import test from "node:test";
 import { hashLegalDocument } from "../lib/legal.ts";
 import { deriveLegalStatus, legalDraftPatchSchema, legalDraftSchema, legalPublishSchema, validateEffectiveAt, LEGAL_DOCUMENT_SLUGS, type AdminLegalVersionRow } from "../lib/legal-admin.ts";
 import { adminRoles, roleHasPermission } from "../lib/security-policy.ts";
+import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const schema = readFileSync("db/schema.ts", "utf8");
 const migration = readFileSync("drizzle-pg/0005_legal_drafts_and_immutability.sql", "utf8");
@@ -148,5 +149,5 @@ test("checkout is unchanged: still resolves required versions server-side and li
   const orders = readFileSync("app/api/orders/route.ts", "utf8");
   assert.match(orders, /loadRequiredCheckoutLegalVersions/);
   assert.match(orders, /acceptedAt = new Date\(\)/);
-  assert.match(readFileSync("public/store.js", "utf8"), /function legalVersionHref\(d\)/);
+  assert.match(storefrontCoreSource(), /function legalVersionHref\(d\)/);
 });
