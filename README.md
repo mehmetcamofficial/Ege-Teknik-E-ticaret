@@ -1,126 +1,205 @@
-# vinext-starter
+# Ege Teknik E‑Ticaret
 
-A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
+Ege Teknik için geliştirilen klima, iklimlendirme ve ikinci el ürün odaklı e‑ticaret platformu.
 
-## Prerequisites
+Production: https://egeteknik.tr
 
-- Node.js `>=22.13.0`
-- Portable: Windows, macOS, or Linux; no Bash required
-- Managed Linux: managed Linux runtime with Bash, `flock`, `curl`, `sha256sum`, and GNU `timeout`
-- Git is required only for publishing
+> Bu repository aktif geliştirme içindir. Secret, veritabanı parolası, API anahtarı veya production credential bilgileri repository'ye commit edilmemelidir.
 
-## Sites Lifecycle
+## Proje kapsamı
 
-The Sites initializer copies the shared starter and selects managed-linux only when `SITES_MANAGED_LINUX_CONTAINER=1`; otherwise it selects portable. It saves the selection only in ignored `.sites-runtime/execution-profile.json`. Both profiles copy/configure first, then use the plugin's separate `install-dependencies.mjs` step to measure installation independently. Edit source under `app/` and follow the Sites skill for installation, preview, builds, and publishing.
+Platformun ana kapsamı:
 
-Whenever reopening or moving a checkout, run `node <plugin-root>/scripts/configure-execution-profile.mjs` before project commands. Profile changes do not alter tracked source or require reinstalling otherwise-valid dependencies; restart an existing preview to use the new selection. Do not commit or upload `.sites-runtime/`.
+- GREE klima ve iklimlendirme ürünlerinin kataloglanması ve satışı
+- İkinci el / spot ürünlerin yönetimi
+- Kategori, marka, ürün, fiyat ve stok yönetimi
+- Favoriler, karşılaştırma ve sepet akışları
+- Checkout ve sipariş oluşturma
+- Stok rezervasyonu ve sipariş transaction'ları
+- Yönetim paneli
+- Müşteri hesabı
+- Blog / içerik ve temel SEO altyapısı
+- Responsive web arayüzü
 
-This starter does not use `wrangler.jsonc`.
+## Teknoloji yığını
 
-`install:ci` runs `npm ci` once against the shared lockfile, disables parent-workspace discovery, and includes required dev/optional dependencies despite production/omit settings. Sharp defaults to prebuilt binaries unless explicitly configured otherwise. Do not overlap installers.
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- PostgreSQL
+- Neon PostgreSQL
+- Drizzle ORM / Drizzle Kit
+- Clerk — müşteri hesabı ve kimlik doğrulama
+- Vercel Blob — gerektiğinde dosya/görsel depolama
+- Vercel — deployment ve hosting
+- Sentry — geçici observability / hata teşhis denemesi
 
-- **Portable:** Preserve host HOME, npm cache, registry, proxy, temporary paths, retry/concurrency settings, and lifecycle-script policy. Use `--prefer-offline --no-audit --no-fund`.
-- **Managed Linux:** Use the existing project-local HOME/cache/tmp setup and Linux install lock, tarball preflight, and timeout. Restore the image-seeded npm cache only when its lockfile hash matches; retain network fallback. Builds keep their existing timeout. These helpers are not invoked by the portable profile.
+## Mimari yaklaşım
 
-`scripts/sites-env.mjs` preserves the caller's HOME, npm cache, proxy, XDG, and temporary-directory configuration while defaulting Wrangler and Miniflare state to the checkout. If npm reports an unwritable cache, select a writable path with `npm_config_cache` for that install. The `dev` and `start` scripts also keep Wrangler logs inside the checkout. Generated `.sites-runtime/` and `.wrangler/` directories are disposable and ignored by Git.
+Projede mümkün olduğunca aşağıdaki prensipler izlenir:
 
-On portable, `npm run dev` uses `vinext dev` with HMR, starting at port 5173. Vinext records the running server in ignored `.vinext/` state, rejects an ordinary duplicate launch, and recovers stale state after a stopped process; exactly simultaneous starts can race. Pass `--port <port>` or `--hostname <host>` after `npm run dev --` when needed; keep portable previews on loopback.
+- Önce çalışan en basit çözüm
+- Ölçmeden optimize etmeme
+- İhtiyaç doğmadan mimari karmaşıklık eklememe
+- Kaizen
+- Clean Code
+- SOLID
+- DRY, ancak gereksiz abstraction oluşturmadan
+- YAGNI
+- OWASP güvenlik prensipleri
+- Zero‑Trust yaklaşımı
+- 12‑Factor App prensipleri
+- CI/CD quality gates
+- Incident / postmortem öğrenme döngüsü
 
-For browser QA on managed Linux, use `sites-preview start`. The project's dev script runs Vite and accepts the supervisor's `--host 0.0.0.0 --port 4173 --strictPort` arguments. The internal browser uses `http://terminal.local:4173/`; it is not a user-facing URL. The supervisor owns the preview lifecycle. The ignored local profile survives the supervisor's cleared process environment.
+Amaç; hızlı geliştirilebilen ancak production ortamında stabil, anlaşılır, güvenli ve sürdürülebilir bir sistem oluşturmaktır.
 
-The portable profile simulates ChatGPT sign-in only for loopback development requests. Visit `/signin-with-chatgpt?return_to=/` to sign in as `local_seedy` (`seedy@sites.test`, display name `Seedy`) and `/signout-with-chatgpt?return_to=/` to sign out. The development cookie preserves that identity across server restarts. Mock auth is disabled in the managed-linux profile and is not included in production builds; hosted authentication remains dispatch-owned.
+## Veritabanı ve ortam ayrımı
 
-The Worker uses `vinext/server/fetch-handler`, including Vinext's config-aware image handling. After building, `npm start` runs that Worker locally through Wrangler on `127.0.0.1`, sharing `.wrangler/state` with dev preview and local D1 migrations; it does not deploy the site or simulate sign-in. Use the URL printed by the server. Pass `npm start -- --port <port>` to select a different built-preview port.
+Uygulama PostgreSQL kullanır ve bağlantı `DATABASE_URL` üzerinden sağlanır.
 
-Local previews use Miniflare's placeholder `Request.cf` metadata without a network lookup. Set `CLOUDFLARE_CF_FETCH_ENABLED=true` to opt into fetching preview metadata; this setting does not change hosted request metadata.
+Development, Preview ve Production ortamları birbirinden ayrıdır. Production veritabanı için ayrı Neon branch kullanılır. Ortam/branch korumaları yanlış veritabanına bağlanma riskini azaltmak amacıyla fail‑closed tasarlanmıştır.
 
-Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=true` to opt in.
+Migration komutları:
 
-## Included Shape
-
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
-- `@cloudflare/workers-types` provides Worker types; `cloudflare-env.d.ts` declares optional `DB`/`BUCKET` bindings—update these declarations if binding names change
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
-
-## Workspace Auth Headers
-
-Signed-in visitors receive both `oai-authenticated-user-id` and `oai-authenticated-user-email`. Private Sites require every visitor to sign in; public Sites may also have anonymous visitors, for whom neither header is present.
-
-The user ID is stable for the same user on the same Site and different across Sites. Use it as the durable user key; use email and name for display or contact purposes.
-
-SIWC-authenticated workspace sites may also receive `oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty `name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by `oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get("oai-authenticated-user-id");
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
+```bash
+pnpm db:generate
+pnpm db:migrate
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+Production migration işlemleri kontrollü yapılmalı; destructive migration veya veri silme işlemleri otomatik varsayılmamalıdır.
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs optional or required ChatGPT sign-in:
+## Sipariş ve stok güvenliği
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use the returned `userId` as the stable user key for user-owned records; do not use email as a durable identifier.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send anonymous visitors through Sign in with ChatGPT.
-- In a Server Component, start sign-in with `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper module is server-only; do not import it into a Client Component.
-- Do not use `fetch`, XHR, a client-side router, or a framework link that can prefetch the sign-in route. SIWC must start as a top-level navigation.
-- Never request the AuthAPI authorization endpoint directly. The dispatch-owned `/signin-with-chatgpt` route must start the SIWC flow.
-- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because they depend on per-request identity headers.
+Sipariş oluşturma ve stok değişiklikleri yalnızca istemci durumuna güvenmez. Kritik işlemler sunucu/veritabanı tarafında yürütülür.
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the OAuth cookies, and identity header injection. Do not implement app routes for those reserved paths. Routes that do not import and call the helper remain anonymous-compatible.
+Sipariş kalemlerinde gerekli ürün/fiyat/vergi bilgilerinin snapshot'larının korunması, sonradan katalog verisi değişse dahi geçmiş siparişin kendi tarihsel durumunu koruması için kullanılır.
 
-SIWC establishes identity only; it does not prove workspace membership. Use the Sites hosting platform's access policy controls for workspace-wide restrictions, or enforce explicit server-side membership or allowlist checks.
+Stok rezervasyonu ve sipariş oluşturma işlemlerinde atomik transaction yaklaşımı tercih edilir.
 
-Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
+## Kimlik doğrulama
 
-## Local D1 migrations
+Müşteri hesabı tarafında Clerk kullanılmaktadır.
 
-For a D1-backed local preview, generate SQL with `npm run db:generate`. Build once through the Sites skill's build entrypoint (or `npm run build` for standalone use) to generate `dist/server/wrangler.json`, rebuilding if bindings change. From the project root, apply each pending migration in order:
+Admin erişimi müşteri hesabından ayrı tutulur. Admin endpoint'lerinde authorization kontrolleri yalnızca UI gizlemeye bırakılmamalıdır; sunucu tarafında uygulanmalıdır.
 
-```sh
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_example.sql
+## Analytics ve gizlilik
+
+Uygulamanın first‑party analytics yaklaşımı veri minimizasyonunu hedefler. Ziyaretçi tanımlamasında uygulama tarafından oluşturulan rastgele identifier kullanılır. Analytics kayıtlarında gereksiz kişisel veri toplamaktan kaçınılmalıdır.
+
+Gizlilik ve KVKK metinleri uygulamanın gerçek veri akışıyla uyumlu tutulmalıdır.
+
+## Sentry durumu
+
+Sentry şu anda hata izleme ve observability amacıyla **geçici deneme** olarak projeye entegredir.
+
+Bu entegrasyon kalıcı bir mimari bağımlılık olarak kabul edilmemelidir. Deneme tamamlandığında Sentry kapatılabilir ve ilgili environment variable / SDK yapılandırmaları kaldırılabilir.
+
+Sentry açıkken veri minimizasyonu uygulanmalı; gereksiz kullanıcı bilgisi, request body veya hassas veri telemetry'ye gönderilmemelidir. Sampling oranları production trafiğine uygun şekilde sınırlı tutulmalıdır.
+
+## Environment variables
+
+Gerçek değerler yalnızca güvenli environment yönetiminde tutulmalıdır. Örnek kategoriler:
+
+```text
+DATABASE_URL=
+APP_ENV=
+NEON_BRANCH_ID=
+EXPECTED_NEON_PRODUCTION_BRANCH_ID=
+
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+
+# Sentry — geçici / opsiyonel
+NEXT_PUBLIC_SENTRY_DSN=
+SENTRY_DSN=
 ```
 
-Replace the filename with the pending migration and `DB` with your D1 binding name if different. Use `.wrangler/state`, not `.wrangler/state/v3`; Wrangler adds the versioned directories. Do not replay migrations already applied locally. This updates only the preview database; publishing applies production migrations separately.
+`.env`, production database credentials, private API keys ve benzeri secret'lar GitHub'a gönderilmemelidir.
 
-## Diagnostic Commands
+## Local development
 
-- `npm run install:ci`: perform the one locked dependency install
-- `npm run dev`: start the Vite/Vinext development server
-- `npm run build`: build the deployable Sites artifact
-- `npm run start`: preview the built Worker locally with D1/R2 support
-- `npm run db:generate`: generate Drizzle migrations after schema changes
+Gereksinimler:
 
-When using the Sites plugin, follow its skill instructions for installation, builds, and publishing. These npm commands remain available for standalone use.
+- Node.js >= 22.13.0
+- pnpm 11
+- PostgreSQL/Neon development database erişimi
 
-The portable build runs Vinext directly without a host `timeout` command. The managed-linux build uses `scripts/build-verified.sh` and its existing `SITES_BUILD_TIMEOUT` setting.
+Kurulum:
 
-## Learn More
+```bash
+pnpm install
+pnpm dev
+```
 
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+Kalite kontrolleri:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+Production'a çıkmadan önce en az lint, typecheck, test ve production build kontrollerinin başarılı olması beklenir.
+
+## Deployment
+
+Ana deployment platformu Vercel'dir.
+
+Ortamlar:
+
+- Development — yerel geliştirme
+- Preview — değişikliklerin production öncesi doğrulanması
+- Production — `egeteknik.tr`
+
+Preview ve Production environment variable'ları birbirinden bağımsız yönetilmelidir.
+
+## Güvenlik
+
+Temel güvenlik yaklaşımı:
+
+- Secret'ları source code'a koymamak
+- Server-side authorization
+- Admin login koruması
+- Rate limiting / brute-force koruması
+- Security headers
+- Input validation
+- Veritabanı transaction'ları
+- Environment isolation
+- Least privilege
+- Production değişikliklerinde kontrollü migration/deployment
+
+İleri aşamada deterministik WAF/Firewall kuralları ve Security Watch, Attack Response ve Bug/Incident otomasyonları ayrı bir operasyon fazında ele alınacaktır.
+
+## Ödeme
+
+Ödeme entegrasyonu ayrı bir fazdır. Kart verilerinin Ege Teknik sunucularında saklanmaması temel tasarım gereksinimidir. Ödeme sağlayıcısı entegrasyonu sağlayıcının güvenli ödeme akışı üzerinden yapılmalıdır.
+
+## Repository çalışma düzeni
+
+Aktif geliştirmede küçük, anlaşılır ve geri alınabilir commit'ler tercih edilir.
+
+Önerilen commit örnekleri:
+
+```text
+feat: ...
+fix: ...
+security: ...
+docs: ...
+refactor: ...
+test: ...
+chore: ...
+```
+
+Büyük ve ilgisiz değişiklikleri tek commit altında toplamaktan kaçınılır.
+
+## Durum
+
+Backend, PostgreSQL/Neon entegrasyonu, temel e‑ticaret akışları, admin altyapısı ve production deployment temeli oluşturulmuştur. Ödeme ve ileri seviye güvenlik/operasyon otomasyonları ayrı fazlar halinde ilerletilmektedir.
+
+---
+
+**Ege Teknik** — Ege Bölgesi klima, iklimlendirme, satış ve teknik servis platformu.
