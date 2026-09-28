@@ -125,3 +125,89 @@ test("the product page offers favourite and compare, section navigation and only
   assert.match(html, /<li><span>SEER<\/span><b>8,5<\/b><\/li>/);
   assert.match(html, /<span>Seri<\/span><b>Airy<\/b>/);
 });
+
+// ---- Paket 1D: content integrity, contact, selector, map ----------------------------------------------------------
+
+test("the shared stylesheets are syntactically balanced (an unclosed block silently drops every later rule)", () => {
+  for (const file of ["public/store.css", "public/product-detail.css"]) {
+    const src = readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    let depth = 0;
+    for (const ch of src) { if (ch === "{") depth++; else if (ch === "}") depth--; assert.ok(depth >= 0, `${file}: stray }`); }
+    assert.equal(depth, 0, `${file}: unclosed {`);
+  }
+});
+
+test("the smart selector reuses one estimator: range near a class boundary and an on-site survey for large or commercial spaces", () => {
+  const field = (value: string) => ({ ...fakeElement(), value });
+  const run = (values: Record<string, string>) => {
+    const out = { ...fakeElement(), classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => true } };
+    const elements: Record<string, ReturnType<typeof fakeElement>> = { "[data-selector-result]": out };
+    for (const [k, v] of Object.entries(values)) elements[`#sel-${k}`] = field(v);
+    loadStorefront({ path: "selector.html", elements }).fn<() => void>("calculateBtu")();
+    return out.innerHTML;
+  };
+  const small = run({ area: "16", sun: "1", ins: "1", people: "2", type: "yatak", city: "aydin" });
+  assert.match(small, /<b>9\.000 BTU\/h<\/b>/);
+  assert.match(small, /href="catalog\.html\?btu=9000"/);
+  assert.doesNotMatch(small, /Yerinde keşif önerilir/);
+  assert.match(run({ area: "34", sun: "1", ins: "1", people: "3", type: "salon", city: "izmir" }), /18\.000 – 24\.000 BTU\/h[\s\S]*Yerinde keşif önerilir/);
+  const shop = run({ area: "40", sun: "1", ins: "1", people: "2", type: "magaza", city: "mugla" });
+  assert.match(shop, /Yerinde keşif önerilir:<\/b> ticari kullanımda/);
+  assert.match(shop, /href="contact\.html\?subject=kesif&city=mugla"/);
+  const big = run({ area: "90", sun: "1.2", ins: "1.2", people: "6", type: "salon", city: "aydin" });
+  assert.match(big, /24\.000 BTU\/h üzeri/);
+  assert.doesNotMatch(big, /catalog\.html\?btu=/, "no single-unit capacity is recommended beyond the wall-unit range");
+  assert.match(home, /data-btu-selector/);
+  assert.match(readFileSync("public/selector.html", "utf8"), /data-btu-selector/);
+});
+
+test("service requests accept e-mail or phone, and refuse a request with neither", async () => {
+  const { serviceRequestSchema } = await import("../lib/service-request-schema.ts");
+  const base = { type: "kesif", name: "Ada Yılmaz", city: "Kuşadası", message: "Keşif talebi" };
+  assert.equal(serviceRequestSchema.safeParse({ ...base, email: "ada@example.com" }).success, true);
+  assert.equal(serviceRequestSchema.safeParse({ ...base, phone: "05001112233" }).success, true);
+  assert.equal(serviceRequestSchema.safeParse({ ...base, phone: "", email: "" }).success, false);
+  assert.equal(serviceRequestSchema.safeParse({ ...base, email: "not-an-email" }).success, false);
+});
+
+test("e-mail is a first-class contact action in the header, footer, contact page and help menu; WhatsApp is secondary", () => {
+  const js = storefrontCoreSource(), contact = readFileSync("public/contact.html", "utf8");
+  assert.match(js, /<div class="top-links"><a href="mailto:\$\{business\.email\}">/);
+  const footer = /function renderFooter\(\)\{[^\n]*/.exec(js)?.[0] ?? "";
+  assert.match(footer, /mailto:\$\{business\.email\}/);
+  assert.doesNotMatch(footer, /business\.wa/, "the footer no longer pushes WhatsApp as the contact route");
+  assert.match(contact, /<a class="contact-card contact-action" href="mailto:info@egeteknik\.tr">/);
+  assert.match(contact, /<input name="email" type="email"/);
+  assert.match(contact, /Telefon \(isteğe bağlı\)<input name="phone"/);
+  assert.doesNotMatch(js, /location\.href=business\.wa/, "the form never redirects to WhatsApp on its own");
+});
+
+test("the help launcher is a real contact menu with an assistant mount point, and makes no AI claim", () => {
+  const js = storefrontCoreSource();
+  const launcher = /function renderHelpLauncher\(\)\{[^\n]*/.exec(js)?.[0] ?? "";
+  assert.match(launcher, /aria-expanded="false" aria-controls="help-panel"/);
+  assert.match(launcher, /id="ege-assistant-root" data-assistant-slot/);
+  assert.match(launcher, /window\.EgeAssistant=/);
+  assert.doesNotMatch(launcher, /yapay zeka|\bAI\b|asistan aktif|chatbot/i);
+});
+
+test("the service-area map covers exactly the nine service provinces and credits its map data", () => {
+  for (const page of ["public/index.html", "public/contact.html", "public/regions.html"]) {
+    const html = readFileSync(page, "utf8");
+    const provinces = [...html.matchAll(/data-map-province="([a-z]+)"/g)].map((m) => m[1]).sort();
+    assert.deepEqual(provinces, ["afyonkarahisar", "aydin", "balikesir", "denizli", "izmir", "kutahya", "manisa", "mugla", "usak"], page);
+    assert.match(html, /Harita verisi © OpenStreetMap katkıda bulunanlar \(ODbL\)/, page);
+    assert.match(html, /<title id="map-title">/, page);
+  }
+});
+
+test("product page tabs only point at sections that exist, and a quote product without extras has no dead tab", async () => {
+  const root = fakeElement();
+  const bare = apiProduct({ id: "q2", saleMode: "quote", price: 0, category: "Multi Sistem", capacity: "9000 BTU/h", description: "", shortDescription: null, specifications: [], documents: [], warranty: null });
+  await loadStorefront({ path: "product.html", search: "?id=q2", elements: { "[data-product-page]": root }, api: { products: [bare] } }).fn<() => Promise<void>>("loadCatalog")();
+  const html = root.innerHTML;
+  const tabs = [...html.matchAll(/<nav class="pd-nav"[\s\S]*?<\/nav>/g)][0]?.[0] ?? "";
+  for (const [, id] of tabs.matchAll(/href="#([a-z-]+)"/g)) assert.match(html, new RegExp(`id="${id}"`), `tab #${id} has no section`);
+  assert.doesNotMatch(tabs, /#belgeler|#teknik|#ozellikler/);
+  assert.doesNotMatch(html, /★/, "no stars without real reviews");
+});

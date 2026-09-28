@@ -242,3 +242,5 @@
 .pd-skeleton .detail-visual,.pd-skeleton .pd-buy{background:linear-gradient(90deg,#edf2f0 0%,#f7faf9 40%,#edf2f0 80%);background-size:200% 100%;animation:shimmer 1.3s linear infinite}
 .pd-skeleton .pd-buy{min-height:260px}
 .pd-skeleton{min-height:min(100vh,760px)}
+[data-product-page] .pd-prose .pd-usage{margin-top:6px;padding:14px 16px;border-radius:12px;background:var(--pd-surface);border:1px solid var(--pd-border);font-size:15px}
+.contact-panel .buy-actions{display:flex;flex-wrap:wrap;gap:10px}
