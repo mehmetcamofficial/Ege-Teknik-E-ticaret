@@ -53,7 +53,10 @@ export function createMigrationPool({ url, Pool }) {
   });
 }
 
-const timer = (ms, message) => { let id; const promise = new Promise((_, reject) => { id = setTimeout(() => reject(new MigrationGuardError(message)), ms); id.unref?.(); }); return { promise, cancel: () => clearTimeout(id) }; };
+// A correctness/safety deadline, NOT a background convenience timer: it is deliberately kept referenced so it
+// bounds a promise that never settles. unref() would let the event loop drain first, so the guard would never
+// fire and an unresolved migration or pool.end() would escape instead of being bounded.
+const timer = (ms, message) => { let id; const promise = new Promise((_, reject) => { id = setTimeout(() => reject(new MigrationGuardError(message)), ms); }); return { promise, cancel: () => clearTimeout(id) }; };
 
 /** pool.end() with a deadline: an unhealthy socket can no longer keep shutdown waiting forever. */
 export async function closePoolBounded(pool, ms = CLEANUP_TIMEOUT_MS, log = () => {}) {

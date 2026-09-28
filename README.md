@@ -145,6 +145,21 @@ pnpm build
 
 Production'a çıkmadan önce en az lint, typecheck, test ve production build kontrollerinin başarılı olması beklenir.
 
+## Testing
+
+- `pnpm test` hermetiktir (veritabanı gerektirmez). `pnpm verify:migrations` uygulanmış migration'ların (0000–0012) değişmediğini çevrimdışı doğrular.
+- `pnpm test:postgres` gerçek bir PostgreSQL üzerinde eşzamanlılık testlerini çalıştırır. Yalnızca **tek kullanımlık, yerel** bir veritabanıyla çalışır:
+  adres loopback olmalı ve veritabanı adı `sprintb` ile başlamalıdır (test şemaları siler). Örnek:
+
+  ```bash
+  docker run -d --name ege-sprintb-pg -e POSTGRES_PASSWORD=<geçici> -e POSTGRES_DB=sprintb -p 127.0.0.1:55432:5432 postgres:18-alpine
+  SPRINTB_PG_URL=postgresql://postgres:<geçici>@127.0.0.1:55432/sprintb pnpm test:postgres
+  ```
+
+  `SPRINTB_PG_URL` yoksa ya da herhangi bir test atlanırsa komut **başarısız** olur (atlama doğrulama sayılmaz). Neon Preview/Production asla kullanılmaz.
+- GitHub Actions (`.github/workflows/ci.yml`) dört zorunlu kontrol çalıştırır: `quality`, `postgres-integration`, `build`, `migration-safety`. CI hiçbir sır ve uzak veritabanı kullanmaz, deploy etmez.
+- Operasyon belgeleri: [`docs/operations/`](docs/operations/) (ortam sözleşmesi, sürüm ve geri alma runbook'ları, branch koruma ve commit imzalama politikası).
+
 ## Deployment
 
 Ana deployment platformu Vercel'dir.
