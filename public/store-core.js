@@ -419,6 +419,8 @@ function calculateBtu(){const area=Number(document.querySelector('#sel-area')?.v
 function renderFeaturedProducts(){document.querySelectorAll('[data-featured-product]').forEach(card=>{const set=(field,text)=>card.querySelectorAll(`[data-product-field="${field}"]`).forEach(el=>{el.textContent=text});
   if(catalogState==='loading'){set('price','Fiyat yükleniyor…');set('stock','');return}
   const p=catalogAuthoritative()?getProducts().find(x=>x.id===card.dataset.featuredProduct):null;
+  // After the authoritative catalog loads, the homepage uses the same card renderer and actions as the catalog.
+  if(card.hasAttribute?.('data-home-card')&&catalogState!=='loading'){card.classList.add('home-catalog-card');card.innerHTML=p?productCard(p):`<div class="empty">${catalogState==='unavailable'?catalogNotice():'Şu anda listelenmiyor'}</div>`;return}
   if(!p){set('price',catalogState==='unavailable'?'Fiyat bilgisi alınamadı':'Şu anda listelenmiyor');set('stock','');return}
   set('name',p.name);set('capacity',p.capacity||'—');set('sku',p.sku||'—');set('price',p.sale?money(p.price):'Fiyat için teklif alın');set('stock',p.sale?(p.stock>0?`Stok: ${p.stock}`:'Stokta yok'):'')})}
 function renderFavorites(){const root=document.querySelector('[data-favorites]');if(!root)return;if(!catalogAuthoritative()){root.innerHTML=`<div class="empty">${catalogNotice()}</div>`;return}const ps=getProducts().filter(p=>getFavorites().includes(p.id));root.innerHTML=ps.length?ps.map(productCard).join(''):'<div class="empty">Henüz favori ürününüz yok. <a class="primary inline" href="catalog.html">Ürünleri inceleyin</a></div>'}

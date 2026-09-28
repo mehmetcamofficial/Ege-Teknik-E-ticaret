@@ -6,6 +6,7 @@ import {
   toCatalogListItem, toPublicProductDetail, toPublicSpecifications, toPublicWarranty, warrantySchema, WRITABLE_COLUMNS, type EnrichmentDataset, type PlanEntry, type ProductRow,
 } from "../lib/product-enrichment.ts";
 import { PRODUCT_SLUG_REDIRECTS, resolveProductIdentifier } from "../lib/product-slugs.ts";
+import { isCustomerVisibleProduct } from "../lib/catalog-visibility.ts";
 import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const dataset: EnrichmentDataset = datasetSchema.parse(JSON.parse(readFileSync("data/catalog-enrichment/catalog-enrichment.v1.json", "utf8")));
@@ -27,6 +28,12 @@ test("87 review decisions with unique product ids: 78 eligible, 9 blocked", () =
 test("blocked products are explicit: 8 asset blocks and the Pular conflict, each with a reason", () => {
   for (const d of blocked) assert.ok(d.reasons.length > 0, d.productId);
   assert.deepEqual(dataset.decisions.filter((d) => d.importStatus === "BLOCKED_CONFLICT").map((d) => d.productId), ["multi-duvar-tipi-pular-ic-unite-9000-btu-h"]);
+});
+test("all reviewed blocked products are excluded from list, detail and new orders without changing database rows", () => {
+  for (const decision of dataset.decisions) assert.equal(isCustomerVisibleProduct(decision.productId), !decision.importStatus.startsWith("BLOCKED_"), decision.productId);
+  for (const file of ["app/api/products/route.ts", "app/api/products/[id]/route.ts", "app/api/orders/route.ts"]) {
+    assert.match(readFileSync(file, "utf8"), /isCustomerVisibleProduct\(/, file);
+  }
 });
 test("enrichment records exist exactly for the eligible products: no orphans, none for blocked products", () => {
   assert.deepEqual(Object.keys(dataset.records).sort(), eligible.map((d) => d.productId).sort());

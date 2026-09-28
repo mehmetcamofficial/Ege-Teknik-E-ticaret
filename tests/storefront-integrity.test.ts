@@ -88,6 +88,17 @@ test("a featured product missing from the catalog is shown as not listed, never 
   assert.equal(card.fields.price.textContent, "Şu anda listelenmiyor");
 });
 
+test("homepage featured slots use the catalog's product card and clear stale content", async () => {
+  const card = { ...featuredCard("synthetic-airy"), innerHTML: "stale card", classList: { add: () => {} }, hasAttribute: (name: string) => name === "data-home-card" };
+  const product = apiProduct({ id: "synthetic-airy", price: 71_234 });
+  const store = loadStorefront({ featured: [card], api: { products: [product] } });
+  await store.fn<() => Promise<void>>("loadCatalog")();
+  assert.match(card.innerHTML, /<article class="product">/);
+  assert.match(card.innerHTML, /Sepete Ekle/);
+  assert.match(card.innerHTML, /71\.234/);
+  assert.doesNotMatch(card.innerHTML, /stale card/);
+});
+
 test("an unknown product id says the product was not found instead of showing a different product", async () => {
   const page = fakeElement();
   const store = loadStorefront({ search: "?id=does-not-exist", elements: { "[data-product-page]": page }, api: { products: [apiProduct({ name: "Başka Ürün" })] } });
