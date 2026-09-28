@@ -34,7 +34,8 @@ test("Blog DELETE endpoint supports both archive and hard delete", () => {
 test("Orders endpoint disallows hard delete and enforces state machine", () => {
   const code = read("app/api/admin/orders/[id]/route.ts");
   assert.doesNotMatch(code, /export async function DELETE/);
-  assert.match(code, /canTransitionOrder/);
+  assert.match(code, /transitionOrder/);
+  assert.match(read("lib/order-transition.ts"), /canTransitionOrder/);
   assert.match(code, /status:\s*409/);
 });
 

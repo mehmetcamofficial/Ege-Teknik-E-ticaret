@@ -24,7 +24,7 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
   async function saveStatus(statusToSave?: string) {
     const target = statusToSave ?? nextStatus;
     if (!order || !target || target === order.status) return;
-    const r = await sendAdmin(`/api/admin/orders/${order.id}`, "PATCH", { status: target });
+    const r = await sendAdmin(`/api/admin/orders/${order.id}`, "PATCH", { status: target, expectedStatus: order.status });
     if (r.ok) {
       toast.success(`Sipariş durumu "${orderStatusLabel[target] ?? target}" olarak güncellendi.`);
       setMessage({ tone: "success", text: "Sipariş durumu güncellendi." });
