@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { and, asc, desc, eq } from "drizzle-orm";
-import { orderItems, orders, payments } from "../db/schema.ts";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { auditLogs, orderItems, orders, payments } from "../db/schema.ts";
 import { audit, ledgerSums, type FinanceActor, type FinanceDb } from "./finance-db.ts";
 import { derivePaymentStatus, ledgerCoversOrder, outstandingAmount } from "./finance.ts";
 import {
@@ -188,3 +188,47 @@ export async function loadPaytrAttempt(db: FinanceDb, merchantOid: string): Prom
   return row ?? null;
 }
 
+
+// ---- admin status (read-only) ----------------------------------------------------------------------------------------
+export type PaytrAdminMetrics = {
+  attempts: { total: number; pending: number; paid: number; failed: number; superseded: number };
+  paidAmount: number;
+  lastAttemptAt: string | null; lastPaidAt: string | null; lastFailedAt: string | null;
+  callbacks: { lastSuccessAt: string | null; lastFailedAt: string | null; invalid: number; amountMismatch: number; unknownReference: number };
+  recent: { orderNumber: string; status: string; amount: number; createdAt: string; paidAt: string | null; failureCode: string | null }[];
+};
+const iso = (v: unknown) => (v ? new Date(v as string).toISOString() : null);
+
+/**
+ * PayTR-only operational counters. `paidAmount` sums status='paid' rows only - a pending attempt is never money.
+ * Callback health comes from audit action names and timestamps; no payload, customer field or provider text is read.
+ */
+export async function loadPaytrAdminMetrics(db: FinanceDb): Promise<PaytrAdminMetrics> {
+  const [counts] = await db.select({
+    total: sql<number>`count(*)::int`,
+    pending: sql<number>`count(*) filter (where ${payments.status} = 'pending')::int`,
+    paid: sql<number>`count(*) filter (where ${payments.status} = 'paid')::int`,
+    failed: sql<number>`count(*) filter (where ${payments.status} = 'failed')::int`,
+    superseded: sql<number>`count(*) filter (where ${payments.status} = 'cancelled')::int`,
+    paidAmount: sql<string>`coalesce(sum(${payments.amount}) filter (where ${payments.status} = 'paid'), 0)::bigint`,
+    lastAttemptAt: sql<string | null>`max(${payments.createdAt})`,
+    lastPaidAt: sql<string | null>`max(${payments.paidAt}) filter (where ${payments.status} = 'paid')`,
+    lastFailedAt: sql<string | null>`max(${payments.updatedAt}) filter (where ${payments.status} = 'failed')`,
+  }).from(payments).where(eq(payments.provider, PAYTR_PROVIDER));
+  const [cb] = await db.select({
+    lastSuccessAt: sql<string | null>`max(${auditLogs.createdAt}) filter (where ${auditLogs.action} = 'paytr_callback_success')`,
+    lastFailedAt: sql<string | null>`max(${auditLogs.createdAt}) filter (where ${auditLogs.action} = 'paytr_callback_failed')`,
+    invalid: sql<number>`count(*) filter (where ${auditLogs.action} = 'paytr_invalid_callback')::int`,
+    amountMismatch: sql<number>`count(*) filter (where ${auditLogs.action} = 'paytr_callback_amount_mismatch')::int`,
+    unknownReference: sql<number>`count(*) filter (where ${auditLogs.action} = 'paytr_callback_unknown_reference')::int`,
+  }).from(auditLogs).where(sql`${auditLogs.action} like 'paytr\\_%'`);
+  const recent = await db.select({ orderNumber: orders.orderNumber, status: payments.status, amount: payments.amount, createdAt: payments.createdAt, paidAt: payments.paidAt, failureCode: sql<string | null>`${payments.metadata} ->> 'failureCode'` })
+    .from(payments).innerJoin(orders, eq(orders.id, payments.orderId)).where(eq(payments.provider, PAYTR_PROVIDER)).orderBy(desc(payments.createdAt)).limit(5);
+  return {
+    attempts: { total: Number(counts?.total ?? 0), pending: Number(counts?.pending ?? 0), paid: Number(counts?.paid ?? 0), failed: Number(counts?.failed ?? 0), superseded: Number(counts?.superseded ?? 0) },
+    paidAmount: Number(counts?.paidAmount ?? 0),
+    lastAttemptAt: iso(counts?.lastAttemptAt), lastPaidAt: iso(counts?.lastPaidAt), lastFailedAt: iso(counts?.lastFailedAt),
+    callbacks: { lastSuccessAt: iso(cb?.lastSuccessAt), lastFailedAt: iso(cb?.lastFailedAt), invalid: Number(cb?.invalid ?? 0), amountMismatch: Number(cb?.amountMismatch ?? 0), unknownReference: Number(cb?.unknownReference ?? 0) },
+    recent: recent.map((r) => ({ orderNumber: r.orderNumber, status: r.status, amount: r.amount, createdAt: r.createdAt.toISOString(), paidAt: r.paidAt?.toISOString() ?? null, failureCode: r.failureCode ? sanitizeProviderText(r.failureCode, 30) : null })),
+  };
+}

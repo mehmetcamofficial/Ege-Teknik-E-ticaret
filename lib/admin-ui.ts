@@ -8,7 +8,7 @@ import { roleHasPermission, type AdminPermission } from "./security-policy.ts";
  */
 export type NavItem = { href: string; label: string; icon: NavIcon; permission: AdminPermission };
 export type NavSection = { title: string | null; items: NavItem[] };
-export type NavIcon = "dashboard" | "orders" | "service" | "products" | "secondHand" | "taxonomy" | "inventory" | "blog" | "reviews" | "legal" | "analytics" | "finance" | "settings" | "users";
+export type NavIcon = "dashboard" | "orders" | "service" | "products" | "secondHand" | "taxonomy" | "inventory" | "blog" | "reviews" | "legal" | "analytics" | "finance" | "payments" | "settings" | "users";
 
 export const ADMIN_NAV: readonly NavSection[] = [
   { title: null, items: [{ href: "/admin", label: "Genel Bakış", icon: "dashboard", permission: "admin:read" }] },
@@ -35,6 +35,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
   // Phase 6D.1: only super_admin holds users:read, so this section is invisible to every other role.
   { title: "Sistem", items: [
     { href: "/admin/users", label: "Kullanıcılar & Yetkiler", icon: "users", permission: "users:read" },
+    { href: "/admin/integrations/payments", label: "Ödeme Sağlayıcıları", icon: "payments", permission: "integrations:read" },
     { href: "/admin/settings", label: "Ayarlar", icon: "settings", permission: "admin:read" },
   ] },
 ];
