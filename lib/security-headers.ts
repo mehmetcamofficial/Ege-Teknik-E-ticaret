@@ -26,9 +26,16 @@ const sharedDirectives = [
   "upgrade-insecure-requests",
 ];
 
+/**
+ * The contact page embeds the verified business location as a Google Maps iframe (Paket 1E).
+ * Only that exact origin may be framed; the embed runs inside Google's own document, so no
+ * script, style or connect source is added for it.
+ */
+export const STATIC_FRAME_SOURCES = ["https://www.google.com"] as const;
+
 export function staticContentSecurityPolicy(scriptHashes: readonly string[]): string {
   const sources = ["'self'", ...scriptHashes.map((hash) => `'${hash}'`)];
-  return [`script-src ${sources.join(" ")}`, ...sharedDirectives].join("; ");
+  return [`script-src ${sources.join(" ")}`, `frame-src ${STATIC_FRAME_SOURCES.join(" ")}`, ...sharedDirectives].join("; ");
 }
 
 export function appContentSecurityPolicy(nonce: string): string {

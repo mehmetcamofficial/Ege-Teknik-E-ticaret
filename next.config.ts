@@ -2,6 +2,7 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import { staticContentSecurityPolicy, staticSecurityHeaders } from "./lib/security-headers";
 import { collectStaticScriptHashes } from "./lib/static-script-hashes";
+import { legacyGuideRedirects } from "./lib/guide-redirects";
 
 // Nonce-based CSP for Next.js-rendered documents is applied per request in proxy.ts.
 const staticCsp = staticContentSecurityPolicy(collectStaticScriptHashes("./public"));
@@ -38,6 +39,8 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      // Old client-rendered guide URLs -> static Klima Rehberi pages.
+      ...legacyGuideRedirects(),
     ];
   },
   async rewrites() {
