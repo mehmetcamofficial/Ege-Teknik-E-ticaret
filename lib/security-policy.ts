@@ -73,6 +73,16 @@ export function maxBodyBytesForApiPath(pathname: string): number {
   return IMAGE_UPLOAD_PATH.test(pathname) ? IMAGE_UPLOAD_MAX_BODY_BYTES : DEFAULT_MAX_BODY_BYTES;
 }
 
+/**
+ * Exact API paths called server-to-server by a payment provider, which sends no browser Origin. They skip only the
+ * same-origin check in proxy.ts; the body-size cap still applies, and the handler must authenticate the caller
+ * cryptographically (PayTR: HMAC hash) before touching any state.
+ */
+export const SERVER_TO_SERVER_API_PATHS: readonly string[] = ["/api/payments/paytr/callback"];
+export function requiresSameOrigin(pathname: string): boolean {
+  return !SERVER_TO_SERVER_API_PATHS.includes(pathname);
+}
+
 export function isSameOrigin(origin: string | null, host: string | null): boolean {
   if (!origin || !host) return false;
   try {

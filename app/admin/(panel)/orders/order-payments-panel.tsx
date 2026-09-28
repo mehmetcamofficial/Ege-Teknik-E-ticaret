@@ -7,16 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, FormField, Notice, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
 import { useAdminJson } from "@/components/admin/use-admin-data";
-import { paymentStatusLabel, paymentStatusTone, trDate, tryCurrency } from "@/lib/admin-ui";
+import { paymentStatusLabel, paymentStatusTone, trDate, tryCurrency, type Tone } from "@/lib/admin-ui";
 import { manualPaymentMethods, paymentMethodLabel, type OrderPaymentStatus } from "@/lib/finance";
 
 export type Ledger = {
   total: number; orderStatus: string; paymentStatus: OrderPaymentStatus; storedPaymentStatus: string; unbackedPaid: boolean;
   collected: number; refunded: number; netCollected: number; outstanding: number;
-  payments: { id: string; provider: string; method: string | null; amount: number; status: string; reference: string; note: string; paidAt: string | null; refundedAmount: number }[];
+  payments: { id: string; provider: string; method: string | null; amount: number; status: string; reference: string; note: string; paidAt: string | null; createdAt: string; refundedAmount: number }[];
   refunds: { id: string; paymentId: string | null; amount: number; status: string; reason: string; refundedAt: string | null }[];
 };
 const methodName = (m: string | null) => (m ? paymentMethodLabel[m as keyof typeof paymentMethodLabel] ?? m : "Belirtilmemiş");
+/** Online attempts that are not (yet) paid are listed for traceability but never shown as collected money. */
+const attemptLabel: Record<string, string> = { pending: "bekliyor", failed: "başarısız", cancelled: "yenilendi" };
+const attemptTone: Record<string, Tone> = { pending: "warning", failed: "danger", cancelled: "neutral" };
 const isClosed = (l: Ledger) => l.orderStatus === "cancelled" || l.orderStatus === "returned";
 
 /** One ledger read per order detail screen; every payment card renders from it. */
@@ -65,11 +68,11 @@ export function PaymentSummaryPanel({ ledger, className }: { ledger: LedgerState
 export function PaymentHistoryPanel({ ledger }: { ledger: LedgerState }) {
   const l = ledger.data;
   const rows = l ? [
-    ...l.payments.map((p) => ({ key: p.id, at: p.paidAt, kind: "Tahsilat", detail: [methodName(p.method), p.reference].filter(Boolean).join(" · "), amount: p.amount, note: p.refundedAmount > 0 ? `iade ${tryCurrency(p.refundedAmount)}` : "" })),
-    ...l.refunds.map((r) => ({ key: r.id, at: r.refundedAt, kind: "İade", detail: r.reason, amount: -r.amount, note: "" })),
+    ...l.payments.map((p) => ({ key: p.id, at: p.paidAt ?? p.createdAt, kind: p.status === "paid" ? "Tahsilat" : `Online deneme · ${attemptLabel[p.status] ?? p.status}`, tone: (p.status === "paid" ? "success" : attemptTone[p.status] ?? "neutral") as Tone, detail: [methodName(p.method), p.reference].filter(Boolean).join(" · "), amount: p.amount, counted: p.status === "paid", note: p.refundedAmount > 0 ? `iade ${tryCurrency(p.refundedAmount)}` : "" })),
+    ...l.refunds.map((r) => ({ key: r.id, at: r.refundedAt, kind: "İade", tone: "neutral" as Tone, detail: r.reason, amount: -r.amount, counted: true, note: "" })),
   ].sort((a, b) => String(a.at ?? "").localeCompare(String(b.at ?? ""))) : [];
   return (
-    <Panel title="Ödeme geçmişi" description={l ? `${l.payments.length} tahsilat · ${l.refunds.length} iade` : undefined} bodyClassName={rows.length ? "p-0" : undefined}>
+    <Panel title="Ödeme geçmişi" description={l ? `${l.payments.filter((p) => p.status === "paid").length} tahsilat · ${l.refunds.length} iade` : undefined} bodyClassName={rows.length ? "p-0" : undefined}>
       {!l ? loadingOrError(ledger)
         : !rows.length ? <EmptyState title="Ödeme kaydı yok" description="Ödeme sağlayıcısı aktif değil; alınan nakit, EFT veya POS tahsilatı elle kaydedilir." />
         : (
@@ -81,9 +84,9 @@ export function PaymentHistoryPanel({ ledger }: { ledger: LedgerState }) {
                   {rows.map((r) => (
                     <TableRow key={r.key}>
                       <TableCell>{trDate(r.at, true)}</TableCell>
-                      <TableCell><StatusBadge tone={r.amount < 0 ? "neutral" : "success"}>{r.kind}</StatusBadge></TableCell>
+                      <TableCell><StatusBadge tone={r.tone}>{r.kind}</StatusBadge></TableCell>
                       <TableCell className="whitespace-normal">{r.detail || "—"}{r.note && <span className="text-muted-foreground"> · {r.note}</span>}</TableCell>
-                      <TableCell className="text-right tabular-nums">{tryCurrency(r.amount)}</TableCell>
+                      <TableCell className={r.counted ? "text-right tabular-nums" : "text-right tabular-nums text-muted-foreground line-through"}>{tryCurrency(r.amount)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -92,7 +95,7 @@ export function PaymentHistoryPanel({ ledger }: { ledger: LedgerState }) {
             <ul className="divide-y md:hidden">
               {rows.map((r) => (
                 <li key={r.key} className="grid gap-1 p-4 text-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2"><StatusBadge tone={r.amount < 0 ? "neutral" : "success"}>{r.kind}</StatusBadge><span className="font-medium tabular-nums">{tryCurrency(r.amount)}</span></div>
+                  <div className="flex flex-wrap items-center justify-between gap-2"><StatusBadge tone={r.tone}>{r.kind}</StatusBadge><span className={r.counted ? "font-medium tabular-nums" : "tabular-nums text-muted-foreground line-through"}>{tryCurrency(r.amount)}</span></div>
                   <p>{r.detail || "—"}{r.note && <span className="text-muted-foreground"> · {r.note}</span>}</p>
                   <p className="text-xs text-muted-foreground">{trDate(r.at, true)}</p>
                 </li>
