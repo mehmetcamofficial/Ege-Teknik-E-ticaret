@@ -1,13 +1,14 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, lt, lte, sql } from "drizzle-orm";
 import { getDb } from "@/db";
 import { adminGrants, adminInvites, adminPasswordResets, adminSessions, adminUsers, auditLogs } from "@/db/schema";
 import { sendMail } from "@/lib/mail";
 import { hashPassword } from "@/lib/password";
+import { SESSION_ROTATION_GRACE_MS, rotateSessionIfDue, type RotationDeps, type RotationOutcome } from "@/lib/admin-session-rotation";
 import { verifyPassword } from "@/lib/password";
-import { ADMIN_INVITE_MAX_TTL_HOURS, PASSWORD_RESET_TOKEN_TTL_MS, SESSION_TTL_MS, canRemovePrivileged, findSecretLeak, isGrantActive, isPrivilegedRole, maxGrantTtlHours, roleHasPermission, shouldRotateSession, type AdminPermission, type AdminRole } from "@/lib/security-policy";
+import { ADMIN_INVITE_MAX_TTL_HOURS, PASSWORD_RESET_TOKEN_TTL_MS, SESSION_TTL_MS, canRemovePrivileged, findSecretLeak, isGrantActive, isPrivilegedRole, maxGrantTtlHours, roleHasPermission, type AdminPermission, type AdminRole } from "@/lib/security-policy";
 
 const COOKIE = "ege_admin_session";
 export type { AdminPermission, AdminRole };
@@ -17,8 +18,66 @@ export type AuthorizedAdmin={userId:string;email:string;displayName:string;role:
 const sha256=(value:string)=>createHash("sha256").update(value).digest("hex");
 const cookieOptions=(extra:Record<string,unknown>)=>({httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"strict" as const,path:"/",...extra});
 export async function createAdminSession(adminUserId:string,request:Request){const token=randomBytes(32).toString("base64url"),now=new Date(),expiresAt=new Date(now.getTime()+SESSION_TTL_MS),db=getDb();await db.insert(adminSessions).values({id:crypto.randomUUID(),adminUserId,tokenHash:sha256(token),expiresAt,lastRotatedAt:now,ipHash:await hashWithSecret(clientIp(request)),userAgentHash:sha256(request.headers.get("user-agent")||"")});const jar=await cookies();jar.set(COOKIE,token,cookieOptions({expires:expiresAt}));return expiresAt}
-export async function revokeAdminSession(){const jar=await cookies(),token=jar.get(COOKIE)?.value;if(token)await getDb().update(adminSessions).set({revokedAt:new Date()}).where(eq(adminSessions.tokenHash,sha256(token)));jar.set(COOKIE,"",cookieOptions({maxAge:0}))}
-export async function getAdminUser(required:AdminPermission="admin:read"):Promise<AuthorizedAdmin|null>{const jar=await cookies(),token=jar.get(COOKIE)?.value;if(!token)return null;const db=getDb(),now=new Date();const [row]=await db.select({session:adminSessions,user:adminUsers}).from(adminSessions).innerJoin(adminUsers,eq(adminUsers.id,adminSessions.adminUserId)).where(and(eq(adminSessions.tokenHash,sha256(token)),isNull(adminSessions.revokedAt),gt(adminSessions.expiresAt,now),eq(adminUsers.active,true))).limit(1);if(!row)return null;const role=row.user.role as AdminRole;if(await hasEffectivePermission(row.user.id,role,required,now)) { if(shouldRotateSession(row.session.lastRotatedAt,now)){const next=randomBytes(32).toString("base64url");await db.update(adminSessions).set({tokenHash:sha256(next),lastRotatedAt:now}).where(eq(adminSessions.id,row.session.id));try{jar.set(COOKIE,next,cookieOptions({expires:row.session.expiresAt}))}catch{}}return{userId:row.user.id,email:row.user.email,displayName:row.user.email,role} } return null}
+/**
+ * Logout: the presented session is revoked, and so is any session of the same admin that was just
+ * superseded by a rotation (it only lives on for the grace window), so a token replaced a moment ago
+ * cannot outlive the logout.
+ */
+export async function revokeAdminSession(){
+  const jar=await cookies(),token=jar.get(COOKIE)?.value;
+  if(token){
+    const db=getDb(),now=new Date(),tokenHash=sha256(token);
+    const [current]=await db.select({adminUserId:adminSessions.adminUserId}).from(adminSessions).where(eq(adminSessions.tokenHash,tokenHash)).limit(1);
+    await db.update(adminSessions).set({revokedAt:now}).where(eq(adminSessions.tokenHash,tokenHash));
+    if(current)await db.update(adminSessions).set({revokedAt:now}).where(and(eq(adminSessions.adminUserId,current.adminUserId),isNull(adminSessions.revokedAt),gt(adminSessions.expiresAt,now),lte(adminSessions.expiresAt,sql`${adminSessions.lastRotatedAt} + (${sql.raw(String(SESSION_ROTATION_GRACE_MS))} * interval '1 millisecond')`)));
+  }
+  jar.set(COOKIE,"",cookieOptions({maxAge:0}))
+}
+
+// Rotation lives in lib/admin-session-rotation.ts. It runs only where the response can carry the new cookie.
+const PROBE_COOKIE = "ege_admin_cookie_probe";
+function rotationOutcomeLog(outcome: RotationOutcome | "revert_failed") {
+  // Outcome names only - never a token, a hash or a cookie value.
+  if (outcome === "failed" || outcome === "revert_failed") console.warn("admin_session_rotation", { outcome });
+  else if (outcome !== "skipped_cookie_unwritable") console.info("admin_session_rotation", { outcome });
+}
+function rotationDeps(jar: Awaited<ReturnType<typeof cookies>>, db: ReturnType<typeof getDb>): RotationDeps {
+  return {
+    now: () => new Date(),
+    newToken: () => randomBytes(32).toString("base64url"),
+    newId: () => crypto.randomUUID(),
+    hash: sha256,
+    // Deleting a cookie that does not exist changes nothing in the browser, but throws where cookies are read-only.
+    probeCookieWritable: () => { jar.delete({ name: PROBE_COOKIE, path: "/" }); },
+    setSessionCookie: (token, expires) => { jar.set(COOKIE, token, cookieOptions({ expires })); },
+    claim: ({ oldId, dueBefore, now, graceUntil, next }) => db.transaction(async (tx) => {
+      const claimed = await tx.update(adminSessions)
+        .set({ lastRotatedAt: now, expiresAt: sql`least(${adminSessions.expiresAt}, ${graceUntil.toISOString()}::timestamptz)` })
+        .where(and(eq(adminSessions.id, oldId), isNull(adminSessions.revokedAt), lt(adminSessions.lastRotatedAt, dueBefore)))
+        .returning({ id: adminSessions.id });
+      if (!claimed.length) return false;
+      await tx.insert(adminSessions).values(next);
+      return true;
+    }),
+    revertClaim: ({ oldId, newId, previous }) => db.transaction(async (tx) => {
+      await tx.delete(adminSessions).where(eq(adminSessions.id, newId));
+      await tx.update(adminSessions).set({ lastRotatedAt: previous.lastRotatedAt, expiresAt: previous.expiresAt }).where(eq(adminSessions.id, oldId));
+    }),
+    log: rotationOutcomeLog,
+  };
+}
+
+export async function getAdminUser(required:AdminPermission="admin:read"):Promise<AuthorizedAdmin|null>{
+  const jar=await cookies(),token=jar.get(COOKIE)?.value;if(!token)return null;
+  const db=getDb(),now=new Date();
+  const [row]=await db.select({session:adminSessions,user:adminUsers}).from(adminSessions).innerJoin(adminUsers,eq(adminUsers.id,adminSessions.adminUserId)).where(and(eq(adminSessions.tokenHash,sha256(token)),isNull(adminSessions.revokedAt),gt(adminSessions.expiresAt,now),eq(adminUsers.active,true))).limit(1);
+  if(!row)return null;
+  const role=row.user.role as AdminRole;
+  if(!(await hasEffectivePermission(row.user.id,role,required,now)))return null;
+  // Authorized. Rotation is housekeeping: it can never fail or delay the request it rides on.
+  try{await rotateSessionIfDue(row.session,rotationDeps(jar,db))}catch{}
+  return{userId:row.user.id,email:row.user.email,displayName:row.user.email,role}
+}
 
 /**
  * Effective permission = base role permission OR a live time-boxed grant.
