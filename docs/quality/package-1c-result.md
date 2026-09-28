@@ -99,7 +99,8 @@ Gree.com.tr karşılaştırması (masaüstü): Gree'nin güçlü yanı yaşam al
 | Lint | PASS |
 | Typecheck | PASS |
 | Storefront testleri | PASS — yeni `tests/storefront-design-quality.test.ts` (9 test) dahil |
-| Tam test paketi (sandbox) | 898 testten yalnız sandbox ortamına bağlı, bu değişiklikten önce de aynı şekilde kalan analytics saat dilimi ve migrator/pg dosyası başarısız; değişiklikten kaynaklı başarısız test yok |
+| Tam test paketi (bu repo, bağlı Linux çalışma alanı) | 907 test, 855 geçti; başarısız olanlar yalnız `tests/analytics-sales.test.ts` (saat dilimi) ve `tests/migrator.test.ts` (pg) alt testleri — bu ortamda değişiklikten önce de başarısız. Mac terminalinde `pnpm test` ile tekrar doğrulanmalı |
+| Tam test paketi (bulut sandbox) | 898 testten yalnız sandbox ortamına bağlı, bu değişiklikten önce de aynı şekilde kalan analytics saat dilimi ve migrator/pg dosyası başarısız; değişiklikten kaynaklı başarısız test yok |
 | Build | PASS — `LOCAL_BUILD_NO_UPLOAD=1 next build`. Sandbox Google Fonts'a erişemediği için **yalnız admin** `next/font/google` isteği test amaçlı `NEXT_FONT_GOOGLE_MOCKED_RESPONSES` ile karşılandı; storefront'un Google bağımlılığı yok |
 
 Eski Tailwind ana sayfasına/eski header markup'ına sabitlenmiş testler, aynı niyeti (fiyat otoritesi, 44px hedefler, menü erişilebilirliği, alt metin, erişilebilir WhatsApp yeşili, okunur yazı boyutu, CSP) yeni işaretleme üzerinden doğrulayacak şekilde güncellendi.
