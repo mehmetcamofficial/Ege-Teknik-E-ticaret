@@ -3,12 +3,9 @@ import { rateLimitBuckets, serviceRequests } from "@/db/schema";
 import { idempotencyKey, hashClientIp } from "@/lib/request-security";
 import { eq, sql } from "drizzle-orm";
 import { publicRoute, readJson } from "@/lib/http-security";
-import { z } from "zod";
+import { serviceRequestSchema as requestSchema } from "@/lib/service-request-schema";
 
-const requestSchema = z.object({
-  type: z.string().min(1).max(40), name: z.string().min(2).max(100), phone: z.string().min(7).max(30),
-  email: z.string().email().max(150).optional().or(z.literal("")), city: z.string().min(2).max(100), message: z.string().min(3).max(3000),
-});
+
 
 async function createServiceRequest(request: Request) {
   const key = idempotencyKey(request); if (!key) return Response.json({ error: "Güvenli istek anahtarı eksik." }, { status: 400 });
@@ -23,7 +20,7 @@ async function createServiceRequest(request: Request) {
   await db.insert(rateLimitBuckets).values({ key: bucketKey, count: 1, windowStartedAt: now, expiresAt }).onConflictDoUpdate({ target: rateLimitBuckets.key, set: bucket && bucket.expiresAt > now ? { count: sql`${rateLimitBuckets.count} + 1` } : { count: 1, windowStartedAt: now, expiresAt } });
   const id = crypto.randomUUID();
   const requestNumber = `ET-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${id.slice(0, 6).toUpperCase()}`;
-  await db.insert(serviceRequests).values({ id, requestNumber, idempotencyKey: key, ...parsed.data });
+  await db.insert(serviceRequests).values({ id, requestNumber, idempotencyKey: key, ...parsed.data, phone: parsed.data.phone ?? "", email: parsed.data.email ?? "" });
   return Response.json({ ok: true, requestNumber }, { status: 201 });
 }
 export const POST=publicRoute(createServiceRequest);

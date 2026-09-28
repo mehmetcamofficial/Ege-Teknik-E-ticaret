@@ -44,22 +44,6 @@ export function shouldRotateSession(lastRotatedAt: Date, now: Date): boolean {
   return now.getTime() - lastRotatedAt.getTime() > SESSION_ROTATE_AFTER_MS;
 }
 
-/**
- * Bootstrap exists only to create the very first administrator. Requiring a zero
- * admin count (rather than "this email has no account") stops the credential from
- * minting fresh owners later, including after an admin is deleted or deactivated.
- */
-export function canBootstrapAdmin(input: {
-  adminCount: number;
-  configuredEmail: string | undefined;
-  configuredPasswordHash: string | undefined;
-  submittedEmail: string;
-}): boolean {
-  if (input.adminCount !== 0) return false;
-  if (!input.configuredEmail || !input.configuredPasswordHash) return false;
-  return input.configuredEmail.trim().toLowerCase() === input.submittedEmail.trim().toLowerCase();
-}
-
 export const DEFAULT_MAX_BODY_BYTES = 64_000;
 // Product image uploads carry a raw file (<=4 MB, enforced again server-side) plus
 // multipart/form-data framing overhead; every other mutating /api/* route keeps the
@@ -71,6 +55,16 @@ const IMAGE_UPLOAD_PATH = /^\/api\/admin\/products\/[^/]+\/image$/;
  * scoped: only the exact single-segment-id image-upload route gets the larger limit. */
 export function maxBodyBytesForApiPath(pathname: string): number {
   return IMAGE_UPLOAD_PATH.test(pathname) ? IMAGE_UPLOAD_MAX_BODY_BYTES : DEFAULT_MAX_BODY_BYTES;
+}
+
+/**
+ * Exact API paths called server-to-server by a payment provider, which sends no browser Origin. They skip only the
+ * same-origin check in proxy.ts; the body-size cap still applies, and the handler must authenticate the caller
+ * cryptographically (PayTR: HMAC hash) before touching any state.
+ */
+export const SERVER_TO_SERVER_API_PATHS: readonly string[] = ["/api/payments/paytr/callback"];
+export function requiresSameOrigin(pathname: string): boolean {
+  return !SERVER_TO_SERVER_API_PATHS.includes(pathname);
 }
 
 export function isSameOrigin(origin: string | null, host: string | null): boolean {

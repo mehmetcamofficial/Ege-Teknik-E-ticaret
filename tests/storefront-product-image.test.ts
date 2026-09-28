@@ -63,15 +63,16 @@ test("productCard renders a real <img> with lazy loading when imageUrl is presen
   const context = loadStore();
   const productCard = context.productCard as (p: unknown) => string;
   const html = productCard(PRODUCT_WITH_IMAGE);
-  assert.match(html, /<img class="product-image" src="https:\/\/ege-teknik-product-images\.public\.blob\.vercel-storage\.com\/products\/SKU1\/primary\.jpg" alt="Test Ürün" loading="lazy">/);
+  assert.match(html, /<img class="product-image" src="https:\/\/ege-teknik-product-images\.public\.blob\.vercel-storage\.com\/products\/SKU1\/primary\.jpg" alt="Test Ürün"[^>]*loading="lazy">/);
   assert.doesNotMatch(html, /class="unit"/);
 });
 
-test("productCard falls back to the .unit placeholder when imageUrl is empty", () => {
+test("productCard states a missing image without inventing a product illustration", () => {
   const context = loadStore();
   const productCard = context.productCard as (p: unknown) => string;
   const html = productCard(PRODUCT_WITHOUT_IMAGE);
-  assert.match(html, /<div class="unit"><\/div>/);
+  assert.match(html, /class="product-image-unavailable"/);
+  assert.doesNotMatch(html, /class="unit"/);
   assert.doesNotMatch(html, /<img/);
 });
 

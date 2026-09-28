@@ -27,10 +27,10 @@ test("the compact top-bar phone link gets a 44px hit area without growing the st
 
 test("the mobile menu button, cart link, icon links and the checkout back link stay 44px, and icon-only links have accessible names", () => {
   assert.ok(minHeight(".store-nav>.menu-toggle") >= 44 || /menu-toggle\{display:inline-flex;align-items:center;min-height:44px/.test(css));
-  assert.ok(minHeight(".store-nav .header-tools .ghost") >= 44);
+  assert.ok(minHeight(".store-nav .header-tools .header-cart") >= 44);
   assert.match(css, /\.header-icon\{display:inline-grid;place-items:center;width:44px;height:44px/);
   const js = storefrontCoreSource();
-  for (const label of ["Favoriler", "Karşılaştır"]) assert.match(js, new RegExp(`class="header-icon"[^>]*aria-label="${label}"`));
+  for (const label of ["Favoriler", "Karşılaştır"]) assert.match(js, new RegExp(`class="header-icon[^"]*"[^>]*aria-label="${label}"`));
   // the checkout header's "Mağazaya dön" is a .nav-links link, which the 44px rule above covers
   assert.match(readFileSync(new URL("../public/checkout.html", import.meta.url), "utf8"), /<div class="nav-links"><a href="catalog.html">Mağazaya dön<\/a><\/div>/);
 });

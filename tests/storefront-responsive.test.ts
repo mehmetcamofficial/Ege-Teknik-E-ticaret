@@ -13,16 +13,22 @@ test("store header: menu button precedes the panel it controls, reports state an
   const root = fakeElement();
   loadStorefront({ elements: { "[data-site-header]": root } }).fn<() => void>("renderHeader")();
   const html = root.innerHTML;
-  assert.match(html, /<button type="button" class="menu-toggle ghost" data-action="toggle-menu" aria-expanded="false" aria-controls="site-nav">Menü<\/button><div class="nav-links" id="site-nav">/);
-  assert.match(html, /aria-label="Favoriler">♡/);
-  assert.match(html, /aria-label="Karşılaştır">⇄/);
+  // The menu button comes before the drawer it controls, names it and reports its state; the drawer is the primary navigation landmark.
+  assert.match(html, /<button type="button" class="menu-toggle ghost" data-action="toggle-menu" aria-expanded="false" aria-controls="site-nav" aria-label="Menüyü aç">/);
+  assert.ok(html.indexOf('aria-controls="site-nav"') < html.indexOf('<nav class="nav-bar" id="site-nav" aria-label="Ana menü">'));
+  // Icon-only links carry an accessible name; the visual is an inline SVG, not a glyph.
+  assert.match(html, /class="header-icon[^"]*" href="favorites\.html" title="Favoriler" aria-label="Favoriler"><svg/);
+  assert.match(html, /class="header-icon[^"]*" href="compare\.html" title="Karşılaştır" aria-label="Karşılaştır"><svg/);
   assert.match(html, /class="nav-extra" href="favorites\.html"/, "favourites stay reachable from the menu when the icons are hidden on narrow screens");
-  assert.match(js, /if\(e\.key==='Escape'\)\{const open=document\.querySelector\('\[data-action="toggle-menu"\]\[aria-expanded="true"\]'\);if\(open\)\{setMenu\(open,false\);open\.focus\(\)/);
+  assert.match(html, /<form class="header-search" action="catalog\.html" method="get" role="search"><label class="sr-only" for="site-search">/, "the header search is a labelled GET form to the catalog");
+  assert.match(js, /if\(e\.key==='Escape'\)\{const open=document\.querySelector\('\.store-nav>\[data-action="toggle-menu"\]\[aria-expanded="true"\]'\);if\(open\)\{setMenu\(open,false\);open\.focus\(\)/);
 });
 
 test("header never wraps into two rows or hides the menu behind nowrap overflow", () => {
-  assert.match(storeCss, /@media\(max-width:1180px\)\{\.store-nav\{flex-wrap:wrap;row-gap:0\}/);
-  assert.match(storeCss, /\.store-nav>\.menu-toggle\{order:3;display:none\}/);
+  // Below 1024px the navigation moves into an off-canvas drawer opened by the menu button; nothing is clipped by nowrap overflow.
+  assert.match(storeCss, /\.store-nav>\.menu-toggle\{order:0;display:none\}/);
+  assert.match(storeCss, /@media\(max-width:1023px\)\{[^@]*\.store-nav>\.menu-toggle\{display:inline-flex;order:0\}/);
+  assert.match(storeCss, /\.nav-bar\.open\{transform:none;visibility:visible/);
   assert.match(storeCss, /\.store-nav \.header-tools>a\.header-icon\{display:inline-grid;place-items:center;width:44px;height:44px/);
 });
 
@@ -74,13 +80,13 @@ test("customer-facing identity: only the verified e-mail, no stale addresses or 
   for (const phone of all.match(/wa\.me\/\d+/g) ?? []) assert.equal(phone, "wa.me/905427957560");
 });
 
-test("homepage: mobile menu exists, no fake live indicators, accessible WhatsApp green, labelled calculator, alt text", () => {
-  assert.match(home, /data-action="toggle-menu" aria-expanded="false" aria-controls="home-mobile-nav"/);
-  assert.match(home, /<nav id="home-mobile-nav"/);
+test("homepage: shared header with mobile menu, no fake live indicators, accessible WhatsApp green, alt text", () => {
+  // The homepage uses the same header as every store page (renderHeader), including the mobile drawer.
+  assert.match(home, /<div data-site-header><\/div>/);
+  assert.match(js, /data-action="toggle-menu" aria-expanded="false" aria-controls="site-nav"/);
   assert.doesNotMatch(home, /animate-(ping|pulse|bounce)/);
   assert.doesNotMatch(home, /Mühendise Danış|Mühendisimizle|WhatsApp Canlı Danışman/);
-  assert.match(home, /"whatsapp-green": "#0F7A42"/);
-  for (const id of ["area-slider", "room-type", "sun-exposure", "insulation"]) assert.match(home, new RegExp(`id="${id}" aria-label="`));
+  assert.match(storeCss, /--wa:#0f7a42/, "WhatsApp actions use the accessible dark green, not the brand #25D366");
   assert.equal((home.match(/<img\b(?![^>]*\salt=)/g) ?? []).length, 0);
   assert.equal((home.match(/aria-label="Sepeti Aç"/g) ?? []).length, 0, "the duplicate floating cart is gone; the header cart remains");
 });
@@ -117,26 +123,26 @@ test("checkout delivery UI is responsive with 44px targets: option rows, single-
   assert.match(storeCss, /\.delivery-option small\{[^}]*overflow-wrap:anywhere/);
 });
 
-test("homepage readable text: no 10-11px shared label token, 12px+ top bar and tagline", () => {
-  assert.match(home, /"label-sm": \["12px"/);
-  assert.match(home, /h-9 flex items-center justify-between font-label-sm text-\[12px\] sm:text-\[13px\]/);
-  assert.match(home, /text-\[12px\] font-semibold tracking-\[0\.08em\] text-secondary whitespace-nowrap">KLİMA &amp; TEKNOLOJİ/);
+test("homepage readable text: no 10-11px label tokens, 12px+ top bar and tagline", () => {
+  assert.match(storeCss, /\.store-top\{background:var\(--p\);color:#d8ebe4;font-size:13px\}/);
   assert.match(storeCss, /\.brand small\{font-size:12px/);
+  assert.doesNotMatch(storeCss, /font-size:1[01](\.\d+)?px/, "no 10-11px text anywhere in the shared stylesheet");
 });
 
-test("area slider: slim visual track, 44px interactive height, keyboard-operable native range", () => {
-  assert.match(home, /<input class="w-full appearance-none cursor-pointer accent-secondary" id="area-slider" aria-label="Alan \(m²\)"[^>]*type="range"/);
-  assert.match(home, /#area-slider\{height:44px;background:transparent/);
-  assert.match(home, /#area-slider::-webkit-slider-runnable-track\{height:10px/);
+test("homepage product imagery is real, local and optimized: no representative illustrations or remote mock-up images", () => {
+  assert.doesNotMatch(home, /googleusercontent|temsili|Temsili/);
+  const imgs = home.match(/<img\b[^>]*>/g) ?? [];
+  assert.ok(imgs.length >= 5);
+  for (const img of imgs) {
+    assert.match(img, /src="\/assets\/home\/[a-z-]+-\d+\.webp"/, img);
+    assert.match(img, /\swidth="\d+" height="\d+"/, `${img} reserves its box (CLS)`);
+  }
+  // Only the hero image is eager; everything below the fold is lazy.
+  assert.equal(imgs.filter((img) => /fetchpriority="high"/.test(img)).length, 1);
+  assert.equal(imgs.filter((img) => !/fetchpriority="high"/.test(img) && !/loading="lazy"/.test(img)).length, 0);
 });
 
-test("illustrative homepage images are visibly and textually labelled, never presented as model photos", () => {
-  const imgs = home.match(/<img\b[^>]*googleusercontent[^>]*>/g) ?? [];
-  assert.equal(imgs.length, 7);
-  for (const img of imgs) assert.match(img, /alt="[^"]*\(temsili görsel\)"/);
-  assert.equal((home.match(/>Temsili görsel<\/span>/g) ?? []).length, 7);
-});
-
-test("homepage header search appears only where the header has room for it", () => {
-  assert.match(home, /class="relative hidden lg:block xl:hidden w-56"/);
+test("header search is shown on desktop and moves into the menu drawer on narrow screens", () => {
+  assert.match(storeCss, /@media\(max-width:1023px\)\{[^@]*\.header-search\{display:none\}/);
+  assert.match(js, /<form class="drawer-search" action="catalog\.html" method="get" role="search">/);
 });

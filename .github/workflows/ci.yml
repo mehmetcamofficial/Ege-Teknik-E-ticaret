@@ -1,0 +1,129 @@
+# Ege Teknik CI — four REQUIRED gates. Read-only, no deployment, no secrets, no remote databases.
+# Policy (locked by tests/ci-workflow-policy.test.ts): no pull_request_target, no continue-on-error, no secrets.*,
+# no Vercel/Neon/Production/Preview credentials, no `db:migrate`, no deploy steps.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enable Corepack (pnpm version comes from package.json "packageManager")
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  postgres-integration:
+    name: postgres-integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          # Throwaway credentials of an ephemeral service container that only lives inside this job. Not a secret.
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sprintb_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sprintb_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enable Corepack (pnpm version comes from package.json "packageManager")
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Real PostgreSQL integration (fails if any integration test is skipped)
+        env:
+          # Loopback service container only; the suite and its runner both refuse anything else.
+          SPRINTB_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: pnpm test:postgres
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enable Corepack (pnpm version comes from package.json "packageManager")
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build (no source-map upload or build telemetry)
+        env:
+          LOCAL_BUILD_NO_UPLOAD: "1"
+        run: pnpm build
+      - name: The build must not change tracked files or create new ones
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+
+  migration-safety:
+    name: migration-safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enable Corepack (pnpm version comes from package.json "packageManager")
+        run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Migration 0011 is byte-identical to the reviewed version
+        run: echo "f740bd31ff771742ed335aa2c2f1c3f4c44d03d30dcc9c4488c612a2c95d7626  drizzle-pg/0011_admin_governance.sql" | sha256sum --check -
+      - name: Migration 0012 is byte-identical to the applied version
+        run: echo "70f1d12ff909a8377dac4bad436fee1155456c82f433bc9259c64b2b4a03c3cb  drizzle-pg/0012_delivery_class.sql" | sha256sum --check -
+      - name: Historical migrations 0000-0012 unchanged, journal consistent (offline, no database)
+        run: pnpm verify:migrations
+      - name: Migration and first-admin bootstrap safety tests
+        run: >-
+          node --test --experimental-strip-types
+          tests/migration-integrity.test.ts
+          tests/admin-governance-migration-safety.test.ts
+          tests/first-admin-bootstrap.test.ts
+          tests/migrator.test.ts

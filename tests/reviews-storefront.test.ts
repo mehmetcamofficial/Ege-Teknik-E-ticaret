@@ -171,8 +171,13 @@ test("no fake ratings or reviews: every star, count and average comes from the A
   assert.match(js, /function reviewHeroMarkup\(\)\{const s=reviewState\.summary;return s&&s\.count>0&&s\.average!=null\?/);
 });
 test("no review structured data is emitted anywhere in Phase 5A", () => {
-  const files = [...readdirSync("public").filter((f) => /\.(html|js)$/.test(f)).map((f) => `public/${f}`), "lib/legal-render.ts"];
-  for (const f of files) assert.doesNotMatch(readFileSync(f, "utf8"), /application\/ld\+json|AggregateRating|"@type"\s*:\s*"Review"|schema\.org\/(Review|AggregateRating)/, f);
+  // Paket 1E adds BreadcrumbList / Article / FAQPage data to the Klima Rehberi pages; review and
+  // rating markup stays forbidden everywhere, including those generated pages.
+  const guides = readdirSync("public/rehber").filter((f) => f.endsWith(".html")).map((f) => `public/rehber/${f}`);
+  const files = [...readdirSync("public").filter((f) => /\.(html|js)$/.test(f)).map((f) => `public/${f}`), ...guides, "lib/legal-render.ts"];
+  for (const f of files) assert.doesNotMatch(readFileSync(f, "utf8"), /AggregateRating|"@type"\s*:\s*"Review"|schema\.org\/(Review|AggregateRating)|"ratingValue"|"reviewRating"/, f);
+  // Only the generated guide pages carry structured data at all.
+  for (const f of readdirSync("public").filter((f) => f.endsWith(".html") && f !== "blog.html")) assert.doesNotMatch(readFileSync(`public/${f}`, "utf8"), /application\/ld\+json/, f);
 });
 test("source files contain no raw bidi-override or zero-width characters (trojan-source guard)", () => {
   const walk = (dir: string): string[] => readdirSync(dir).flatMap((f) => { const p = join(dir, f); return statSync(p).isDirectory() ? walk(p) : /\.(ts|tsx|js|css|html|sql)$/.test(f) ? [p] : []; });

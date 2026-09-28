@@ -19,7 +19,7 @@ export default function ServiceRequestsView({ canWrite }: { canWrite: boolean })
   const rows = useMemo(() => {
     const q = query.trim().toLocaleLowerCase("tr");
     return (data?.requests ?? []).filter((r) => (filter === "all" || (filter === "open" ? (OPEN_SERVICE_STATUSES as readonly string[]).includes(r.status) : r.status === filter))
-      && (!q || [r.requestNumber, r.name, r.city, r.type, r.phone].some((v) => v?.toLocaleLowerCase("tr").includes(q))));
+      && (!q || [r.requestNumber, r.name, r.city, r.type, r.phone, r.email].some((v) => v?.toLocaleLowerCase("tr").includes(q))));
   }, [data, query, filter]);
 
   /** Same behaviour as before the redesign: choosing a status saves it immediately. */
@@ -62,7 +62,7 @@ export default function ServiceRequestsView({ canWrite }: { canWrite: boolean })
                 {rows.map((r) => (
                   <TableRow key={r.id} className="align-top">
                     <TableCell><p className="font-medium">{r.requestNumber}</p><p className="text-xs text-muted-foreground">{trDate(r.createdAt, true)}</p></TableCell>
-                    <TableCell className="whitespace-normal">{r.name}<p><a className="text-sm text-primary underline-offset-4 hover:underline" href={`tel:${r.phone}`}>{r.phone}</a></p><p className="text-xs text-muted-foreground">{r.city}</p></TableCell>
+                    <TableCell className="whitespace-normal">{r.name}{r.phone ? <p><a className="text-sm text-primary underline-offset-4 hover:underline" href={`tel:${r.phone}`}>{r.phone}</a></p> : null}{r.email ? <p><a className="text-sm text-primary underline-offset-4 hover:underline" href={`mailto:${r.email}`}>{r.email}</a></p> : null}<p className="text-xs text-muted-foreground">{r.city}</p></TableCell>
                     <TableCell className="max-w-[26rem] min-w-[14rem] whitespace-normal">
                       <p className="font-medium">{r.type}</p>
                       {r.message.length > 140

@@ -106,7 +106,7 @@ test("checkout markup: no marketing consent is collected until the İYS/consent 
   const legal = html.match(/<fieldset[^>]*data-legal-consents[^>]*>[\s\S]*?<\/fieldset>/)![0];
   assert.doesNotMatch(legal, /marketing/i);
   assert.doesNotMatch(html, /data-marketing-consents|data-marketing-channel/, "no marketing boxes are rendered");
-  assert.match(html, /Tanıtım ve pazarlama izinleri V1 sipariş akışında alınmaz\. Pazarlama özelliği İYS\/izin\/ret süreci tamamlanana kadar kapalıdır\./, "the page says plainly that marketing is closed");
+  assert.doesNotMatch(html, /V1|Production|İYS\/izin\/ret/, 'internal rollout details are not customer copy');
 });
 test("the client sends only explicitly ticked marketing channels", () => {
   assert.match(store, /function marketingChoices\(boxes\)\{const choices=\{sms:false,email:false,whatsapp:false\}/);
@@ -142,7 +142,7 @@ test("inactive payment providers are hidden entirely: no PayTR, iyzico or bank-t
   assert.deepEqual(radios.map((r) => r.match(/value="([^"]+)"/)![1]), ["discovery"], "only the confirm-later option is offered");
   assert.doesNotMatch(html, /PayTR|iyzico|bank_transfer|havale/i, "an inactive provider is not shown, not even disabled");
   assert.doesNotMatch(html, /\bTR\d{2}[ 0-9]{10,}|IBAN\s*:/i);
-  assert.match(html, /Online ödeme henüz aktif değildir\./);
+  assert.match(html, /Online ödeme şu anda kullanılamıyor\./);
 });
 
 // ---- checkout page copy --------------------------------------------------------------------------

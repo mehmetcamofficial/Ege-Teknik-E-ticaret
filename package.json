@@ -8,13 +8,17 @@
   "scripts": {
     "install:ci": "bash scripts/install-pnpm.sh",
     "dev": "next dev",
-    "build": "node scripts/build-home-css.mjs && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --experimental-strip-types tests/**/*.test.ts",
+    "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
+    "test:postgres": "node scripts/test-postgres-integration.mjs",
+    "verify:migrations": "node scripts/verify-migration-integrity.mjs",
+    "ci:verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && git diff --exit-code",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
+    "admin:bootstrap-first": "node --experimental-strip-types scripts/bootstrap-first-admin.mts",
     "auth:hash-password": "node scripts/hash-admin-password.mjs"
   },
   "dependencies": {
@@ -66,7 +70,7 @@
     "tw-animate-css": "^1.4.0",
     "typescript": "5.9.3",
     "vinext": "1.0.0-beta.5",
-    "vite": "8.0.13",
+    "vite": "8.0.16",
     "wrangler": "4.92.0"
   },
   "type": "module",

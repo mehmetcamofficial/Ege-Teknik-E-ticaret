@@ -86,7 +86,7 @@ test("storefront self-links point at / instead of index.html", () => {
     assert.equal(src.includes("href='/index.html'"), false, `${name} still links to index.html`);
     assert.equal(src.includes('href="/index.html"'), false, `${name} still links to /index.html`);
   }
-  assert.ok(homepage.includes('href="/"'), "homepage brand link should point at /");
+  assert.ok(storefrontCoreSource().includes('class="brand" href="/"'), "the shared header brand link (also used on the homepage) should point at /");
   assert.ok(storeCore.includes('href="/"'), "shared header/footer should point at /");
 });
 

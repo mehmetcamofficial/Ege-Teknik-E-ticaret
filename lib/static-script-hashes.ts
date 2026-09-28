@@ -4,9 +4,13 @@ import { join } from "node:path";
 
 const INLINE_SCRIPT = /<script(?![^>]*\ssrc=)([^>]*)>([\s\S]*?)<\/script>/gi;
 
+/* Data blocks (structured data) are never executed by the browser, so CSP script-src does not apply to them. */
+const DATA_BLOCK_TYPE = /\stype\s*=\s*["']?application\/(ld\+)?json["']?/i;
+
 export function inlineScriptBodies(html: string): string[] {
   const bodies: string[] = [];
   for (const match of html.matchAll(INLINE_SCRIPT)) {
+    if (DATA_BLOCK_TYPE.test(match[1])) continue;
     const body = match[2];
     if (body.trim()) bodies.push(body);
   }

@@ -203,7 +203,7 @@ test("migration 0012 is additive: nothing is dropped, deleted or rewritten", () 
 });
 test("migration 0012 is registered in the journal as idx 12 after 0011, and the schema declares the same column and check", () => {
   const journal = JSON.parse(read("drizzle-pg/meta/_journal.json")) as { entries: { idx: number; tag: string }[] };
-  assert.deepEqual(journal.entries.slice(-2).map((e) => [e.idx, e.tag]), [[11, "0011_admin_governance"], [12, "0012_delivery_class"]]);
+  assert.deepEqual(journal.entries.filter((e) => e.idx === 11 || e.idx === 12).map((e) => [e.idx, e.tag]), [[11, "0011_admin_governance"], [12, "0012_delivery_class"]]);
   const schema = read("db/schema.ts");
   assert.match(schema, /deliveryClass:text\("delivery_class"\)\.notNull\(\)\.default\("installed_delivery"\)/);
   assert.match(schema, /check\("products_delivery_class_ck",sql`\$\{t\.deliveryClass\} IN \('installed_delivery','shippable','local_delivery'\)`\)/);

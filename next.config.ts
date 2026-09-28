@@ -2,6 +2,7 @@ import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import { staticContentSecurityPolicy, staticSecurityHeaders } from "./lib/security-headers";
 import { collectStaticScriptHashes } from "./lib/static-script-hashes";
+import { legacyGuideRedirects } from "./lib/guide-redirects";
 
 // Nonce-based CSP for Next.js-rendered documents is applied per request in proxy.ts.
 const staticCsp = staticContentSecurityPolicy(collectStaticScriptHashes("./public"));
@@ -38,6 +39,8 @@ const nextConfig: NextConfig = {
         destination: "/",
         permanent: true,
       },
+      // Old client-rendered guide URLs -> static Klima Rehberi pages.
+      ...legacyGuideRedirects(),
     ];
   },
   async rewrites() {
@@ -55,6 +58,13 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
+  // Local verification can compile without sending source maps or build telemetry.
+  // Deployment behavior is unchanged unless this explicit opt-out is set.
+  ...(process.env.LOCAL_BUILD_NO_UPLOAD === "1" ? {
+    telemetry: false,
+    sourcemaps: { disable: true },
+    release: { create: false, finalize: false },
+  } : {}),
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 

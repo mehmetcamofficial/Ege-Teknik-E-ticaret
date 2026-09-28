@@ -1,4 +1,5 @@
 import { getDb } from "@/db";
+import { isCustomerVisibleProduct } from "@/lib/catalog-visibility";
 import { addresses, customers, inventory, orderItems, orderLegalAcceptances, orders, products } from "@/db/schema";
 import { finalizeOrderTotals, totalMatchesDisplayed } from "@/lib/checkout-charges";
 import { deliveryTraits, planDelivery, type DeliveryClass } from "@/lib/delivery";
@@ -32,6 +33,7 @@ async function createOrder(request: Request) {
     return Response.json({ ok: true, ...toOrderConfirmation({ orderNumber: existing.orderNumber, status: existing.status, items, subtotal: existing.subtotal, vatTotal: existing.vatTotal, shippingTotal: existing.shippingTotal, installationTotal: existing.installationTotal, total: existing.total, customerName: existing.customerName, phone: existing.phone, email: existing.email, city: existing.city, address: existing.address, installation: existing.installationPreference ?? "none", ...deliverySummaryFromSnapshot(existing.shippingAddressSnapshot) }) });
   };
   const replayed = await replay(); if (replayed) return replayed;
+  if ([...requested.keys()].some((productId) => !isCustomerVisibleProduct(productId))) return Response.json({ error: "Sepette satışa açık olmayan bir ürün var." }, { status: 409 });
   // Marketing permission is closed until the İYS / izin-ret flow is ready: an explicit opt-in is refused, never recorded.
   if (marketingConsentRequested(parsed.data.marketing)) return Response.json({ error: MARKETING_CONSENT_DISABLED.error, code: MARKETING_CONSENT_DISABLED.code }, { status: MARKETING_CONSENT_DISABLED.status });
   const legal = await loadRequiredCheckoutLegalVersions();
