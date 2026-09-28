@@ -15,6 +15,7 @@
     "test": "node --test --experimental-strip-types tests/**/*.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
+    "admin:bootstrap-first": "node --experimental-strip-types scripts/bootstrap-first-admin.mts",
     "auth:hash-password": "node scripts/hash-admin-password.mjs"
   },
   "dependencies": {

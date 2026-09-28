@@ -44,22 +44,6 @@ export function shouldRotateSession(lastRotatedAt: Date, now: Date): boolean {
   return now.getTime() - lastRotatedAt.getTime() > SESSION_ROTATE_AFTER_MS;
 }
 
-/**
- * Bootstrap exists only to create the very first administrator. Requiring a zero
- * admin count (rather than "this email has no account") stops the credential from
- * minting fresh owners later, including after an admin is deleted or deactivated.
- */
-export function canBootstrapAdmin(input: {
-  adminCount: number;
-  configuredEmail: string | undefined;
-  configuredPasswordHash: string | undefined;
-  submittedEmail: string;
-}): boolean {
-  if (input.adminCount !== 0) return false;
-  if (!input.configuredEmail || !input.configuredPasswordHash) return false;
-  return input.configuredEmail.trim().toLowerCase() === input.submittedEmail.trim().toLowerCase();
-}
-
 export const DEFAULT_MAX_BODY_BYTES = 64_000;
 // Product image uploads carry a raw file (<=4 MB, enforced again server-side) plus
 // multipart/form-data framing overhead; every other mutating /api/* route keeps the
