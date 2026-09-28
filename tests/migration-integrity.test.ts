@@ -31,18 +31,32 @@ test("removing, or re-timestamping, a frozen journal entry is detected", () => {
   assert.ok(verifyMigrationIntegrity(root).some((p) => /journal entry 5 no longer matches/.test(p)));
 });
 
-test("a NEW migration after 0012 is allowed only when contiguous and journaled", () => {
+test("a NEW migration after the current head is allowed only when contiguous and journaled", () => {
   const root = copy();
-  writeFileSync(join(root, "drizzle-pg/0013_new_thing.sql"), "SELECT 1;\n");
-  assert.ok(verifyMigrationIntegrity(root).some((p) => /journal lists 13 migrations but 14 SQL files exist/.test(p)), "an un-journaled file is flagged");
   const journalPath = join(root, "drizzle-pg/meta/_journal.json");
   const journal = JSON.parse(readFileSync(journalPath, "utf8"));
-  journal.entries.push({ idx: 13, version: "7", when: journal.entries[12].when + 1000, tag: "0013_new_thing", breakpoints: true });
+  const count = journal.entries.length; // 13 before the finance ledger (0013), 14 with it: the test follows the real head
+  const tag = `${String(count).padStart(4, "0")}_new_thing`;
+  writeFileSync(join(root, `drizzle-pg/${tag}.sql`), "SELECT 1;\n");
+  assert.ok(verifyMigrationIntegrity(root).some((p) => new RegExp(`journal lists ${count} migrations but ${count + 1} SQL files exist`).test(p)), "an un-journaled file is flagged");
+  const last = journal.entries[count - 1];
+  journal.entries.push({ idx: count, version: "7", when: last.when + 1000, tag, breakpoints: true });
   writeFileSync(journalPath, JSON.stringify(journal));
   assert.deepEqual(verifyMigrationIntegrity(root), []);
-  journal.entries[13].when = journal.entries[12].when;
+  journal.entries[count].when = last.when;
   writeFileSync(journalPath, JSON.stringify(journal));
   assert.ok(verifyMigrationIntegrity(root).some((p) => /does not increase/.test(p)));
+});
+
+test("migration 0013 (finance ledger) is a permitted, additive addition that leaves the frozen 0000-0012 untouched", () => {
+  const sql = readFileSync("drizzle-pg/0013_finance_ledger.sql", "utf8");
+  assert.doesNotMatch(sql, /\bDROP\b|\bTRUNCATE\b|\bDELETE\s+FROM\b|\bUPDATE\s+"|\bALTER\s+COLUMN\b|\bRENAME\b/i, "additive only");
+  assert.equal(sql.match(/ADD COLUMN/g)?.length, 8);
+  assert.equal(sql.match(/FOREIGN KEY/g)?.length, 2);
+  assert.equal(sql.match(/CREATE (UNIQUE )?INDEX/g)?.length, 3);
+  assert.equal(sql.match(/CHECK \([^;]*\) NOT VALID/g)?.length, 7);
+  assert.doesNotMatch(sql, /orders_created_idx/, "the index that was deliberately dropped from the design must not return");
+  assert.deepEqual(verifyMigrationIntegrity(process.cwd()), []);
 });
 
 test("the gate never touches a database", () => {

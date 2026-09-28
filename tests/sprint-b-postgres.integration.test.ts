@@ -88,9 +88,10 @@ const transition = (orderId: string, expectedStatus: string, nextStatus: string)
 const inv = async (productId: string) => (await pool.query("select on_hand, reserved from inventory where product_id=$1", [productId])).rows[0] as { on_hand: number; reserved: number };
 const one = async (q: string, params: unknown[] = []) => Number((await pool.query(q, params)).rows[0].n);
 
-test("setup: the disposable database is migrated 0000-0012 through the real migrator (0011 promotes the legacy owner)", opts, async () => {
+test("setup: the disposable database is migrated to head through the real migrator (0011 promotes the legacy owner)", opts, async () => {
   await setup();
-  assert.equal(await one("select count(*)::int n from drizzle.__drizzle_migrations"), 13);
+  const headCount = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8")).entries.length; // 13 before the finance ledger, 14 with 0013
+  assert.equal(await one("select count(*)::int n from drizzle.__drizzle_migrations"), headCount);
   assert.equal(await one("select count(*)::int n from admin_users where role='super_admin' and active"), 1);
   assert.equal(await one("select count(*)::int n from admin_users where role='owner'"), 0);
 });
@@ -186,6 +187,36 @@ test("3. status CAS: two conflicting transitions from the same expected status =
   assert.ok(status === "preparing" || status === "cancelled");
   assert.deepEqual(await inv(p), status === "cancelled" ? { on_hand: 10, reserved: 0 } : { on_hand: 8, reserved: 2 }, "stock matches the single winner");
   assert.equal(await one("select count(*)::int n from audit_logs where entity_id='cas1' and action='status'"), 1, "the audit matches the committed state");
+});
+
+test("3b. finance guards inside the transition on real PostgreSQL: paid needs the ledger, cancel needs the refund, payment_status is derived", opts, async () => {
+  const p = await seedOrder("fg1", "pending_payment", 8, 2, 2);
+  await pool.query("update orders set total = 1000 where id = 'fg1'");
+  const early = await transition("fg1", "pending_payment", "paid");
+  assert.deepEqual([early.ok, !early.ok && early.code], [false, "PAYMENT_NOT_RECORDED"]);
+  assert.equal((await pool.query("select status, payment_status from orders where id='fg1'")).rows[0].status, "pending_payment");
+  assert.equal(await one("select count(*)::int n from audit_logs where entity_id='fg1'"), 0);
+
+  await pool.query("insert into payments (id, order_id, provider, amount, status, method, paid_at) values ('pay-fg1','fg1','manual',1000,'paid','cash', now())");
+  const paid = await transition("fg1", "pending_payment", "paid");
+  assert.deepEqual([paid.ok, paid.ok && paid.paymentStatus], [true, "paid"]);
+  assert.equal((await pool.query("select payment_status from orders where id='fg1'")).rows[0].payment_status, "paid");
+
+  const blocked = await Promise.all([transition("fg1", "paid", "cancelled"), transition("fg1", "paid", "cancelled")]);
+  assert.ok(blocked.every((r) => !r.ok && r.code === "REFUND_REQUIRED"), "both concurrent cancels are refused while money is held");
+  assert.deepEqual(await inv(p), { on_hand: 8, reserved: 2 }, "a refused cancel moves no stock");
+
+  await pool.query("insert into refunds (id, order_id, payment_id, amount, status, refunded_at, reason) values ('ref-fg1','fg1','pay-fg1',1000,'completed', now(),'test')");
+  const results = await Promise.allSettled([transition("fg1", "paid", "cancelled"), transition("fg1", "paid", "cancelled")]);
+  noDeadlock(results);
+  const outcomes = results.map((r) => (r.status === "fulfilled" ? (r.value.ok ? "ok" : r.value.code) : "error"));
+  assert.deepEqual(outcomes.sort(), ["STALE", "ok"]);
+  assert.deepEqual(await inv(p), { on_hand: 10, reserved: 0 }, "stock restored exactly once");
+  assert.equal((await pool.query("select payment_status, status from orders where id='fg1'")).rows[0].payment_status, "refunded");
+  const audit = (await pool.query("select payload from audit_logs where entity_id='fg1' and action='status' and payload->>'to'='cancelled'")).rows;
+  assert.equal(audit.length, 1);
+  assert.deepEqual(audit[0].payload.paymentStatus, { from: "paid", to: "refunded" });
+  assert.deepEqual(audit[0].payload.stockReleased, [{ productId: p, quantity: 2 }]);
 });
 
 test("4. rate limit: 40 genuinely parallel claims with limit 7 => exactly 7 allowed", opts, async () => {

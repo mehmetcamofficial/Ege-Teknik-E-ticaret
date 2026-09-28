@@ -132,7 +132,10 @@ test("route holds row lock, CAS, stock release and audit inside the same transac
   assert.match(transaction, /gte\(inventory\.reserved,quantity\)/);
   assert.match(transaction, /onHand:sql`\$\{inventory\.onHand\}\+\$\{quantity\}`/);
   assert.match(transaction, /reserved:sql`\$\{inventory\.reserved\}-\$\{quantity\}`/);
-  assert.match(transaction, /tx\.insert\(auditLogs\)/);
+  // The audit goes through finance-db's audit(tx, ...) (secret-shaped-key guard, same audit_logs table) on the SAME tx.
+  assert.match(transaction, /audit\(tx,actor,"status","order",orderId/);
+  assert.match(transaction, /ledgerSums:\(orderId\)=>ledgerSums\(tx,orderId\)/);
+  assert.match(readFileSync("lib/finance-db.ts", "utf8"), /await tx\.insert\(auditLogs\)/);
   assert.doesNotMatch(transaction, /db\.insert\(auditLogs\)/);
 });
 

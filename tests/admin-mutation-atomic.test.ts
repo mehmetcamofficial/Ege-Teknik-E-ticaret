@@ -77,7 +77,7 @@ test("every governed admin mutation route writes its audit through auditedMutati
 });
 
 test("order transitions already carry their audit inside the transition transaction", () => {
-  assert.match(read("lib/order-transition-db.ts"), /insertAudit:async/);
+  assert.match(read("lib/order-transition-db.ts"), /insertAudit:\(/);
   assert.match(read("lib/order-transition.ts"), /await tx\.insertAudit\(/);
 });
 

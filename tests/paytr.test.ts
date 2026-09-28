@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHmac } from "node:crypto";
 import { globSync, readFileSync } from "node:fs";
 import test from "node:test";
@@ -39,7 +40,9 @@ test("no .env or source file ships a real PayTR credential or a public (NEXT_PUB
     assert.doesNotMatch(src, /NEXT_PUBLIC_PAYTR/i, f);
     assert.doesNotMatch(src, /PAYTR_MERCHANT_(KEY|SALT)\s*[=:]\s*["'][^"']+["']/, f);
   }
-  assert.equal(globSync(".env*").filter((f) => !/\.example$/.test(f)).length, 0, "no committed .env file");
+  // "Committed" means tracked by git: an ignored, machine-local file such as .env.sentry-build-plugin is not a committed file.
+  const tracked = execFileSync("git", ["ls-files", "--", ".env*"], { encoding: "utf8" }).split("\n").filter(Boolean);
+  assert.equal(tracked.filter((f) => !/\.example$/.test(f)).length, 0, "no committed .env file");
 });
 
 // ---- money ----------------------------------------------------------------------------------------------------------
