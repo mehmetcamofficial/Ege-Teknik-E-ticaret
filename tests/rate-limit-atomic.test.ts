@@ -7,7 +7,7 @@ const T0 = new Date("2026-09-28T12:00:00Z");
 const at = (ms: number) => new Date(T0.getTime() + ms);
 
 /**
- * A store with the exact semantics of the one-statement upsert in lib/http-security.ts (insert, or update the row
+ * A store with the exact semantics of the one-statement upsert in lib/rate-limit-db.ts (insert, or update the row
  * only when the window expired / count < limit). Every claim yields to the event loop first, so simultaneous callers
  * genuinely interleave; the row update itself is one synchronous step, like the database's row-level atomicity.
  */
@@ -63,13 +63,13 @@ test("keys and scopes are isolated from each other", async () => {
 });
 
 test("the production claim is ONE atomic statement: upsert with a conditional update and RETURNING, no read-then-write", () => {
-  const src = readFileSync(new URL("../lib/http-security.ts", import.meta.url), "utf8");
+  const src = readFileSync(new URL("../lib/rate-limit-db.ts", import.meta.url), "utf8");
   const claimBody = src.slice(src.indexOf("async claim("), src.indexOf("async purgeExpired("));
   assert.match(claimBody, /\.insert\(rateLimitBuckets\)[\s\S]*\.onConflictDoUpdate\(/);
   assert.match(claimBody, /setWhere:sql`\$\{expired\} OR \$\{rateLimitBuckets\.count\} < \$\{limit\}`/);
   assert.match(claimBody, /\.returning\(/);
   assert.doesNotMatch(claimBody, /\.select\(/, "the count must not be read in a separate statement");
-  assert.doesNotMatch(src, /rateLimitExceeded|isBucketWindowActive/, "the old read-then-write helpers are no longer used by the limiter");
+  assert.doesNotMatch(readFileSync(new URL("../lib/http-security.ts", import.meta.url), "utf8"), /rateLimitExceeded|isBucketWindowActive/, "the old read-then-write helpers are no longer used by the limiter");
 });
 
 test("cleanup removes only long-expired buckets, bounded by the batch, and leaves live ones", async () => {

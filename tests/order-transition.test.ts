@@ -118,8 +118,8 @@ test("inventory mismatch and audit failure roll back status, stock, side effects
 });
 
 test("route holds row lock, CAS, stock release and audit inside the same transaction", () => {
-  const route = readFileSync("app/api/admin/orders/[id]/route.ts", "utf8");
-  const transaction = route.slice(route.indexOf("transaction:(work)"));
+  const route = readFileSync("lib/order-transition-db.ts", "utf8");
+  const transaction = route.slice(route.indexOf("transaction:"));
   assert.match(transaction, /\.for\("update"\)/);
   assert.match(transaction, /eq\(orders\.status,expected\)/);
   assert.match(transaction, /gte\(inventory\.reserved,quantity\)/);

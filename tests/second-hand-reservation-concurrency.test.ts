@@ -85,7 +85,7 @@ test("transaction failure leaves no partial reservation", async () => {
 });
 
 test("reservation route uses a transaction advisory lock, row lock and active-count capacity check", () => {
-  const route = readFileSync("app/api/second-hand/reservations/route.ts", "utf8");
+  const route = readFileSync("lib/second-hand-reservation-db.ts", "utf8");
   assert.match(route, /db\.transaction/);
   assert.match(route, /pg_advisory_xact_lock/);
   assert.match(route, /\.for\("update"\)/);

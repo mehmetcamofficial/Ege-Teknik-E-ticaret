@@ -77,7 +77,7 @@ test("every governed admin mutation route writes its audit through auditedMutati
 });
 
 test("order transitions already carry their audit inside the transition transaction", () => {
-  assert.match(read("app/api/admin/orders/[id]/route.ts"), /insertAudit:async/);
+  assert.match(read("lib/order-transition-db.ts"), /insertAudit:async/);
   assert.match(read("lib/order-transition.ts"), /await tx\.insertAudit\(/);
 });
 
@@ -86,8 +86,8 @@ test("permissions are unchanged: each audited route still authorizes before muta
 });
 
 test("the helper is the only place that binds the audit insert to the mutation transaction", () => {
-  const bound = read("lib/admin-audited.ts");
-  assert.match(bound, /getDb\(\)\.transaction\(work\)/);
+  const bound = read("lib/admin-audited-db.ts");
+  assert.match(bound, /db\.transaction\(work\)/);
   assert.match(bound, /insertAudit: async \(tx, e\) =>/);
 });
 

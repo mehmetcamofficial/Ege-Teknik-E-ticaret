@@ -1,0 +1,254 @@
+/**
+ * Sprint B.1 — the concurrency-sensitive SQL against a REAL, DISPOSABLE PostgreSQL.
+ *
+ * (Kept at the top level of tests/ on purpose: a subdirectory would make `sh` expand the npm test glob (tests, double-star, *.test.ts) to that
+ * directory alone and silently drop the rest of the suite.)
+ *
+ * Opt-in: runs only when SPRINTB_PG_URL is set (otherwise every test is skipped, so `npm test` stays hermetic).
+ * Hard safety guards: the URL must point at loopback and the database name must start with "sprintb". The suite
+ * DROPS and recreates the public/drizzle schemas of that database, so it refuses anything else.
+ *
+ *   docker run -d --name ege-sprintb-pg -e POSTGRES_PASSWORD=... -e POSTGRES_DB=sprintb -p 127.0.0.1:55432:5432 postgres:18-alpine
+ *   SPRINTB_PG_URL=postgresql://postgres:...@127.0.0.1:55432/sprintb npm test -- tests/sprint-b-postgres.integration.test.ts
+ *
+ * Nothing here uses a fake repository: the production dependency builders (lib/*-db.ts) run through Drizzle on real
+ * pooled connections, so every "concurrent" case is several independent PostgreSQL transactions.
+ */
+import assert from "node:assert/strict";
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import test, { after } from "node:test";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { sql } from "drizzle-orm";
+import pg from "pg";
+import * as schema from "../db/schema.ts";
+import { auditedMutationOn } from "../lib/admin-audited-db.ts";
+import { claimRateLimit, maybePurgeExpiredBuckets, PURGE_BATCH } from "../lib/rate-limit.ts";
+import { createRateLimitStore } from "../lib/rate-limit-db.ts";
+import { reserveSecondHandProduct } from "../lib/second-hand-reservation.ts";
+import { secondHandReservationDeps } from "../lib/second-hand-reservation-db.ts";
+import { transitionOrder } from "../lib/order-transition.ts";
+import { orderTransitionDeps } from "../lib/order-transition-db.ts";
+
+const URL_ENV = process.env.SPRINTB_PG_URL;
+const skip = URL_ENV ? false : "SPRINTB_PG_URL is not set (real-PostgreSQL verification is opt-in)";
+const opts = { skip, timeout: 60_000 };
+const actor = { userId: "admin-1", email: "admin@example.test" };
+const NOW = () => new Date();
+/** Drizzle wraps driver errors ("Failed query"); the PostgreSQL message is on `cause`. */
+const causedBy = (pattern: RegExp) => (error: unknown) => pattern.test(String((error as { cause?: { message?: string } })?.cause?.message ?? error));
+
+let pool: pg.Pool;
+let db: ReturnType<typeof drizzle<typeof schema>>;
+const deadlocks: unknown[] = [];
+
+async function setup() {
+  const target = new URL(URL_ENV!);
+  assert.ok(["127.0.0.1", "localhost", "::1"].includes(target.hostname), "the integration DB must be a loopback instance");
+  assert.ok(target.pathname.slice(1).startsWith("sprintb"), 'the integration DB name must start with "sprintb"');
+  pool = new pg.Pool({ connectionString: URL_ENV, max: 40 });
+  db = drizzle(pool, { schema });
+  await pool.query("drop schema if exists public cascade; drop schema if exists drizzle cascade; create schema public;");
+  // Same path production took: 0000-0010, then a legacy owner exists, then 0011 (owner -> super_admin) and 0012.
+  const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
+  const partial = mkdtempSync(join(tmpdir(), "sprintb-mig-"));
+  mkdirSync(join(partial, "meta"));
+  writeFileSync(join(partial, "meta/_journal.json"), JSON.stringify({ ...journal, entries: journal.entries.slice(0, 11) }));
+  for (const entry of journal.entries.slice(0, 11)) cpSync(`drizzle-pg/${entry.tag}.sql`, join(partial, `${entry.tag}.sql`));
+  await migrate(db, { migrationsFolder: partial });
+  await pool.query("insert into admin_users (id, external_user_id, email, role, active) values ('owner-1', 'password:o@example.test', 'o@example.test', 'owner', true)");
+  await migrate(db, { migrationsFolder: "drizzle-pg" });
+  // The forced-failure hook for the audit test: a real DB-level refusal, not a mock.
+  await pool.query(`create function sprintb_block_audit() returns trigger language plpgsql as $$ begin if new.entity_type = 'forced_failure' then raise exception 'forced audit failure'; end if; return new; end $$;
+    create trigger sprintb_block_audit_trg before insert on audit_logs for each row execute function sprintb_block_audit();`);
+}
+
+const noDeadlock = (results: PromiseSettledResult<unknown>[]) => {
+  for (const r of results) if (r.status === "rejected" && (r.reason as { code?: string })?.code === "40P01") deadlocks.push(r.reason);
+};
+
+async function seedUsed(id: string, stock: number, status = "published") {
+  await db.insert(schema.usedProducts).values({ id, slug: id, name: id, category: "test", stock, status });
+}
+const claimSecondHand = (productId: string, reservationId: string) =>
+  reserveSecondHandProduct({ reservationId, productId, name: "Ada", phone: "05001112233", now: NOW(), expiresAt: new Date(Date.now() + 30 * 60_000) }, secondHandReservationDeps(db));
+
+async function seedOrder(id: string, status: string, onHand: number, reserved: number, quantity: number, productId = `prod-${id}`) {
+  await db.insert(schema.products).values({ id: productId, slug: productId, name: productId, sku: productId });
+  await db.insert(schema.inventory).values({ id: `inv-${id}`, productId, onHand, reserved });
+  await db.insert(schema.orders).values({ id, orderNumber: `N-${id}`, idempotencyKey: `key-${id}`, customerName: "Ada", phone: "05001112233", city: "İzmir", address: "Sokak No 1 Bornova", status });
+  await db.insert(schema.orderItems).values({ id: `item-${id}`, orderId: id, productId, productName: productId, unitPrice: 100, vatRateBps: 2000, vatAmount: 17, quantity, lineTotal: 100 * quantity });
+  return productId;
+}
+const transition = (orderId: string, expectedStatus: string, nextStatus: string) =>
+  transitionOrder({ orderId, expectedStatus: expectedStatus as never, nextStatus: nextStatus as never, actor }, orderTransitionDeps(db));
+const inv = async (productId: string) => (await pool.query("select on_hand, reserved from inventory where product_id=$1", [productId])).rows[0] as { on_hand: number; reserved: number };
+const one = async (q: string, params: unknown[] = []) => Number((await pool.query(q, params)).rows[0].n);
+
+test("setup: the disposable database is migrated 0000-0012 through the real migrator (0011 promotes the legacy owner)", opts, async () => {
+  await setup();
+  assert.equal(await one("select count(*)::int n from drizzle.__drizzle_migrations"), 13);
+  assert.equal(await one("select count(*)::int n from admin_users where role='super_admin' and active"), 1);
+  assert.equal(await one("select count(*)::int n from admin_users where role='owner'"), 0);
+});
+
+test("1. second-hand: stock=1 and two genuinely concurrent independent transactions => exactly one reservation", opts, async () => {
+  await seedUsed("u-one", 1);
+  const results = await Promise.allSettled([claimSecondHand("u-one", "res-a"), claimSecondHand("u-one", "res-b")]);
+  noDeadlock(results);
+  const outcomes = results.map((r) => (r.status === "fulfilled" ? (r.value.ok ? "ok" : r.value.code) : "error"));
+  assert.deepEqual(outcomes.sort(), ["UNAVAILABLE", "ok"]);
+  assert.equal(await one("select count(*)::int n from second_hand_reservations where product_id='u-one'"), 1);
+});
+
+test("1b. second-hand: stock=3 with 25 concurrent claims => exactly 3 reservations, never more", opts, async () => {
+  await seedUsed("u-three", 3);
+  const results = await Promise.allSettled(Array.from({ length: 25 }, (_, i) => claimSecondHand("u-three", `res-three-${i}`)));
+  noDeadlock(results);
+  assert.equal(results.filter((r) => r.status === "fulfilled" && r.value.ok).length, 3);
+  assert.equal(results.filter((r) => r.status === "rejected").length, 0, "no transaction failed or deadlocked");
+  assert.equal(await one("select count(*)::int n from second_hand_reservations where product_id='u-three'"), 3);
+});
+
+test("1c. second-hand: same idempotency key concurrently => one reservation, both callers get the same reservation; stock=0 and expired cases", opts, async () => {
+  await seedUsed("u-idem", 1);
+  const [a, b] = await Promise.all([claimSecondHand("u-idem", "res-same"), claimSecondHand("u-idem", "res-same")]);
+  assert.ok(a.ok && b.ok);
+  assert.equal(a.ok && b.ok && a.reservationId, "res-same");
+  assert.equal(await one("select count(*)::int n from second_hand_reservations where product_id='u-idem'"), 1);
+  await seedUsed("u-zero", 0);
+  const zero = await claimSecondHand("u-zero", "res-zero");
+  assert.deepEqual(zero.ok, false);
+  assert.equal(await one("select count(*)::int n from second_hand_reservations where product_id='u-zero'"), 0, "no write on stock=0");
+  await seedUsed("u-exp", 1);
+  await pool.query("insert into second_hand_reservations (id, product_id, name, phone, expires_at) values ('res-old','u-exp','Old','05000000000', now() - interval '1 minute')");
+  const fresh = await claimSecondHand("u-exp", "res-new");
+  assert.ok(fresh.ok, "an expired reservation no longer blocks a new one");
+});
+
+test("1d. second-hand: a failure inside the transaction leaves no partial reservation", opts, async () => {
+  await seedUsed("u-fail", 1);
+  await pool.query("create function sprintb_fail_res() returns trigger language plpgsql as $$ begin if new.product_id = 'u-fail' then raise exception 'forced insert failure'; end if; return new; end $$; create trigger sprintb_fail_res_trg before insert on second_hand_reservations for each row execute function sprintb_fail_res();");
+  await assert.rejects(claimSecondHand("u-fail", "res-fail"), causedBy(/forced insert failure/));
+  assert.equal(await one("select count(*)::int n from second_hand_reservations where product_id='u-fail'"), 0);
+  await pool.query("drop trigger sprintb_fail_res_trg on second_hand_reservations");
+  assert.ok((await claimSecondHand("u-fail", "res-fail-2")).ok, "the product is still claimable after the failed attempt");
+});
+
+test("2. cancellation: two concurrent cancels from the same state => one effective transition, stock restored exactly once", opts, async () => {
+  const p = await seedOrder("c1", "paid", 8, 2, 2);
+  const results = await Promise.allSettled([transition("c1", "paid", "cancelled"), transition("c1", "paid", "cancelled")]);
+  noDeadlock(results);
+  const values = results.map((r) => (r.status === "fulfilled" ? (r.value.ok ? "ok" : r.value.code) : "error"));
+  assert.deepEqual(values.sort(), ["STALE", "ok"]);
+  assert.deepEqual(await inv(p), { on_hand: 10, reserved: 0 }, "released exactly once");
+  assert.equal((await pool.query("select status from orders where id='c1'")).rows[0].status, "cancelled");
+  assert.equal(await one("select count(*)::int n from audit_logs where entity_id='c1' and action='status'"), 1);
+  const retry = await transition("c1", "paid", "cancelled");
+  assert.deepEqual(retry.ok, false);
+  assert.deepEqual(await inv(p), { on_hand: 10, reserved: 0 }, "a later retry moves no stock");
+});
+
+test("2b. cancellation stress: 20 orders x 2 concurrent cancels => 20 effective releases, no negative stock", opts, async () => {
+  const ids = Array.from({ length: 20 }, (_, i) => `cs${i}`);
+  const products = await Promise.all(ids.map((id) => seedOrder(id, "paid", 5, 3, 3)));
+  const results = await Promise.allSettled(ids.flatMap((id) => [transition(id, "paid", "cancelled"), transition(id, "paid", "cancelled")]));
+  noDeadlock(results);
+  assert.equal(results.filter((r) => r.status === "rejected").length, 0);
+  assert.equal(results.filter((r) => r.status === "fulfilled" && r.value.ok).length, 20);
+  for (const p of products) assert.deepEqual(await inv(p), { on_hand: 8, reserved: 0 });
+});
+
+test("2c. a non-cancellable state and a failing stock release leave inventory and status untouched", opts, async () => {
+  const shipped = await seedOrder("nc1", "shipped", 5, 1, 1);
+  const r1 = await transition("nc1", "shipped", "cancelled");
+  assert.deepEqual([r1.ok, !r1.ok && r1.code], [false, "INVALID_TRANSITION"]);
+  assert.deepEqual(await inv(shipped), { on_hand: 5, reserved: 1 });
+  const p = await seedOrder("nc2", "paid", 5, 0, 2); // reserved < quantity: the release guard must refuse and roll the status back
+  const r2 = await transition("nc2", "paid", "cancelled");
+  assert.deepEqual([r2.ok, !r2.ok && r2.code], [false, "INVENTORY_INVARIANT"]);
+  assert.equal((await pool.query("select status from orders where id='nc2'")).rows[0].status, "paid");
+  assert.deepEqual(await inv(p), { on_hand: 5, reserved: 0 });
+  assert.equal(await one("select count(*)::int n from audit_logs where entity_id='nc2'"), 0);
+});
+
+test("3. status CAS: two conflicting transitions from the same expected status => one commits, one is stale", opts, async () => {
+  const p = await seedOrder("cas1", "paid", 8, 2, 2);
+  const results = await Promise.allSettled([transition("cas1", "paid", "preparing"), transition("cas1", "paid", "cancelled")]);
+  noDeadlock(results);
+  const settled = results.map((r) => (r.status === "fulfilled" ? r.value : null));
+  assert.equal(settled.filter((r) => r?.ok).length, 1);
+  assert.equal(settled.filter((r) => r && !r.ok && r.code === "STALE").length, 1);
+  const status = (await pool.query("select status from orders where id='cas1'")).rows[0].status as string;
+  assert.ok(status === "preparing" || status === "cancelled");
+  assert.deepEqual(await inv(p), status === "cancelled" ? { on_hand: 10, reserved: 0 } : { on_hand: 8, reserved: 2 }, "stock matches the single winner");
+  assert.equal(await one("select count(*)::int n from audit_logs where entity_id='cas1' and action='status'"), 1, "the audit matches the committed state");
+});
+
+test("4. rate limit: 40 genuinely parallel claims with limit 7 => exactly 7 allowed", opts, async () => {
+  const store = createRateLimitStore(db);
+  const results = await Promise.allSettled(Array.from({ length: 40 }, () => claimRateLimit(store, { key: "rl-burst", limit: 7, windowMs: 60_000, now: NOW() })));
+  noDeadlock(results);
+  assert.equal(results.filter((r) => r.status === "rejected").length, 0);
+  assert.equal(results.filter((r) => r.status === "fulfilled" && r.value).length, 7);
+  assert.equal(await one("select count::int n from rate_limit_buckets where key='rl-burst'"), 7);
+  assert.equal(await claimRateLimit(store, { key: "rl-other", limit: 7, windowMs: 60_000, now: NOW() }), true, "keys are isolated");
+});
+
+test("5. rate limit window reset: an expired bucket resets to 1 with real ON CONFLICT semantics", opts, async () => {
+  const store = createRateLimitStore(db);
+  await pool.query("insert into rate_limit_buckets (key, count, window_started_at, expires_at) values ('rl-expired', 99, now() - interval '2 minutes', now() - interval '1 minute')");
+  assert.equal(await claimRateLimit(store, { key: "rl-expired", limit: 2, windowMs: 60_000, now: NOW() }), true);
+  const row = (await pool.query("select count, expires_at > now() as live from rate_limit_buckets where key='rl-expired'")).rows[0];
+  assert.deepEqual([row.count, row.live], [1, true]);
+  assert.equal(await claimRateLimit(store, { key: "rl-expired", limit: 2, windowMs: 60_000, now: NOW() }), true);
+  assert.equal(await claimRateLimit(store, { key: "rl-expired", limit: 2, windowMs: 60_000, now: NOW() }), false, "the new window enforces the limit again");
+});
+
+test("6. rate limit cleanup: long-expired rows are removed (bounded), active and just-ended rows are preserved", opts, async () => {
+  const store = createRateLimitStore(db);
+  await pool.query("delete from rate_limit_buckets");
+  await pool.query(`insert into rate_limit_buckets (key, count, window_started_at, expires_at) values
+    ('old', 5, now() - interval '5 hours', now() - interval '4 hours'),
+    ('just-ended', 5, now() - interval '2 minutes', now() - interval '1 minute'),
+    ('live', 1, now(), now() + interval '1 minute')`);
+  assert.equal(await maybePurgeExpiredBuckets(store, NOW(), () => 0), 1);
+  const keys = (await pool.query("select key from rate_limit_buckets order by key")).rows.map((r) => r.key);
+  assert.deepEqual(keys, ["just-ended", "live"]);
+  await pool.query(`insert into rate_limit_buckets (key, count, window_started_at, expires_at) select 'bulk-' || g, 1, now() - interval '5 hours', now() - interval '4 hours' from generate_series(1, ${PURGE_BATCH + 50}) g`);
+  assert.equal(await maybePurgeExpiredBuckets(store, NOW(), () => 0), PURGE_BATCH, "one pass is bounded");
+  assert.equal(await one("select count(*)::int n from rate_limit_buckets where key in ('live','just-ended')"), 2);
+  // correctness is unaffected by cleanup
+  assert.equal(await claimRateLimit(store, { key: "live", limit: 1, windowMs: 60_000, now: NOW() }), false);
+});
+
+test("7. audit transaction: a forced audit-insert failure rolls the admin mutation back (real DB refusal)", opts, async () => {
+  await seedUsed("u-audit", 1);
+  await assert.rejects(
+    auditedMutationOn(db, actor, { action: "update", entityType: "forced_failure", entityId: "u-audit", payload: {} }, async (tx) => {
+      await tx.update(schema.usedProducts).set({ name: "CHANGED" }).where(sql`${schema.usedProducts.id} = 'u-audit'`);
+    }),
+    causedBy(/forced audit failure/),
+  );
+  assert.equal((await pool.query("select name from used_products where id='u-audit'")).rows[0].name, "u-audit", "the mutation did not survive without its audit");
+  assert.equal(await one("select count(*)::int n from audit_logs where entity_id='u-audit'"), 0);
+  await auditedMutationOn(db, actor, { action: "update", entityType: "second_hand_product", entityId: "u-audit", payload: {} }, async (tx) => {
+    await tx.update(schema.usedProducts).set({ name: "OK" }).where(sql`${schema.usedProducts.id} = 'u-audit'`);
+  });
+  assert.equal((await pool.query("select name from used_products where id='u-audit'")).rows[0].name, "OK");
+  assert.equal(await one("select count(*)::int n from audit_logs where entity_id='u-audit'"), 1, "success commits both, exactly one audit row");
+});
+
+test("invariants: no negative inventory, no over-reservation, no duplicate release, no deadlock, no lingering transactions", opts, async () => {
+  assert.equal(await one("select count(*)::int n from inventory where on_hand < 0 or reserved < 0"), 0);
+  assert.equal(await one("select count(*)::int n from (select product_id, count(*) c from second_hand_reservations where expires_at > now() group by product_id) x join used_products u on u.id = x.product_id where x.c > u.stock"), 0);
+  assert.equal(await one("select count(*)::int n from (select entity_id from audit_logs where entity_type='order' and payload->>'to'='cancelled' group by entity_id having count(*) > 1) d"), 0, "no order was cancelled twice");
+  assert.equal(deadlocks.length, 0, "no deadlock (SQLSTATE 40P01) in any tested scenario");
+  assert.equal(await one("select count(*)::int n from pg_stat_activity where datname = current_database() and state like 'idle in transaction%'"), 0);
+  assert.equal(await one("select count(*)::int n from pg_locks where not granted"), 0);
+});
+
+after(async () => { if (pool) await pool.end(); });
