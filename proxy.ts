@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, type NextFetchEvent } from "next/server";
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { appContentSecurityPolicy } from "@/lib/security-headers";
-import { isSameOrigin, maxBodyBytesForApiPath } from "@/lib/security-policy";
+import { isSameOrigin, maxBodyBytesForApiPath, requiresSameOrigin } from "@/lib/security-policy";
 import { classifyProxyRoute } from "@/lib/proxy-routing";
 
 const mutating = new Set(["POST", "PUT", "PATCH", "DELETE"]);
@@ -10,6 +10,7 @@ function guardApiRequest(request: NextRequest): NextResponse | null {
   if (!mutating.has(request.method)) return null;
   const maxBytes = maxBodyBytesForApiPath(request.nextUrl.pathname);
   if (Number(request.headers.get("content-length") || 0) > maxBytes) return NextResponse.json({ error: "İstek boyutu çok büyük." }, { status: 413 });
+  if (!requiresSameOrigin(request.nextUrl.pathname)) return null;
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
   if (!isSameOrigin(request.headers.get("origin"), host)) return NextResponse.json({ error: "İstek kaynağı reddedildi." }, { status: 403 });
   return null;
