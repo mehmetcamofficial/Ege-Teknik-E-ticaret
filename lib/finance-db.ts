@@ -21,13 +21,13 @@ import { findSecretLeak } from "./security-policy.ts";
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type FinanceDb = NodePgDatabase<any>;
-type Tx = Parameters<Parameters<FinanceDb["transaction"]>[0]>[0];
+export type Tx = Parameters<Parameters<FinanceDb["transaction"]>[0]>[0];
 export type FinanceActor = { userId: string; email: string };
 type Refused = { ok: false; refusal: FinanceRefusal };
 const refused = (status: number, code: string, error: string): Refused => ({ ok: false, refusal: { status, code, error } });
 
 /** Same table and the same secret-shaped-key guard as lib/admin-auth.ts auditPrivileged - not a parallel audit system. */
-async function audit(tx: Tx, actor: FinanceActor, action: string, entityType: string, entityId: string, payload: Record<string, unknown>) {
+export async function audit(tx: Tx, actor: FinanceActor, action: string, entityType: string, entityId: string, payload: Record<string, unknown>) {
   const leak = findSecretLeak(payload);
   if (leak) throw new Error(`audit payload refused: secret-shaped key "${leak}"`);
   await tx.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId: actor.userId, actorEmail: actor.email, action, entityType, entityId, payload });
@@ -38,7 +38,7 @@ async function lockOrder(tx: Tx, orderId: string) {
   return order ?? null;
 }
 
-async function ledgerSums(tx: Tx | FinanceDb, orderId: string) {
+export async function ledgerSums(tx: Tx | FinanceDb, orderId: string) {
   const [pay] = await tx.select({ n: sql<string>`coalesce(sum(${payments.amount}), 0)::bigint` }).from(payments).where(and(eq(payments.orderId, orderId), eq(payments.status, "paid")));
   const [ref] = await tx.select({ n: sql<string>`coalesce(sum(${refunds.amount}), 0)::bigint` }).from(refunds).where(and(eq(refunds.orderId, orderId), eq(refunds.status, "completed")));
   return { collected: Number(pay?.n ?? 0), refunded: Number(ref?.n ?? 0) };
