@@ -53,6 +53,21 @@ test("the comparison window never reaches into the future and never overlaps the
     const current = resolved(preset);
     const previous = resolvePreviousRange(preset, NOON_UTC);
     assert.equal(previous.ok, true);
+    if (!previous.ok) continue;
+    assert.ok(
+      previous.range.end.getTime() <= current.start.getTime(),
+      `${preset}: previous must end at or before current starts`,
+    );
+    assert.ok(
+      previous.range.end.getTime() <= NOON_UTC.getTime(),
+      `${preset}: previous must not be in the future`,
+    );
+    assert.ok(
+      previous.range.start.getTime() < previous.range.end.getTime(),
+      `${preset}: previous must be a real, non-empty window`,
+    );
+  }
+});
 
 test("'month' compares against the PREVIOUS CALENDAR month, not the last 30 days", () => {
   const current = resolved("month");
@@ -106,6 +121,27 @@ test("a custom range whose end is in the future is capped at now, and so is its 
 test("granularity is chosen from the range length so a chart never gets an unreadable number of points", () => {
   const span = (ms: number) => trendGranularityFor({ start: new Date(0), end: new Date(ms) });
   assert.equal(span(day), "day");
+  assert.equal(span(30 * day), "day");
+  assert.equal(span(45 * day), "day");
+  assert.equal(span(46 * day), "week");
+  assert.equal(span(90 * day), "week");
+  assert.equal(span(200 * day), "week");
+  assert.equal(span(201 * day), "month");
+  assert.equal(span(365 * day), "month");
+});
+test("the real presets bucket sensibly: short windows daily, 90d weekly, a long year monthly", () => {
+  assert.equal(trendGranularityFor(resolved("7d")), "day");
+  assert.equal(trendGranularityFor(resolved("30d")), "day");
+  assert.equal(trendGranularityFor(resolved("90d")), "week");
+  // "Bu yıl" in mid-June spans ~155 days, so it is still weekly (~22 points). Only once the window
+  // passes 200 days - i.e. from July onwards - does it switch to monthly. This is deliberate: the
+  // bucket follows the ACTUAL window length, so the point count stays readable all year instead of
+  // jumping granularity on a calendar boundary.
+  assert.equal(trendGranularityFor(resolved("year")), "week");
+  // Late in the year the same preset genuinely becomes monthly.
+  const lateInYear = resolved("year", new Date("2026-12-20T12:00:00.000Z"));
+  assert.equal(trendGranularityFor(lateInYear), "month");
+});
 
 // ---- sales deltas ---------------------------------------------------------------------------------
 test("a percentage change from a previous value of ZERO is undefined, not 0 and not Infinity", () => {
@@ -157,33 +193,6 @@ test("the cancellation rate is a percentage of ALL orders, rounded to one decima
 test("subtotal + VAT always reconstructs the order value, so the three figures can never disagree", () => {
   const totals = salesTotalsFrom({ orderValue: 120_000, netOrderValue: 100_000, vatTotal: 20_000, orderCount: 2, cancelledCount: 0, unitsSold: 2 });
   assert.equal(totals.netOrderValue + totals.vatTotal, totals.orderValue);
-});
-  assert.equal(span(30 * day), "day");
-  assert.equal(span(45 * day), "day");
-  assert.equal(span(46 * day), "week");
-  assert.equal(span(90 * day), "week");
-  assert.equal(span(200 * day), "week");
-  assert.equal(span(201 * day), "month");
-  assert.equal(span(365 * day), "month");
-});
-test("the real presets bucket sensibly: short windows daily, 90d weekly, a long year monthly", () => {
-  assert.equal(trendGranularityFor(resolved("7d")), "day");
-  assert.equal(trendGranularityFor(resolved("30d")), "day");
-  assert.equal(trendGranularityFor(resolved("90d")), "week");
-  // "Bu yıl" in mid-June spans ~155 days, so it is still weekly (~22 points). Only once the window
-  // passes 200 days - i.e. from July onwards - does it switch to monthly. This is deliberate: the
-  // bucket follows the ACTUAL window length, so the point count stays readable all year instead of
-  // jumping granularity on a calendar boundary.
-  assert.equal(trendGranularityFor(resolved("year")), "week");
-  // Late in the year the same preset genuinely becomes monthly.
-  const lateInYear = resolved("year", new Date("2026-12-20T12:00:00.000Z"));
-  assert.equal(trendGranularityFor(lateInYear), "month");
-});
-    if (!previous.ok) continue;
-    assert.ok(previous.range.end.getTime() <= current.start.getTime(), `${preset}: previous must end at or before current starts`);
-    assert.ok(previous.range.end.getTime() <= NOON_UTC.getTime(), `${preset}: previous must not be in the future`);
-    assert.ok(previous.range.start.getTime() < previous.range.end.getTime(), `${preset}: previous must be a real, non-empty window`);
-  }
 });
 
 // ---- terminology ---------------------------------------------------------------------------------
