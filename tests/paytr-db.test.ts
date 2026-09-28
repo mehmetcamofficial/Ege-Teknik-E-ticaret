@@ -6,7 +6,7 @@ import pg from "pg";
 import { auditLogs, inventory, orderItems, orders, payments, products } from "../db/schema.ts";
 import { loadFinanceReport, recordManualPayment, type FinanceDb } from "../lib/finance-db.ts";
 import { paytrCallbackHash, readPaytrConfig, type PaytrCallback, type PaytrConfig } from "../lib/paytr.ts";
-import { loadPaytrAttempt, processPaytrCallback, startPaytrPayment } from "../lib/paytr-db.ts";
+import { loadPaytrAdminMetrics, loadPaytrAttempt, processPaytrCallback, startPaytrPayment } from "../lib/paytr-db.ts";
 
 /**
  * PayTR token + callback flows on a real PostgreSQL with a FAKE fetch: no credential, no network. Opt-in with
@@ -213,4 +213,18 @@ test("parallel duplicate callbacks and a parallel double start are serialized by
   const results = await Promise.all(Array.from({ length: 5 }, () => processPaytrCallback(db, { config, callback: callback(oid, "success", "700000"), now: at(41) })));
   assert.deepEqual(results.map((r) => r.result).sort(), ["already_paid", "already_paid", "already_paid", "already_paid", "paid"]);
   assert.equal(await auditCount(o.id, "payment_paid"), 1);
+});
+
+test("admin metrics equal the ledger: money only from paid PayTR rows, counts per status, callback health from audit names", { skip }, async () => {
+  const m = await loadPaytrAdminMetrics(db);
+  const rows = await db.select().from(payments).where(eq(payments.provider, "paytr"));
+  assert.equal(m.attempts.total, rows.length);
+  for (const [k, st] of [["pending", "pending"], ["paid", "paid"], ["failed", "failed"], ["superseded", "cancelled"]] as const) assert.equal(m.attempts[k], rows.filter((r) => r.status === st).length, k);
+  assert.equal(m.paidAmount, rows.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0));
+  assert.ok(m.attempts.pending > 0 && m.paidAmount < rows.reduce((s, r) => s + r.amount, 0), "pending attempts are never money");
+  assert.ok(m.callbacks.invalid >= 1 && m.callbacks.amountMismatch >= 1 && m.callbacks.unknownReference >= 1);
+  assert.ok(m.callbacks.lastSuccessAt && m.callbacks.lastFailedAt);
+  assert.ok(m.recent.length <= 5 && m.recent.length > 0);
+  for (const r of m.recent) assert.deepEqual(Object.keys(r).sort(), ["amount", "createdAt", "failureCode", "orderNumber", "paidAt", "status"]);
+  assert.doesNotMatch(JSON.stringify(m), /@example\.test|Test Müşteri|TOK|Yetersiz bakiye/);
 });
