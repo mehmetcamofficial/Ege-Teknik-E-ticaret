@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse, type NextFetchEvent } from "next/server";
 import { clerkMiddleware } from "@clerk/nextjs/server";
-import { appContentSecurityPolicy } from "@/lib/security-headers";
+import { accountContentSecurityPolicy, appContentSecurityPolicy, clerkFrontendOrigin } from "@/lib/security-headers";
 import { isSameOrigin, maxBodyBytesForApiPath } from "@/lib/security-policy";
 import { classifyProxyRoute } from "@/lib/proxy-routing";
 
@@ -22,7 +22,20 @@ function guardApiRequest(request: NextRequest): NextResponse | null {
  * recommended pattern (route-matcher-based protection here is deprecated).
  * /api and /admin never touch this handler, so Clerk cannot influence them.
  */
-const withClerk = clerkMiddleware(() => NextResponse.next());
+function nextWithNonceCsp(request: NextRequest, csp: string, nonce: string): NextResponse {
+  const headers = new Headers(request.headers);
+  headers.set("x-nonce", nonce);
+  headers.set("Content-Security-Policy", csp);
+  const response = NextResponse.next({ request: { headers } });
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
+}
+
+const withClerk = clerkMiddleware((_auth, request) => {
+  const nonce = crypto.randomUUID().replaceAll("-", "");
+  const clerkOrigin = clerkFrontendOrigin(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  return nextWithNonceCsp(request, accountContentSecurityPolicy(nonce, clerkOrigin), nonce);
+});
 
 export function proxy(request: NextRequest, event: NextFetchEvent) {
   const route = classifyProxyRoute(request.nextUrl.pathname);
@@ -34,12 +47,7 @@ export function proxy(request: NextRequest, event: NextFetchEvent) {
   // stamps it onto the inline bootstrap scripts it emits, so those need no 'unsafe-inline'.
   const nonce = crypto.randomUUID().replaceAll("-", "");
   const csp = appContentSecurityPolicy(nonce);
-  const headers = new Headers(request.headers);
-  headers.set("x-nonce", nonce);
-  headers.set("Content-Security-Policy", csp);
-  const response = NextResponse.next({ request: { headers } });
-  response.headers.set("Content-Security-Policy", csp);
-  return response;
+  return nextWithNonceCsp(request, csp, nonce);
 }
 
 // Next.js requires this array as a static literal here (it's parsed at build time,
