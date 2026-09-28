@@ -1,10 +1,29 @@
 import { getDb } from "@/db";
+import { orderItems, orders, products } from "@/db/schema";
 import { getAdminUser } from "@/lib/admin-auth";
+import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { orderStatuses } from "@/lib/order-domain";
 import { transitionOrder } from "@/lib/order-transition";
 import { orderTransitionDeps } from "@/lib/order-transition-db";
 import { readJson } from "@/lib/http-security";
+
+const safeImage=(url:string|null|undefined)=>url&&(url.startsWith("https://")||(url.startsWith("/")&&!url.startsWith("//")))?url:null;
+
+/**
+ * The order's lines exactly as sold: name, SKU, quantity, unit price, VAT and line total come from the order_items
+ * snapshot, never from the live product. Only the thumbnail is read from the product (display only, no money).
+ */
+export async function GET(_request:Request,context:{params:Promise<{id:string}>}){
+  const user=await getAdminUser("admin:read"); if(!user)return Response.json({error:"Yetkisiz erişim"},{status:403});
+  const {id}=await context.params; const db=getDb();
+  const [order]=await db.select({id:orders.id}).from(orders).where(eq(orders.id,id)).limit(1);
+  if(!order)return Response.json({error:"Sipariş bulunamadı."},{status:404});
+  const rows=await db.select({id:orderItems.id,productName:orderItems.productName,productSku:orderItems.productSku,productSnapshot:orderItems.productSnapshot,quantity:orderItems.quantity,unitPrice:orderItems.unitPrice,vatRateBps:orderItems.vatRateBps,vatAmount:orderItems.vatAmount,lineTotal:orderItems.lineTotal,imageUrl:products.imageUrl})
+    .from(orderItems).leftJoin(products,eq(products.id,orderItems.productId)).where(eq(orderItems.orderId,id)).orderBy(asc(orderItems.createdAt),asc(orderItems.id));
+  const items=rows.map(({productSnapshot,imageUrl,...r})=>{const snap=(productSnapshot&&typeof productSnapshot==="object"?productSnapshot:{}) as {capacity?:unknown};return{...r,capacity:typeof snap.capacity==="string"?snap.capacity:"",imageUrl:safeImage(imageUrl)}});
+  return Response.json({items},{headers:{"cache-control":"no-store"}});
+}
 
 const schema=z.object({status:z.enum(orderStatuses),expectedStatus:z.enum(orderStatuses)});
 /**

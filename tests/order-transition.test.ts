@@ -10,7 +10,7 @@ type State = {
   onHand: number;
   reserved: number;
   items: { productId: string | null; quantity: number }[];
-  audits: { from: OrderStatus; to: OrderStatus; paymentStatus?: { from: string; to: string }; stockReleased?: { productId: string; quantity: number }[] }[];
+  audits: { from: OrderStatus; to: OrderStatus; paymentStatus?: { from: string; to: string }; stockReleased?: { productId: string | null; quantity: number }[] }[];
   shipments: string[];
   installations: number;
   // Finance ledger (Phase 3.3A): what the payments/refunds tables hold for the order, and the cached payment_status.

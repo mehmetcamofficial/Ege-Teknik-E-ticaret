@@ -169,6 +169,7 @@ test("finance reads need admin:read; payment and refund writes need orders:write
   assert.equal(permission("app/api/admin/orders/[id]/payments/route.ts", "POST"), "orders:write");
   assert.equal(permission("app/api/admin/orders/[id]/refunds/route.ts", "POST"), "orders:write");
   assert.equal(permission("app/api/admin/orders/[id]/route.ts", "PATCH"), "orders:write");
+  assert.equal(permission("app/api/admin/orders/[id]/route.ts", "GET"), "admin:read");
   for (const role of ["viewer", "catalog_manager"]) assert.equal(roleHasPermission(role, "orders:write"), false, `${role} cannot record money`);
   for (const role of adminRoles) assert.equal(roleHasPermission(role, "admin:read"), true);
   assert.equal(roleHasPermission("", "admin:read"), false);
@@ -185,6 +186,22 @@ test("no money value from the client is trusted as a total: amounts are bounded 
   assert.match(db, /validateManualPayment\(\{ orderStatus: order\.status, total: order\.total, collected/);
   assert.match(db, /for\("update"\)/);
   assert.doesNotMatch(read("app/api/admin/finance/route.ts"), /request\.json|readJson/);
+});
+
+// ---- order detail lines ------------------------------------------------------------------------------------------
+test("order lines come from the order_items snapshot; only the thumbnail is read from the product", () => {
+  const route = read("app/api/admin/orders/[id]/route.ts");
+  const get = route.slice(route.indexOf("export async function GET"), route.indexOf("export async function PATCH"));
+  for (const field of ["unitPrice:orderItems.unitPrice", "vatAmount:orderItems.vatAmount", "lineTotal:orderItems.lineTotal", "quantity:orderItems.quantity", "productName:orderItems.productName", "productSku:orderItems.productSku"]) assert.ok(get.includes(field), field);
+  assert.doesNotMatch(get, /products\.(price|vatRateBps|name|sku)/, "no live product price, VAT, name or SKU in an order line");
+  assert.match(route, /url\.startsWith\("https:\/\/"\)\|\|\(url\.startsWith\("\/"\)&&!url\.startsWith\("\/\/"\)\)/, "thumbnail limited to https or site-relative URLs");
+});
+test("the order detail lists its lines instead of the old placeholder", () => {
+  const view = read("app/admin/(panel)/orders/order-detail-view.tsx");
+  assert.doesNotMatch(view, /henüz listelenmiyor/);
+  assert.match(view, /<OrderItemsPanel orderId=\{order\.id\} \/>/);
+  for (const panel of ["PaymentSummaryPanel", "PaymentHistoryPanel", "PaymentActionPanels"]) assert.match(view, new RegExp(`<${panel} `), panel);
+  assert.match(view, /\{canWrite && \(/, "entry cards and status controls stay behind orders:write in the UI");
 });
 
 // ---- migration 0013 ---------------------------------------------------------------------------------------------
