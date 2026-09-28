@@ -199,3 +199,46 @@
 .review-form .primary{min-height:48px;justify-self:start;padding:12px 22px}
 .review-sent{margin:0;padding:14px 16px;border-radius:10px;background:#e3f3ea;color:#05603a;font-weight:700}
 @media(max-width:650px){.review-summary{grid-template-columns:minmax(0,1fr);gap:16px;padding:18px}.review-form{padding:18px}.review-toolbar{align-items:stretch}.review-toolbar>*{flex:1 1 100%}.review-sort select{width:100%}.review-form .primary,.review-write,.review-more{width:100%;justify-self:stretch}}
+
+/* ---- Paket 1C: shared design-system alignment for the product page ---- */
+[data-product-page] .detail-visual{background:var(--stage-grad);border-color:var(--line)}
+@media(min-width:1001px){.product-gallery{position:sticky;top:calc(var(--header-h) + 20px)}}
+.gallery-thumb{background:#fff}
+.pd-facts li{background:var(--bg)}
+.pd-toggles{display:flex;flex-wrap:wrap;gap:4px 16px;padding-top:2px}
+.pd-toggle{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 2px;border:0;background:none;color:var(--pd-heading);font-size:14px;font-weight:700;cursor:pointer;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .15s}
+.pd-toggle:hover{text-decoration-color:currentColor}
+.pd-toggle[aria-pressed=true]{color:var(--pd-accent)}
+.pd-toggle[data-action=toggle-favorite][aria-pressed=true] svg path{fill:currentColor}
+.pd-assure{list-style:none;margin:0;padding:16px 0 0;border-top:1px solid var(--pd-border);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pd-assure li{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;color:var(--pd-muted);min-width:0}
+.pd-assure svg{color:var(--pd-accent);margin-top:2px}
+.pd-assure b{display:block;color:var(--pd-text);font-size:13.5px}
+.pd-assure a{color:var(--pd-heading);font-weight:650;text-decoration:underline;text-underline-offset:3px}
+.pd-nav{position:sticky;top:var(--header-h);z-index:15;margin:var(--pd-space) 0 0;background:rgb(245 248 247/.96);backdrop-filter:blur(10px);border-block:1px solid var(--pd-border)}
+.pd-nav>div{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.pd-nav>div::-webkit-scrollbar{display:none}
+.pd-nav a{display:inline-flex;align-items:center;min-height:48px;padding:0 14px;font-size:14.5px;font-weight:700;color:var(--pd-muted);white-space:nowrap;border-bottom:2px solid transparent}
+.pd-nav a:hover{color:var(--pd-heading);border-bottom-color:var(--pd-border-strong)}
+.pd-nav+.pd-section{margin-top:clamp(28px,4vw,44px)}
+[data-product-page] .pd-section[id],[data-product-page] #yorumlar{scroll-margin-top:calc(var(--header-h) + 64px)}
+.pd-highlights{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:12px}
+.pd-highlights li{display:flex;flex-direction:column;gap:4px;padding:16px 18px;background:#fff;border:1px solid var(--pd-border);border-radius:var(--pd-radius);min-width:0}
+.pd-highlights span{font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--pd-muted)}
+.pd-highlights b{font-size:20px;font-weight:800;color:var(--pd-heading);letter-spacing:-.01em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.pd-highlights b small{font-size:13px;font-weight:650;color:var(--pd-muted)}
+.pd-sticky{display:none}
+@media(max-width:1000px){
+  .pd-sticky{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;transform:translateY(110%);transition:transform .25s ease;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:rgb(255 255 255/.97);border-top:1px solid var(--pd-border);box-shadow:0 -8px 24px -12px rgb(15 56 46/.25);backdrop-filter:blur(10px)}
+  .pd-sticky b{display:block;font-size:19px;color:var(--pd-heading);font-variant-numeric:tabular-nums}
+  .pd-sticky small{font-size:12px;color:var(--pd-muted)}
+  .pd-sticky .primary{flex:0 0 auto;min-width:150px}
+  body.store:has(.pd-sticky) .cookie-settings-trigger{bottom:86px}
+  .pd-assure{grid-template-columns:minmax(0,1fr)}
+  .pd-sticky.is-visible{transform:none}
+  body.store:has(.pd-sticky.is-visible){padding-bottom:76px}
+}
+@media(max-width:650px){.pd-assure{order:3}}
+.pd-skeleton .detail-visual,.pd-skeleton .pd-buy{background:linear-gradient(90deg,#edf2f0 0%,#f7faf9 40%,#edf2f0 80%);background-size:200% 100%;animation:shimmer 1.3s linear infinite}
+.pd-skeleton .pd-buy{min-height:260px}
+.pd-skeleton{min-height:min(100vh,760px)}

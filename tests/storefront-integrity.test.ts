@@ -33,7 +33,7 @@ test("every homepage product reference (featured card, product link, favorite bu
   const featuredIds = new Set([...homepage.matchAll(/data-featured-product="([^"]+)"/g)].map((m) => m[1]));
   assert.ok(featuredIds.size >= 3, "expected the hero + three featured cards to be catalog-bound");
   const linked = [...homepage.matchAll(/href="product\.html\?id=([^"]+)"/g)].map((m) => decodeURIComponent(m[1]));
-  const favorites = [...homepage.matchAll(/data-favorite-id="([^"]+)"/g)].map((m) => m[1]);
+  const favorites = [...homepage.matchAll(/data-action="(?:toggle-favorite|add-cart)" data-id="([^"]+)"/g)].map((m) => m[1]);
   assert.ok(linked.length > 0 && favorites.length > 0);
   for (const id of [...linked, ...favorites]) assert.ok(featuredIds.has(id), `homepage references ${id}, which no featured card renders from the catalog`);
 });

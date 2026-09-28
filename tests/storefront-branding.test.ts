@@ -15,10 +15,12 @@ const BROKEN_EXTERNAL_LOGO_URL =
   "https://lh3.googleusercontent.com/aida/AEtjO1X-m38btI0omMcMjB0cwv3H2eJBt-7DQ6GXFcg-rgy6bxNqTCdNzk6x8uMBkWDyFbEHmALwCOFDU9ssfzdUMfoxk90Epi5bPxpWmeVZGY3Ivhzat4s6ynZwMCL9JfGL4cbSX43cOhWJZ1Ft-Gjvt0epWpgJuV74dlgy4eMTk7fk6ICDmjFQhU0MiQ2mddntuDwabnjNQxRvD0aMv2nc-YVNWvNH2ZHtonWQALTybCQUOEBrJSM60Cd4r90p";
 
 test("homepage brand is semantic text rather than a remote image", () => {
-  const brandLink = homepage.match(/<a\b(?=[^>]*\bdata-path="home")[^>]*>([\s\S]*?)<\/a>/)?.[1];
-  assert.ok(brandLink, "homepage must keep its home brand link");
+  // The homepage renders the shared store header; its brand link is the same text wordmark.
+  assert.match(homepage, /<div data-site-header><\/div>/);
+  const brandLink = storeJs.match(/<a class="brand" href="\/">([\s\S]*?)<\/a>/)?.[1];
+  assert.ok(brandLink, "the shared header must keep its home brand link");
   assert.match(brandLink, /EGE TEKNİK/);
-  assert.match(brandLink, /KLİMA &amp; TEKNOLOJİ/);
+  assert.match(brandLink, /KLİMA & TEKNOLOJİ/);
   assert.doesNotMatch(brandLink, /<img\b/i);
   assert.doesNotMatch(brandLink, /https?:\/\//i);
 });

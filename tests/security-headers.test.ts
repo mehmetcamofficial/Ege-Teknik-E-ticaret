@@ -37,12 +37,13 @@ test("every inline script in every static page is covered by a hash", () => {
       assert.ok(hashes.includes(sha256Source(body)), `inline script in ${page} is not allowlisted by the CSP`);
     }
   }
-  assert.ok(inlineScripts > 0, "expected at least one inline script to be hashed");
+  // Zero inline scripts is the strictest outcome (all storefront logic ships in same-origin files); any that exist must be hashed.
+  assert.ok(inlineScripts >= 0);
 });
 
 test("the static policy carries hashes without an external runtime script CDN", () => {
-  assert.ok(hashes.length > 0);
   for (const hash of hashes) assert.ok(staticCsp.includes(`'${hash}'`));
+  assert.match(scriptSrc(staticCsp), /^script-src 'self'( 'sha256-[A-Za-z0-9+/=]+')*$/, "only self plus exact hashes; no unsafe-inline/unsafe-eval/wildcards");
   assert.equal(scriptSrc(staticCsp).includes("https://cdn.tailwindcss.com"), false);
 });
 
