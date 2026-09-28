@@ -3,16 +3,17 @@ import { brands, categories, inventory, products } from "@/db/schema";
 import { catalogDefaults } from "@/lib/catalog-defaults";
 import { count } from "drizzle-orm";
 
-export async function ensureCatalogInitialized() {
+/** Explicit operator/admin import only. Public reads must never call this function. */
+export async function importCatalogDefaults() {
   const db = getDb();
   const [result] = await db.select({ value: count() }).from(products);
   if (result.value > 0) return { inserted: 0, total: result.value };
 
   const brandId = "gree";
-  await db.insert(brands).values({ id: brandId, name: "GREE", slug: "gree" }).onConflictDoNothing();
   const categoryNames = [...new Set(catalogDefaults.map((item) => item.category))];
-  await db.insert(categories).values(categoryNames.map((name) => ({ id: `category-${slugify(name)}`, name, slug: slugify(name) }))).onConflictDoNothing();
   await db.transaction(async (tx) => {
+    await tx.insert(brands).values({ id: brandId, name: "GREE", slug: "gree" }).onConflictDoNothing();
+    await tx.insert(categories).values(categoryNames.map((name) => ({ id: `category-${slugify(name)}`, name, slug: slugify(name) }))).onConflictDoNothing();
     for (const item of catalogDefaults) {
       const { stock, ...product } = item;
       await tx.insert(products).values({ ...product, brandId, categoryId: `category-${slugify(item.category)}` }).onConflictDoNothing();
