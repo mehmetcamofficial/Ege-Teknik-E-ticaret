@@ -32,6 +32,21 @@ test("fandesk-fan-76 is blocked for its confirmed-404 primary image and excluded
   assert.equal("fandesk-fan-76" in dataset.records, false);
   assert.ok(dataset.excludedImageUrls.some((u) => u.includes("fandesk-fan-180.png")));
 });
+test("kaset-tipi-inverter-klima-24000-btu-h's confirmed-404 secondary gallery image is excluded, not the whole product", () => {
+  const id = "kaset-tipi-inverter-klima-24000-btu-h";
+  const decision = dataset.decisions.find((d) => d.productId === id)!;
+  // the fix must not touch eligibility, and must not change the 77/10 split established by the fandesk-fan-76 fix
+  assert.equal(decision.importStatus, "READY_FOR_PREVIEW_IMPORT");
+  assert.equal(eligible.length, 77);
+  assert.equal(blocked.length, 10);
+  const record = dataset.records[id];
+  assert.ok(record, "the product keeps its enrichment record");
+  assert.ok(dataset.excludedImageUrls.some((u) => u.includes("18k-kaset-dis-unite-r32.webp")));
+  assert.equal(record.gallery.some((g) => g.url.includes("18k-kaset-dis-unite-r32.webp")), false, "dead URL removed from gallery");
+  assert.equal(record.gallery.length, 1, "gallery shrank by exactly one entry");
+  assert.equal(record.imageUrl, "https://www.gree.com.tr/idea/na/38/myassets/products/296/kaset-ic-unite-r32.webp", "primary image untouched");
+  assert.equal(record.gallery[0].url, record.imageUrl, "primary/gallery[0] invariant still holds");
+});
 test("blocked products are explicit: 9 asset blocks and the Pular conflict, each with a reason", () => {
   for (const d of blocked) assert.ok(d.reasons.length > 0, d.productId);
   assert.deepEqual(dataset.decisions.filter((d) => d.importStatus === "BLOCKED_CONFLICT").map((d) => d.productId), ["multi-duvar-tipi-pular-ic-unite-9000-btu-h"]);
