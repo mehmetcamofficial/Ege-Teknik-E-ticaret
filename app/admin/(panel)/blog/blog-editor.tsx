@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState, FormField, Notice, PageHeader, Panel, selectClass } from "@/components/admin/ui";
-import { sendAdmin, useAdminJson, type Overview, type Post } from "@/components/admin/use-admin-data";
+import { sendAdmin, useAdminJson, type Post } from "@/components/admin/use-admin-data";
 
 /** Matches app/api/admin/blog/schema.ts (POST full, PATCH partial). */
 const empty = { title: "", slug: "", excerpt: "", content: "", imageUrl: "", status: "draft" };
 type Form = typeof empty;
 const crumbs = [{ href: "/admin/blog", label: "Blog" }];
+type BlogPostResponse = { post: Post };
 
 function BlogForm({ post }: { post?: Post }) {
   const router = useRouter();
@@ -94,8 +95,8 @@ function BlogForm({ post }: { post?: Post }) {
 }
 
 export default function BlogEditor({ postId }: { postId?: string }) {
-  const { data, error, loading } = useAdminJson<Overview>(postId ? "/api/admin/overview" : null);
-  const post = postId ? data?.posts.find((p) => p.id === postId) : undefined;
+  const { data, error, loading } = useAdminJson<BlogPostResponse>(postId ? `/api/admin/blog/${postId}` : null);
+  const post = data?.post;
   return (
     <>
       <PageHeader title={postId ? (post?.title ?? "Yazıyı düzenle") : "Yeni blog yazısı"} breadcrumb={crumbs} />
