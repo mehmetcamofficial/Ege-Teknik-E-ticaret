@@ -208,7 +208,13 @@ test("the order detail lists its lines instead of the old placeholder", () => {
 const migration = read("drizzle-pg/0013_finance_ledger.sql");
 test("migration 0013 is journaled after 0012 and is additive: no DROP/DELETE/UPDATE/INSERT/RENAME/ALTER COLUMN", () => {
   const entries = JSON.parse(read("drizzle-pg/meta/_journal.json")).entries as { idx: number; tag: string }[];
-  assert.deepEqual(entries.slice(-2).map((e) => [e.idx, e.tag]), [[12, "0012_delivery_class"], [13, "0013_finance_ledger"]]);
+  // 0013 must sit IMMEDIATELY after 0012. This is deliberately an adjacency assertion, not a "last entry"
+  // one: a later additive migration (0014, the content registry) legitimately extends the journal, and
+  // 0013's own guarantees must keep holding regardless of what comes after it.
+  const at = entries.findIndex((e) => e.tag === "0013_finance_ledger");
+  assert.ok(at > 0, "0013 is journaled");
+  assert.deepEqual([entries[at - 1].idx, entries[at - 1].tag], [12, "0012_delivery_class"]);
+  assert.deepEqual([entries[at].idx, entries[at].tag], [13, "0013_finance_ledger"]);
   assert.deepEqual(destructiveReasons(migration), []);
   assert.doesNotMatch(migration, /ALTER TABLE "(?!payments"|refunds")/, "only payments and refunds are touched");
 });

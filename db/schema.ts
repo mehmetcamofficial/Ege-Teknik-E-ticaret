@@ -113,3 +113,74 @@ export const adminGrants=pgTable("admin_grants",{id:text("id").primaryKey(),admi
 export const integrationConfigs=pgTable("integration_configs",{key:text("key").primaryKey(),displayName:text("display_name").notNull(),configured:boolean("configured").notNull().default(false),hint:text("hint").notNull().default(""),updatedBy:text("updated_by").references(()=>adminUsers.id),updatedAt:timestamp("updated_at",{withTimezone:true}).notNull().defaultNow()},t=>[
   check("integration_configs_hint_ck",sql`char_length(${t.hint}) <= 32`),
 ]);
+
+/**
+ * Content registry (P0-B / P1 foundation).
+ *
+ * Canonical editing model: these tables are canonical for EDITING; the committed deterministic snapshot
+ * (data/content/registry-snapshot.json) is canonical for the BUILD. The build never queries these tables.
+ * No generator, public URL, slug or rendered byte depends on them yet — P1 is foundation only.
+ */
+export const contentEntries=pgTable("content_entries",{id:text("id").primaryKey(),entryType:text("entry_type").notNull().default("guide"),slug:text("slug").notNull(),category:text("category").notNull(),title:text("title").notNull(),seoTitle:text("seo_title").notNull().default(""),description:text("description").notNull().default(""),lead:text("lead").notNull().default(""),answer:text("answer").notNull().default(""),imageKey:text("image_key").notNull().default(""),imageAlt:text("image_alt").notNull().default(""),imageCaption:text("image_caption").notNull().default(""),imagePortrait:boolean("image_portrait"),status:text("status").notNull().default("published"),publishedAt:timestamp("published_at",{withTimezone:true}).notNull(),contentHash:text("content_hash").notNull(),sourceRef:text("source_ref").notNull().default(""),...timestamps},t=>[
+  uniqueIndex("content_entries_slug_uq").on(t.slug),
+  index("content_entries_type_status_idx").on(t.entryType,t.status),
+  index("content_entries_published_at_idx").on(t.publishedAt),
+  check("content_entries_type_ck",sql`${t.entryType} IN ('guide')`),
+  check("content_entries_status_ck",sql`${t.status} IN ('draft','published','archived')`),
+  check("content_entries_slug_ck",sql`${t.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+  check("content_entries_content_hash_ck",sql`${t.contentHash} ~ '^[0-9a-f]{64}$'`),
+]);
+/* Section and FAQ ordering is explicit: `position` is the source order and is unique per entry. */
+export const contentSections=pgTable("content_sections",{entryId:text("entry_id").notNull().references(()=>contentEntries.id,{onDelete:"cascade"}),sectionKey:text("section_key").notNull(),position:integer("position").notNull(),title:text("title").notNull(),html:text("html").notNull()},t=>[
+  uniqueIndex("content_sections_pkey").on(t.entryId,t.sectionKey),
+  uniqueIndex("content_sections_position_uq").on(t.entryId,t.position),
+  check("content_sections_position_ck",sql`${t.position} >= 0`),
+  check("content_sections_key_ck",sql`${t.sectionKey} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+]);
+export const contentFaq=pgTable("content_faq",{entryId:text("entry_id").notNull().references(()=>contentEntries.id,{onDelete:"cascade"}),position:integer("position").notNull(),question:text("question").notNull(),answer:text("answer").notNull()},t=>[
+  uniqueIndex("content_faq_pkey").on(t.entryId,t.position),
+  check("content_faq_position_ck",sql`${t.position} >= 0`),
+]);
+/* Guide -> guide relations. The guides' `related[]` holds slugs, so it lands here, NOT in content_related_services. */
+export const contentRelatedEntries=pgTable("content_related_entries",{entryId:text("entry_id").notNull().references(()=>contentEntries.id,{onDelete:"cascade"}),relatedEntryId:text("related_entry_id").notNull().references(()=>contentEntries.id),position:integer("position").notNull(),label:text("label").notNull().default("")},t=>[
+  uniqueIndex("content_related_entries_pkey").on(t.entryId,t.relatedEntryId),
+  uniqueIndex("content_related_entries_position_uq").on(t.entryId,t.position),
+  index("content_related_entries_related_idx").on(t.relatedEntryId),
+  check("content_related_entries_position_ck",sql`${t.position} >= 0`),
+  check("content_related_entries_no_self_ck",sql`${t.entryId} <> ${t.relatedEntryId}`),
+]);
+/* Genuine product relations only (real products.id). Left empty by the importer rather than faked. */
+export const contentRelatedProducts=pgTable("content_related_products",{entryId:text("entry_id").notNull().references(()=>contentEntries.id,{onDelete:"cascade"}),productId:text("product_id").notNull().references(()=>products.id),position:integer("position").notNull(),label:text("label").notNull().default("")},t=>[
+  uniqueIndex("content_related_products_pkey").on(t.entryId,t.productId),
+  uniqueIndex("content_related_products_position_uq").on(t.entryId,t.position),
+  check("content_related_products_position_ck",sql`${t.position} >= 0`),
+]);
+export const contentRelatedServices=pgTable("content_related_services",{entryId:text("entry_id").notNull().references(()=>contentEntries.id,{onDelete:"cascade"}),serviceSlug:text("service_slug").notNull(),position:integer("position").notNull(),label:text("label").notNull().default("")},t=>[
+  uniqueIndex("content_related_services_pkey").on(t.entryId,t.serviceSlug),
+  uniqueIndex("content_related_services_position_uq").on(t.entryId,t.position),
+  check("content_related_services_position_ck",sql`${t.position} >= 0`),
+]);
+/* Lossless literal links: where the guides' category/catalog/contact `products[]` URLs are preserved verbatim. */
+export const contentLinks=pgTable("content_links",{entryId:text("entry_id").notNull().references(()=>contentEntries.id,{onDelete:"cascade"}),position:integer("position").notNull(),label:text("label").notNull(),href:text("href").notNull(),linkKind:text("link_kind").notNull().default("link")},t=>[
+  uniqueIndex("content_links_pkey").on(t.entryId,t.position),
+  index("content_links_href_idx").on(t.href),
+  check("content_links_position_ck",sql`${t.position} >= 0`),
+  check("content_links_kind_ck",sql`${t.linkKind} IN ('link','catalog_filter','category','service','contact','selector','second_hand')`),
+]);
+/* Append-only edit history. Never read by the build; exists for audit and rollback. */
+export const contentVersions=pgTable("content_versions",{id:text("id").primaryKey(),entryId:text("entry_id").notNull().references(()=>contentEntries.id,{onDelete:"cascade"}),version:integer("version").notNull(),contentHash:text("content_hash").notNull(),snapshot:jsonb("snapshot").notNull(),changedBy:text("changed_by").notNull().default(""),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  uniqueIndex("content_versions_version_uq").on(t.entryId,t.version),
+  index("content_versions_entry_idx").on(t.entryId,t.version),
+  check("content_versions_version_ck",sql`${t.version} >= 1`),
+  check("content_versions_content_hash_ck",sql`${t.contentHash} ~ '^[0-9a-f]{64}$'`),
+]);
+/* Ledger of exported snapshots, tying a committed file back to the content hash it came from. */
+export const contentExports=pgTable("content_exports",{id:text("id").primaryKey(),targetPath:text("target_path").notNull(),contentHash:text("content_hash").notNull(),entryCount:integer("entry_count").notNull(),generatedBy:text("generated_by").notNull().default(""),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  index("content_exports_created_at_idx").on(t.createdAt),
+  check("content_exports_content_hash_ck",sql`${t.contentHash} ~ '^[0-9a-f]{64}$'`),
+  check("content_exports_entry_count_ck",sql`${t.entryCount} >= 0`),
+]);
+export const contentRedirects=pgTable("content_redirects",{id:text("id").primaryKey(),fromPath:text("from_path").notNull(),toPath:text("to_path").notNull(),statusCode:integer("status_code").notNull().default(308),entryId:text("entry_id").references(()=>contentEntries.id,{onDelete:"cascade"}),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+  uniqueIndex("content_redirects_from_path_uq").on(t.fromPath),
+  check("content_redirects_status_ck",sql`${t.statusCode} IN (301,308)`),
+]);

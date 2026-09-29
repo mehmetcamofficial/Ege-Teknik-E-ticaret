@@ -99,6 +99,13 @@
       "when": 1790551435508,
       "tag": "0013_finance_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790637835912,
+      "tag": "0014_content_registry",
+      "breakpoints": true
     }
   ]
 }

@@ -18,6 +18,9 @@
     "ci:verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && git diff --exit-code",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
+    "content:import": "node --experimental-strip-types scripts/import-content-registry.mjs",
+    "content:export": "node --experimental-strip-types scripts/export-content-registry.mjs",
+    "content:check": "node --experimental-strip-types scripts/export-content-registry.mjs --check",
     "admin:bootstrap-first": "node --experimental-strip-types scripts/bootstrap-first-admin.mts",
     "auth:hash-password": "node scripts/hash-admin-password.mjs"
   },
