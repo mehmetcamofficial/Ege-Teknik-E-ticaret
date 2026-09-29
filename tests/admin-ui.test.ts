@@ -80,7 +80,7 @@ test("every admin API route is registered explicitly: Phase 3.3A/3.3B add the fi
     "app/api/admin/legal/versions/[id]/publish/route.ts", "app/api/admin/legal/versions/[id]/route.ts", "app/api/admin/media/route.ts",
     "app/api/admin/orders/[id]/payments/route.ts", "app/api/admin/orders/[id]/refunds/route.ts", "app/api/admin/orders/[id]/route.ts", "app/api/admin/orders/route.ts", "app/api/admin/overview/route.ts", "app/api/admin/products/[id]/image/route.ts", "app/api/admin/products/[id]/route.ts",
     "app/api/admin/products/route.ts", "app/api/admin/reviews/[id]/route.ts", "app/api/admin/reviews/route.ts", "app/api/admin/second-hand/[id]/route.ts",
-    "app/api/admin/second-hand/route.ts", "app/api/admin/service-requests/[id]/route.ts", "app/api/admin/taxonomy/route.ts",
+    "app/api/admin/second-hand/route.ts", "app/api/admin/service-requests/[id]/route.ts", "app/api/admin/service-requests/route.ts", "app/api/admin/taxonomy/route.ts",
     "app/api/admin/users/[id]/grants/route.ts", "app/api/admin/users/[id]/role/route.ts", "app/api/admin/users/[id]/status/route.ts",
     "app/api/admin/users/grants/[grantId]/revoke/route.ts", "app/api/admin/users/invites/route.ts", "app/api/admin/users/route.ts",
   ].sort());
