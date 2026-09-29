@@ -231,7 +231,8 @@ html.nav-open{overflow:hidden}
 .product-visual{position:relative;display:grid;place-items:center;aspect-ratio:16/11;padding:12px 14px;overflow:hidden}
 .product-visual .product-image{position:absolute;inset:0;display:block;width:100%;max-width:100%;height:100%;padding:12px 16px;object-fit:contain;mix-blend-mode:multiply;transition:transform .22s ease-out}
 @media(hover:hover) and (pointer:fine){.product:hover{transform:translateY(-3px);border-color:rgb(0 108 73/.35);box-shadow:0 2px 4px rgb(15 56 46/.04),0 18px 36px -14px rgb(15 56 46/.22)}.product:hover .product-image{transform:translateY(-3px) scale(1.03)}.product:hover .actions .primary{background:var(--p-600);box-shadow:0 6px 16px -8px rgb(15 56 46/.55)}.product:hover h3 a{color:var(--s)}.product .actions .primary,.product h3 a{transition:background-color .2s ease-out,box-shadow .2s ease-out,color .2s ease-out}}
-.product-image-unavailable{max-width:22ch;color:var(--muted);font-size:13.5px;font-weight:600;text-align:center;line-height:1.45}
+.product-image-unavailable{display:grid;place-items:center;gap:10px;max-width:24ch;padding:20px;color:var(--muted);font-size:13.5px;font-weight:650;text-align:center;line-height:1.45}
+.product-image-unavailable .ico{width:42px;height:42px;padding:9px;border:1px solid rgb(0 108 73/.18);border-radius:13px;background:rgb(255 255 255/.7);color:var(--p);box-shadow:0 8px 22px -18px rgb(0 75 51/.7)}
 .product-flags{position:absolute;left:12px;top:12px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
 .product-tools{position:absolute;right:10px;top:10px;display:flex;gap:6px}
 .icon-toggle{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:rgb(255 255 255/.94);color:var(--p);cursor:pointer;box-shadow:var(--sh-sm);transition:background-color .15s,color .15s,border-color .15s,transform .12s}

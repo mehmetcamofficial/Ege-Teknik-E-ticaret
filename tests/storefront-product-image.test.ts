@@ -63,7 +63,7 @@ test("productCard renders a real <img> with lazy loading when imageUrl is presen
   const context = loadStore();
   const productCard = context.productCard as (p: unknown) => string;
   const html = productCard(PRODUCT_WITH_IMAGE);
-  assert.match(html, /<img class="product-image" src="https:\/\/ege-teknik-product-images\.public\.blob\.vercel-storage\.com\/products\/SKU1\/primary\.jpg" alt="Test Ürün"[^>]*loading="lazy">/);
+  assert.match(html, /<img class="product-image" data-product-image="main" src="https:\/\/ege-teknik-product-images\.public\.blob\.vercel-storage\.com\/products\/SKU1\/primary\.jpg" alt="Test Ürün"[^>]*width="640" height="400"[^>]*loading="lazy">/);
   assert.doesNotMatch(html, /class="unit"/);
 });
 
@@ -72,6 +72,9 @@ test("productCard states a missing image without inventing a product illustratio
   const productCard = context.productCard as (p: unknown) => string;
   const html = productCard(PRODUCT_WITHOUT_IMAGE);
   assert.match(html, /class="product-image-unavailable"/);
+  assert.match(html, /role="img" aria-label="Test Ürün için doğrulanmış ürün görseli mevcut değil"/);
+  assert.match(html, /Doğrulanmış ürün görseli mevcut değil/);
+  assert.match(html, /<svg class="ico"/);
   assert.doesNotMatch(html, /class="unit"/);
   assert.doesNotMatch(html, /<img/);
 });
@@ -98,7 +101,7 @@ test("product detail page renders the real image and drops the placeholder capti
         : { ok: false },
   });
   await (context.loadCatalog as () => Promise<void>)();
-  assert.match(root.innerHTML, /<img class="detail-image" src="https:\/\/ege-teknik-product-images\.public\.blob\.vercel-storage\.com\/products\/SKU1\/primary\.jpg"/);
+  assert.match(root.innerHTML, /<img class="detail-image" data-product-image="main" src="https:\/\/ege-teknik-product-images\.public\.blob\.vercel-storage\.com\/products\/SKU1\/primary\.jpg"/);
   assert.doesNotMatch(root.innerHTML, /Temsili görünüm/);
 });
 
@@ -115,7 +118,36 @@ test("product detail page keeps an honest missing-image state when imageUrl is e
   });
   await (context.loadCatalog as () => Promise<void>)();
   assert.match(root.innerHTML, /class="detail-visual missing-product-image"/);
-  assert.match(root.innerHTML, /Ürün görseli henüz eklenmedi/);
+  assert.match(root.innerHTML, /Doğrulanmış ürün görseli mevcut değil/);
+  assert.match(root.innerHTML, /class="product-image-unavailable is-detail" role="img"/);
   assert.doesNotMatch(root.innerHTML, /class="unit large"/);
   assert.doesNotMatch(root.innerHTML, /class="detail-image"/);
+});
+
+test("malformed image URLs use the honest placeholder instead of issuing an asset request", () => {
+  const context = loadStore();
+  const productCard = context.productCard as (p: unknown) => string;
+  const html = productCard({ ...PRODUCT_WITH_IMAGE, imageUrl: "javascript:alert(1)" });
+  assert.doesNotMatch(html, /<img/);
+  assert.match(html, /Doğrulanmış ürün görseli mevcut değil/);
+});
+
+test("a runtime image failure is replaced by the accessible neutral placeholder", () => {
+  const created = { className: "", attrs: new Map<string, string>(), innerHTML: "", setAttribute(k: string, v: string) { this.attrs.set(k, v); } };
+  const context = loadStore();
+  (context.document as { createElement?: () => unknown }).createElement = () => created;
+  let replacement: unknown;
+  const image = {
+    dataset: { productImage: "main" },
+    matches: () => true,
+    classList: { contains: (name: string) => name === "detail-image" },
+    getAttribute: (name: string) => name === "alt" ? "Test Ürün" : null,
+    replaceWith: (value: unknown) => { replacement = value; },
+  };
+  (context.handleBrokenProductImage as (event: unknown) => void)({ target: image });
+  assert.equal(replacement, created);
+  assert.equal(created.className, "product-image-unavailable is-detail");
+  assert.equal(created.attrs.get("role"), "img");
+  assert.equal(created.attrs.get("aria-label"), "Test Ürün için doğrulanmış ürün görseli mevcut değil");
+  assert.match(created.innerHTML, /Doğrulanmış ürün görseli mevcut değil/);
 });

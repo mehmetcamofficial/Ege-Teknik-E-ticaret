@@ -41,16 +41,16 @@ test("product detail uses the dedicated endpoint exactly once and renders full e
 test("limited enrichment omits empty gallery, specs, documents and warranty sections", async () => {
   const limited = apiProduct({ id: "limited", imageUrl: "", shortDescription: null, description: "Sınırlı açıklama.", gallery: [], specifications: [], documents: [], warranty: null });
   const { root } = await render(limited);
-  assert.match(root.innerHTML, /Ürün görseli henüz eklenmedi/);
+  assert.match(root.innerHTML, /Doğrulanmış ürün görseli mevcut değil/);
   assert.doesNotMatch(root.innerHTML, /Teknik Özellikler|Belgeler ve Dokümanlar|<h2>Garanti<\/h2>/);
   assert.doesNotMatch(root.innerHTML, /<div class="gallery-thumbs"/);
 });
 
 test("gallery changes the stable primary image without navigation and exposes keyboard state", async () => {
   const { root, store } = await render(full);
-  assert.match(root.innerHTML, /class="detail-image" src="https:\/\/www\.gree\.com\.tr\/a\.jpg"/);
+  assert.match(root.innerHTML, /class="detail-image" data-product-image="main" src="https:\/\/www\.gree\.com\.tr\/a\.jpg"/);
   store.fn<(index: number) => void>("selectProductGallery")(1);
-  assert.match(root.innerHTML, /class="detail-image" src="https:\/\/www\.gree\.com\.tr\/b\.jpg"/);
+  assert.match(root.innerHTML, /class="detail-image" data-product-image="main" src="https:\/\/www\.gree\.com\.tr\/b\.jpg"/);
   assert.match(root.innerHTML, /aria-pressed="true"/);
   assert.match(js, /ArrowLeft.*ArrowRight.*Home.*End/);
 });

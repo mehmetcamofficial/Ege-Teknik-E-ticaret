@@ -31,7 +31,7 @@ test("the shared product card carries series, name, model, capacity, energy, Wi-
   assert.match(html, /data-action="toggle-compare" data-id="c1"/);
   assert.match(html, /data-action="add-cart" data-id="c1">Sepete Ekle</);
   assert.match(html, /<a class="ghost" href="product\.html\?id=c1">İncele<\/a>/);
-  assert.match(html, /<img class="product-image" src="https:\/\/www\.gree\.com\.tr\/a\.png" alt="Airy 12000 BTU\/h"[^>]*loading="lazy">/);
+  assert.match(html, /<img class="product-image" data-product-image="main" src="https:\/\/www\.gree\.com\.tr\/a\.png" alt="Airy 12000 BTU\/h"[^>]*loading="lazy">/);
 });
 
 test("quote-only products say so on the card instead of showing a price or stock count", () => {
