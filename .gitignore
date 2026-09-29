@@ -16,3 +16,6 @@ tsconfig.tsbuildinfo
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# local scratch space (audit/build scratchpads); never source
+.scratch/
