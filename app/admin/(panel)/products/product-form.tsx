@@ -13,22 +13,47 @@ import { sendAdmin, type Product, type Taxonomy } from "@/components/admin/use-a
 import { DEFAULT_DELIVERY_CLASS, deliveryClassDescriptions, deliveryClassLabels, deliveryClasses, isDeliveryClass, type DeliveryClass } from "@/lib/delivery-classes";
 import { getBlockedProductInfo } from "@/lib/catalog-visibility";
 
-/** Exactly the POST /api/admin/products body the previous dashboard form sent. */
-const empty = { name: "", slug: "", category: "Klima", brandId: null as string | null, categoryId: null as string | null, series: "", sku: "", capacity: "", energyClass: "", wifi: "", price: 0, stock: 0, saleMode: "quote", status: "draft", description: "", imageUrl: "", deliveryClass: DEFAULT_DELIVERY_CLASS as DeliveryClass };
+/** Exactly the POST /api/admin/products body the previous dashboard form sent, plus P0-A #4's fields. */
+const empty = { name: "", slug: "", category: "Klima", brandId: null as string | null, categoryId: null as string | null, series: "", sku: "", capacity: "", energyClass: "", wifi: "", price: 0, stock: 0, saleMode: "quote", status: "draft", description: "", imageUrl: "", deliveryClass: DEFAULT_DELIVERY_CLASS as DeliveryClass, shortDescription: "", sourceUrl: "" };
 type Form = typeof empty;
+/** Raw text for the 4 jsonb fields (P0-A #4); parsed to real JSON on submit, see parseJsonFields(). */
+type JsonFieldsText = { gallery: string; specifications: string; documents: string; manufacturerWarranty: string };
+const emptyJsonFields: JsonFieldsText = { gallery: "[]", specifications: "{}", documents: "[]", manufacturerWarranty: "" };
 const saleModes: [string, string][] = [["quote", "Teklif"], ["online", "Online satış"], ["discovery", "Keşif"], ["whatsapp", "WhatsApp"], ["out_of_stock", "Stok dışı"]];
 const textFields: [keyof Form, string, boolean][] = [["name", "Ürün adı", true], ["slug", "URL kısa adı", true], ["category", "Kategori (metin)", true], ["series", "Seri", false], ["sku", "SKU", false], ["capacity", "Kapasite", false], ["energyClass", "Enerji sınıfı", false], ["wifi", "Wi-Fi", false]];
+
+/**
+ * Parses the 4 JSON-textarea fields, or returns a Turkish error message instead of throwing. Kept outside the
+ * component so it's easy to unit-test independently of React. `manufacturerWarranty` is nullable - an empty/blank
+ * textarea means "no warranty record", not "{}".
+ */
+function parseJsonFields(text: JsonFieldsText): { ok: true; value: { gallery: unknown; specifications: unknown; documents: unknown; manufacturerWarranty: unknown } } | { ok: false; error: string } {
+  try {
+    const gallery = JSON.parse(text.gallery.trim() || "[]");
+    const specifications = JSON.parse(text.specifications.trim() || "{}");
+    const documents = JSON.parse(text.documents.trim() || "[]");
+    const manufacturerWarranty = text.manufacturerWarranty.trim() ? JSON.parse(text.manufacturerWarranty) : null;
+    return { ok: true, value: { gallery, specifications, documents, manufacturerWarranty } };
+  } catch {
+    return { ok: false, error: "Galeri, teknik özellikler, belgeler veya garanti alanlarından biri geçerli JSON değil. Biçimi kontrol edip tekrar deneyin." };
+  }
+}
 
 export default function ProductForm({ product, brands, categories }: { product?: Product; brands: Taxonomy[]; categories: Taxonomy[] }) {
   const router = useRouter();
   const editing = !!product;
   const [form, setForm] = useState<Form>(() => product
-    ? { name: product.name, slug: product.slug, category: product.category, brandId: product.brandId, categoryId: product.categoryId, series: product.series, sku: product.sku, capacity: product.capacity, energyClass: product.energyClass, wifi: product.wifi, price: product.price, stock: product.stock, saleMode: product.saleMode, deliveryClass: isDeliveryClass(product.deliveryClass) ? product.deliveryClass : DEFAULT_DELIVERY_CLASS, status: product.status, description: product.description, imageUrl: product.imageUrl }
+    ? { name: product.name, slug: product.slug, category: product.category, brandId: product.brandId, categoryId: product.categoryId, series: product.series, sku: product.sku, capacity: product.capacity, energyClass: product.energyClass, wifi: product.wifi, price: product.price, stock: product.stock, saleMode: product.saleMode, deliveryClass: isDeliveryClass(product.deliveryClass) ? product.deliveryClass : DEFAULT_DELIVERY_CLASS, status: product.status, description: product.description, imageUrl: product.imageUrl, shortDescription: product.shortDescription ?? "", sourceUrl: product.sourceUrl ?? "" }
     : empty);
+  const [jsonFields, setJsonFields] = useState<JsonFieldsText>(() => product
+    ? { gallery: JSON.stringify(product.gallery, null, 2), specifications: JSON.stringify(product.specifications, null, 2), documents: JSON.stringify(product.documents, null, 2), manufacturerWarranty: product.manufacturerWarranty ? JSON.stringify(product.manufacturerWarranty, null, 2) : "" }
+    : emptyJsonFields);
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [upload, setUpload] = useState<{ status: "idle" | "uploading" | "error"; error?: string }>({ status: "idle" });
   const set = <K extends keyof Form>(key: K, value: Form[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const setJson = <K extends keyof JsonFieldsText>(key: K, value: JsonFieldsText[K]) => setJsonFields((f) => ({ ...f, [key]: value }));
 
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -36,8 +61,16 @@ export default function ProductForm({ product, brands, categories }: { product?:
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    setJsonError(null);
+    const parsed = parseJsonFields(jsonFields);
+    if (!parsed.ok) {
+      setJsonError(parsed.error);
+      setMessage({ tone: "error", text: parsed.error });
+      return;
+    }
     setBusy(true); setMessage({ tone: "info", text: editing ? "Güncelleniyor…" : "Ürün kaydediliyor…" });
-    const r = editing ? await sendAdmin(`/api/admin/products/${product!.id}`, "PATCH", form) : await sendAdmin("/api/admin/products", "POST", form);
+    const payload = { ...form, ...parsed.value };
+    const r = editing ? await sendAdmin(`/api/admin/products/${product!.id}`, "PATCH", payload) : await sendAdmin("/api/admin/products", "POST", payload);
     setBusy(false);
     if (!r.ok) {
       toast.error(r.error || "Kayıt başarısız.");
@@ -141,6 +174,32 @@ export default function ProductForm({ product, brands, categories }: { product?:
           {upload.status === "uploading" && <Notice tone="info">Görsel yükleniyor…</Notice>}
           {upload.status === "error" && <Notice tone="error">{upload.error}</Notice>}
         </div>
+      </Panel>
+
+      <Panel title="Zenginleştirilmiş içerik" description="Bu alanlar mağazada yalnızca aşağıdaki koşullara uyduğunda görünür; uymayan kayıtlar müşteriye hiç gösterilmez, hata vermez.">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField label="Kısa açıklama" htmlFor="p-short-description" className="sm:col-span-2" hint="Ürün kartlarında kullanılan kısa özet, en fazla 300 karakter.">
+            <Textarea id="p-short-description" rows={2} maxLength={300} value={form.shortDescription} onChange={(e) => set("shortDescription", e.target.value)} />
+          </FormField>
+          <FormField label="Kaynak URL" htmlFor="p-source-url" hint="Bu verinin alındığı sayfa (iç kullanım, müşteriye gösterilmez).">
+            <Input id="p-source-url" type="url" placeholder="https://..." value={form.sourceUrl} onChange={(e) => set("sourceUrl", e.target.value)} />
+          </FormField>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <FormField label="Galeri (JSON)" htmlFor="p-gallery" hint='Dizi; her öğe { "url", "alt", "width", "height" } içerir. "url" yalnızca gree.com.tr veya tlcklima.com üzerindeki https adresleri olabilir, aksi halde mağazada gösterilmez.'>
+            <Textarea id="p-gallery" rows={8} className="font-mono text-xs" value={jsonFields.gallery} onChange={(e) => setJson("gallery", e.target.value)} />
+          </FormField>
+          <FormField label="Teknik özellikler (JSON)" htmlFor="p-specifications" hint='Nesne; anahtarlar önceden tanımlı bir teknik özellik listesiyle (SPEC_KEYS) sınırlıdır, her değer { "label", "value", "unit", "status", "source" } içerir. Tanınmayan bir anahtar veya eksik alan mağazada o özelliği gizler.'>
+            <Textarea id="p-specifications" rows={8} className="font-mono text-xs" value={jsonFields.specifications} onChange={(e) => setJson("specifications", e.target.value)} />
+          </FormField>
+          <FormField label="Belgeler (JSON)" htmlFor="p-documents" hint='Dizi; her öğe { "type", "label", "url" } içerir. "type" catalog/manual/energy_label/wifi_guide/erp değerlerinden biri, "url" yalnızca gree.com.tr veya tlcklima.com olabilir.'>
+            <Textarea id="p-documents" rows={8} className="font-mono text-xs" value={jsonFields.documents} onChange={(e) => setJson("documents", e.target.value)} />
+          </FormField>
+          <FormField label="Üretici garantisi (JSON)" htmlFor="p-warranty" hint='Boş bırakılırsa garanti kaydı silinir. Doluysa { "classification", "displayText", "pageValue", "conditions", "sourceUrl", "generalTermsUrl", "retrievedAt" } içermeli; "classification" VERIFIED_PRODUCT_SPECIFIC/GENERAL_TERMS_ONLY/CONFLICT_REVIEW_REQUIRED değerlerinden biri olmalı.'>
+            <Textarea id="p-warranty" rows={8} className="font-mono text-xs" value={jsonFields.manufacturerWarranty} onChange={(e) => setJson("manufacturerWarranty", e.target.value)} />
+          </FormField>
+        </div>
+        {jsonError && <div className="mt-4"><Notice tone="error">{jsonError}</Notice></div>}
       </Panel>
 
       <div className="flex flex-wrap items-center gap-3">
