@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField, Notice, Panel, selectClass } from "@/components/admin/ui";
 import { sendAdmin, type Product, type Taxonomy } from "@/components/admin/use-admin-data";
 import { DEFAULT_DELIVERY_CLASS, deliveryClassDescriptions, deliveryClassLabels, deliveryClasses, isDeliveryClass, type DeliveryClass } from "@/lib/delivery-classes";
+import { getBlockedProductInfo } from "@/lib/catalog-visibility";
 
 /** Exactly the POST /api/admin/products body the previous dashboard form sent. */
 const empty = { name: "", slug: "", category: "Klima", brandId: null as string | null, categoryId: null as string | null, series: "", sku: "", capacity: "", energyClass: "", wifi: "", price: 0, stock: 0, saleMode: "quote", status: "draft", description: "", imageUrl: "", deliveryClass: DEFAULT_DELIVERY_CLASS as DeliveryClass };
@@ -31,6 +32,7 @@ export default function ProductForm({ product, brands, categories }: { product?:
 
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const blocked = product ? getBlockedProductInfo(product.id) : null;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -75,6 +77,11 @@ export default function ProductForm({ product, brands, categories }: { product?:
 
   return (
     <form onSubmit={submit} className="grid gap-6">
+      {blocked && (
+        <Notice tone="error">
+          Bu ürün müşteriye kapalı (katalog incelemesi tarafından engellendi): {blocked.reasons.join("; ")}
+        </Notice>
+      )}
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       <Panel title="Ürün bilgileri">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
