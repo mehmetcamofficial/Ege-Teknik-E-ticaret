@@ -80,9 +80,9 @@
   },
   {
    "productId": "fandesk-fan-76",
-   "importStatus": "READY_WITH_LIMITED_SPECS",
+   "importStatus": "BLOCKED_ASSET",
    "reasons": [
-    "all displayed claims are source-backed; unsupported sections omitted"
+    "primary image: only official image (fandesk-fan-180.png) returns HTTP 404; no verified replacement asset"
    ]
   },
   {
@@ -3128,41 +3128,6 @@
    "sourceUrl": "https://www.gree.com.tr/urun/gree-fairy-a-9-000-btu-duvar-tipi-inverter-klima-beyaz-montaj-dahil-5",
    "energyClass": "A++ / A+",
    "wifi": "Var"
-  },
-  "fandesk-fan-76": {
-   "productId": "fandesk-fan-76",
-   "shortDescription": "Fandesk Fan.",
-   "description": "Fandesk Fan. Üretici sayfasında model kodu FXTWK-15X66Bg3 olarak görünür. Bu ürün için resmî kaynaklarda ayrıntılı teknik değer yayınlanmadığından burada teknik veri verilmemiştir. Ayrıntılı bilgi ve fiyat için Ege Teknik ile iletişime geçebilirsiniz.",
-   "sku": "FXTWK-15X66Bg3",
-   "imageUrl": "https://www.gree.com.tr/idea/na/38/myassets/products/224/fandesk-fan-180.png",
-   "gallery": [
-    {
-     "url": "https://www.gree.com.tr/idea/na/38/myassets/products/224/fandesk-fan-180.png",
-     "alt": "Fandesk Fan",
-     "width": 1920,
-     "height": 1920
-    }
-   ],
-   "specifications": {},
-   "documents": [
-    {
-     "type": "catalog",
-     "label": "Ürün kataloğu",
-     "url": "https://tlcklima.com/wp-content/uploads/2024/04/Gree-Home-Urun-Katalogu.pdf"
-    }
-   ],
-   "manufacturerWarranty": {
-    "classification": "CONFLICT_REVIEW_REQUIRED",
-    "displayText": "Garanti bilgisi için Ege Teknik ile iletişime geçebilirsiniz.",
-    "pageValue": "2 Yıl",
-    "conditions": null,
-    "sourceUrl": "https://www.gree.com.tr/urun/fandesk-fan-76",
-    "generalTermsUrl": "https://www.gree.com.tr/sayfa/garanti-sartlari",
-    "retrievedAt": "2026-09-24"
-   },
-   "sourceUrl": "https://www.gree.com.tr/urun/fandesk-fan-76",
-   "energyClass": null,
-   "wifi": null
   },
   "fantastic": {
    "productId": "fantastic",
@@ -11945,6 +11910,7 @@
   "https://www.gree.com.tr/idea/na/38/myassets/products/296/kaset-tipi-inverter-r32-uzaktan-kumanda.webp",
   "https://www.gree.com.tr/idea/na/38/myassets/products/297/kaset-tipi-inverter-r32-uzaktan-kumanda.webp",
   "https://www.gree.com.tr/idea/na/38/myassets/products/298/kaset-tipi-inverter-r32-uzaktan-kumanda.webp",
-  "https://www.gree.com.tr/idea/na/38/myassets/products/300/kaset-tipi-inverter-r32-uzaktan-kumanda.webp"
+  "https://www.gree.com.tr/idea/na/38/myassets/products/300/kaset-tipi-inverter-r32-uzaktan-kumanda.webp",
+  "https://www.gree.com.tr/idea/na/38/myassets/products/224/fandesk-fan-180.png"
  ]
 }

@@ -87,9 +87,9 @@ test("only safe document links render and unresolved warranties remain duration-
   assert.deepEqual(toPublicWarranty({ classification: "CONFLICT_REVIEW_REQUIRED", displayText: "İletişime geçin.", pageValue: null, conditions: null, sourceUrl: "https://www.gree.com.tr/x", generalTermsUrl: "https://www.gree.com.tr/g", retrievedAt: "2026-09-01" }), { kind: "contact", text: "Garanti bilgisi için Ege Teknik ile iletişime geçebilirsiniz.", conditions: null });
 });
 
-test("all nine blocked products remain customer-safe without mutating their records", () => {
+test("all ten blocked products remain customer-safe without mutating their records", () => {
   const blocked = dataset.decisions.filter((d) => d.importStatus.startsWith("BLOCKED_"));
-  assert.equal(blocked.length, 9);
+  assert.equal(blocked.length, 10);
   for (const decision of blocked) {
     const baseline = dataset.baseline[decision.productId];
     const before = baseline.description;

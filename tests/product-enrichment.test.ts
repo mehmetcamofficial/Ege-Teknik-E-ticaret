@@ -17,15 +17,22 @@ const applicable = (plan: PlanEntry[]) => plan.filter((e): e is Extract<PlanEntr
 const oneEligible = () => eligible.find((d) => dataset.records[d.productId].specifications && Object.keys(dataset.records[d.productId].specifications).length > 3)!.productId;
 
 // ---- review decisions ----------------------------------------------------------------------------------
-test("87 review decisions with unique product ids: 78 eligible, 9 blocked", () => {
+test("87 review decisions with unique product ids: 77 eligible, 10 blocked", () => {
   assert.equal(dataset.decisions.length, 87);
   assert.equal(new Set(dataset.decisions.map((d) => d.productId)).size, 87);
-  assert.equal(eligible.length, 78);
-  assert.equal(blocked.length, 9);
+  assert.equal(eligible.length, 77);
+  assert.equal(blocked.length, 10);
   const by = (status: string) => dataset.decisions.filter((d) => d.importStatus === status).length;
-  assert.deepEqual([by("READY_FOR_PREVIEW_IMPORT"), by("READY_WITH_LIMITED_SPECS"), by("BLOCKED_ASSET"), by("BLOCKED_CONFLICT")], [43, 35, 8, 1]);
+  assert.deepEqual([by("READY_FOR_PREVIEW_IMPORT"), by("READY_WITH_LIMITED_SPECS"), by("BLOCKED_ASSET"), by("BLOCKED_CONFLICT")], [43, 34, 9, 1]);
 });
-test("blocked products are explicit: 8 asset blocks and the Pular conflict, each with a reason", () => {
+test("fandesk-fan-76 is blocked for its confirmed-404 primary image and excluded from re-import", () => {
+  const decision = dataset.decisions.find((d) => d.productId === "fandesk-fan-76")!;
+  assert.equal(decision.importStatus, "BLOCKED_ASSET");
+  assert.match(decision.reasons.join(" "), /404/);
+  assert.equal("fandesk-fan-76" in dataset.records, false);
+  assert.ok(dataset.excludedImageUrls.some((u) => u.includes("fandesk-fan-180.png")));
+});
+test("blocked products are explicit: 9 asset blocks and the Pular conflict, each with a reason", () => {
   for (const d of blocked) assert.ok(d.reasons.length > 0, d.productId);
   assert.deepEqual(dataset.decisions.filter((d) => d.importStatus === "BLOCKED_CONFLICT").map((d) => d.productId), ["multi-duvar-tipi-pular-ic-unite-9000-btu-h"]);
 });
@@ -43,10 +50,10 @@ test("enrichment records exist exactly for the eligible products: no orphans, no
 });
 
 // ---- importer plan --------------------------------------------------------------------------------------
-test("plan against the reviewed baseline: 78 candidates update, 9 blocked are skipped, nothing fails", () => {
+test("plan against the reviewed baseline: 77 candidates update, 10 blocked are skipped, nothing fails", () => {
   const plan = planEnrichment(dataset, rows());
-  assert.equal(applicable(plan).length, 78);
-  assert.equal(plan.filter((e) => e.action === "skipped-blocked").length, 9);
+  assert.equal(applicable(plan).length, 77);
+  assert.equal(plan.filter((e) => e.action === "skipped-blocked").length, 10);
   assert.equal(plan.filter((e) => e.action.startsWith("fail-")).length, 0);
 });
 test("blocked asset and blocked conflict products can never be imported, even if a record is injected for them", () => {
@@ -54,7 +61,7 @@ test("blocked asset and blocked conflict products can never be imported, even if
   for (const d of blocked) forged.records[d.productId] = structuredClone(dataset.records[oneEligible()]);
   const plan = planEnrichment(forged, rows());
   for (const d of blocked) assert.equal(plan.find((e) => e.productId === d.productId)!.action, "skipped-blocked", d.productId);
-  assert.equal(applicable(plan).length, 78);
+  assert.equal(applicable(plan).length, 77);
 });
 test("the importer is idempotent: after applying the plan, a second run changes nothing", () => {
   const current = rows();
@@ -62,7 +69,7 @@ test("the importer is idempotent: after applying the plan, a second run changes 
   for (const entry of applicable(first)) { const row = current.get(entry.productId) as Record<string, unknown>; for (const field of entry.changes) row[field] = structuredClone((entry.record as Record<string, unknown>)[field]); }
   const second = planEnrichment(dataset, current);
   assert.equal(second.filter((e) => e.action === "update").length, 0);
-  assert.equal(applicable(second).length, 78);
+  assert.equal(applicable(second).length, 77);
   assert.equal(summarizePlan(dataset, second).SPECIFICATIONS_TO_SET, 0);
 });
 test("a product missing from the database fails closed and is never created", () => {
@@ -107,7 +114,7 @@ test("price, VAT, inventory, sale mode, publish state, id and slug are not writa
 });
 test("every generated UPDATE sets only whitelisted columns, guards the protected values in WHERE, and never touches inventory", () => {
   const plan = applicable(planEnrichment(dataset, rows())).filter((e) => e.action === "update");
-  assert.equal(plan.length, 78);
+  assert.equal(plan.length, 77);
   const allowed = new Set([...(Object.values(WRITABLE_COLUMNS) as string[]), "updated_at"]);
   for (const entry of plan) {
     const { text, values } = buildUpdate(entry);
@@ -120,11 +127,11 @@ test("every generated UPDATE sets only whitelisted columns, guards the protected
     assert.doesNotMatch(text, /inventory|INSERT|DELETE|DROP|TRUNCATE/i);
   }
 });
-test("dry-run summary: 78 candidates, protected commercial fields report zero changes", () => {
+test("dry-run summary: 77 candidates, protected commercial fields report zero changes", () => {
   const s = summarizePlan(dataset, planEnrichment(dataset, rows()));
-  assert.deepEqual([s.TOTAL_REVIEWED, s.ELIGIBLE_FOR_IMPORT, s.BLOCKED_ASSET, s.BLOCKED_CONFLICT, s.FAILED_CLOSED], [87, 78, 8, 1, 0]);
+  assert.deepEqual([s.TOTAL_REVIEWED, s.ELIGIBLE_FOR_IMPORT, s.BLOCKED_ASSET, s.BLOCKED_CONFLICT, s.FAILED_CLOSED], [87, 77, 9, 1, 0]);
   assert.deepEqual([s.PRICE_CHANGES, s.VAT_CHANGES, s.INVENTORY_CHANGES, s.SALE_MODE_CHANGES, s.PUBLISH_STATE_CHANGES, s.PRODUCT_ID_CHANGES], [0, 0, 0, 0, 0, 0]);
-  assert.equal(s.PRIMARY_IMAGES_TO_SET, 78); assert.equal(s.GALLERIES_TO_SET, 78); assert.equal(s.DESCRIPTIONS_TO_SET, 78); assert.equal(s.WARRANTY_RECORDS_TO_SET, 78);
+  assert.equal(s.PRIMARY_IMAGES_TO_SET, 77); assert.equal(s.GALLERIES_TO_SET, 77); assert.equal(s.DESCRIPTIONS_TO_SET, 77); assert.equal(s.WARRANTY_RECORDS_TO_SET, 77);
   assert.equal(s.SPECIFICATIONS_TO_SET, Object.values(dataset.records).filter((r) => Object.keys(r.specifications).length).length);
   assert.equal(s.DOCUMENTS_TO_SET, Object.values(dataset.records).filter((r) => r.documents.length).length);
 });
