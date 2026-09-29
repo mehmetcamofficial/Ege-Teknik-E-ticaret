@@ -6,9 +6,11 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
-import { sendAdmin, useAdminJson, type Overview } from "@/components/admin/use-admin-data";
+import { sendAdmin, useAdminJson, type Order } from "@/components/admin/use-admin-data";
 import { orderStatusLabel, orderStatusTone, trDate, tryCurrency } from "@/lib/admin-ui";
 import { describeOrderDelivery } from "@/lib/order-delivery";
+
+type OrderDetailResponse = { order: Order };
 import OrderItemsPanel from "./order-items-panel";
 import { PaymentActionPanels, PaymentHistoryPanel, PaymentSummaryPanel, paymentActionCount, useOrderLedger } from "./order-payments-panel";
 
@@ -18,8 +20,8 @@ const controlsGrid: Record<number, string> = { 1: "grid gap-6", 2: "grid grid-co
 
 /** Order summary from the overview endpoint, lines from the order_items snapshot, money from the payment ledger - nothing is derived or invented. */
 export default function OrderDetailView({ orderId, canWrite }: { orderId: string; canWrite: boolean }) {
-  const { data, error, loading, reload } = useAdminJson<Overview>("/api/admin/overview");
-  const order = data?.orders.find((o) => o.id === orderId);
+  const { data, error, loading, reload } = useAdminJson<OrderDetailResponse>(`/api/admin/orders/${orderId}`);
+  const order = data?.order;
   const ledger = useOrderLedger(orderId);
   const refreshAll = () => { reload(); ledger.reload(); };
   const [nextStatus, setNextStatus] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
   }
 
   if (!data) return <><PageHeader title="Sipariş" breadcrumb={crumbs} />{error ? <Notice tone="error">{error}</Notice> : loading ? <Notice tone="info">Yükleniyor…</Notice> : null}</>;
-  if (!order) return <><PageHeader title="Sipariş" breadcrumb={crumbs} /><EmptyState title="Sipariş bulunamadı" description="Bu ekran en son 100 siparişi gösterebilir; bağlantı hatalı ya da sipariş daha eski olabilir." /></>;
+  if (!order) return <><PageHeader title="Sipariş" breadcrumb={crumbs} /><EmptyState title="Sipariş bulunamadı" description="Bağlantı hatalı olabilir ya da sipariş silinmiş olabilir." /></>;
 
   const selected = nextStatus ?? order.status;
   const delivery = describeOrderDelivery(order);

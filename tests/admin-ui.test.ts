@@ -72,13 +72,13 @@ test("requireAdminPage: no session -> login, missing permission -> dashboard, on
   assert.match(guard, /if \(!admin\) redirect\("\/admin\/login"\)/);
   assert.match(guard, /if \(!roleHasPermission\(admin\.role, permission\)\) redirect\("\/admin"\)/);
 });
-test("every admin API route is registered explicitly: Phase 3.3A/3.3B add only the finance, order-ledger and read-only PayTR status routes", () => {
+test("every admin API route is registered explicitly: Phase 3.3A/3.3B add the finance, order-ledger and read-only PayTR status routes; P0-A adds paginated orders/service-requests list routes", () => {
   assert.deepEqual(globSync("app/api/admin/**/route.ts").sort(), [
     "app/api/admin/analytics/route.ts", "app/api/admin/analytics/sales/route.ts", "app/api/admin/audit/route.ts", "app/api/admin/blog/[id]/route.ts", "app/api/admin/blog/route.ts",
     "app/api/admin/catalog/import/route.ts", "app/api/admin/finance/route.ts", "app/api/admin/integrations/paytr/route.ts", "app/api/admin/integrations/route.ts",
     "app/api/admin/legal/documents/[slug]/versions/route.ts", "app/api/admin/legal/documents/route.ts", "app/api/admin/legal/versions/[id]/preview/route.ts",
     "app/api/admin/legal/versions/[id]/publish/route.ts", "app/api/admin/legal/versions/[id]/route.ts", "app/api/admin/media/route.ts",
-    "app/api/admin/orders/[id]/payments/route.ts", "app/api/admin/orders/[id]/refunds/route.ts", "app/api/admin/orders/[id]/route.ts", "app/api/admin/overview/route.ts", "app/api/admin/products/[id]/image/route.ts", "app/api/admin/products/[id]/route.ts",
+    "app/api/admin/orders/[id]/payments/route.ts", "app/api/admin/orders/[id]/refunds/route.ts", "app/api/admin/orders/[id]/route.ts", "app/api/admin/orders/route.ts", "app/api/admin/overview/route.ts", "app/api/admin/products/[id]/image/route.ts", "app/api/admin/products/[id]/route.ts",
     "app/api/admin/products/route.ts", "app/api/admin/reviews/[id]/route.ts", "app/api/admin/reviews/route.ts", "app/api/admin/second-hand/[id]/route.ts",
     "app/api/admin/second-hand/route.ts", "app/api/admin/service-requests/[id]/route.ts", "app/api/admin/taxonomy/route.ts",
     "app/api/admin/users/[id]/grants/route.ts", "app/api/admin/users/[id]/role/route.ts", "app/api/admin/users/[id]/status/route.ts",
