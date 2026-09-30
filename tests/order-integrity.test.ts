@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { computeOrderTotals, orderRequestSchema, priceOrderLines, toOrderConfirmation, toPublicOrderItem } from "../lib/order-domain.ts";
+import { computeOrderTotals, orderRequestSchema, orderStatusLabel, priceOrderLines, toOrderConfirmation, toPublicOrderItem } from "../lib/order-domain.ts";
 
 const baseRequest = {
   customerName: "Ada Lovelace",
@@ -119,7 +119,7 @@ test("toPublicOrderItem is an exact allow-list: product name, quantity, unit pri
 });
 
 const confirmationInput = {
-  orderNumber: "ETS-20260101-ABC123", status: "pending_payment",
+  orderNumber: "ETS-20260101-ABC123", status: "pending_payment", createdAt: new Date("2026-01-01T03:00:00.000Z"),
   items: [{ productName: "Airy 12000", quantity: 1, unitPrice: 12_000, lineTotal: 12_000 }],
   subtotal: 10_000, vatTotal: 2_000, shippingTotal: 0, installationTotal: 0, total: 12_000,
   customerName: "Ada Lovelace", phone: "05001112233", email: "ada@example.test", city: "İzmir", address: "Kuşadası Mahallesi 1 Sokak No 1",
@@ -127,7 +127,7 @@ const confirmationInput = {
 };
 test("toOrderConfirmation exposes only real order data: no order/customer/address id, no idempotency key", () => {
   const confirmation = toOrderConfirmation(confirmationInput);
-  assert.deepEqual(Object.keys(confirmation).sort(), ["delivery", "installationTotal", "items", "orderNumber", "shippingTotal", "status", "subtotal", "total", "vatTotal"]);
+  assert.deepEqual(Object.keys(confirmation).sort(), ["createdAt", "delivery", "installationTotal", "items", "orderNumber", "shippingTotal", "status", "statusLabel", "subtotal", "total", "vatTotal"]);
   assert.deepEqual(Object.keys(confirmation.delivery).sort(), ["address", "city", "district", "email", "installation", "method", "name", "phone"]);
   for (const forbidden of ["id", "customerId", "addressId", "idempotencyKey", "requestFingerprint"]) {
     assert.equal(forbidden in confirmation, false, forbidden);
@@ -138,6 +138,10 @@ test("toOrderConfirmation carries the real values through without inventing or d
   const confirmation = toOrderConfirmation(confirmationInput);
   assert.equal(confirmation.orderNumber, "ETS-20260101-ABC123");
   assert.equal(confirmation.status, "pending_payment");
+  // P3-A1: the guest status lookup shows when the order was placed and its status in Turkish - both derived
+  // from the one stored status and the one label map, never a second mapping.
+  assert.equal(confirmation.statusLabel, orderStatusLabel("pending_payment"));
+  assert.equal(confirmation.createdAt, "2026-01-01T03:00:00.000Z");
   assert.deepEqual(confirmation.items, confirmationInput.items);
   assert.equal(confirmation.subtotal, 10_000);
   assert.equal(confirmation.vatTotal, 2_000);

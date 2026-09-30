@@ -95,6 +95,9 @@ function existingOrderFor(body: Record<string, unknown>) {
   const parsed = orderRequestSchema.parse(body);
   return {
     id: "order-1", orderNumber: "ETS-TEST-000001", total: EXPECTED_TOTAL, status: "pending_payment",
+    // A real orders row always carries created_at (NOT NULL with a default), and the confirmation
+    // projection now reports it, so the fixture must be as complete as the schema.
+    createdAt: new Date("2026-02-03T04:05:06.000Z"),
     requestFingerprint: orderRequestFingerprint(parsed, new Map(parsed.items.map((item) => [item.productId, item.quantity]))),
     subtotal: EXPECTED_TOTAL, vatTotal: 0, shippingTotal: 0, installationTotal: 0, customerName: parsed.customerName, phone: parsed.phone,
     email: parsed.email, city: parsed.city, address: parsed.address, installationPreference: "none", shippingAddressSnapshot: {},

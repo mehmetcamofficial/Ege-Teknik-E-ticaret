@@ -1,8 +1,8 @@
-import { createHash, timingSafeEqual } from "node:crypto";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { auditLogs, orderItems, orders, payments } from "../db/schema.ts";
 import { audit, ledgerSums, type FinanceActor, type FinanceDb } from "./finance-db.ts";
 import { derivePaymentStatus, ledgerCoversOrder, outstandingAmount } from "./finance.ts";
+import { sameOrderEmail } from "./order-email.ts";
 import {
   PAYTR_IFRAME_BASE, PAYTR_PROVIDER, PAYTR_TIMEOUT_MINUTES, PAYTR_TOKEN_URL, buildTokenRequest, isMerchantOid, mapPaytrStatus, newMerchantOid,
   resultUrl, sanitizeProviderText, tlToKurus, verifyPaytrCallbackHash, type BasketLine, type PaytrCallback, type PaytrConfig, type PaytrConfigResult,
@@ -26,8 +26,7 @@ type Meta = Record<string, unknown>;
 const meta = (value: unknown): Meta => (value && typeof value === "object" && !Array.isArray(value) ? { ...(value as Meta) } : {});
 
 const DISABLED_MESSAGE = "Online ödeme şu anda kullanılamıyor. Siparişiniz kayıtlıdır; ödeme için sizinle iletişime geçeceğiz.";
-const digest = (value: string) => createHash("sha256").update(value, "utf8").digest();
-const sameEmail = (a: string, b: string) => timingSafeEqual(digest(a.trim().toLocaleLowerCase("tr")), digest(b.trim().toLocaleLowerCase("tr")));
+// The order-ownership e-mail comparison is the shared lib/order-email.ts helper (same semantics as before).
 
 // ---- payment attempt / iframe token --------------------------------------------------------------------------------
 export type StartPaymentResult = Refusal | { ok: true; token: string; iframeUrl: string; merchantOid: string; reused: boolean };
@@ -46,7 +45,7 @@ export async function startPaytrPayment(db: FinanceDb, input: {
 
   const prepared = await db.transaction(async (tx) => {
     const [order] = await tx.select().from(orders).where(eq(orders.orderNumber, input.orderNumber)).for("update").limit(1);
-    if (!order || !order.email || !sameEmail(order.email, input.email)) return refuse(404, "ORDER_NOT_FOUND", "Sipariş bilgileri doğrulanamadı. Sipariş numarası ve e-posta adresini kontrol edin.");
+    if (!order || !order.email || !sameOrderEmail(order.email, input.email)) return refuse(404, "ORDER_NOT_FOUND", "Sipariş bilgileri doğrulanamadı. Sipariş numarası ve e-posta adresini kontrol edin.");
     if (order.status === "cancelled" || order.status === "returned") return refuse(409, "ORDER_NOT_PAYABLE", "Bu sipariş için ödeme alınamaz.");
     const { collected } = await ledgerSums(tx, order.id);
     const due = outstandingAmount(order.total, collected);

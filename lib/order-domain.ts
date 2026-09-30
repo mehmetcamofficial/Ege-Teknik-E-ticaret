@@ -101,15 +101,19 @@ export function computeOrderTotals(lines: readonly { lineTotal: number; vatAmoun
 }
 
 // ---- guest order confirmation --------------------------------------------------------------------
-// What the customer may see immediately after placing (or replaying) an order: real order data only,
-// projected through an explicit allow-list. No internal id ever appears here - not the order id, the
-// customer id it was billed to, the address id, or the idempotency key. Both the just-created and the
-// idempotent-replay response in app/api/orders/route.ts build their answer through this one function,
-// so the two can never quietly drift apart.
+// What the customer may see for an order: real order data only, projected through an explicit
+// allow-list. No internal id ever appears here - not the order id, the customer id it was billed to, the
+// address id, or the idempotency key. THREE callers build their answer through this one function - the
+// just-created order and its idempotent replay in app/api/orders/route.ts, and the guest lookup in
+// app/api/orders/lookup/route.ts - so they can never quietly drift apart.
 export type PublicOrderItem = { productName: string; quantity: number; unitPrice: number; lineTotal: number };
 export type PublicOrderConfirmation = {
   orderNumber: string;
   status: OrderStatus;
+  /** The stored status in the customer's language, from the one label map (never a second mapping). */
+  statusLabel: string;
+  /** ISO 8601 once serialized; when the order was placed. */
+  createdAt: string;
   items: PublicOrderItem[];
   subtotal: number;
   vatTotal: number;
@@ -126,6 +130,7 @@ export function toPublicOrderItem(line: { product: { name: string }; quantity: n
 export function toOrderConfirmation(input: {
   orderNumber: string;
   status: string;
+  createdAt: Date | string;
   items: readonly PublicOrderItem[];
   subtotal: number;
   vatTotal: number;
@@ -144,6 +149,8 @@ export function toOrderConfirmation(input: {
   return {
     orderNumber: input.orderNumber,
     status: input.status as OrderStatus,
+    statusLabel: orderStatusLabel(input.status),
+    createdAt: (input.createdAt instanceof Date ? input.createdAt : new Date(input.createdAt)).toISOString(),
     items: input.items.map((item) => ({ ...item })),
     subtotal: input.subtotal,
     vatTotal: input.vatTotal,
