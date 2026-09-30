@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
     "test:postgres": "node scripts/test-postgres-integration.mjs",
+    "test:commerce-postgres": "node scripts/test-commerce-postgres.mjs",
     "verify:migrations": "node scripts/verify-migration-integrity.mjs",
     "ci:verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build && git diff --exit-code",
     "db:generate": "drizzle-kit generate",

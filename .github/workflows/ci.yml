@@ -74,6 +74,13 @@ jobs:
           # Loopback service container only; the suite and its runner both refuse anything else.
           SPRINTB_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:postgres
+      - name: Commerce persistence suites on real PostgreSQL (fails if any DB test is skipped)
+        env:
+          # Loopback service container only, same database; the runner re-migrates a clean schema per
+          # suite and exports the variable the suites read to the test process alone. Deliberately
+          # NOT named *_DATABASE_URL: tests/ci-workflow-policy.test.ts forbids that token here.
+          COMMERCE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: pnpm test:commerce-postgres
 
   build:
     name: build
