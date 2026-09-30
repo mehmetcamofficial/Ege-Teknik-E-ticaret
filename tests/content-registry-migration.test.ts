@@ -211,4 +211,52 @@ test("the committed snapshot exists, holds all 16 entries, and is a tracked arti
   assert.doesNotMatch(ignored, /^data\/?$/m, "data/ must not be gitignored wholesale");
 });
 
+// ---- P2-A: registry-driven guide generation ---------------------------------------------------
+test("P2-A: the generator reads the committed snapshot (not the frozen guides) and stays DB-free", async () => {
+  const generator = readFileSync("scripts/build-klima-rehberi.mjs", "utf8");
+  assert.doesNotMatch(generator, /klima-rehberi\/guides-[123]\.mjs/, "generator must not import the frozen guides");
+  assert.match(generator, /REGISTRY_SNAPSHOT_PATH|registry-snapshot\.json/, "generator must read the committed snapshot");
+  assert.match(generator, /parseRegistrySnapshot/, "generator must reuse the pure domain parser");
+  assert.match(generator, /registryToGuides/, "generator must reuse the registry->guide adapter");
+  assert.doesNotMatch(generator, /content-registry-db\.ts/, "build path must not import the DB adapter module");
+  assert.doesNotMatch(generator, /from ["']\.\.\/lib\/content-registry-db/, "build path must not import the DB adapter");
+  assert.doesNotMatch(generator, /DATABASE_URL|getDb|drizzle\(|new pg\.|require\(.pg.\)|from .pg./, "no DB connection is possible from the build path");
+  const { GUIDE_ORDER } = await import("../scripts/build-klima-rehberi.mjs") as { GUIDE_ORDER: string[] };
+  assert.equal(GUIDE_ORDER.length, 16, "frozen hub order holds 16 slugs");
+  assert.equal(new Set(GUIDE_ORDER).size, 16, "hub order slugs are unique");
+  for (const slug of GUIDE_ORDER) assert.match(slug, /^[a-z0-9]+(-[a-z0-9]+)*$/);
+});
+
+test("P2-A: snapshot guides rebuild the frozen slug set with full section/FAQ/related/link counts", async () => {
+  const { parseRegistrySnapshot, registryToGuides, countEntries } = await import("../lib/content-registry.ts");
+  const snapshot = parseRegistrySnapshot(readFileSync("data/content/registry-snapshot.json", "utf8"));
+  const guides = registryToGuides(snapshot.entries);
+  const { GUIDE_ORDER } = await import("../scripts/build-klima-rehberi.mjs") as { GUIDE_ORDER: string[] };
+  assert.deepEqual([...guides.map((g) => g.slug)].sort(), [...GUIDE_ORDER].sort(), "snapshot slugs match the frozen hub order");
+  assert.deepEqual(countEntries(snapshot.entries), {
+    entries: 16, sections: 64, faq: 31, relatedEntries: 48, links: 39, relatedProducts: 0, relatedServices: 0,
+  });
+  for (const guide of guides) {
+    assert.ok(guide.sections.length > 0, `${guide.slug}: sections preserved`);
+    assert.ok(guide.title.length > 0 && guide.description.length > 0, `${guide.slug}: SEO text preserved`);
+  }
+});
+
+test("P2-A: snapshot-driven output keeps the 1:1 guide-page mapping and all 16 public URLs", async () => {
+  const { buildAll, GUIDE_ORDER, guidePath } = await import("../scripts/build-klima-rehberi.mjs") as {
+    buildAll: () => Record<string, string>; GUIDE_ORDER: string[]; guidePath: (slug: string) => string;
+  };
+  const files = buildAll();
+  const committedPages = readdirSync("public/rehber").filter((n) => n.endsWith(".html")).map((n) => n.replace(/\.html$/, "")).sort();
+  assert.deepEqual([...GUIDE_ORDER].sort(), committedPages, "every registry guide maps 1:1 to a committed public page");
+  for (const slug of GUIDE_ORDER) {
+    const key = `public/${guidePath(slug)}`;
+    assert.ok(files[key], `${key} generated`);
+    assert.match(files[key], new RegExp(`<link rel="canonical" href="https://egeteknik\\.tr/rehber/${slug}\\.html">`), `${slug}: canonical URL unchanged`);
+  }
+  assert.ok(files["public/blog.html"], "hub generated");
+  assert.ok(files["public/sitemap.xml"], "sitemap generated");
+  for (const slug of GUIDE_ORDER) assert.ok(files["public/sitemap.xml"].includes(`<loc>https://egeteknik.tr/rehber/${slug}.html</loc>`), `sitemap lists ${slug}`);
+});
+
 

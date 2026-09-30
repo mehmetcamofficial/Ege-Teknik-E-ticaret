@@ -1,11 +1,19 @@
 #!/usr/bin/env node
 /**
- * Klima Rehberi static page generator (Paket 1E).
+ * Klima Rehberi static page generator (Paket 1E, P2-A: registry-driven).
  *
  * The guide hub (public/blog.html) and every guide article (public/rehber/<slug>.html) are
  * pre-rendered static HTML so their full text, headings, breadcrumbs and structured data are
- * in the document itself (crawlable without JavaScript). Content lives in
- * scripts/klima-rehberi/*.mjs; this script only renders it.
+ * in the document itself (crawlable without JavaScript).
+ *
+ * P2-A pipeline: Preview DB --(explicit export)--> data/content/registry-snapshot.json
+ * --(this script)--> public/blog.html + public/rehber/<slug>.html + public/sitemap.xml.
+ * Content input is the COMMITTED snapshot file via the pure domain functions in
+ * lib/content-registry.ts (parseRegistrySnapshot + registryToGuides). This script never
+ * contacts PostgreSQL/Neon: no driver import, no database-adapter import,
+ * no connection string.
+ * The frozen scripts/klima-rehberi/guides-*.mjs sources remain as recovery/reference
+ * fixtures only and are no longer read by the generator.
  *
  *   node scripts/build-klima-rehberi.mjs          write the pages + sitemap
  *   node scripts/build-klima-rehberi.mjs --check  exit 1 when a committed page is out of date
@@ -16,11 +24,52 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { selectionGuides } from "./klima-rehberi/guides-1.mjs";
-import { technologyGuides } from "./klima-rehberi/guides-2.mjs";
-import { serviceGuides } from "./klima-rehberi/guides-3.mjs";
+import { parseRegistrySnapshot, registryToGuides, REGISTRY_SNAPSHOT_PATH } from "../lib/content-registry.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+/* P2-A: the committed snapshot is the ONLY content input. Read it once,
+ * parse via the pure domain function, and rebuild the exact SourceGuide
+ * shape the renderer already consumes. No DB, no network, no pg.
+ *
+ * Order contract: the legacy generator consumed guides in source-file order
+ * (guides-1, then guides-2, then guides-3), and renderHub/renderSitemap emit
+ * pages in GUIDES order. The snapshot stores entries sorted by id, so restore
+ * the legacy hub order explicitly via the frozen list below. This list is the
+ * hub presentation order only — the content of every guide comes from the
+ * snapshot. The frozen guides-*.mjs files are no longer read at all; they
+ * remain as recovery/reference fixtures. */
+const SNAPSHOT_FILE = join(ROOT, REGISTRY_SNAPSHOT_PATH);
+const SNAPSHOT = parseRegistrySnapshot(readFileSync(SNAPSHOT_FILE, "utf8"));
+/* Frozen hub order (source-file order of the legacy generator). Changing this
+ * list changes public output (blog.html ItemList, hub sections, sitemap). */
+export const GUIDE_ORDER = [
+  "klima-secimi-rehberi",
+  "klima-btu-hesaplama",
+  "btu-kapasite-farklari",
+  "mekana-gore-klima-secimi",
+  "salon-tipi-klima",
+  "multi-sistem-klima-nedir",
+  "ikinci-el-klima-alinir-mi",
+  "inverter-klima-nedir",
+  "enerji-sinifi-seer-scop",
+  "wifi-klima-ne-ise-yarar",
+  "gree-serileri-karsilastirma",
+  "klima-montaji-oncesi",
+  "yerinde-kesif-neden-onemli",
+  "klima-bakimi-ne-zaman",
+  "klima-neden-sogutmaz",
+  "klima-neden-su-akitir",
+];
+const GUIDE_INDEX = new Map(GUIDE_ORDER.map((slug, i) => [slug, i]));
+const REGISTRY_GUIDES = registryToGuides(SNAPSHOT.entries);
+if (REGISTRY_GUIDES.length !== GUIDE_ORDER.length) {
+  throw new Error(`snapshot holds ${REGISTRY_GUIDES.length} guides, expected ${GUIDE_ORDER.length}`);
+}
+for (const guide of REGISTRY_GUIDES) {
+  if (!GUIDE_INDEX.has(guide.slug)) throw new Error(`snapshot guide "${guide.slug}" is not in the frozen hub order`);
+}
+export const GUIDES = [...REGISTRY_GUIDES].sort((a, b) => GUIDE_INDEX.get(a.slug) - GUIDE_INDEX.get(b.slug));
 const ORIGIN = "https://egeteknik.tr";
 const PUBLISHED = "2026-09-28";
 const UPDATED_LABEL = "28 Eylül 2026";
@@ -51,8 +100,6 @@ export const IMAGES = {
   kesifPlan: { src: "/assets/rehber/kesif-plan.svg", w: 1200, h: 750 },
   ikinciEl: { src: "/assets/rehber/ikinci-el.svg", w: 1200, h: 750 },
 };
-
-export const GUIDES = [...selectionGuides, ...technologyGuides, ...serviceGuides];
 
 
 const FEATURED = ["klima-secimi-rehberi", "klima-btu-hesaplama", "gree-serileri-karsilastirma"];
