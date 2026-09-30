@@ -14,9 +14,10 @@
  *      a remote/hosted database, a developer machine's local database - is refused before a socket is
  *      opened, so no credential is ever used against a database it does not own;
  *   2. fails if any allow-listed suite file is missing (an accidental omission must not look green);
- *   3. before EACH suite, drops and re-migrates the public/drizzle schemas through the repository's own
- *      migration mechanism (drizzle-orm's migrator over drizzle-pg/, the same one the Sprint-B
- *      integration suite uses) - see ISOLATION below;
+ *   3. before EACH suite, resets and re-migrates the database through the repository's own migration
+ *      mechanism (drizzle-orm's migrator over drizzle-pg/), reproducing the reviewed history migration
+ *      0011 requires - 0000-0010, then the single legacy owner, then 0011..head - exactly as
+ *      tests/sprint-b-postgres.integration.test.ts already does (see scripts/disposable-postgres-bootstrap.mjs);
  *   4. runs the suites one at a time and fails unless exit status, fail, cancelled and skipped are all
  *      zero, pass equals tests, and the aggregate reaches EXPECTED_MIN_TESTS.
  *
@@ -34,10 +35,11 @@
  * Run via `pnpm test:commerce-postgres`.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
+import { BootstrapError, bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 
 /** Every test file in tests/ that opts into FINANCE_TEST_DATABASE_URL. tests/ci-commerce-postgres.test.ts fails if this drifts. */
 const TEST_FILES = [
@@ -54,7 +56,6 @@ const ENV_NAME = "COMMERCE_PG_URL";
 /** What the suites themselves read. Supplied to the child process only. */
 const CHILD_ENV_NAME = "FINANCE_TEST_DATABASE_URL";
 const MIGRATIONS_FOLDER = "drizzle-pg";
-const RESET_SQL = "drop schema if exists public cascade; drop schema if exists drizzle cascade; create schema public;";
 const LOOPBACK = ["127.0.0.1", "localhost", "::1"];
 
 function fail(message) {
@@ -73,6 +74,7 @@ function parseUrl(value) {
 
 /** A printable summary that can never contain the connection string, a host, a user or a password. */
 function safeErrorSummary(error) {
+  if (error instanceof BootstrapError) return error.message;
   const code = typeof error?.code === "string" ? error.code : error?.name ?? "Error";
   if (typeof error?.severity === "string" && typeof error?.message === "string") return `${code}: ${error.message.slice(0, 200)}`;
   return String(code);
@@ -108,19 +110,17 @@ async function main() {
     if (!existsSync(file)) fail(`expected suite ${file} is missing; the allow-list must only name committed test files.`);
   }
 
+  const journal = JSON.parse(readFileSync(`${MIGRATIONS_FOLDER}/meta/_journal.json`, "utf8"));
   const totals = { tests: 0, pass: 0, fail: 0, skipped: 0, cancelled: 0 };
   for (const file of TEST_FILES) {
-    const pool = new pg.Pool({ connectionString: url, max: 1, connectionTimeoutMillis: 15_000 });
-    pool.on?.("error", () => {}); // an idle-client error must not crash the gate; the query below reports its own failure
     try {
-      // Fail-closed setup: a reset or migration failure stops the gate before any test runs.
-      await pool.query(RESET_SQL);
-      await migrate(drizzle(pool), { migrationsFolder: MIGRATIONS_FOLDER });
+      // Fail-closed setup: a reset, the reviewed pre-0011 bootstrap or a migration failure stops the
+      // gate before any test runs. 0011 needs the one legacy owner, so the history is reproduced
+      // (0000-0010 -> owner -> 0011..head) rather than any guard being relaxed.
+      await bootstrapDisposableDatabase({ Pool: pg.Pool, drizzle, migrate, url, journal, migrationsFolder: MIGRATIONS_FOLDER, ...defaultStageDeps, log: (message) => console.log(`${message} [${file}]`) });
     } catch (error) {
-      await pool.end().catch(() => {});
       fail(`database setup/migration failed for ${file} (${safeErrorSummary(error)}).`);
     }
-    await pool.end().catch(() => {});
 
     const run = spawnSync(process.execPath, ["--test", "--experimental-strip-types", "--test-reporter=tap", file], {
       env: { ...process.env, [CHILD_ENV_NAME]: url },
