@@ -344,7 +344,7 @@ function toggleMenu(button){const panel=document.getElementById(button?.getAttri
    claims an assistant exists. */
 function renderHelpLauncher(){if(!document.querySelector('[data-site-footer]')||document.querySelector('[data-help]'))return;const wrap=document.createElement('div');wrap.className='help-launcher';wrap.dataset.help='';wrap.innerHTML=`<div class="help-panel" id="help-panel" role="dialog" aria-modal="false" aria-labelledby="help-title" hidden><div class="help-head"><h2 id="help-title">Size nasıl yardımcı olalım?</h2><button type="button" class="help-close" data-action="toggle-help" aria-label="Yardım menüsünü kapat">${ico('close',18)}</button></div><div id="ege-assistant-root" data-assistant-slot></div><ul class="help-list"><li><a href="mailto:${business.email}">${ico('mail',18)}<span><b>E-posta</b>${business.email}</span></a></li><li><a href="${business.phoneHref}">${ico('phone',18)}<span><b>Telefon</b>${business.phone}</span></a></li><li><a href="contact.html">${ico('clipboard',18)}<span><b>İletişim formu</b>Satış, keşif veya servis talebi</span></a></li><li><a href="${business.wa}" rel="noopener">${ico('chat',18)}<span><b>WhatsApp</b>Hızlı soru için</span></a></li><li><a href="${business.map}" target="_blank" rel="noopener">${ico('pin',18)}<span><b>Yol tarifi</b>Kuşadası mağaza konumu<span class="sr-only"> (yeni sekmede açılır)</span></span></a></li></ul></div><button type="button" class="help-toggle" data-action="toggle-help" aria-expanded="false" aria-controls="help-panel">${ico('headset',20)}<span class="help-label">Yardım</span></button>`;document.body.appendChild(wrap);window.EgeAssistant=window.EgeAssistant||{mount(render){const slot=document.getElementById('ege-assistant-root');if(slot&&typeof render==='function')render(slot)}}}
 function setHelpOpen(open){const panel=document.getElementById('help-panel'),btn=document.querySelector('.help-toggle');if(!panel||!btn)return;panel.hidden=!open;btn.setAttribute('aria-expanded',String(open));if(open)panel.querySelector('a')?.focus();else btn.focus()}
-function renderFooter(){const root=document.querySelector('[data-site-footer]');if(!root)return;root.innerHTML=`<footer class="store-footer"><div class="wrap footer-grid"><div class="footer-company"><a class="brand light" href="/">EGE TEKNİK<small>KLİMA & TEKNOLOJİ</small></a><p>GREE klima satış, keşif, montaj ve satış sonrası destek.<br>${esc(business.address)}</p></div><div><b>İletişim</b><a href="mailto:${business.email}">${ico('mail',16)}${business.email}</a><a href="${business.phoneHref}">${ico('phone',16)}${business.phone}</a><a href="${business.map}" target="_blank" rel="noopener">${ico('pin',16)}Yol tarifi<span class="sr-only"> (yeni sekmede açılır)</span></a><a href="contact.html">${ico('clipboard',16)}İletişim formu</a></div><div><b>Ürünler</b>${NAV_CATEGORIES.slice(0,5).map(([c])=>`<a href="${esc(catalogHref({category:c}))}">${esc(c)}</a>`).join('')}<a href="catalog.html">Tüm ürünler</a></div><div><b>Hizmetler</b><a href="services.html">Montaj ve servis</a><a href="contact.html?subject=kesif">Keşif talebi</a><a href="regions.html">Hizmet bölgeleri</a><b class="footer-sub">Hesap</b><a href="/account">Hesabım</a><a href="checkout.html">Sepet</a></div></div><div class="wrap footer-bottom"><span>© 2026 Ege Teknik · Kuşadası / Aydın</span><nav class="footer-legal" aria-label="Yasal"><a href="policies.html">Satış ve iade koşulları</a><a href="policies.html#privacy">KVKK ve gizlilik</a><button type="button" class="footer-cookie" data-cookie-settings>Çerez tercihleri</button></nav></div></footer>`;/* the footer carries the cookie-preferences control, so the floating fallback button is not needed */document.querySelectorAll('.cookie-settings-trigger').forEach(b=>b.remove())}
+function renderFooter(){const root=document.querySelector('[data-site-footer]');if(!root)return;root.innerHTML=`<footer class="store-footer"><div class="wrap footer-grid"><div class="footer-company"><a class="brand light" href="/">EGE TEKNİK<small>KLİMA & TEKNOLOJİ</small></a><p>GREE klima satış, keşif, montaj ve satış sonrası destek.<br>${esc(business.address)}</p></div><div><b>İletişim</b><a href="mailto:${business.email}">${ico('mail',16)}${business.email}</a><a href="${business.phoneHref}">${ico('phone',16)}${business.phone}</a><a href="${business.map}" target="_blank" rel="noopener">${ico('pin',16)}Yol tarifi<span class="sr-only"> (yeni sekmede açılır)</span></a><a href="contact.html">${ico('clipboard',16)}İletişim formu</a></div><div><b>Ürünler</b>${NAV_CATEGORIES.slice(0,5).map(([c])=>`<a href="${esc(catalogHref({category:c}))}">${esc(c)}</a>`).join('')}<a href="catalog.html">Tüm ürünler</a></div><div><b>Hizmetler</b><a href="services.html">Montaj ve servis</a><a href="contact.html?subject=kesif">Keşif talebi</a><a href="regions.html">Hizmet bölgeleri</a><b class="footer-sub">Hesap</b><a href="/account">Hesabım</a><a href="order-lookup.html">Sipariş takibi</a><a href="checkout.html">Sepet</a></div></div><div class="wrap footer-bottom"><span>© 2026 Ege Teknik · Kuşadası / Aydın</span><nav class="footer-legal" aria-label="Yasal"><a href="policies.html">Satış ve iade koşulları</a><a href="policies.html#privacy">KVKK ve gizlilik</a><button type="button" class="footer-cookie" data-cookie-settings>Çerez tercihleri</button></nav></div></footer>`;/* the footer carries the cookie-preferences control, so the floating fallback button is not needed */document.querySelectorAll('.cookie-settings-trigger').forEach(b=>b.remove())}
 function applyCatalogQuery(){const params=new URLSearchParams(location.search);const search=document.querySelector('#catalog-search');if(search)search.value=params.get('q')||'';const category=params.get('category')||'Tümü';document.querySelectorAll('[name=category]').forEach(el=>{el.checked=el.value===category});setBtuChip(params.get('btu')||'Tümü');for(const key of catalogFilterKeys){const el=document.querySelector(`[data-catalog-filter="${key}"]`);if(el)el.value=params.get(key)||''}renderCatalog()}
 /* Product-detail data has its own trust boundary. The catalog list is used only for
    related products and cart authority; hero/specification/document content comes from
@@ -583,7 +583,79 @@ function initHeroCarousel(){const root=document.querySelector('[data-hero-carous
   document.addEventListener('visibilitychange',()=>{if(document.hidden){if(st.timer){st.remaining=Math.max(600,st.remaining-(Date.now()-st.started));clear()}}sync();schedule()});
   root.style?.setProperty?.('--hc-dur',HERO_INTERVAL+'ms');root.classList.add('hc-ready');go(0,false);
   return {go,state:st}}
-document.addEventListener('DOMContentLoaded',()=>{renderHeader();renderFooter();renderHelpLauncher();renderBtuSelector();renderServiceMap();initHeroCarousel();updateCartCount();updateFavoritesCount();renderFeaturedProducts();applyCatalogQuery();renderProductPage();renderRegions();renderRegionPage();renderArticle();renderContactForm();renderFavorites();renderCompare()});
+/* P3-A2: guest order lookup. Posts the tracking number and the e-mail the order was placed with to
+   POST /api/orders/lookup and shows what the server returns. Two rules shape this function:
+
+   1. Nothing the API returns is ever turned into HTML. Every API-derived value is written with
+      textContent on a created element - no innerHTML, insertAdjacentHTML, outerHTML or document.write -
+      so a stored product name or address can never become markup.
+   2. The API's own error text is never displayed. The page owns its messages: every 400/404/429 (which
+      deliberately do not distinguish an unknown order from a wrong e-mail) renders ONE sentence, and a
+      network/5xx failure renders a different, operational one. Nothing here reveals whether an order
+      exists, and no proof ever enters a URL, storage or an analytics payload. */
+const ORDER_LOOKUP_URL='/api/orders/lookup';
+const ORDER_LOOKUP_INVALID_MESSAGE='Sipariş bilgileri doğrulanamadı. Sipariş numarası ve e-posta adresini kontrol edip tekrar deneyin.';
+const ORDER_LOOKUP_UNAVAILABLE_MESSAGE='Sipariş bilgileri şu anda alınamıyor. Lütfen daha sonra tekrar deneyin.';
+const ORDER_LOOKUP_IN_PROGRESS='Sipariş sorgulanıyor…';
+/* Visible sub-state names: what the customer can act on. Everything else stays neutral rather than
+   promising a date or a service level the site cannot evidence. */
+const ORDER_STATUS_TEXT={pending_payment:'Ödeme bekleniyor',cancelled:'İptal edildi',returned:'İade edildi',completed:'Tamamlandı'};
+const ORDER_DATE_FORMAT=new Intl.DateTimeFormat('tr-TR',{dateStyle:'long'});
+const orderLookupDate=value=>{const date=new Date(value);return Number.isNaN(date.getTime())?'':ORDER_DATE_FORMAT.format(date)};
+const orderElement=(tag,text,className)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=String(text);if(className)element.className=className;return element};
+const orderSummaryRow=(label,value)=>{const row=orderElement('div',undefined,'summary-row');row.append(orderElement('span',label),orderElement('b',value));return row};
+
+function renderOrderLookupResult(data){
+  const box=document.querySelector('[data-order-lookup-result]');if(!box)return;
+  const order=data&&typeof data==='object'?data.order:null;if(!order||typeof order!=='object')return;
+  const items=Array.isArray(order.items)?order.items:[],delivery=order.delivery&&typeof order.delivery==='object'?order.delivery:{},total=Number(order.total)||0;
+  const panel=orderElement('section',undefined,'panel');panel.setAttribute('tabindex','-1');
+  panel.append(orderElement('h2',`Sipariş ${order.orderNumber}`));
+  const meta=orderElement('p',undefined,'tax-note');
+  meta.append(orderElement('small',`Sipariş tarihi: ${orderLookupDate(order.createdAt)||'—'}`),orderElement('small',order.statusLabel||ORDER_STATUS_TEXT[order.status]||''));
+  panel.append(meta);
+  panel.append(orderElement('h3','Sipariş içeriği'));
+  for(const item of items){
+    const row=orderElement('div',undefined,'summary-row');
+    row.append(orderElement('span',`${item.productName} · ${money(item.unitPrice)} × ${item.quantity} adet`),orderElement('b',money(item.lineTotal)));
+    panel.append(row);
+  }
+  if(!items.length)panel.append(orderElement('p','Bu sipariş için ürün kaydı bulunamadı.','notice'));
+  panel.append(orderElement('h3','Ödeme özeti'));
+  panel.append(orderSummaryRow('Ara toplam',money(order.subtotal)),orderSummaryRow('KDV (ara toplama dahil)',money(order.vatTotal)),orderSummaryRow('Teslimat',deliveryMethodText(delivery,order)),orderSummaryRow('Ödenecek toplam (KDV dâhil)',money(total)));
+  panel.append(orderElement('h3','Teslimat bilgileri'));
+  const place=[delivery.address,[delivery.district,delivery.city].filter(Boolean).join(' / ')].filter(Boolean).join(', ');
+  const details=orderElement('p');
+  details.append(orderElement('span',delivery.name),document.createElement('br'),orderElement('span',`${delivery.phone} · ${delivery.email}`),document.createElement('br'),orderElement('span',place),document.createElement('br'),orderElement('span',deliveryMethodText(delivery,order)));
+  panel.append(details);
+  box.replaceChildren(panel);
+  panel.focus?.();
+}
+
+function renderOrderLookup(){
+  const form=document.querySelector('[data-order-lookup]');if(!form)return;
+  const status=form.querySelector('[data-form-status]');
+  const say=(text,ok=false)=>{if(!status)return;status.textContent=text;status.className='form-status'+(ok?' is-ok':'');status.hidden=!text};
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(!form.checkValidity?.()){form.reportValidity?.();return}
+    const orderNumber=String(form.querySelector('[name=orderNumber]')?.value||'').trim(),email=String(form.querySelector('[name=email]')?.value||'').trim();
+    const button=form.querySelector('button[type=submit]');
+    if(button){button.disabled=true;button.textContent=ORDER_LOOKUP_IN_PROGRESS}
+    say('');
+    try{
+      const response=await fetch(ORDER_LOOKUP_URL,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({orderNumber,email})});
+      // A refusal and a transport failure are told apart deliberately: only the server can say the details
+      // were wrong, and blaming the customer for our own network problem would be both wrong and unhelpful.
+      if(!response.ok){say(response.status>=500?ORDER_LOOKUP_UNAVAILABLE_MESSAGE:ORDER_LOOKUP_INVALID_MESSAGE);return}
+      renderOrderLookupResult(await response.json().catch(()=>null));
+      say('Sipariş bilgileriniz doğrulandı.',true);
+    }catch{say(ORDER_LOOKUP_UNAVAILABLE_MESSAGE)}
+    finally{if(button){button.disabled=false;button.textContent='Siparişimi görüntüle'}}
+  });
+}
+
+document.addEventListener('DOMContentLoaded',()=>{renderHeader();renderFooter();renderHelpLauncher();renderBtuSelector();renderServiceMap();initHeroCarousel();updateCartCount();updateFavoritesCount();renderFeaturedProducts();applyCatalogQuery();renderProductPage();renderRegions();renderRegionPage();renderArticle();renderContactForm();renderFavorites();renderCompare();renderOrderLookup()});
 document.addEventListener('DOMContentLoaded',()=>{void loadManagedContent()});
 document.addEventListener('error',handleBrokenProductImage,true);
 /* First-party analytics beacon (Phase 6A). Fire-and-forget: never blocks rendering or any other
