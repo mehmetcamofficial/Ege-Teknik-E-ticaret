@@ -136,6 +136,19 @@ a.g-cat:hover{background:#d3eddf}
 .g-cat-nav b{font-size:15.5px;color:var(--p);line-height:1.3}
 .g-cat-nav small{font-size:13px;color:var(--muted)}
 @media(hover:hover) and (pointer:fine){.g-cat-nav a:hover{border-color:var(--s);box-shadow:var(--sh);transform:translateY(-2px)}}
+/* hub: local guide search (P2-C1). Progressive enhancement: without JS the form
+   is a plain, labelled search field and every guide card stays visible. */
+.g-search{margin:clamp(24px,3vw,36px) 0 0}
+.g-search-box{display:grid;gap:8px;padding:18px 20px;border-radius:18px;border:1px solid var(--line);background:#fff;box-shadow:var(--sh-sm)}
+.g-search-label{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--s)}
+.g-search input[type=search]{width:100%;min-height:48px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:16px;line-height:1.4}
+.g-search input[type=search]::placeholder{color:var(--muted)}
+.g-search input[type=search]:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-color:var(--s)}
+.g-search-status{margin:0;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.g-search-empty{margin:0;font-size:15px;line-height:1.6;color:var(--body)}
+.g-search-empty button{display:inline-flex;align-items:center;min-height:44px;padding:0 2px;border:0;background:none;color:var(--s);font:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.g-search-empty button:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+@media(hover:hover) and (pointer:fine){.g-search-empty button:hover{color:var(--p)}}
 .g-featured{margin-top:clamp(28px,4vw,44px)}
 .g-featured-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .g-card.is-lead h3{font-size:21px}

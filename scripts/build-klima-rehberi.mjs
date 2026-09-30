@@ -169,13 +169,25 @@ const foot = `<div data-site-footer></div>
 </html>
 `;
 
-function card(guide, { headingLevel = 3 } = {}) {
+/* Hub-only: the local guide search script runs solely on blog.html. Guide
+ * article pages keep exactly their existing scripts. */
+const hubFoot = `<div data-site-footer></div>
+<script src="/store.js"></script>
+<script src="/guide-search.js" defer></script>
+</body>
+</html>
+`;
+
+function card(guide, { headingLevel = 3, searchable = false } = {}) {
   const cat = CATEGORIES[guide.category];
   const im = IMAGES[guide.image.key];
   const h = `h${headingLevel}`;
-  return `<article class="g-card${im.photo ? " is-photo" : ""}">
+  /* The hub search (blog.html only) hooks onto these markers; guide article pages stay
+     byte-identical to before by not carrying them. */
+  const hook = searchable ? ` data-guide-card data-guide-slug="${guide.slug}"` : "";
+  return `<article class="g-card${im.photo ? " is-photo" : ""}"${hook}>
 <div class="g-card-media">${imgTag(guide.image.key, "", { sizes: "(max-width:760px) 92vw, 400px" })}</div>
-<div class="g-card-body"><span class="g-cat">${esc(cat.short)}</span><${h}><a href="${guidePath(guide.slug)}">${esc(guide.title)}</a></${h}><p>${esc(guide.description)}</p>
+<div class="g-card-body"><span class="g-cat">${esc(cat.short)}</span><${h}${searchable ? " data-guide-title" : ""}><a href="${guidePath(guide.slug)}">${esc(guide.title)}</a></${h}><p${searchable ? " data-guide-description" : ""}>${esc(guide.description)}</p>
 <div class="g-card-foot"><span class="g-time">${ICON.clock}${readingMinutes(guide)} dk okuma</span><span class="g-card-cta" aria-hidden="true">Rehberi oku${ICON.arrow}</span></div></div>
 </article>`;
 }
@@ -253,6 +265,17 @@ ${foot}`;
 export function renderHub() {
   const url = `${ORIGIN}/blog.html`;
   const featured = FEATURED.map(bySlug);
+  /* P2-C1: local guide discovery search. Progressive enhancement - with JavaScript the
+     form filters the already-rendered cards; without it the field is inert and every
+     card stays visible. Enter never navigates (the script cancels the submit). */
+  const search = `<form class="g-search" action="/blog.html" method="get" role="search" aria-labelledby="g-search-title">
+<div class="wrap"><div class="g-search-box">
+<label class="g-search-label" id="g-search-title" for="guide-search">Rehberlerde ara</label>
+<input id="guide-search" name="guide-search" type="search" autocomplete="off" placeholder="Örn. inverter, BTU, bakım…" data-guide-search aria-describedby="guide-search-status">
+<p class="g-search-status" id="guide-search-status" data-guide-search-status role="status" aria-live="polite">${GUIDES.length} rehberden ${GUIDES.length} gösteriliyor</p>
+<p class="g-search-empty" data-guide-search-empty hidden>Aramanızla eşleşen rehber bulunamadı. <button type="button" data-guide-search-clear>Aramayı temizle</button></p>
+</div></div>
+</form>`;
   const graph = [
     { "@type": "BreadcrumbList", itemListElement: [
       { "@type": "ListItem", position: 1, name: "Ana Sayfa", item: `${ORIGIN}/` },
@@ -264,9 +287,9 @@ export function renderHub() {
   ];
   const sections = Object.entries(CATEGORIES).map(([key, cat]) => {
     const list = GUIDES.filter((g) => g.category === key);
-    return `<section class="g-cat-section" id="${key}" aria-labelledby="${key}-title">
+    return `<section class="g-cat-section" id="${key}" data-guide-section aria-labelledby="${key}-title">
 <div class="section-head"><div><span class="eyebrow">${list.length} rehber</span><h2 id="${key}-title">${esc(cat.name)}</h2><p>${esc(cat.desc)}</p></div></div>
-<div class="g-grid">${list.map((g) => card(g)).join("\n")}</div>
+<div class="g-grid">${list.map((g) => card(g, { searchable: true })).join("\n")}</div>
 </section>`;
   }).join("\n");
   return `${head({ title: "Klima Rehberi: Seçim, Kapasite, Montaj ve Bakım | Ege Teknik", description: "Klima seçimi, BTU hesabı, inverter, enerji sınıfı, montaj, bakım ve arıza konularında Ege Teknik'in hazırladığı sade ve uygulanabilir rehberler.", canonical: url, ogType: "website", image: "/assets/rehber/og/klima-rehberi.jpg" })}${jsonLd({ "@context": "https://schema.org", "@graph": graph })}
@@ -287,10 +310,11 @@ export function renderHub() {
 </div>
 </div>
 </header>
+${search}
 <div class="wrap">
-<section class="g-featured" aria-labelledby="g-featured-title">
+<section class="g-featured" data-guide-section aria-labelledby="g-featured-title">
 <h2 id="g-featured-title" class="sr-only">Öne çıkan rehberler</h2>
-<div class="g-featured-grid">${featured.map((g, i) => card(g, { headingLevel: 3 }).replace('class="g-card', `class="g-card${i === 0 ? " is-lead" : ""}`)).join("\n")}</div>
+<div class="g-featured-grid">${featured.map((g, i) => card(g, { headingLevel: 3, searchable: true }).replace('class="g-card', `class="g-card${i === 0 ? " is-lead" : ""}`)).join("\n")}</div>
 </section>
 <section class="g-tool" aria-labelledby="g-tool-title">
 <div class="g-tool-copy"><span class="eyebrow">Akıllı Klima Seçici</span><h2 id="g-tool-title">Hangi kapasite size uygun?</h2><p>Alan, güneş, yalıtım ve kişi sayısına göre ön kapasite önerisini hemen alın; sonuçla birlikte uygun modelleri görün.</p><a class="primary btn-lg" href="selector.html">Klima Seçici'yi aç</a></div>
@@ -320,7 +344,7 @@ ${sections}
 </div>
 ${ctaBand()}
 </main>
-${foot}`;
+${hubFoot}`;
 }
 
 export function renderSitemap() {
