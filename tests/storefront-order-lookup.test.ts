@@ -103,6 +103,8 @@ const node = (tagName = "div"): StubNode => ({
 });
 /** Everything a rendered node carries as one string - the assertion reads what a customer would read. */
 const textOf = (value: StubNode): string => [value.textContent, ...value.children.map(textOf)].join(" ").replace(/\s+/g, " ").trim();
+/** Every node of the rendered tree, depth first. */
+const collectNodes = (value: StubNode): StubNode[] => [value, ...value.children.flatMap(collectNodes)];
 
 const CONFIRMATION = {
   orderNumber: "ETS-20260203-AB12CD", status: "pending_payment", statusLabel: "Ödeme Bekleniyor", createdAt: "2026-02-03T04:05:06.000Z",
@@ -193,6 +195,51 @@ test("(19)(20)(21)(22)(23)(24)(37) a success renders the order, and the result i
   assert.equal(panel.focused, true, "focus moves to the result");
   assert.equal(session.status.textContent, "Sipariş bilgileriniz doğrulandı.");
   assert.equal(session.status.hidden, false);
+});
+
+// ---- P3-A2.1: the summary must read clearly ---------------------------------------------------------------------
+
+test("the order date and the status are separated by presentation text, not glued together", async () => {
+  const session = mount();
+  await session.submit();
+  const rendered = textOf(session.result);
+  assert.match(rendered, /Sipariş tarihi: 3 Şubat 2026 · Ödeme Bekleniyor/, "date and status are readable as one line");
+
+  // The separator is its OWN node holding page-owned text, so neither API value is concatenated into a
+  // string with the other and nothing from the API can ever pose as the separator.
+  const separators = collectNodes(session.result).filter((node) => node.textContent === " · ");
+  assert.equal(separators.length >= 1, true, "a separator node exists");
+  for (const separator of separators) {
+    assert.equal(separator.attributes["aria-hidden"], "true", "a purely visual separator is hidden from screen readers");
+    assert.equal(separator.children.length, 0, "the separator holds text only - it never wraps an API value");
+  }
+  const meta = collectNodes(session.result).find((node) => node.className === "tax-note");
+  assert.ok(meta, "the meta line exists");
+  const [dateNode, separatorNode, statusNode] = meta!.children;
+  assert.equal(meta!.children.length, 3, "date, separator and status are three sibling nodes");
+  assert.equal(textOf(dateNode!), "Sipariş tarihi: 3 Şubat 2026");
+  assert.equal(separatorNode!.textContent, " · ", "the separator is this page's own text, kept verbatim");
+  assert.equal(statusNode!.textContent, "Ödeme Bekleniyor");
+  assert.equal(textOf(meta!), "Sipariş tarihi: 3 Şubat 2026 · Ödeme Bekleniyor", "and the line reads correctly end to end");
+});
+
+test("the delivery line is labelled, so a fallback shipping amount is never shown naked", async () => {
+  // An order that recorded no delivery method: deliveryMethodText() falls back to the shipping amount.
+  const legacy = { ...CONFIRMATION, shippingTotal: 500, delivery: { ...CONFIRMATION.delivery, method: "", installation: "" } };
+  const session = mount({ response: async () => ({ ok: true, status: 200, body: { ok: true, order: legacy } }) });
+  await session.submit();
+  const rendered = textOf(session.result);
+  assert.match(rendered, /Teslimat: ₺500/, "the amount carries its label");
+
+  // No naked amount anywhere in the delivery-information block.
+  const details = collectNodes(session.result).find((node) => node.tagName === "p" && textOf(node).includes("Ada Lovelace"));
+  assert.ok(details, "the delivery block exists");
+  assert.doesNotMatch(textOf(details!), /(?<!Teslimat: )₺500/, "the shipping amount is never emitted without its label");
+  assert.equal(textOf(details!).includes("Teslimat: ₺500"), true);
+
+  // Nothing invents a charge: installationTotal is not shown at all, so it cannot appear unlabelled.
+  assert.doesNotMatch(renderer, /installationTotal/);
+  assert.doesNotMatch(rendered, /₺0\s*₺|montaj ücreti/i);
 });
 
 test("(25)(26) every API-derived value is written as text, never as HTML", async () => {

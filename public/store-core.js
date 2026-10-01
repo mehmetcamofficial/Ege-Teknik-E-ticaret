@@ -611,8 +611,14 @@ function renderOrderLookupResult(data){
   const items=Array.isArray(order.items)?order.items:[],delivery=order.delivery&&typeof order.delivery==='object'?order.delivery:{},total=Number(order.total)||0;
   const panel=orderElement('section',undefined,'panel');panel.setAttribute('tabindex','-1');
   panel.append(orderElement('h2',`Sipariş ${order.orderNumber}`));
+  /* The date and the status are two facts, so they are two text nodes with a separator element between
+   them: the " · " is presentation text this page owns, never a value that arrived from the API, and the
+   two API-derived values are never concatenated into one string. */
   const meta=orderElement('p',undefined,'tax-note');
-  meta.append(orderElement('small',`Sipariş tarihi: ${orderLookupDate(order.createdAt)||'—'}`),orderElement('small',order.statusLabel||ORDER_STATUS_TEXT[order.status]||''));
+  const dateLine=orderElement('small');
+  dateLine.append(orderElement('span','Sipariş tarihi: '),orderElement('span',orderLookupDate(order.createdAt)||'—'));
+  const separator=orderElement('span',' · ','order-sep');separator.setAttribute('aria-hidden','true');
+  meta.append(dateLine,separator,orderElement('small',order.statusLabel||ORDER_STATUS_TEXT[order.status]||''));
   panel.append(meta);
   panel.append(orderElement('h3','Sipariş içeriği'));
   for(const item of items){
@@ -626,7 +632,13 @@ function renderOrderLookupResult(data){
   panel.append(orderElement('h3','Teslimat bilgileri'));
   const place=[delivery.address,[delivery.district,delivery.city].filter(Boolean).join(' / ')].filter(Boolean).join(', ');
   const details=orderElement('p');
-  details.append(orderElement('span',delivery.name),document.createElement('br'),orderElement('span',`${delivery.phone} · ${delivery.email}`),document.createElement('br'),orderElement('span',place),document.createElement('br'),orderElement('span',deliveryMethodText(delivery,order)));
+  /* The delivery method is always introduced by its label. deliveryMethodText() falls back to the
+     shipping amount for an order that recorded no method, and a bare "₺500" at the end of a block tells
+     the customer nothing; "Teslimat: ₺500" does. No amount is computed here - the value is whatever the
+     storefront's own helper already reads from the public projection. */
+  const deliveryLine=orderElement('span');
+  deliveryLine.append(orderElement('b','Teslimat: '),orderElement('span',deliveryMethodText(delivery,order)));
+  details.append(orderElement('span',delivery.name),document.createElement('br'),orderElement('span',`${delivery.phone} · ${delivery.email}`),document.createElement('br'),orderElement('span',place),document.createElement('br'),deliveryLine);
   panel.append(details);
   box.replaceChildren(panel);
   panel.focus?.();
