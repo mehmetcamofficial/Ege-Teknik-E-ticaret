@@ -8,7 +8,7 @@ import { sendMail } from "@/lib/mail";
 import { hashPassword } from "@/lib/password";
 import { SESSION_ROTATION_GRACE_MS, rotateSessionIfDue, type RotationDeps, type RotationOutcome } from "@/lib/admin-session-rotation";
 import { verifyPassword } from "@/lib/password";
-import { ADMIN_INVITE_MAX_TTL_HOURS, PASSWORD_RESET_TOKEN_TTL_MS, SESSION_TTL_MS, canRemovePrivileged, findSecretLeak, isGrantActive, isPrivilegedRole, maxGrantTtlHours, roleHasPermission, type AdminPermission, type AdminRole } from "@/lib/security-policy";
+import { ADMIN_INVITE_MAX_TTL_HOURS, PASSWORD_RESET_TOKEN_TTL_MS, SESSION_TTL_MS, canRemovePrivileged, findSecretLeak, isGrantActive, isPrivilegedRole, maxGrantTtlHours, roleHasPermission, trustedClientIp, type AdminPermission, type AdminRole } from "@/lib/security-policy";
 
 const COOKIE = "ege_admin_session";
 export type { AdminPermission, AdminRole };
@@ -179,7 +179,13 @@ export async function changeAdminRole(targetId: string, nextRole: AdminRole, act
 export async function hashWithSecret(value:string){const secret=process.env.IP_HASH_SALT;if(!secret||secret.length<32)throw new Error("IP_HASH_SALT must contain at least 32 characters");return sha256(`${secret}:${value}`)}
 /** Anything with a Headers-like .get(name) - a real Request, or next/headers' headers() (used by Server Actions, which have no Request object). */
 export type HeaderSource={headers:{get(name:string):string|null}};
-export function clientIp(request:HeaderSource){return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()||request.headers.get("x-real-ip")||"unknown"}
+/**
+ * The client identity every rate limiter, session row and ipHash column is keyed on. The parsing and the
+ * whole trust model are documented in lib/security-policy.ts's trustedClientIp(); this is the thin
+ * server-side seam over it, kept here so lib/http-security.ts and lib/request-security.ts keep their
+ * existing imports. hashWithSecret below is unchanged and still the only thing that ever touches storage.
+ */
+export function clientIp(request:HeaderSource){return trustedClientIp(request.headers)}
 export const sessionCookieName=COOKIE;
 
 // ---- Phase 6D.1: invitations (hash-only token, Resend delivery only) --------------------------------

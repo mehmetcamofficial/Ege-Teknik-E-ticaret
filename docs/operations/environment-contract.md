@@ -31,6 +31,28 @@ variable, the running deployment does not see it until it is redeployed (`vercel
 | `SENTRY_AUTH_TOKEN` | Optional, build-time only | source-map upload | No upload. Never needed at runtime. |
 | `PAYMENT_PROVIDER` | Preview only today | not read by any application code | No effect (PayTR is not implemented). |
 
+## Client-IP trust boundary (P3-S1A)
+
+Application rate limiting, and every `ipHash` column, are keyed on the client IP that `lib/security-policy.ts`'s
+`trustedClientIp()` reads from the request: the **first** element of `X-Forwarded-For`, else `X-Real-IP`, else the
+literal `unknown` — accepted only when the value is a valid IPv4 or IPv6 address, with surrounding whitespace
+normalised. The address itself is never stored; only `sha256(IP_HASH_SALT + ":" + address)` is.
+
+**The application does not authenticate that header, and does not claim to prevent spoofing.** The value is trusted
+because the hosting platform sets it: per Vercel's documented behaviour, Vercel **overwrites** `X-Forwarded-For` and
+does not forward external IPs, explicitly to prevent IP spoofing
+(<https://vercel.com/docs/headers/request-headers>). That platform guarantee — not the parser — is the trust
+boundary. The parser's only guarantees are that an arbitrary string can never become a bucket identity and that
+whitespace never splits one client across two buckets.
+
+Two changes require a security review of this assumption, not just a deployment note:
+
+- **Moving the application behind another proxy, CDN or host.** A proxy that forwards (rather than replaces) the
+  client's `X-Forwarded-For` makes the first element caller-chosen, and every per-IP limit becomes bypassable. Re-validate
+  this boundary before any such move; the parser will not catch it.
+- **Enabling Vercel Enterprise "Trusted Proxy".** That is the documented feature that lets a custom
+  `X-Forwarded-For` reach the application, i.e. it would remove the very guarantee this design depends on.
+
 ## Operator-only (never set on Vercel runtime)
 
 These are read only by scripts run by an operator from a trusted machine with a chmod-600 credential file.

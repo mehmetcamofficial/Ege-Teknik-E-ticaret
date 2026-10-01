@@ -76,6 +76,81 @@ export function isSameOrigin(origin: string | null, host: string | null): boolea
   }
 }
 
+// ---- the client IP identity -------------------------------------------------------------------------------
+/**
+ * P3-S1A. The single place that decides "which client is this?", for every rate limiter and every
+ * ipHash column in the application.
+ *
+ * WHY THIS IS NOT A SPOOF DEFENCE. This function parses a header; it does not authenticate one. On the
+ * current deployment the header is set by the hosting platform before the request reaches this code:
+ * Vercel documents that it OVERWRITES `X-Forwarded-For` and does not forward external IPs, explicitly to
+ * prevent IP spoofing (https://vercel.com/docs/headers/request-headers). That platform guarantee - not
+ * anything below - is what makes the identity trustworthy. On a host that forwards a caller's XFF, the
+ * first element below would be caller-chosen; no parser can undo that. See
+ * docs/operations/environment-contract.md.
+ *
+ * WHAT THIS DOES GUARANTEE, regardless of who set the header:
+ *   - the identity is a syntactically valid IPv4 or IPv6 address, or the literal "unknown";
+ *   - an arbitrary string can never become an identity, so a bucket can never be keyed on junk;
+ *   - surrounding whitespace is normalised identically in BOTH headers (the previous x-real-ip branch
+ *     did not trim, so " 1.2.3.4 " and "1.2.3.4" were two different buckets for one client);
+ *   - nothing is logged, returned or persisted here. The caller hashes the result (hashWithSecret), and
+ *     no raw address is ever written to the database.
+ *
+ * Deliberately NOT done, each a separate decision rather than an oversight: no trusted-hop counting, no
+ * right-most XFF element, no TRUSTED_HOPS setting, and no use of x-vercel-forwarded-for. The first XFF
+ * element is what Vercel documents as "the public IP address of the client", so it stays the first
+ * element; the alternatives would change the trust model, which this slice explicitly does not do.
+ */
+
+/** Matches inet_pton's IPv4 strictness: four dotted decimal octets, 0-255, and NO leading zeros. */
+const IPV4_OCTET = /^(?:0|[1-9]\d{0,2})$/;
+const IPV6_HEXTET = /^[0-9a-fA-F]{1,4}$/;
+
+function isIpv4Address(value: string): boolean {
+  const parts = value.split(".");
+  return parts.length === 4 && parts.every((part) => IPV4_OCTET.test(part) && Number(part) <= 255);
+}
+
+function isIpv6Address(value: string): boolean {
+  // Only hex digits, colons and dots. This rejects an IPv6 zone id ("fe80::1%eth0"), which node:net's isIP
+  // does accept: a zone id names a local interface on one host, never travels in a forwarding header, and
+  // accepting it would let one client spell one address two ways and land in two buckets. That is the only
+  // place this validator is stricter than the standard; tests/client-ip.test.ts pins that against isIP().
+  if (!value || !/^[0-9a-fA-F:.]+$/.test(value)) return false;
+  let text = value;
+  if (text.includes(".")) {
+    // A trailing dotted-quad ("::ffff:1.2.3.4") occupies the last two hextets; "0:0" keeps the count right.
+    const embedded = text.slice(text.lastIndexOf(":") + 1);
+    if (!isIpv4Address(embedded)) return false;
+    text = `${text.slice(0, text.lastIndexOf(":") + 1)}0:0`;
+  }
+  const halves = text.split("::");
+  if (halves.length > 2) return false; // "::" may appear at most once
+  const head = halves[0] ? halves[0].split(":") : [];
+  const rest = halves.length === 2 ? (halves[1] ? halves[1].split(":") : []) : null;
+  if (![...head, ...(rest ?? [])].every((hextet) => IPV6_HEXTET.test(hextet))) return false;
+  // Without "::" there must be exactly eight hextets; with it, "::" must stand for at least one.
+  return rest === null ? head.length === 8 : head.length + rest.length < 8;
+}
+
+function isIpAddress(value: string): boolean {
+  return value.includes(":") ? isIpv6Address(value) : isIpv4Address(value);
+}
+
+/**
+ * The client identity, or "unknown" when no header carried a usable address. Kept in this module because
+ * it is the module every other security rule already lives in - and because it must stay importable by
+ * the browser (an admin client component reads this file) and by proxy.ts on the Edge runtime, which is
+ * why it is written without any node:* import. tests/client-ip.test.ts pins it to node:net's own isIP().
+ */
+export function trustedClientIp(headers: Pick<Headers, "get">): string {
+  const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+  if (isIpAddress(forwarded)) return forwarded;
+  const real = headers.get("x-real-ip")?.trim() ?? "";
+  return isIpAddress(real) ? real : "unknown";
+}
+
 const prohibitedCardKeys = /^(pan|card_?number|credit_?card|cvv|cvc|expiry|expiration|expiration_?date)$/i;
 
 export function containsCardData(value: unknown): boolean {
