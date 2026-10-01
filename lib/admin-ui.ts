@@ -113,6 +113,76 @@ export function stockLevel(p: { stock: number; status: string; saleMode: string 
 export const stockLabel: Record<StockLevel, string> = { ok: "Stokta", low: "Az stok", out: "Tükendi", untracked: "Takip dışı" };
 export const stockTone: Record<StockLevel, Tone> = { ok: "success", low: "warning", out: "danger", untracked: "neutral" };
 
+// ---- record-management actions ---------------------------------------------------------------------
+/**
+ * The record actions the admin panel can offer, with their exact Turkish labels. Every admin list/table
+ * screen renders these from the SAME vocabulary, so a button never says one thing on one screen and
+ * something else on another. Kept pure (no React) so the label set is unit-testable.
+ */
+export const recordActionLabel = {
+  view: "Görüntüle",
+  edit: "Düzenle",
+  archive: "Arşivle",
+  delete: "Sil",
+  publish: "Yayınla",
+} as const;
+export type RecordActionKey = keyof typeof recordActionLabel;
+
+/** Why an action is unavailable, shown instead of a button that silently does nothing. */
+export const recordActionUnavailableReason = {
+  /** Published legal versions are immutable in the database (migration 0005), not merely read-only in the UI. */
+  legalPublishedImmutable: "Yayınlanmış sürüm veritabanında kilitlidir; değiştirilemez veya silinemez.",
+  /** A second-hand listing with reservations must be archived or marked sold instead. */
+  secondHandHasReservations: "Bu ilana rezervasyon bağlı olduğu için kalıcı olarak silinemez; 'Satıldı' yapın.",
+  /** Taxonomy rows referenced by products keep their link; only unreferenced rows can be deleted. */
+  taxonomyInUse: "Bağlı ürünleri olduğu için silinemez; önce ürünlerdeki bağlantıyı kaldırın.",
+} as const;
+
+/**
+ * Per-resource capability matrix. This is the single source of truth for which actions a screen may
+ * render, derived from what the EXISTING endpoints actually do - never from wishful CRUD symmetry.
+ *
+ * Full audit of every admin navigation entry (see docs/operations/admin-capability-matrix.md):
+ *  - product:      PATCH + soft DELETE. Hard delete is deliberately absent: the inventory FK needs the row.
+ *  - secondHand:   PATCH + archive (soft) + hard delete, refused with 409 when a reservation exists.
+ *  - blogPost:     PATCH + archive (soft) + hard delete.
+ *  - taxonomy:     POST + PATCH(active, name, slug) + guarded DELETE, refused with 409 while in use.
+ *  - legalVersion: draft -> edit/publish/delete; published -> view only (hard DELETE refuses with 409).
+ *                  No archive: see LEGAL_ARCHIVE_DECISION below.
+ *  - order:        state-machine PATCH only. Never a delete - an order is financial + acceptance history.
+ *  - serviceRequest: NO actions. There is no detail page and no single-record GET route
+ *                  (app/api/admin/service-requests/[id]/route.ts is PATCH-only), and the list row already
+ *                  renders every column of ServiceRequestListRow, so the row IS the complete record.
+ *                  A "Görüntüle" button would have nowhere to point - reporting one would be a fake action.
+ *  - review:        moderation transitions only; no edit/archive/delete (see the matrix doc).
+ */
+export type RecordResource = "product" | "secondHand" | "blogPost" | "legalVersion" | "taxonomy" | "order" | "serviceRequest" | "review" | "user" | "inventory";
+export function recordActionsFor(resource: RecordResource, state?: { published?: boolean }): RecordActionKey[] {
+  if (resource === "legalVersion") return state?.published ? ["view"] : ["edit", "publish", "delete"];
+  if (resource === "product") return ["edit", "archive"];
+  if (resource === "secondHand" || resource === "blogPost") return ["edit", "archive", "delete"];
+  if (resource === "taxonomy") return ["edit", "delete"]; // PATCH now also renames (name/slug), so "Düzenle" is real
+  if (resource === "order") return ["view"]; // status transitions live on the detail screen, guarded by the order state machine
+  // Service requests and reviews have NO detail route/page, and their rows already show the whole record.
+  if (resource === "serviceRequest" || resource === "review") return [];
+  if (resource === "user") return ["edit", "archive"]; // disable/enable; there is deliberately no user delete
+  return []; // inventory: stock is edited inline in the cell itself
+}
+
+/**
+ * LEGAL ARCHIVE DECISION - no `Arşivle` on a legal draft, on purpose.
+ *
+ * A legal version's status is DERIVED (draft/scheduled/effective/superseded) and never stored, and
+ * `legal_document_versions` has no archived/withdrawn column. Inventing one would mean a new column plus
+ * a new write path for a table whose whole point is that a published row can never change again
+ * (migration 0005's trigger fires on ANY update of a published row). A draft can already be removed
+ * through the real, audited `Sil` path, so an archive flag would add a second, weaker way to do the same
+ * thing and create drafts that look removable but are not. `Arşivle` is therefore deliberately absent
+ * from the legal action set rather than faked.
+ */
+export const LEGAL_ARCHIVE_DECISION =
+  "Hukuki belge sürümlerinde arşivleme uygulanmaz: durum türetilir, arşiv alanı yoktur ve yayınlanmış satırlar değiştirilemez. Taslaklar denetimli 'Sil' yoluyla kaldırılır.";
+
 export const tryCurrency = (value: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(value);
 export const trDate = (value: string | Date | null | undefined, withTime = false) =>
   value ? new Date(value).toLocaleString("tr-TR", withTime ? { dateStyle: "medium", timeStyle: "short" } : { dateStyle: "medium" }) : "—";
