@@ -105,7 +105,7 @@ Cayma hakkı yalnızca yürürlükteki mevzuatta öngörülen istisnaların somu
 - tüketicinin istekleri veya kişisel ihtiyaçları doğrultusunda özel hazırlanan ürünler,
 - iadesi sağlık veya hijyen açısından uygun olmayan ve koruyucu unsurları teslimden sonra açılan belirli ürünler,
 - mevzuattaki şartları sağlamak kaydıyla ifasına tüketicinin onayıyla başlanmış hizmetler,
-- tanıtma ve kullanma kılavuzunda kurulumunun satıcı veya yetkili servis tarafından yapılacağı belirtilen ve kurulumu gerçekleştirilmiş mallar
+- **Mal satışı ile montaj hizmeti ayrı değerlendirilir.** Cihazın kurulmuş olması, kılavuzda kurulumun belirtilmiş olması veya yetkili servis tarafından montajın gerçekleştirilmiş olması, mal satışı bakımından tek başına cayma hakkı istisnası oluşturmaz.
 
 gibi istisnalar ancak ilgili şartlar gerçekten oluşmuşsa uygulanır.
 

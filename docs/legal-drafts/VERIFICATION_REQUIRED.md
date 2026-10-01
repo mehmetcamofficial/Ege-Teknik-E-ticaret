@@ -87,8 +87,8 @@ Kargo henüz aktif değilken legal metinlerde belirli taşıyıcı adı uydurulm
 | G6 | Analytics consent UI | IMPLEMENTED ON BRANCH | Production env + browser/network testi yapılmalı |
 | G7 | Google Fonts / Tailwind Play CDN | DONE TECH | Runtime bağımlılıkları kaldırıldı; build-time/local asset modeli kullanılıyor |
 | G8 | Google-hosted temsili görseller | DONE TECH | Ana sayfa first-party local asset'lere geçirildi |
-| G9 | KVKK faaliyet → hukuki sebep eşlemesi | **PENDING LEGAL (P3-LEGAL-1)** | `kvkk.md` §3'teki F1-F10 eşlemesi (m.5/2, m.5/3, m.5/4, m.5/5, m.5/6) hukukçu tarafından Resmî Gazete/mevzuat.gov.tr metni üzerinden doğrulanmalıdır. Birebir madde metni bu turda makine-çekimiyle alınamamıştır; bkz. `SOURCES.md` §0 |
-| G10 | Sentry varsayılan veri kategorileri | **PENDING TECH/LEGAL** | Yapılandırmada yalnız `userInfo` kapatılmış ve `httpBodies` boşaltılmıştır. Çerez, HTTP başlığı, URL sorgu parametresi ve veritabanı sorgu ayrıntısı sağlayıcı **varsayılanı** ile toplanmaktadır. Sentry gerçekten etkinleşirse bu kategoriler için ayrıca karar verilmelidir; kod değişikliği gerekiyorsa ayrı onaylı dilimde yapılacaktır |
+| G9 | KVKK faaliyet → hukuki sebep eşlemesi | **DONE (P3-LEGAL-1.1)** | KVKK m.5 bent yapısı resmî metinden doğrulandı (mevzuat.gov.tr, 6698 sayılı Kanun): **m.5/1 açık rıza**; **m.5/2(a)-(f)** rızasız işleme şartları. `kvkk.md` §3 atıfları buna göre düzeltildi (c/ç/e/f, m.5/2(d) kullanılmadı). Faaliyet→şart seçiminin genel onayı hukukçu incelemesine açıktır; bkz. `SOURCES.md` §0 |
+| G10 | Sentry varsayılan veri kategorileri | **PENDING TECH/LEGAL** | Yapılandırmada yalnız `userInfo` kapatılmış ve `httpBodies` boşaltılmıştır. Çerez, HTTP başlığı, URL sorgu parametresi ve veritabanı sorgu ayrıntısı sağlayıcı **varsayılanı** ile toplanmaktadır. Sentry gerçekten etkinleşirse bu kategoriler için ayrıca karar verilmelidir; **kod değişikliği gerekiyorsa ayrı onaylı dilimde yapılacaktır** (P3-LEGAL-1.1'de değiştirilmemiştir) |
 
 ## H. İYS / pazarlama
 

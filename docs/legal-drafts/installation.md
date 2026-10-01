@@ -75,7 +75,7 @@ Standart montajın ürün fiyatına dâhil olduğu bir siparişte montajın yap�
 
 ## 7. Cayma hakkı ve montaj
 
-Cayma hakkının bulunmadığı haller yürürlükteki mevzuata ve aşağıdaki koşulların birlikte gerçekleşmesine bağlıdır. Kurulum/montaj istisnası yalnızca; (a) tanıtma ve kullanma kılavuzunda satıcı veya yetkili servis tarafından kurulum/montaj yapılacağının belirtilmiş olması, (b) kurulumun/montajın gerçekleştirilmiş olması ve (c) mevzuatın öngördüğü hâllerde tüketicinin bu hizmetin ifasına önceden ve açıkça onay vermiş olması hâlinde değerlendirilir. Koşullardan herhangi biri gerçekleşmemişse istisna uygulanmaz.
+**Malın satışı ile montaj hizmeti farklı hukuki işlemlerdir.** Klima cihazı bir mal olarak satılır ve cayma hakkı bu mal satışı bakımından değerlendirilir. Cihazın kurulmuş olması, tanıtma veya kullanma kılavuzunda kurulumun satıcı ya da yetkili servis tarafından yapılacağının belirtilmiş olması veya montajın gerçekleştirilmiş olması **tek başına bir cayma hakkı istisnası değildir ve tüketicinin 14 günlük cayma hakkını kendiliğinden ortadan kaldırmaz.** Montayla birlikte sunulan hizmet için, yalnızca mevzuattaki hizmet istisnasının tüm şartları gerçekleşmişse ve tüketicinin hizmetin ifasına onay vermişse, hizmetin ifa edilmeye başlanmış olması bakımından değerlendirme yapılabilir. Bu değerlendirme montaj hizmeti içindir; ürünün kendisi hakkında bir istisna doğurmaz. Ayıplı mala ilişkin kanuni haklar cayma hakkından ayrıdır.
 
 Bu durum tüm klima satışlarında otomatik ve genel bir "montaj yapıldıysa iade yok" kuralı olarak yorumlanmaz. İstisnanın uygulanabilirliği ürünün niteliği, kılavuzu, gerçekleştirilen işlem ve yürürlükteki mevzuata göre değerlendirilir.
 
