@@ -282,6 +282,71 @@ test("(30) a 5xx and a network failure use the operational message, not the veri
   }
 });
 
+// ---- P3-A3: a 200 the page cannot display is not a verification ------------------------------------------------
+
+test("a 200 whose payload carries no order is reported as unavailable, never as verified", async () => {
+  // A server regression, a truncating proxy or an error page answered with 200 must never leave the
+  // customer reading "Sipariş bilgileriniz doğrulandı." over an empty result.
+  const unusable: [string, unknown][] = [
+    ["{ok:true} with no order", { ok: true }],
+    ["order: null", { ok: true, order: null }],
+    ["order as a string", { ok: true, order: "ETS-20260203-AB12CD" }],
+    ["order as an array", { ok: true, order: [] }],
+    ["an order with no order number", { ok: true, order: { total: 12_000 } }],
+    ["an empty object", { ok: true, order: {} }],
+    ["a null body", null],
+  ];
+  for (const [label, body] of unusable) {
+    const session = mount({ response: async () => ({ ok: true, status: 200, body }) });
+    await session.submit();
+    assert.equal(session.status.textContent, "Sipariş bilgileri şu anda alınamıyor. Lütfen daha sonra tekrar deneyin.", label);
+    assert.equal(session.result.children.length, 0, `${label}: no result panel is rendered`);
+    assert.equal(session.button.disabled, false, `${label}: the customer can try again`);
+    assert.equal(session.button.textContent, "Siparişimi görüntüle", label);
+    assert.equal(session.storage.size, 0, `${label}: nothing is stored`);
+    assert.equal(session.calls.length, 1, `${label}: no second request is made`);
+    // The inputs keep what was typed, so the customer can simply press the button again.
+    assert.equal(JSON.parse(session.calls[0]!.init?.body ?? "{}").orderNumber, "ETS-20260203-AB12CD");
+  }
+});
+
+test("a partially malformed order still shows what it has, without throwing or inventing anything", async () => {
+  // Deliberately NOT treated as a failure: the order WAS verified server-side, and a wrong items or delivery
+  // field is something the page can state honestly ("Bu sipariş için ürün kaydı bulunamadı.", "—"). Refusing
+  // to show a customer's own order over a malformed sub-field would be worse than degrading.
+  for (const [label, order] of [
+    ["items not a list", { ...CONFIRMATION, items: "Airy 12000" }],
+    ["items is null", { ...CONFIRMATION, items: null }],
+    ["delivery not an object", { ...CONFIRMATION, delivery: "İzmir" }],
+    ["a non-numeric total", { ...CONFIRMATION, total: "twelve thousand" }],
+    ["an unparsable date", { ...CONFIRMATION, createdAt: "not-a-date" }],
+  ] as [string, unknown][]) {
+    const session = mount({ response: async () => ({ ok: true, status: 200, body: { ok: true, order } }) });
+    await session.submit();
+    const rendered = textOf(session.result);
+    assert.match(rendered, /ETS-20260203-AB12CD/, `${label}: the order is still identified`);
+    assert.doesNotMatch(rendered, /not-a-date|twelve thousand|undefined|NaN|\[object Object\]/, `${label}: no raw or unusable value is displayed`);
+    assert.equal(session.status.textContent, "Sipariş bilgileriniz doğrulandı.", label);
+    assert.equal(session.button.disabled, false, label);
+    assert.equal(session.storage.size, 0, label);
+    assert.equal(session.calls.length, 1, `${label}: no second request`);
+  }
+});
+
+test("an empty item list is stated in words rather than shown as a broken total", async () => {
+  const session = mount({ response: async () => ({ ok: true, status: 200, body: { ok: true, order: { ...CONFIRMATION, items: [] } } }) });
+  await session.submit();
+  assert.match(textOf(session.result), /Bu sipariş için ürün kaydı bulunamadı\./);
+  assert.equal(session.status.textContent, "Sipariş bilgileriniz doğrulandı.");
+});
+
+test("a 200 with a usable order still renders normally, so the new guard cannot swallow a success", async () => {
+  const session = mount();
+  await session.submit();
+  assert.match(textOf(session.result), /ETS-20260203-AB12CD/);
+  assert.equal(session.status.textContent, "Sipariş bilgileriniz doğrulandı.");
+});
+
 test("(32)(33)(34)(35)(36) the proof is never stored, logged, or put in a URL", async () => {
   const session = mount();
   await session.submit();

@@ -2,8 +2,10 @@
  * In-memory stand-ins for the order route's infrastructure - the database, legal-document loading,
  * the Idempotency-Key header and the HTTP helpers - so tests/order-marketing-consent.test.ts can run
  * the REAL POST /api/orders handler (its validation, pricing, delivery plan, legal acceptance and
- * transaction logic) and inspect exactly which rows it would write. order-route-hooks.mjs loads this
- * module in place of "@/db", "@/lib/legal-db", "@/lib/request-security" and "@/lib/http-security".
+ * transaction logic) and inspect exactly which rows it would write, and so tests/order-lookup-route.test.ts
+ * can run the REAL POST /api/orders/lookup handler the same way. order-route-hooks.mjs loads this
+ * module in place of "@/db", "@/lib/legal-db", "@/lib/request-security", "@/lib/http-security" and
+ * "@/lib/order-lookup-db".
  *
  * Writes made inside db.transaction() are committed only when the callback succeeds, the same
  * all-or-nothing contract Postgres gives the route, so `state.committed` is what would persist.
@@ -11,7 +13,7 @@
  * Not a *.test.ts file, so the test runner's glob does not execute it on its own.
  */
 import { getTableName, type Table } from "drizzle-orm";
-import { isValidIdempotencyKey } from "../../lib/security-policy.ts";
+import { containsCardData, isValidIdempotencyKey } from "../../lib/security-policy.ts";
 
 type Row = Record<string, unknown>;
 export type Write = { kind: "insert" | "update"; table: string; values: unknown };
@@ -22,6 +24,12 @@ export const state = {
   existingOrder: null as Row | null,
   required: [] as { slug: string; title: string; versionId: string }[],
   notices: [] as string[],
+  /** P3-A3: the guest lookup's in-memory order and items, plus what the store was asked for. */
+  lookupOrder: null as Row | null,
+  lookupItems: [] as Row[],
+  storeCalls: [] as string[],
+  /** What each handler asked of the limiter - observed, never simulated. */
+  rateLimitCalls: [] as { request: Request; scope: string; limit: number; windowMs: number }[],
 };
 
 export function resetState() {
@@ -30,6 +38,10 @@ export function resetState() {
   state.existingOrder = null;
   state.required = [];
   state.notices = ["kvkk"];
+  state.lookupOrder = null;
+  state.lookupItems = [];
+  state.storeCalls.length = 0;
+  state.rateLimitCalls.length = 0;
 }
 
 type Settle = (calls: ReadonlyMap<string, unknown[]>) => unknown;
@@ -111,11 +123,40 @@ export function idempotencyKey(request: Request) {
 }
 
 // ---- "@/lib/http-security" ---------------------------------------------------------------------------
-export async function rateLimit() {}
+/** Records how the handler limits itself; the real limiter's semantics are covered by tests/rate-limit-atomic.test.ts. */
+export async function rateLimit(request: Request, scope: string, limit: number, windowMs: number) {
+  state.rateLimitCalls.push({ request, scope, limit, windowMs });
+}
+/** Card data is refused by the REAL detector (lib/security-policy.ts), exactly as production does. */
 export async function readJson(request: Request) {
-  return JSON.parse(await request.text()) as unknown;
+  const value = JSON.parse(await request.text()) as unknown;
+  if (containsCardData(value)) throw new HttpError(400, "Kart verisi bu sistem tarafından kabul edilmez.");
+  return value;
+}
+export class HttpError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
 }
 /** Errors propagate to the test instead of becoming a generic 500, so a crash cannot pass silently. */
 export function publicRoute(handler: (request: Request) => Promise<Response>) {
   return handler;
 }
+
+// ---- "@/lib/order-lookup-db" (P3-A3) ------------------------------------------------------------------
+/** The store the real route uses. Two READ methods only - there is no write path to call. */
+export const orderLookupStore = {
+  async findByOrderNumber(orderNumber: string) {
+    state.storeCalls.push(`find:${orderNumber}`);
+    const row = state.lookupOrder;
+    return row && row.orderNumber === orderNumber ? ({ ...row }) : null;
+  },
+  async listItemsForOrder(orderId: string) {
+    state.storeCalls.push(`items:${orderId}`);
+    // The harness models one order at a time (as state.existingOrder does for the create route), so the
+    // items in state are already this order's; only the id the route asked for is recorded.
+    return state.lookupItems;
+  },
+};

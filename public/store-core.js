@@ -605,9 +605,16 @@ const orderLookupDate=value=>{const date=new Date(value);return Number.isNaN(dat
 const orderElement=(tag,text,className)=>{const element=document.createElement(tag);if(text!==undefined)element.textContent=String(text);if(className)element.className=className;return element};
 const orderSummaryRow=(label,value)=>{const row=orderElement('div',undefined,'summary-row');row.append(orderElement('span',label),orderElement('b',value));return row};
 
+/** Renders the order and reports whether it could: a 200 whose payload carries no usable order is NOT a success. */
 function renderOrderLookupResult(data){
-  const box=document.querySelector('[data-order-lookup-result]');if(!box)return;
-  const order=data&&typeof data==='object'?data.order:null;if(!order||typeof order!=='object')return;
+  const box=document.querySelector('[data-order-lookup-result]');if(!box)return false;
+  const order=data&&typeof data==='object'?data.order:null;
+  /* Usable means: a real order object carrying the one field a lookup result can never omit. Anything else
+     - null, a string, an array, {} - is a response the page cannot show, and showing nothing while saying
+     "doğrulandı" would be a lie. Fields below that are individually wrong (items, delivery, total) are
+     still tolerated: the renderer degrades to an empty item list or "—", which is honest. */
+  if(!order||typeof order!=='object'||Array.isArray(order))return false;
+  if(typeof order.orderNumber!=='string'||!order.orderNumber.trim())return false;
   const items=Array.isArray(order.items)?order.items:[],delivery=order.delivery&&typeof order.delivery==='object'?order.delivery:{},total=Number(order.total)||0;
   const panel=orderElement('section',undefined,'panel');panel.setAttribute('tabindex','-1');
   panel.append(orderElement('h2',`Sipariş ${order.orderNumber}`));
@@ -631,17 +638,25 @@ function renderOrderLookupResult(data){
   panel.append(orderSummaryRow('Ara toplam',money(order.subtotal)),orderSummaryRow('KDV (ara toplama dahil)',money(order.vatTotal)),orderSummaryRow('Teslimat',deliveryMethodText(delivery,order)),orderSummaryRow('Ödenecek toplam (KDV dâhil)',money(total)));
   panel.append(orderElement('h3','Teslimat bilgileri'));
   const place=[delivery.address,[delivery.district,delivery.city].filter(Boolean).join(' / ')].filter(Boolean).join(', ');
+  /* Each of these three lines is dropped when it has no content, so a response that is missing the delivery
+     object renders an honest "Teslimat: ₺0" instead of a literal "undefined · undefined". */
   const details=orderElement('p');
+  for(const [index,line] of [delivery.name,[delivery.phone,delivery.email].filter(Boolean).join(' · '),place].filter(Boolean).entries()){
+    if(index)details.append(document.createElement('br'));
+    details.append(orderElement('span',line));
+  }
   /* The delivery method is always introduced by its label. deliveryMethodText() falls back to the
      shipping amount for an order that recorded no method, and a bare "₺500" at the end of a block tells
      the customer nothing; "Teslimat: ₺500" does. No amount is computed here - the value is whatever the
      storefront's own helper already reads from the public projection. */
   const deliveryLine=orderElement('span');
   deliveryLine.append(orderElement('b','Teslimat: '),orderElement('span',deliveryMethodText(delivery,order)));
-  details.append(orderElement('span',delivery.name),document.createElement('br'),orderElement('span',`${delivery.phone} · ${delivery.email}`),document.createElement('br'),orderElement('span',place),document.createElement('br'),deliveryLine);
+  if(details.children.length)details.append(document.createElement('br'));
+  details.append(deliveryLine);
   panel.append(details);
   box.replaceChildren(panel);
   panel.focus?.();
+  return true;
 }
 
 function renderOrderLookup(){
@@ -660,7 +675,8 @@ function renderOrderLookup(){
       // A refusal and a transport failure are told apart deliberately: only the server can say the details
       // were wrong, and blaming the customer for our own network problem would be both wrong and unhelpful.
       if(!response.ok){say(response.status>=500?ORDER_LOOKUP_UNAVAILABLE_MESSAGE:ORDER_LOOKUP_INVALID_MESSAGE);return}
-      renderOrderLookupResult(await response.json().catch(()=>null));
+      // A 200 the page cannot actually display is not a verification: say so, and show nothing.
+      if(!renderOrderLookupResult(await response.json().catch(()=>null))){say(ORDER_LOOKUP_UNAVAILABLE_MESSAGE);return}
       say('Sipariş bilgileriniz doğrulandı.',true);
     }catch{say(ORDER_LOOKUP_UNAVAILABLE_MESSAGE)}
     finally{if(button){button.disabled=false;button.textContent='Siparişimi görüntüle'}}
