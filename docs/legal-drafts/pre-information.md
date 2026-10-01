@@ -80,9 +80,9 @@ Cayma bildiriminin ardından tüketici, Satıcı malı kendisinin geri alacağı
 
 İade için anlaşmalı taşıyıcı henüz kesinleşmemiştir. Ön bilgilendirmede iade için bir taşıyıcı belirtilmemiş olması halinde tüketici iadeye ilişkin masraflardan sorumlu tutulmaz. Taşıyıcı kesinleştiğinde bu metin yeni sürümle güncellenir.
 
-Geri ödeme, yürürlükteki mevzuatta öngörülen süre ve yöntemle, tüketicinin satın alma sırasında kullandığı ödeme aracına uygun ve tüketiciye ilave masraf yüklemeyecek şekilde yapılır.
+Geri ödeme, satıcının teslimat masrafları dâhil ödemelerin tamamını **14 gün içinde** iade etmesi kuralı uyarınca yapılır. Bu süre, tüketicinin malı kargoya teslim ettiği tarihten itibaren başlar; iade işlemi ön bilgilendirmede belirtilenden farklı bir kargo şirketiyle yapılmışsa süre, ürünün satıcıya ulaştığı tarihte başlar. Henüz teslim edilmemiş ürünlerde ise süre, tüketicinin cayma bildirimini ilettiği tarihten itibaren işlemeye başlar. Geri ödeme, tüketicinin satın alma sırasında kullandığı ödeme aracına uygun olarak, ürün taksitle satın alınmış olsa dahi tek seferde ve tüketicinin ilave masraf veya yükümlülük taşımadığı şekilde gerçekleştirilir.
 
-Cayma hakkının bulunmadığı haller yürürlükteki mevzuata göre değerlendirilir. Özellikle tanıtma ve kullanma kılavuzunda satıcı veya yetkili servis tarafından kurulum/montaj yapılacağı belirtilen ve kurulumu/montajı gerçekleştirilmiş mallarda mevzuattaki cayma hakkı istisnası uygulanabilir. Ürün özelindeki durum satın alma öncesinde tüketiciye gösterilir.
+Cayma hakkının bulunmadığı haller yürürlükteki mevzuata ve aşağıdaki koşulların birlikte gerçekleşmesine bağlıdır. Kurulum/montaj istisnası yalnızca; (a) tanıtma ve kullanma kılavuzunda satıcı veya yetkili servis tarafından kurulum/montaj yapılacağının belirtilmiş olması, (b) kurulumun/montajın gerçekleştirilmiş olması ve (c) mevzuatın öngördüğü hâllerde tüketicinin bu hizmetin ifasına önceden ve açıkça onay vermiş olması hâlinde değerlendirilir. Bu koşullardan herhangi biri gerçekleşmemişse istisna uygulanmaz. Ürün özelindeki durum satın alma öncesinde tüketicinin anlayacağı şekilde gösterilir.
 
 ## 7. Spot Ürünler
 

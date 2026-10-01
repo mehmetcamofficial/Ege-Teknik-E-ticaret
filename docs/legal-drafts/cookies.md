@@ -17,7 +17,8 @@ Bu metin, çerezlerin yanında `localStorage` ve `sessionStorage` gibi çerez ol
 |---|---|---|---|---|
 | `ege_admin_session` | yalnız yönetim paneline giriş yapan yetkili kullanıcılar | admin oturumunun güvenli şekilde sürdürülmesi | Zorunlu | en çok 8 saat; güvenlik kurallarına göre yenilenebilir/sona erdirilebilir |
 | Clerk oturum çerezleri | müşteri hesabı (`/account`) giriş/oturum akışı | kimlik doğrulama ve müşteri oturumu | Hesap özelliği için zorunlu | Clerk'in aktif yapılandırmasına ve oturum politikasına göre |
-| `ege_analytics_consent` | storefront ziyaretçisi | ziyaretçinin analitik tercihini hatırlamak ve tercihi her sayfada tekrar sormamak | Tercih / gerekli işlev | en çok 365 gün; kullanıcı tercih ekranından değiştirebilir |
+| `ege_analytics_consent` | storefront ziyaretçisi | ziyaretçinin analitik tercihini hatırlamak ve tercihi her sayfada tekrar sormamak | Tercih | en çok 365 gün; kullanıcı tercih ekranından değiştirilebilir |
+| `ege_vid` | yalnızca analitik tercihi verilmiş ziyaretçi | analitik olaylarını ilişkilendirmek için sunucu tarafından üretilen rastgele ziyaretçi kimliği; IP veya cihaz bilgisinden türetilmez | Tercihe bağlı | en çok 180 gün; analitik izni kaldırıldığında sunucu tarafından silinir |
 
 Clerk çerez adları ve süreleri sağlayıcı yapılandırmasına göre değişebileceğinden, sabit olmayan teknik ayrıntılar bu politikada gerçeğe aykırı kesin değer olarak yazılmaz.
 
