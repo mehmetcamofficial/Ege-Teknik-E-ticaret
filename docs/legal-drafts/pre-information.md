@@ -97,7 +97,7 @@ Garanti ve satış sonrası servis koşulları ürün/model ve satın alma tarih
 
 ## 9. Şikâyet ve uyuşmazlık
 
-Talepler info@egeteknik.tr veya 0542 795 75 60 üzerinden Ege Teknik'e iletilebilir. Tüketicinin yürürlükteki mevzuat kapsamında Tüketici Hakem Heyeti veya Tüketici Mahkemesine başvuru hakları saklıdır.
+Talepler info@egeteknik.tr veya 0542 795 75 60 üzerinden Ege Teknik'e iletilebilir. Tüketici, uyuşmazlık konusundaki başvurusunu **tüketici hakem heyetine** veya **6502 sayılı Tüketinin Korunması Hakkında Kanun m.73/A uyarınca dava açmadan önce arabulucuya başvurulması şartı ile tüketici mahkemesine** yapabilir. Tüketici Hakem Heyetinin yıllara göre değişebilen parasal sınırı ve başvuru usulü bu metinde sabitlenmemiştir; uyuşmazlığın doğduğu tarihte yürürlükte olan mevzuat ve yetki kriterleri uygulanır.
 
 ## 10. Kişisel veriler ve pazarlama
 

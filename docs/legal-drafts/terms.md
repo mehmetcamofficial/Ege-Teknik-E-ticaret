@@ -104,9 +104,8 @@ KVKK kapsamındaki başvurular için ayrıca KVKK Aydınlatma Metni'nde açıkla
 
 ## 12. Uygulanacak hukuk ve tüketici uyuşmazlıkları
 
-Türkiye Cumhuriyeti hukuku uygulanır. Tüketicilerin yürürlükteki mevzuattan doğan Tüketici Hakem Heyeti, Tüketici Mahkemesi ve diğer yetkili başvuru mercilerine başvuru hakları saklıdır.
+Türkiye Cumhuriyeti hukuku uygulanır. Tüketici, uyuşmazlık konusundaki başvurusunu **tüketici hakem heyetine** veya **6502 sayılı Tüketinin Korunması Hakkında Kanun m.73/A uyarınca dava açmadan önce arabulucuya başvurulması şartı ile tüketici mahkemesine** yapabilir; ayrıca diğer yetkili merciler kapsamındaki hakları saklıdır. Tüketici Hakem Heyetinin yıllara göre değişebilen parasal sınırı, başvuru usulü ve yetkili mahkeme kriterleri bu sabit metinde hard-code edilmez; uyuşmazlığın doğduğu tarihte yürürlükte olan mevzuat uygulanır.
 
-Yıllara göre değişebilen parasal sınırlar veya yetki kriterleri bu sabit metinde hard-code edilmez; uyuşmazlığın doğduğu tarihte yürürlükte olan mevzuat uygulanır.
 
 ## 13. Değişiklikler ve sürümleme
 
