@@ -13,17 +13,36 @@ Bu turda yalnızca birincil resmî kaynaklar kullanıldı; hukukçu blogu veya S
 | Kaynak | URL | Alınan doğrulama |
 |---|---|---|
 | **6698 sayılı KVKK — resmî metin (mevzuat.gov.tr PDF)** | https://www.mevzuat.gov.tr/MevzuatMetin/1.5.6698.pdf | **MADDE 5-(1):** "Kişisel veriler ilgili kişinin **açık rızası** olmaksızın işlenemez." **MADDE 5-(2):** açık rıza aranmaksızın işlenebilme şartları **a)** kanunlarda açıkça öngörülmesi · **b)** fiili imkânsızlık nedeniyle rıza açıklayamama / hayat veya beden bütünlüğünün korunması · **c)** bir sözleşmenin kurulması veya ifasıyla doğrudan doğruya ilgili olması kaydıyla sözleşmenin taraflarına ait verilerin işlenmesinin gerekli olması · **ç)** veri sorumlusunun hukuki yükümlülüğünü yerine getirebilmesi için zorunlu olması · **d)** ilgili kişinin kendisi tarafından alenileştirilmiş olması · **e)** bir hakkın tesisi, kullanılması veya korunması için zorunlu olması · **f)** temel hak ve özgürlüklere zarar vermemek kaydıyla meşru menfaat için zorunlu olması. **MADDE 6-(1)** özel nitelikli kişisel veri listesi; **MADDE 6-(2) Mülga** (2/3/2024-7499/33 md.). |
-| **Resmî Gazete 24 Mayıs 2025, No. 32909** | https://www.resmigazete.gov.tr/eskiler/2025/05/20250524-1.pdf | Mesafeli Sözleşmeler Yönetmeliği değişikliği: kurulmuş/montajı yapılmış mallara ilişkin cayma hakkı istisnası **kaldırılmış**, yürürlük **01.01.2026**. ⚠️ Bu gazete nüshası taranmış (scanned) PDF olarak yayımlanmış olduğundan değişiklik metni bu oturumda makine-çekimiyle alınamadı; aşağıdaki Bakanlık rehberi ile çapraz doğrulandı. Hukukçu, madde numaraları (Madde 4 ve Madde 5) ve yürürlük hükmü ile birlikte teyit etmelidir. |
+| **Resmî Gazete 24 Mayıs 2025, No. 32909** — resmî HTML metni | https://www.resmigazete.gov.tr/eskiler/2025/05/20250524-2.htm | "Mesafeli Sözleşmeler Yönetmeliğinde Değişiklik Yapılmasına Dair Yönetmelik" metni birebir alınmıştır: **MADDE 1** → Yönetmelik 5/1-(g) ve (k) bentleri değişik (ön bilgilendirme içeriği; uyuşmazlık çözümü). **MADDE 2** → 12/4'teki ifade kaldırıldı; 5/1-(g) kapsamında iade taşıyıcısı bilgisi verilmemişse tüketiciden iade masrafı için hiçbir bedel talep edilemez. **MADDE 4** → "Aynı Yönetmeliğin **15 inci maddesinin birinci fıkrasının (i) bendi yürürlükten kaldırılmıştır.**" **MADDE 5** → "Bu Yönetmelik **1/1/2026 tarihinde yürürlüğe girer.**" MADDE 6 → Ticaret Bakanı yürütür. |
 | T.C. Ticaret Bakanlığı, Tüketicinin Korunması ve Piyasa Gözetimi GD — "Mesafeli Sözleşmeler Hakkında Bilgilendirme" (17.08.2026) | https://tuketici.ticaret.gov.tr/yayinlar/tuketici-bilgi-rehberi/mesafeli-sozlesmeler-hakkinda-bilgilendirme | Cayma süresi **14 gün**; tüketici cayma bildiriminden itibaren **14 gün** içinde malı geri göndermek zorundadır; satıcı teslimat masrafları dâhil ödemelerin **tamamını 14 gün içinde** iade etmelidir; iade için kargo şirketi belirtilmemişse tüketici iade masraflarından sorumlu tutulamaz; geri ödeme tek seferde ve tüketicinin kullandığı ödeme aracına uygun yapılır. **Güncel istisna listesinde kurulumu/montajı yapılmış mallar için bağımsız bir istisna YER ALMAMAKTADIR**; listede yalnızca "**cayma hakkı süresi sona ermeden önce, tüketicinin onayı ile ifasına başlanan hizmetler**" bulunmaktadır. Bu, 01.01.2026 itibarıyla yürürlüğe giren değişikliği doğrulamaktadır. |
 | KVKK Kurumu — "Aydınlatma Yükümlülüğü" | https://www.kvkk.gov.tr/Icerik/2033/Aydinlatma-Yukumlulugu- | KVKK m.10 uyarınca aydınlatmada veri sorumlusunun kimliği, verilerin **hangi amaçla** işleneceği, **kimlere ve hangi amaçla** aktarılabileceği, **veri toplama yöntemi ve hukuki sebebi** ile m.11'deki diğer hakların ilgili kişiye sağlanması gerekir. Aydınlatma ile açık rıza ayrıdır; rıza aranmaksızın da aydınlatma yükümlülüğü devam eder. |
 
 **P3-LEGAL-1.1 ile kapanan nokta:** KVKK m.5'in bent yapısı resmî metinden doğrulandığı için `kvkk.md` §3'teki atıflar gerçek yapıya göre düzeltilmiş (bkz. aşağıdaki harita) ve **G9 kapatılmıştır**. Eşleme, faaliyetin gerçek amacı üzerinden birebir incelenerek yapılmıştır; örnek atıflar mekanik olarak dağıtılmamıştır. **m.5/2(d)** (alenileştirme) hiçbir faaliyette kullanılmamıştır.
 
+**P3-LEGAL-1.2 ile eklenen doğrulama kaydı — şirket kimliği:**
+
+Aşağıdaki şirket bilgileri işletme tarafından resmî şirket kayıtlarından doğrulanmış olarak iletildi ve Release Candidate belgelerine işlendi:
+
+| Bilgi | Değer |
+|---|---|
+| Ticaret unvanı | Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi |
+| VKN | 3250963985 |
+| MERSİS | 0325096398500001 |
+| Vergi dairesi | Kuşadası Vergi Dairesi |
+| Ticaret sicil no | 10388 |
+| Müşteri-facing adres | Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın |
+| e-Fatura | Mükellef: EVET · geçiş 01.07.2023 |
+| e-İrsaliye | Mükellef: EVET |
+
+**Kasıtlı olarak yayımlanmayanlar:** Luca PK/GB posta kutusu (mailbox) tanımlayıcıları; şirket temsilcisinin kişisel bilgileri; **Elektronik Bildirim Adresi — KEP adresi değildir ve KEP olarak kullanılmamıştır.** KEP adresi doğrulanana kadar hiçbir belgeye eklenmeyecektir.
+
+**P3-LEGAL-1.2 ile kapanan nokta (Resmî Gazete):** 24.05.2025 No.32909 sayılı gazetenin **resmî HTML metni** bu oturumda birebir okundu. **MADDE 4** kurulmuş/montajı yapılmış mallara ilişkin istisnayı kaldırmakta, **MADDE 5** yürürlüğü 1/1/2026 olarak belirlemektedir. Bu nedenle P3-LEGAL-1.1'de "taranmış PDF nedeniyle madde numaraları doğrulanamadı" olarak bırakılan nokta **artık açık değildir.** PDF nüshası hâlâ taranmıştır; ancak aynı kararnın HTML metni erişilebilir ve doğrulama ondan yapılmıştır.
+
 **Hâlâ hukukçu doğrulaması gereken noktalar:**
 
-- Resmî Gazete 24.05.2025 No.32909 değişiklik metninin **madde numaraları ve yürürlük hükmü** (yukarıdaki tarama nedeniyle makine-çekilemedi).
-- Mesafeli Sözleşmeler Yönetmeliği'nin yürürlükteki **madde/dayanak numaraları**; yukarıdaki içerik Bakanlık bilgilendirme metninden alınmıştır.
-- `kvkk.md` §3 eşlemesinin hukukçu tarafından genel olarak onaylanması (atıf yapısı doğrulanmıştır; faaliyet→şart seçimi hukuki değerlendirmedir).
+- `kvkk.md` §3 faaliyet→şart eşlemesinin genel onayı (atıf yapısı resmî metinden doğrulandı; faaliyet→şart seçimi hukuki değerlendirmedir).
+- Mesafeli Sözleşmeler Yönetmeliği'nin bugünkü **birleşik madde numaraları**; yukarıdaki içerik değişiklik metninden ve Bakanlık rehberinden alınmıştır.
+- **MADDE 1'in (k) bendi** uyuşmazlık çözümünde Tüketici Hakem Heyeti / Tüketici Mahkemesi yanında 6502 sayılı Kanun m.73/A uyarınca **dava açılmadan önce arabuluculuğa başvurma** imkânını da düzenlemektedir. Bu, P3-LEGAL-1 kapsamı dışında bırakılmış ve belge metnine eklenmemiştir; hukukçu kararına bırakılmıştır.
 
 ## 1. Mesafeli satış / tüketici
 

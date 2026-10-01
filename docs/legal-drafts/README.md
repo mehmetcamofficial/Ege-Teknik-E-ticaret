@@ -27,8 +27,8 @@
 ## Yayın kuralları
 
 1. `{{...}}` alanları sipariş anında sunucu tarafından doldurulan dinamik sipariş alanlarıdır; hata/placeholder değildir.
-2. Doğrulanmamış MERSİS, KEP, kargo şirketi, ödeme kuruluşu, e-belge sağlayıcısı veya başka işletme bilgisi müşteriye uydurularak gösterilmez.
-3. VKN gibi hassas/işletme kimlik bilgileri public repository içine açık değer olarak yazılmaz; gerekiyorsa kontrollü Production legal kayıt oluşturulurken doğrulanmış resmî kaynaktan eklenir.
+2. Doğrulanmamış KEP, kargo şirketi
+3. VKN ve MERSİS P3-LEGAL-1.2 ile resmî şirket kaydından doğrulanmış ve Release Candidate belgelerine işlenmiştir. Luca PK/GB posta kutusu tanımlayıcıları ile şirket temsilcisinin kişisel bilgileri müşteri-facing belgelerde yayımlanmaz; KEP adresi doğrulanana kadar eklenmez.
 4. Checkout'ta `pre-information` ve `distance-sales` kabulü sürüm kimliğiyle kaydedilir. KVKK aydınlatması bilgi verme metnidir; açık rıza checkbox'ına dönüştürülmez.
 5. Yayımlanan legal version geriye dönük sessizce değiştirilmez; değişiklik gerekiyorsa yeni version oluşturulur.
 6. Sipariş anındaki ürün/fiyat/vergi/teslimat bilgileri order snapshot ile korunur; genel legal metin her sipariş için yeniden versiyonlanmaz.
@@ -47,7 +47,7 @@
 
 ## Hâlâ açık olan işletme/uyum maddeleri
 
-Pazartesi/mali müşavir teyidi bekleyenler: MERSİS, KEP, e-Fatura/e-Arşiv durumu, e-belge sağlayıcısı, 2025 bilanço/çalışan sayısı üzerinden VERBİS istisna değerlendirmesi.
+Pazartesi/mali müşavir teyidi bekleyenler: KEP, e-Arşiv durumu
 
 Operasyonel olarak ayrıca ETBİS kaydı, kargo/iade taşıyıcısı, aktif ödeme kuruluşu ve aktif vendor yurt dışı aktarım mekanizmaları kesinleştirilmelidir. Ayrıntılar `COMPLIANCE_CHECKLIST.md` ve `VERIFICATION_REQUIRED.md` içindedir.
 

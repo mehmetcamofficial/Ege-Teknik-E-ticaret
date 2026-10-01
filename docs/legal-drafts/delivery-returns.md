@@ -8,7 +8,7 @@
 **Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi**
 
 - Ticari ad: Ege Teknik
-- Adres / iade adresi: İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+- Adres / iade adresi: Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın
 - Vergi dairesi: Kuşadası
 - E-posta: info@egeteknik.tr
 - Telefon: 0542 795 75 60
@@ -146,7 +146,7 @@ Ege Teknik'in doğrudan hizmet veremediği bölgelerde uygun yetkili servise yö
 
 - E-posta: info@egeteknik.tr
 - Telefon: 0542 795 75 60
-- Adres: İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+- Adres: Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın
 
 ---
 

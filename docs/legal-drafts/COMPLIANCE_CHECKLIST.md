@@ -19,8 +19,8 @@ Ege Teknik plans to accept orders through its own e-commerce domain `egeteknik.t
 
 | Item | Status | Required evidence / action |
 |---|---|---|
-| MERSİS number | PENDING OWNER | Obtain from accountant/company records. |
-| VKN used in ETBİS identity | PENDING OWNER | Use official company record; do not place the number in this public repository. |
+| MERSİS number | **VERIFIED (P3-LEGAL-1.2)** | 0325096398500001; resmî şirket kaydı. |
+| VKN used in ETBİS identity | **VERIFIED (P3-LEGAL-1.2)** | 3250963985; ETBİS başvurusunda bu numara kullanılacak. |
 | `egeteknik.tr` ETBİS registration | BLOCKER | Complete/verify company + domain record through official ETBİS/e-Devlet flow. |
 | Company/domain identity match | PENDING OWNER | Compare official record with legal pack. |
 | ETBİS evidence | PENDING OWNER | Retain screenshot/PDF/date internally. |
@@ -100,12 +100,16 @@ Sales/order analytics sourced from real orders are not dependent on the visitor 
 
 ## 6. Company / accountant facts still needed
 
+**P3-LEGAL-1.2 ile DOĞRULANAN ve listeden çıkarılanlar:** MERSİS numarası (0325096398500001), ticaret sicil no (10388), e-Fatura mükellefiyeti (EVET, geçiş 01.07.2023), e-İrsaliye mükellefiyeti (EVET).
+
+Kalanlar:
+
 Obtain in one batch on Monday:
 
-- MERSİS number,
+- (MERSİS number — P3-LEGAL-1.2 ile doğrulandı, listeden çıkarıldı)
 - KEP address, if active,
-- trade-registry/chamber information if required,
-- e-Fatura/e-Arşiv status,
+- (ticaret sicil no 10388 — doğrulandı, listeden çıkarıldı)
+- e-Arşiv statüsü ve aktif e-belge entegratörü (e-Fatura mükellefiyeti doğrulandı)
 - active e-document integrator/accounting software,
 - 2025 balance-sheet total,
 - annual employee count,

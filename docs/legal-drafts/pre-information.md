@@ -1,5 +1,5 @@
 > **RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED**
-> `{{...}}` alanları sipariş anında sistem tarafından doldurulur. MERSİS/KEP ve VKN'nin açık yazımı yayın öncesi şirket kayıtlarından son kez doğrulanacaktır.
+KEP adresi doğrulanana kadar bu belge sürümüne eklenmez.
 
 # ÖN BİLGİLENDİRME FORMU
 
@@ -26,15 +26,16 @@ Sipariş özetinde gösterilmeyen ek bedel tüketiciden talep edilmez. Standart 
 |---|---|
 | Ticaret unvanı | Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi |
 | Ticari ad | Ege Teknik |
-| Şirket sahibi | Levent Karakoyun |
-| Vergi dairesi | Kuşadası |
-| VKN | Yayın öncesi vergi levhasındaki kayıt sisteme aynen işlenecektir |
-| Adres | İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın |
+| Ticaret sicil no | 10388 |
+| Vergi dairesi | Kuşadası Vergi Dairesi |
+| VKN | 3250963985 |
+| MERSİS numarası | 0325096398500001 |
+| Adres | Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın |
 | Telefon / WhatsApp | 0542 795 75 60 |
 | E-posta | info@egeteknik.tr |
 | Web | egeteknik.tr |
 
-MERSİS ve KEP bilgileri doğrulandığında ilgili belge sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
+KEP adresi doğrulandığında ilgili belge sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
 
 ## 3. Ödeme ve fatura
 

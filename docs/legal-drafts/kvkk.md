@@ -11,12 +11,16 @@
 |---|---|
 | Veri sorumlusu | Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi |
 | Ticari ad | Ege Teknik |
-| Adres | İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın |
-| Vergi dairesi | Kuşadası |
+| VKN | 3250963985 |
+| MERSİS numarası | 0325096398500001 |
+| VKN | 3250963985 |
+| MERSİS numarası | 0325096398500001 |
+| Adres | Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın |
+| Vergi dairesi | Kuşadası Vergi Dairesi |
 | E-posta / telefon | info@egeteknik.tr / 0542 795 75 60 |
 | Web | egeteknik.tr |
 
-MERSİS ve KEP bilgileri doğrulandığında bu metnin sonraki sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
+KEP adresi doğrulandığında bu metnin sonraki sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
 
 ## 2. İşlenen kişisel veri kategorileri
 
@@ -102,7 +106,7 @@ KVKK kapsamındaki taleplerinizi, kimliğinizi ve talebinizi doğrulamaya yetece
 İletişim:
 
 - E-posta: info@egeteknik.tr
-- Adres: İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+- Adres: Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın
 
 Başvurular yürürlükteki mevzuatta öngörülen usul ve süreler çerçevesinde değerlendirilir.
 
