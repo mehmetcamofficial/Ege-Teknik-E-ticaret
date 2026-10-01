@@ -66,6 +66,17 @@ test("surrounding whitespace is normalised in BOTH headers", () => {
   assert.equal(trustedClientIp(withHeaders({ "x-forwarded-for": "   8.8.8.8   " })), "8.8.8.8");
   assert.equal(trustedClientIp(withHeaders({ "x-forwarded-for": "\t8.8.8.8\n" })), "8.8.8.8");
   assert.equal(trustedClientIp(withHeaders({ "x-real-ip": "  198.51.100.7  " })), "198.51.100.7");
+  assert.equal(
+    trustedClientIp(withHeaders({ "x-forwarded-for": " 8.8.8.8 " })),
+    trustedClientIp(withHeaders({ "x-forwarded-for": "8.8.8.8" })),
+    "the padded and the bare form are one client, so they must be one identity",
+  );
+  assert.equal(
+    trustedClientIp(withHeaders({ "x-real-ip": " 198.51.100.7 " })),
+    trustedClientIp(withHeaders({ "x-real-ip": "198.51.100.7" })),
+    "and identically for x-real-ip",
+  );
+});
 
 // ---- fallthrough --------------------------------------------------------------------------------------------
 
@@ -132,6 +143,7 @@ test("the same legitimate address is always the same identity, and different one
   assert.notEqual(trustedClientIp(withHeaders({ "x-forwarded-for": "203.0.113.9" })), trustedClientIp(withHeaders({ "x-forwarded-for": "203.0.113.10" })));
   assert.notEqual(trustedClientIp(withHeaders({ "x-forwarded-for": "203.0.113.9" })), trustedClientIp(withHeaders({ "x-forwarded-for": "2001:db8::9" })));
   assert.notEqual(trustedClientIp(withHeaders({ "x-forwarded-for": "203.0.113.9" })), "unknown");
+});
 
 // ---- parity with the standard validator --------------------------------------------------------------------
 
@@ -230,20 +242,6 @@ test("no rate-limit constant, limiter store or proxy rule was touched by the cli
   assert.doesNotMatch(policy, /TRUSTED_HOPS|x-vercel-forwarded-for/, "this slice adds no trusted-proxy model");
 });
 
-});
-
 test("X-Forwarded-For still takes precedence over x-real-ip when both carry a valid address", () => {
   assert.equal(trustedClientIp(withHeaders({ "x-forwarded-for": "1.1.1.1", "x-real-ip": "9.9.9.9" })), "1.1.1.1");
-});
-
-  assert.equal(
-    trustedClientIp(withHeaders({ "x-forwarded-for": " 8.8.8.8 " })),
-    trustedClientIp(withHeaders({ "x-forwarded-for": "8.8.8.8" })),
-    "the padded and the bare form are one client, so they must be one identity",
-  );
-  assert.equal(
-    trustedClientIp(withHeaders({ "x-real-ip": " 198.51.100.7 " })),
-    trustedClientIp(withHeaders({ "x-real-ip": "198.51.100.7" })),
-    "and identically for x-real-ip",
-  );
 });
