@@ -81,7 +81,7 @@ export default function ReviewsAdmin() {
               <div className="grid gap-2">
                 <Label htmlFor={`note-${review.id}`}>Moderasyon notu (isteğe bağlı, yalnızca yönetim görür)</Label>
                 <Textarea id={`note-${review.id}`} maxLength={500} value={notes[review.id] ?? ""} onChange={(e) => setNotes({ ...notes, [review.id]: e.target.value })} />
-                <div className="flex flex-wrap gap-2">{actionsFor[review.status].map((a) => <Button key={a.to} type="button" variant={a.to === "rejected" ? "destructive" : "default"} onClick={() => void decide(review, a.to)}>{a.label}</Button>)}</div>
+                <div className="flex flex-wrap gap-2" role="group" aria-label={`${review.productName} yorum moderasyon işlemleri`}>{actionsFor[review.status].map((a) => <Button key={a.to} type="button" variant={a.to === "rejected" ? "destructive" : "default"} onClick={() => void decide(review, a.to)}>{a.label}</Button>)}</div>
               </div>
             </li>
           ))}

@@ -8,9 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { sendAdmin, useAdminJson } from "@/components/admin/use-admin-data";
 import { serviceStatusLabel, serviceStatusTone, serviceStatuses, trDate } from "@/lib/admin-ui";
 import type { ServiceRequestListPage } from "@/lib/service-requests-db";
+
+/** Statuses that close a request; they confirm before saving because they cannot be casually undone. */
+const closingStatuses = ["completed", "cancelled"] as const;
 
 /** Every row comes from GET /api/admin/service-requests (P0-A #3), paginated server-side - no 100-row cap. */
 export default function ServiceRequestsView({ canWrite }: { canWrite: boolean }) {
@@ -18,6 +22,7 @@ export default function ServiceRequestsView({ canWrite }: { canWrite: boolean })
   const [filter, setFilter] = useState("open");
   const [page, setPage] = useState(1);
   const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [confirm, setConfirm] = useState<{ id: string; requestNumber: string; status: string } | null>(null);
 
   const url = useMemo(() => {
     const q = new URLSearchParams();
@@ -30,8 +35,15 @@ export default function ServiceRequestsView({ canWrite }: { canWrite: boolean })
   const onQueryChange = (v: string) => { setQuery(v); setPage(1); };
   const onFilterChange = (v: string) => { setFilter(v); setPage(1); };
 
-  /** Same behaviour as before the redesign: choosing a status saves it immediately. */
+  /**
+   * Choosing a status saves it immediately, as before - but a CLOSING status (completed/cancelled) now
+   * confirms first and names the request, because it is the only destructive-feeling action this screen has.
+   */
   async function updateStatus(id: string, requestNumber: string, status: string) {
+    if ((closingStatuses as readonly string[]).includes(status)) return setConfirm({ id, requestNumber, status });
+    return applyStatus(id, requestNumber, status);
+  }
+  async function applyStatus(id: string, requestNumber: string, status: string) {
     const r = await sendAdmin(`/api/admin/service-requests/${id}`, "PATCH", { status });
     if (r.ok) {
       toast.success(`${requestNumber} durumu "${serviceStatusLabel[status]}" olarak güncellendi.`);
@@ -103,6 +115,21 @@ export default function ServiceRequestsView({ canWrite }: { canWrite: boolean })
           </>
         )}
       </Panel>
+
+      <ConfirmDialog
+        open={Boolean(confirm)}
+        onOpenChange={(open) => !open && setConfirm(null)}
+        title="Talep Durumu Onayı"
+        description={confirm ? <span><strong>{confirm.requestNumber}</strong> numaralı talep &quot;{serviceStatusLabel[confirm.status]}&quot; olarak kapatılacak. Devam edilsin mi?</span> : null}
+        confirmLabel="Evet, Kaydet"
+        cancelLabel="Vazgeç"
+        variant={confirm?.status === "cancelled" ? "destructive" : "default"}
+        onConfirm={async () => {
+          if (!confirm) return;
+          setConfirm(null);
+          await applyStatus(confirm.id, confirm.requestNumber, confirm.status);
+        }}
+      />
     </>
   );
 }
