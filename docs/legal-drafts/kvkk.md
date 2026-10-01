@@ -41,18 +41,18 @@ Aşağıdaki tablo, Ege Teknik'in fiilen gerçekleştirdiği her işleme faaliye
 
 | # | İşleme faaliyeti | İşlenen veri kategorisi | Toplama yöntemi | Hukuki sebep (KVKK m.5) |
 |---|---|---|---|---|
-| F1 | **Sipariş oluşturma ve sözleşmenin ifası** (sipariş, teslimat, montaj ve servis süreçlerinin yürütülmesi) | Ad-soyad, telefon, e-posta, teslimat adresi (il/ilçe/adres), sipariş edilen ürünler, tutarlar, teslimat ve montaj tercihi, sipariş notu | İnternet sitesi checkout formu ve sipariş özeti ekranı | **m.5/3** — sözleşmenin kurulması ve ifasıyla doğrudan ilgili |
-| F2 | **Ön bilgilendirme ve sözleşme kabulünün kaydı** | Sipariş numarası, kabul edilen belge sürümü, kabul zamanı | Checkout'ta elektronik teyit | **m.5/3** — sözleşmenin ifasıyla doğrudan ilgili; ayrıca ispat güvence amaçlı **m.5/5** |
-| F3 | **Ödeme, fatura ve muhasebe işlemleri** | Sipariş tutarları, ödeme durumu, faturalandırma için gereken bilgiler | Sipariş kaydı üzerinden | **m.5/4** — hukuki yükümlülüğün yerine getirilmesi (vergi/fatura mevzuatı) |
-| F4 | **Cayma, iade, ayıplı mal, servis ve şikâyet yönetimi** | Ad-soyad, telefon, e-posta, talebin içeriği, sipariş bilgisi | İletişim/servis formları, e-posta, telefon | **m.5/3** ve **m.5/5** |
-| F5 | **Müşteri hesabı ve kimlik doğrulama** | Ad-soyad, telefon, e-posta, adres, müşteri hesabı sağlayıcısının kullanıcı kimliği | `/account` sayfası üzerinden | **m.5/3** — hesabın oluşturulması ve hizmetin sunulması |
-| F6 | **Misafir sipariş takibi** | Sipariş numarası ve siparişe kayıtlı e-posta adresi | `order-lookup.html` sayfası | **m.5/3** — tüketicinin kendi siparişine erişim talebi |
-| F7 | **Teknik güvenlik, hız sınırlama ve kötüye kullanımın önlenmesi** | Talebin IP adresi, kullanıcı aracısı bilgisi, istek zamanı | İnternet sitesi formları ve uygulama | **m.5/3** ve **m.5/5**; ayrıca **m.5/6** — temel hak ve özgürlüklerin korunması |
-| F8 | **Yalnızca tercih verilirse ziyaretçi analitiği** | Rastgele ziyaretçi kimliği, görüntülenen sayfa/ürün, cihaz kategorisi, yönlendiren kaynağın alan adı | İnternet sitesi | **m.5/2** — açık rıza (tercih verilmemişse bu faaliyet hiç yürütülmez) |
-| F9 | **Ticari elektronik ileti/pazarlama** | Ad-soyad, e-posta/telefon, tercih kaydı ve kanal | Tercih formu | **m.5/2** — açık rıza; siparişin koşulu değildir |
-| F10 | **Yönetici personeli ve yetkili kullanıcı işlemleri** | Yetkili kullanıcı kimliği, oturum kaydı, işlem denetimi | Yönetim paneli | **m.5/4** ve **m.5/5** |
+| F1 | **Sipariş oluşturma ve sözleşmenin ifası** (sipariş, teslimat, montaj ve servis süreçlerinin yürütülmesi) | Ad-soyad, telefon, e-posta, teslimat adresi (il/ilçe/adres), sipariş edilen ürünler, tutarlar, teslimat ve montaj tercihi, sipariş notu | İnternet sitesi checkout formu ve sipariş özeti ekranı | **m.5/2(c)** — sözleşmenin kurulması veya ifasıyla doğrudan doğruya ilgili olması kaydıyla gerekli olması |
+| F2 | **Ön bilgilendirme ve sözleşme kabulünün kaydı** | Sipariş numarası, kabul edilen belge sürümü, kabul zamanı | Checkout'ta elektronik teyit | **m.5/2(c)** — sözleşmenin ifasıyla doğrudan ilgili olması; ayrıca ispat güvence amacıyla **m.5/2(ç)** |
+| F3 | **Ödeme, fatura ve muhasebe işlemleri** | Sipariş tutarları, ödeme durumu, faturalandırma için gereken bilgiler | Sipariş kaydı üzerinden | **m.5/2(ç)** — veri sorumlusunun hukuki yükümlülüğünü yerine getirebilmesi için zorunlu olması |
+| F4 | **Cayma, iade, ayıplı mal, servis ve şikâyet yönetimi** | Ad-soyad, telefon, e-posta, talebin içeriği, sipariş bilgisi | İletişim/servis formları, e-posta, telefon | **m.5/2(c)** ve **m.5/2(e)** |
+| F5 | **Müşteri hesabı ve kimlik doğrulama** | Ad-soyad, telefon, e-posta, adres, müşteri hesabı sağlayıcısının kullanıcı kimliği | `/account` sayfası üzerinden | **m.5/2(c)** — hesabın oluşturulması ve hizmetin sunulması için gerekli olması |
+| F6 | **Misafir sipariş takibi** | Sipariş numarası ve siparişe kayıtlı e-posta adresi | `order-lookup.html` sayfası | **m.5/2(c)** — sözleşmenin ifasıyla doğrudan ilgili olması |
+| F7 | **Teknik güvenlik, hız sınırlama ve kötüye kullanımın önlenmesi** | Talebin IP adresi, kullanıcı aracısı bilgisi, istek zamanı | İnternet sitesi formları ve uygulama | **m.5/2(f)** — temel hak ve özgürlüklere zarar vermemek kaydıyla meşru menfaat; ayrıca **m.5/2(e)** |
+| F8 | **Yalnızca tercih verilirse ziyaretçi analitiği** | Rastgele ziyaretçi kimliği, görüntülenen sayfa/ürün, cihaz kategorisi, yönlendiren kaynağın alan adı | İnternet sitesi | **m.5/1** — açık rıza (tercih verilmemişse bu faaliyet hiç yürütülmez) |
+| F9 | **Ticari elektronik ileti/pazarlama** | Ad-soyad, e-posta/telefon, tercih kaydı ve kanal | Tercih formu | **m.5/1** — açık rıza; siparişin koşulu değildir |
+| F10 | **Yönetici personeli ve yetkili kullanıcı işlemleri** | Yetkili kullanıcı kimliği, oturum kaydı, işlem denetimi | Yönetim paneli | **m.5/2(ç)** ve **m.5/2(e)** |
 
-**Açık rıza genel bir hukuki sebep olarak kullanılmaz.** F1-F7 faaliyetlerinin hukuki sebebi rıza değil, sözleşme, hukuki yükümlülük, hakkın korunması ve temel hakların korunmasıdır. Açık rıza yalnızca F8 (analitik) ve F9 (pazarlama) faaliyetlerinde, ayrı ve isteğe bağlı bir tercih olarak istenir.
+**Açık rıza genel bir hukuki sebep olarak kullanılmaz.** F1-F7 faaliyetlerinin hukuki sebebi rıza değil, sözleşme, hukuki yükümlülük, hakkın korunması ve temel hakların korunmasıdır. Açık rıza (m.5/1) yalnızca F8 (analitik) ve F9 (pazarlama) faaliyetlerinde, ayrı ve isteğe bağlı bir tercih olarak istenir.
 
 **Özel nitelikli kişisel veri (KVKK m.6) işlenmemektedir.** Sitede sağlık, biyometrik, genetik, etnik köken, siyasi görüş, sendika üyeliği, felsefi/dini inanç veya cinsel yönelim bilgisi hiçbir form alanında talep edilmemekte ve sipariş kaydında tutulmamaktadır. Bu nedenle m.6 için ayrıca yazılı açık rıza alınmaz.
 
