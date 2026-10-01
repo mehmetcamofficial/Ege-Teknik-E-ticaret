@@ -18,6 +18,21 @@ test("the capability matrix mirrors the endpoints that actually exist, not CRUD 
   assert.deepEqual(recordActionsFor("secondHand"), ["edit", "archive", "delete"]);
   assert.deepEqual(recordActionsFor("blogPost"), ["edit", "archive", "delete"]);
   // legal: a draft can be edited, published and deleted; a published version can only be viewed.
+test("structural guard: no test body is left unclosed, and the wiring block stays top-level", () => {
+  // Regression guard. The "RecordActions is keyboard-reachable..." test once lost its closing `});`,
+  // so every declaration after it - including the `screens` table and its generated tests - was
+  // lexically nested inside it. On Node 22 (pinned by .nvmrc, used by CI) the runner then tracked
+  // those as subtests and cancelled them (`cancelledByParent`), failing the quality job; Node 24
+  // tolerated it, so it passed locally. `CALL` is concatenated so this guard cannot match itself.
+  const CALL = "test" + "(";
+  const source = read("tests/admin-record-actions.test.ts");
+  const lines = source.split("\n");
+  assert.equal(lines.filter((l) => l.startsWith(CALL)).length, 19, "nineteen tests must be top-level");
+  // One indented call site inside the loop generates one test per screens entry (four at run time).
+  assert.equal(lines.filter((l) => l.startsWith("  " + CALL)).length, 1, "exactly one loop-generated test call site");
+  assert.ok(lines.some((l) => l.startsWith("const screens")), "the screens table must be declared at top level");
+  assert.ok(lines.some((l) => l.startsWith("for (const [file, keys] of screens)")), "the loop must be top-level");
+});
   assert.deepEqual(recordActionsFor("legalVersion", { published: false }), ["edit", "publish", "delete"]);
   assert.deepEqual(recordActionsFor("legalVersion", { published: true }), ["view"]);
   // taxonomy: PATCH now also renames (name/slug), so "Düzenle" is a real operation.
@@ -76,6 +91,7 @@ test("RecordActions is keyboard-reachable, labelled per record, and wraps on nar
   // A real <button>, not a clickable <div>/<span>: every action renders through <Button>.
   assert.match(ui, /<Button key=\{action\.key\} type="button"/);
   assert.doesNotMatch(ui, /onClick[\s\S]{0,60}<(div|span)/, "no clickable non-button element");
+});
 
 // ---- wiring: each audited screen renders the shared actions -------------------------------------
 const screens: [string, string[]][] = [
@@ -122,8 +138,6 @@ test("every archive/delete action is confirmed, and the dialog keeps the project
   assert.match(ui, /cancelLabel=\{pending\?\.confirm\?\.cancelLabel \?\? "Vazgeç"\}/);
 });
 
-  assert.doesNotMatch(ui, /onClick[\s\S]{0,40}<div/);
-});
 test("RecordActions performs no I/O of its own and never imports server-only code", () => {
   assert.doesNotMatch(ui, /fetch\(|useAdminJson|sendAdmin|@\/db|drizzle-orm|process\.env/);
 });
