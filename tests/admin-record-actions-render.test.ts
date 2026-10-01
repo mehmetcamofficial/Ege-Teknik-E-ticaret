@@ -18,6 +18,23 @@ const SCREENS = {
   orders: "app/admin/(panel)/orders/orders-view.tsx",
 } as const;
 
+test("every test in this file is top-level and self-contained (guards the nested-test CI regression)", () => {
+  // Regression guard: three tests were once nested inside the "Second-hand" test body. On Node 22
+  // (pinned by .nvmrc, used by CI) the runner correctly tracked them as subtests and cancelled them
+  // because the synchronous parent finished first -> `cancelledByParent` and a red quality job. Node 24
+  // tolerated it, so it passed locally and failed only in CI. Each test must therefore be its own
+  // top-level call, and no test body may declare another test.
+  const source = read("tests/admin-record-actions-render.test.ts");
+  // Built by concatenation so this guard never matches its own source text.
+  const CALL = "test" + "(";
+  const lines = source.split("\n");
+  const topLevel = lines.filter((line) => line.startsWith(CALL)).length;
+  assert.equal(topLevel, 7, "all seven tests must be declared at the top level");
+  const nested = lines.filter((line) => !line.startsWith(CALL) && line.includes(CALL));
+  assert.deepEqual(nested, [], "no test call may be declared inside another test body");
+  // No describe/it nesting either, so nothing can inherit a parent lifecycle.
+  assert.doesNotMatch(source, /\bdescribe\(|\bit\(/);
+});
 test("the empty screens render their actions ONLY from real API rows", () => {
   // second-hand and blog render the table only when the list is non-empty.
   const sh = read(SCREENS.secondHand);
@@ -42,6 +59,17 @@ test("Second-hand actions bind to the exact endpoints the route implements", () 
   assert.match(src.match(/async function archive[\s\S]*?\n  \}/)![0], /sendAdmin\(`\/api\/admin\/second-hand\/\$\{id\}`, "DELETE"\)/);
   assert.match(src.match(/async function destroy[\s\S]*?\n  \}/)![0], /sendAdmin\(`\/api\/admin\/second-hand\/\$\{id\}\?hard=1`, "DELETE"\)/);
   // edit is a navigation link, never a mutation.
+  assert.match(actions, /key: "edit" as const, href: `\/admin\/second-hand\/\$\{x\.id\}`/);
+  assert.deepEqual(recordActionsFor("secondHand"), ["edit", "archive", "delete"]);
+  // The hard delete is refused with 409 when a reservation exists; the view surfaces that exact reason,
+  // so an operator is told to archive instead of being given a generic failure.
+  assert.match(src, /recordActionUnavailableReason\.secondHandHasReservations/);
+  assert.match(
+    read("app/api/admin/second-hand/[id]/route.ts"),
+    /secondHandReservations\.productId[\s\S]*status:\s*409/,
+    "the route must refuse a hard delete while a reservation exists"
+  );
+});
 test("Reviews expose exactly the moderation transitions their state machine allows, and nothing else", () => {
   const src = read("app/admin/reviews-admin.tsx");
   const map = src.match(/const actionsFor[\s\S]*?\n\};/)![0];
@@ -75,9 +103,6 @@ test("Orders offer only Görüntüle, pointing at the one detail route that genu
   assert.match(src, /key: "view", href: `\/admin\/orders\/\$\{o\.id\}`/);
   assert.doesNotMatch(src, /key: "(archive|delete)"/);
   assert.deepEqual(recordActionsFor("order"), ["view"]);
-});
-  assert.match(actions, /key: "edit" as const, href: `\/admin\/second-hand\/\$\{x\.id\}`/);
-  assert.deepEqual(recordActionsFor("secondHand"), ["edit", "archive", "delete"]);
 });
 
 test("Blog actions bind to the exact endpoints the route implements", () => {
