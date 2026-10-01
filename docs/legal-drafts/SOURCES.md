@@ -42,7 +42,18 @@ Aşağıdaki şirket bilgileri işletme tarafından resmî şirket kayıtlarınd
 
 - `kvkk.md` §3 faaliyet→şart eşlemesinin genel onayı (atıf yapısı resmî metinden doğrulandı; faaliyet→şart seçimi hukuki değerlendirmedir).
 - Mesafeli Sözleşmeler Yönetmeliği'nin bugünkü **birleşik madde numaraları**; yukarıdaki içerik değişiklik metninden ve Bakanlık rehberinden alınmıştır.
-- **MADDE 1'in (k) bendi** uyuşmazlık çözümünde Tüketici Hakem Heyeti / Tüketici Mahkemesi yanında 6502 sayılı Kanun m.73/A uyarınca **dava açılmadan önce arabuluculuğa başvurma** imkânını da düzenlemektedir. Bu, P3-LEGAL-1 kapsamı dışında bırakılmış ve belge metnine eklenmemiştir; hukukçu kararına bırakılmıştır.
+
+**P3-LEGAL-1.3 — uyuşmazlık/başvuru bilgisi güncellendi (5/1-(k)):**
+
+Aynı değişiklik kararının **MADDE 1**'i, Mesafeli Sözleşmeler Yönetmeliği **5/1-(k)** bendini şu şekilde değiştirmiştir (resmî HTML metninden birebir):
+
+> "k) Tüketicilerin uyuşmazlık konusundaki başvuruları **tüketici hakem heyetine veya Kanunun 73/A maddesi uyarınca dava açmadan önce arabulucuya başvurulması şartı ile tüketici mahkemesine** yapabileceklerine ilişkin bilgi."
+
+Bu madde 1/1/2026 itibarıyla yürürlüktedir (MADDE 5). `pre-information.md` §9, `distance-sales.md` §11 ve `terms.md` §12 bu üçlü başvuru yolunu ve **dava açmadan önce arabulucuya başvurulması şartını** açıkça belirtecek şekilde güncellenmiştir.
+
+Kasıtlı olarak yazılmayanlar: sabit yıllık parasal sınır (Tüketici Hakem Heyeti eşiği yıllara göre değiştiği için metin "uyuşmazlığın doğduğu tarihte yürürlükte olan mevzuat uygulanır" ifadesiyle bağlı tutulmuştur), yetkili mahkeme/il, arabuluculuk ofisi adresi ve bireysel uyuşmazlığa ilişkin hukuki görüş.
+
+**Kapsam konusunda açık bırakılan nokta (hukukçu incelemesine):** Mesafeli Sözleşmeler Yönetmeliği'nin **kapsam (Madde 2)** hükmü, bir malın **kurulum, bakım ve onarımı** ile ilgili sözleşmeler bakımından kapsam dışı olabilmektedir. Bu hükmün güncel metni bu oturumda makine-çekimiyle doğrulanamamıştır. Bu nedenle belgelerde **"her montaj hizmeti Mesafeli Sözleşmeler Yönetmeliği'ne tabidir"** şeklinde genel bir ifade kullanılmamıştır; satış (mal) ile isteğe bağlı montaj hizmetinin hangi düzenlemeye tabi olduğuna ilişkin sözleşme yapısına bağlı sonuç nihai hukuk incelemesine bırakılmıştır. P3-LEGAL-1.1'deki mal/montaj ayrımı ve kaldırılan kurulmuş mal istisnası bu işlemde değiştirilmemiştir.
 
 ## 1. Mesafeli satış / tüketici
 

@@ -115,7 +115,7 @@ Kişisel veriler ayrı KVKK Aydınlatma Metni'nde açıklanan esaslarla işlenir
 
 ## 11. Uyuşmazlık ve iletişim
 
-Alıcı, talep ve şikâyetlerini info@egeteknik.tr veya 0542 795 75 60 üzerinden Satıcı'ya iletebilir. Tüketicinin yürürlükteki mevzuat kapsamında Tüketici Hakem Heyeti ve Tüketici Mahkemesine başvuru hakları saklıdır.
+Alıcı, talep ve şikâyetlerini info@egeteknik.tr veya 0542 795 75 60 üzerinden Satıcı'ya iletebilir. Tüketici, uyuşmazlık konusundaki başvurusunu **tüketici hakem heyetine** veya **6502 sayılı Tüketinin Korunması Hakkında Kanun m.73/A uyarınca dava açmadan önce arabulucuya başvurulması şartı ile tüketici mahkemesine** yapabilir. Tüketici Hakem Heyetinin yıllara göre değişebilen parasal sınırı ve başvuru usulü bu sözleşmede sabitlenmemiştir; uyuşmazlığın doğduğu tarihte yürürlükte olan mevzuat ve yetki kriterleri uygulanır.
 
 ## 12. Yürürlük ve elektronik kayıt
 
