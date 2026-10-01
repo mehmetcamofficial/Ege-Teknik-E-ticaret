@@ -8,8 +8,9 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
-import { sendAdmin, useAdminJson, type Overview } from "@/components/admin/use-admin-data";
-import { publishLabel, publishTone, tryCurrency } from "@/lib/admin-ui";
+import { RecordActions } from "@/components/admin/record-actions";
+import { sendAdmin, useAdminJson, type Overview, type SecondHand } from "@/components/admin/use-admin-data";
+import { publishLabel, publishTone, recordActionUnavailableReason, tryCurrency } from "@/lib/admin-ui";
 
 export default function SecondHandView({ canWrite }: { canWrite: boolean }) {
   const { data, error, loading, reload } = useAdminJson<Overview>("/api/admin/overview");
@@ -28,6 +29,44 @@ export default function SecondHandView({ canWrite }: { canWrite: boolean }) {
     reload();
   }
 
+  /** Soft archive: the existing DELETE without ?hard, which marks the listing sold and zeroes its stock. */
+  async function archive(id: string, name: string) {
+    const r = await sendAdmin(`/api/admin/second-hand/${id}`, "DELETE");
+    if (r.ok) {
+      toast.success(`"${name}" arşivlendi (Satıldı).`);
+      setMessage({ tone: "success", text: `"${name}" arşivlendi (Satıldı).` });
+    } else {
+      toast.error(r.error || "Arşivleme başarısız.");
+      setMessage({ tone: "error", text: r.error || "Arşivleme başarısız." });
+    }
+    reload();
+  }
+  /** Hard delete (?hard=1). The route refuses with 409 when a reservation references the listing. */
+  async function destroy(id: string, name: string) {
+    const r = await sendAdmin(`/api/admin/second-hand/${id}?hard=1`, "DELETE");
+    if (r.ok) {
+      toast.success(`"${name}" kalıcı olarak silindi.`);
+      setMessage({ tone: "success", text: `"${name}" kalıcı olarak silindi.` });
+    } else {
+      toast.error(r.error || recordActionUnavailableReason.secondHandHasReservations);
+      setMessage({ tone: "error", text: r.error || recordActionUnavailableReason.secondHandHasReservations });
+    }
+    reload();
+  }
+
+  /** Mirrors lib/admin-ui.ts recordActionsFor("secondHand"): edit (page), archive (soft), delete (hard). */
+  function actionsFor(x: SecondHand) {
+    return [
+      { key: "edit" as const, href: `/admin/second-hand/${x.id}` },
+      { key: "archive" as const, onClick: () => void archive(x.id, x.name),
+        confirm: { title: "İlanı Arşivleme Onayı", confirmLabel: "Evet, Arşivle",
+          description: <span><strong>{x.name}</strong> ilanı arşivlenecek: &quot;Satıldı&quot; olarak işaretlenir ve stoğu sıfırlanır, ancak kayıt veritabanında kalır. Devam edilsin mi?</span> } },
+      { key: "delete" as const, onClick: () => void destroy(x.id, x.name),
+        confirm: { title: "İlanı Kalıcı Silme Onayı", confirmLabel: "Evet, Kalıcı Sil",
+          description: <span><strong>{x.name}</strong> ilanı kalıcı olarak silinecek; bu işlem geri alınamaz. İlana rezervasyon bağlıysa silme engellenir ve &quot;Arşivle&quot; kullanmanız gerekir.</span> } },
+    ];
+  }
+
   return (
     <>
       <PageHeader title="İkinci El / Outlet" description="Test edilmiş ikinci el ve outlet stokları." actions={canWrite ? <Button asChild><Link href="/admin/second-hand/new"><Plus aria-hidden="true" />Yeni ilan</Link></Button> : null} />
@@ -39,7 +78,7 @@ export default function SecondHandView({ canWrite }: { canWrite: boolean }) {
         ) : (
           <div className="px-1 py-2 sm:px-2">
             <Table>
-              <TableHeader><TableRow><TableHead>İlan</TableHead><TableHead>Kondisyon</TableHead><TableHead className="text-right">Fiyat</TableHead><TableHead className="text-right">Stok</TableHead><TableHead>Durum</TableHead>{canWrite && <TableHead><span className="sr-only">İşlem</span></TableHead>}</TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>İlan</TableHead><TableHead>Kondisyon</TableHead><TableHead className="text-right">Fiyat</TableHead><TableHead className="text-right">Stok</TableHead><TableHead>Durum</TableHead>{canWrite && <TableHead className="text-left">İşlemler</TableHead>}</TableRow></TableHeader>
               <TableBody>
                 {data?.secondHand.map((x) => (
                   <TableRow key={x.id}>
@@ -53,7 +92,7 @@ export default function SecondHandView({ canWrite }: { canWrite: boolean }) {
                           <select id={`sh-status-${x.id}`} className={selectClass} value={x.status} onChange={(e) => updateStatus(x.id, x.name, e.target.value)}><option value="draft">Taslak</option><option value="published">Yayında</option><option value="sold">Satıldı</option></select></>
                       ) : <StatusBadge tone={publishTone[x.status] ?? "neutral"}>{publishLabel[x.status] ?? x.status}</StatusBadge>}
                     </TableCell>
-                    {canWrite && <TableCell className="text-right"><Button asChild variant="outline" size="sm"><Link href={`/admin/second-hand/${x.id}`} aria-label={`${x.name} ilanını düzenle`}>Düzenle</Link></Button></TableCell>}
+                    {canWrite && <TableCell><RecordActions actions={actionsFor(x)} label={`${x.name} ilan işlemleri`} /></TableCell>}
                   </TableRow>
                 ))}
               </TableBody>

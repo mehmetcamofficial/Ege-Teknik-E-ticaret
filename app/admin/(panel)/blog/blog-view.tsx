@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
 import { sendAdmin, useAdminJson } from "@/components/admin/use-admin-data";
+import { RecordActions } from "@/components/admin/record-actions";
+import type { BlogListRow } from "@/lib/blog-db";
 import { publishLabel, publishTone, trDate } from "@/lib/admin-ui";
 import type { BlogListPage } from "@/lib/blog-db";
 
@@ -30,6 +32,44 @@ export default function BlogView({ canWrite }: { canWrite: boolean }) {
     reload();
   }
 
+  /** Soft archive: the existing DELETE without ?hard, which returns the post to draft. */
+  async function archive(id: string, title: string) {
+    const r = await sendAdmin(`/api/admin/blog/${id}`, "DELETE");
+    if (r.ok) {
+      toast.success(`"${title}" arşivlendi (taslağa alındı).`);
+      setMessage({ tone: "success", text: `"${title}" arşivlendi (taslağa alındı).` });
+    } else {
+      toast.error(r.error || "Arşivleme başarısız.");
+      setMessage({ tone: "error", text: r.error || "Arşivleme başarısız." });
+    }
+    reload();
+  }
+  /** Hard delete (?hard=1): the row itself is removed and the audit log keeps the trace. */
+  async function destroy(id: string, title: string) {
+    const r = await sendAdmin(`/api/admin/blog/${id}?hard=1`, "DELETE");
+    if (r.ok) {
+      toast.success(`"${title}" kalıcı olarak silindi.`);
+      setMessage({ tone: "success", text: `"${title}" kalıcı olarak silindi.` });
+    } else {
+      toast.error(r.error || "Kalıcı silme başarısız.");
+      setMessage({ tone: "error", text: r.error || "Kalıcı silme başarısız." });
+    }
+    reload();
+  }
+
+  /** Mirrors lib/admin-ui.ts recordActionsFor("blogPost"). The status <select> above stays the publish control. */
+  function actionsFor(p: BlogListRow) {
+    return [
+      { key: "edit" as const, href: `/admin/blog/${p.id}` },
+      { key: "archive" as const, onClick: () => void archive(p.id, p.title),
+        confirm: { title: "Yazıyı Arşivleme Onayı", confirmLabel: "Evet, Arşivle",
+          description: <span><strong>{p.title}</strong> yazısı arşivlenecek: &quot;{p.status === "published" ? "Yayından kaldırılıp taslağa alınacak" : "Taslak olarak kalacak"}&quot; ve mağazada görünmeyecek. Kayıt silinmez. Devam edilsin mi?</span> } },
+      { key: "delete" as const, onClick: () => void destroy(p.id, p.title),
+        confirm: { title: "Yazıyı Kalıcı Silme Onayı", confirmLabel: "Evet, Kalıcı Sil",
+          description: <span><strong>{p.title}</strong> yazısı kalıcı olarak silinecek. Yazı içeriği geri getirilemez; yalnızca denetim kaydı kalır. Emin misiniz?</span> } },
+    ];
+  }
+
   return (
     <>
       <PageHeader title="Blog" description="Mağazada yayınlanan rehber ve haber yazıları." actions={canWrite ? <Button asChild><Link href="/admin/blog/new"><Plus aria-hidden="true" />Yeni yazı</Link></Button> : null} />
@@ -42,7 +82,7 @@ export default function BlogView({ canWrite }: { canWrite: boolean }) {
           <>
             <div className="px-1 py-2 sm:px-2">
               <Table>
-                <TableHeader><TableRow><TableHead>Başlık</TableHead><TableHead>Durum</TableHead><TableHead>Yayın tarihi</TableHead><TableHead>Son güncelleme</TableHead>{canWrite && <TableHead><span className="sr-only">İşlem</span></TableHead>}</TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Başlık</TableHead><TableHead>Durum</TableHead><TableHead>Yayın tarihi</TableHead><TableHead>Son güncelleme</TableHead>{canWrite && <TableHead className="text-left">İşlemler</TableHead>}</TableRow></TableHeader>
                 <TableBody>
                   {data?.rows.map((p) => (
                     <TableRow key={p.id}>
@@ -55,7 +95,7 @@ export default function BlogView({ canWrite }: { canWrite: boolean }) {
                       </TableCell>
                       <TableCell>{trDate(p.publishedAt)}</TableCell>
                       <TableCell>{trDate(p.updatedAt)}</TableCell>
-                      {canWrite && <TableCell className="text-right"><Button asChild variant="outline" size="sm"><Link href={`/admin/blog/${p.id}`} aria-label={`${p.title} yazısını düzenle`}>Düzenle</Link></Button></TableCell>}
+                      {canWrite && <TableCell><RecordActions actions={actionsFor(p)} label={`${p.title} yazı işlemleri`} /></TableCell>}
                     </TableRow>
                   ))}
                 </TableBody>

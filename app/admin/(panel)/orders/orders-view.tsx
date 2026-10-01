@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
+import { RecordActions } from "@/components/admin/record-actions";
 import { useAdminJson } from "@/components/admin/use-admin-data";
 import { orderStatusLabel, orderStatusTone, paymentStatusLabel, trDate, tryCurrency } from "@/lib/admin-ui";
 import type { OrderListPage } from "@/lib/orders-db";
@@ -49,7 +49,7 @@ export default function OrdersView() {
           <>
             <div className="px-1 pb-2 sm:px-2">
               <Table>
-                <TableHeader><TableRow><TableHead>Sipariş</TableHead><TableHead>Tarih</TableHead><TableHead>Müşteri</TableHead><TableHead className="text-right">Tutar</TableHead><TableHead>Ödeme</TableHead><TableHead>Durum</TableHead><TableHead><span className="sr-only">Detay</span></TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Sipariş</TableHead><TableHead>Tarih</TableHead><TableHead>Müşteri</TableHead><TableHead className="text-right">Tutar</TableHead><TableHead>Ödeme</TableHead><TableHead>Durum</TableHead><TableHead className="text-left">İşlemler</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {(data?.rows ?? []).map((o) => (
                     <TableRow key={o.id}>
@@ -59,7 +59,9 @@ export default function OrdersView() {
                       <TableCell className="text-right tabular-nums">{tryCurrency(o.total)}</TableCell>
                       <TableCell>{paymentStatusLabel[o.paymentStatus] ?? o.paymentStatus}</TableCell>
                       <TableCell><StatusBadge tone={orderStatusTone[o.status] ?? "neutral"}>{orderStatusLabel[o.status] ?? o.status}</StatusBadge></TableCell>
-                      <TableCell className="text-right"><Button asChild variant="outline" size="sm"><Link href={`/admin/orders/${o.id}`} aria-label={`${o.orderNumber} siparişinin detayı`}>Detay</Link></Button></TableCell>
+                      <TableCell>
+                        <RecordActions actions={[{ key: "view", href: `/admin/orders/${o.id}` }]} label={`${o.orderNumber} sipariş işlemleri`} align="start" />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

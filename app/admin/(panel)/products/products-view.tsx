@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
 import { deliveryClassBadge } from "@/lib/delivery-classes";
 import { getBlockedProductInfo } from "@/lib/catalog-visibility";
-import { sendAdmin, useAdminJson, type Overview } from "@/components/admin/use-admin-data";
+import { sendAdmin, useAdminJson, type Overview, type Product } from "@/components/admin/use-admin-data";
+import { RecordActions } from "@/components/admin/record-actions";
 import { publishLabel, publishTone, stockLabel, stockLevel, stockTone, tryCurrency } from "@/lib/admin-ui";
 
 const collator = new Intl.Collator("tr");
@@ -49,6 +50,32 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
     reload();
   }
 
+  /**
+   * Archive = the EXISTING product DELETE, which is a soft archive (status draft + saleMode out_of_stock
+   * + stock 0). There is deliberately no hard-delete endpoint for products, so no "Sil" is offered here.
+   */
+  async function archive(id: string, name: string) {
+    const r = await sendAdmin(`/api/admin/products/${id}`, "DELETE");
+    if (r.ok) {
+      toast.success(`"${name}" arşivlendi.`);
+      setMessage({ tone: "success", text: `"${name}" arşivlendi: taslağa alındı ve stoğu sıfırlandı.` });
+    } else {
+      toast.error(r.error || "Arşivleme başarısız.");
+      setMessage({ tone: "error", text: r.error || "Arşivleme başarısız." });
+    }
+    reload();
+  }
+
+  /** Mirrors lib/admin-ui.ts recordActionsFor("product"): edit + archive, never delete. */
+  function actionsFor(p: Product) {
+    return [
+      { key: "edit" as const, href: `/admin/products/${p.id}` },
+      { key: "archive" as const, onClick: () => void archive(p.id, p.name),
+        confirm: { title: "Ürünü Arşivleme Onayı", confirmLabel: "Evet, Arşivle",
+          description: <span><strong>{p.name}</strong> arşivlenecek: &quot;Taslak&quot; yapılır, satış biçimi &quot;Stok dışı&quot; olur ve stok sıfırlanır. Ürün kaydı ve geçmişi veritabanında korunur; mağazada görünmez olur.</span> } },
+    ];
+  }
+
   return (
     <>
       <PageHeader
@@ -85,7 +112,7 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
         ) : (
           <div className="px-1 pb-2 sm:px-2">
             <Table>
-              <TableHeader><TableRow><TableHead>Ürün</TableHead><TableHead>Kategori</TableHead><TableHead className="text-right">Fiyat</TableHead><TableHead>Stok</TableHead><TableHead>Durum</TableHead>{canWrite && <TableHead className="sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.18)]"><span className="sr-only">İşlem</span></TableHead>}</TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Ürün</TableHead><TableHead>Kategori</TableHead><TableHead className="text-right">Fiyat</TableHead><TableHead>Stok</TableHead><TableHead>Durum</TableHead>{canWrite && <TableHead className="sticky right-0 bg-card text-left shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.18)]">İşlemler</TableHead>}</TableRow></TableHeader>
               <TableBody>
                 {rows.map((p) => {
                   const level = stockLevel(p);
@@ -103,7 +130,7 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
                         </div>
                         {blocked && <p className="mt-1 text-xs text-muted-foreground">{blocked.reasons.join("; ")}</p>}
                       </TableCell>
-                      {canWrite && <TableCell className="text-right sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.18)]"><Button asChild variant="outline" size="sm"><Link href={`/admin/products/${p.id}`} aria-label={`${p.name} ürününü düzenle`}>Düzenle</Link></Button></TableCell>}
+                      {canWrite && <TableCell className="sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.18)]"><RecordActions actions={actionsFor(p)} label={`${p.name} ürün işlemleri`} /></TableCell>}
                     </TableRow>
                   );
                 })}
