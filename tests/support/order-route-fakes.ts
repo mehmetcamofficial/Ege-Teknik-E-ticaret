@@ -13,7 +13,8 @@
  * Not a *.test.ts file, so the test runner's glob does not execute it on its own.
  */
 import { getTableName, type Table } from "drizzle-orm";
-import { containsCardData, isValidIdempotencyKey } from "../../lib/security-policy.ts";
+import { createHash } from "node:crypto";
+import { containsCardData, isValidIdempotencyKey, trustedClientIp } from "../../lib/security-policy.ts";
 
 type Row = Record<string, unknown>;
 export type Write = { kind: "insert" | "update"; table: string; values: unknown };
@@ -30,6 +31,8 @@ export const state = {
   storeCalls: [] as string[],
   /** What each handler asked of the limiter - observed, never simulated. */
   rateLimitCalls: [] as { request: Request; scope: string; limit: number; windowMs: number }[],
+  /** When set, the fake limiter refuses exactly as the real one does: same status, same shared message. */
+  rateLimitRefusal: null as { status: number; message: string } | null,
 };
 
 export function resetState() {
@@ -42,6 +45,7 @@ export function resetState() {
   state.lookupItems = [];
   state.storeCalls.length = 0;
   state.rateLimitCalls.length = 0;
+  state.rateLimitRefusal = null;
 }
 
 type Settle = (calls: ReadonlyMap<string, unknown[]>) => unknown;
@@ -117,6 +121,15 @@ export async function loadCurrentLegalIndex() {
 }
 
 // ---- "@/lib/request-security" (same rule as the real module, with the real validator) ---------------
+/** The real module exports this too. Mirrored here so a route that reaches for it is exercised rather
+ *  than failed at import time; the identity is the REAL P3-S1A one and the salted-hash contract, salt
+ *  length included, is the real one. */
+export async function hashClientIp(request: Request) {
+  const secret = process.env.IP_HASH_SALT;
+  if (!secret || secret.length < 32) throw new Error("IP_HASH_SALT must contain at least 32 characters");
+  return createHash("sha256").update(`${secret}:${trustedClientIp(request.headers)}`).digest("hex");
+}
+
 export function idempotencyKey(request: Request) {
   const value = request.headers.get("idempotency-key")?.trim();
   return isValidIdempotencyKey(value) ? value! : null;
@@ -126,6 +139,8 @@ export function idempotencyKey(request: Request) {
 /** Records how the handler limits itself; the real limiter's semantics are covered by tests/rate-limit-atomic.test.ts. */
 export async function rateLimit(request: Request, scope: string, limit: number, windowMs: number) {
   state.rateLimitCalls.push({ request, scope, limit, windowMs });
+  // Optional: refuse the way the real limiter does, so a route's 429 path can actually be executed.
+  if (state.rateLimitRefusal) throw new HttpError(state.rateLimitRefusal.status, state.rateLimitRefusal.message);
 }
 /** Card data is refused by the REAL detector (lib/security-policy.ts), exactly as production does. */
 export async function readJson(request: Request) {
