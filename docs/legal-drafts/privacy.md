@@ -10,7 +10,7 @@ Bu politika, Ege Teknik internet sitesini kullandığınızda hangi bilgilerin h
 **Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi**
 
 - Ticari ad: Ege Teknik
-- Adres: İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+- Adres: Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın
 - Vergi dairesi: Kuşadası
 - E-posta: info@egeteknik.tr
 - Telefon: 0542 795 75 60
@@ -94,7 +94,7 @@ Hiçbir internet sistemi mutlak güvenlik garantisi vermez. Şüpheli bir güven
 KVKK kapsamındaki haklarınız ve başvuru usulü ayrı **KVKK Aydınlatma Metni**nde açıklanır. Başvuru kanalları:
 
 - info@egeteknik.tr
-- İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, Kuşadası/Aydın
+- Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın
 
 ## 10. Değişiklikler
 

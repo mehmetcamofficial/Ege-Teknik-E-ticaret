@@ -19,7 +19,7 @@
 - ☐ **E-posta** ile ({{EPOSTA}})
 - ☐ **WhatsApp** ile ({{TELEFON}})
 
-Bu izin; Ege Teknik'in (İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın · info@egeteknik.tr ·
+Bu izin; Ege Teknik'in (Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi, VKN 3250963985, MERSİS 0325096398500001, Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın · info@egeteknik.tr ·
 0542 795 75 60) yukarıda işaretlediğim kanallarla bana ticari elektronik ileti göndermesi içindir. Dilediğim zaman, ücretsiz olarak, aynı kanaldan
 veya info@egeteknik.tr adresinden izni geri alabilirim; bu durumda yeni ileti gönderilmez. İzin vermemem veya geri almam, satın alma veya hizmet
 haklarımı etkilemez.

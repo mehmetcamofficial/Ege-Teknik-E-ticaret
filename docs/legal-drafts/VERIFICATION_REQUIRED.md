@@ -24,22 +24,24 @@ Sorumlu kısaltmaları: **İŞ** işletme · **MM** mali müşavir · **AV** huk
 
 | # | Alan | Durum | Kim / kanıt |
 |---|---|---|---|
-| B1 | MERSİS numarası | PENDING | MM/şirket kayıtları |
-| B2 | KEP adresi | PENDING | MM/şirket kayıtları; yoksa “yok” olarak teyit |
-| B3 | Ticaret sicil no / oda bilgisi gerekiyorsa | PENDING | MM/RESMÎ |
-| B4 | e-Fatura / e-Arşiv statüsü | PENDING | MM |
+| B1 | MERSİS numarası | **VERIFIED (P3-LEGAL-1.2)** | 0325096398500001 — şirket kayıtlarından doğrulandı |
+| B2 | KEP adresi | **PENDING** | Hâlâ doğrulanmadı. **Elektronik Bildirim Adresi KEP adresi sayılmaz**; ayrıca teyit gerekir |
+| B3 | Ticaret sicil no | **VERIFIED (P3-LEGAL-1.2)** | 10388 |
+| B4 | e-Fatura / e-Arşiv statüsü | **PARTIAL (P3-LEGAL-1.2)** | e-Fatura mükellefi: **EVET**, geçiş tarihi **01.07.2023**. e-Arşiv ve özel entegratör hâlâ **PENDING** |
 | B5 | e-belge özel entegratörü / muhasebe yazılımı | PENDING | MM |
 | B6 | 2025 yıllık mali bilanço toplamı 100 milyon TL altında mı? | PENDING | MM |
 | B7 | Yıllık çalışan sayısı 50'den az mı? | PENDING | MM/İŞ |
 | B8 | VERBİS kayıt/istisna sonucu | PENDING LEGAL/ACCOUNTANT | B6+B7 ve güncel Kurul kriterleriyle kesinleştir |
 
-**Public repo kuralı:** VKN gibi şirket kimlik numaralarının açık değeri bu repository'ye yazılmaz. Production legal version için gerekliyse doğrulanmış resmî kaynaktan kontrollü olarak eklenir.
+**E-Fatura / e-İrsaliye (P3-LEGAL-1.2):** e-Fatura mükellefi **EVET** (geçiş 01.07.2023); e-İrsaliye mükellefi **EVET**. Bu bilgiler doğrulanmış şirket kaydından gelmiştir; e-Arşiv ve e-belge entegratörü ayrıca PENDING'dir.
+
+**Public repo kuralı (P3-LEGAL-1.2 ile güncellendi):** MERSİS numarası ve VKN artık doğrulanmış resmî şirket kaydından gelmektedir ve bu Release Candidate belgelerine işlenmiştir. Luca PK/GB posta kutusu tanımlayıcıları ile şirket temsilcisinin kişisel bilgileri müşteri-facing belgelerde yayımlanmaz; KEP adresi doğrulanana kadar eklenmez.
 
 ## C. ETBİS
 
 | # | Alan | Durum | Eylem |
 |---|---|---|---|
-| C1 | `egeteknik.tr` ETBİS kaydı | BLOCKER | e-Devlet/ETBİS üzerinden şirket/domain kaydı oluştur veya doğrula |
+| C1 | `egeteknik.tr` ETBİS kaydı | **BLOCKER (PENDING)** | Doğrulanmadı; ETBİS üzerinden şirket/domain kaydı oluşturulmalı veya teyit edilmeli |
 | C2 | ETBİS kimlik/domain eşleşmesi | PENDING | Şirket unvanı, MERSİS/VKN ve alan adını karşılaştır |
 | C3 | ETBİS kayıt kanıtı | PENDING | İç kayıt olarak ekran görüntüsü/PDF/tarih sakla |
 
