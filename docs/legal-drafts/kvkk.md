@@ -35,40 +35,49 @@ Ege Teknik ile kurduğunuz ilişkiye göre aşağıdaki veriler işlenebilir:
 
 Kart numarası ve CVV gibi ödeme kartı doğrulama bilgileri Ege Teknik uygulama veritabanında saklanacak şekilde tasarlanmamıştır. Kartlı ödeme aktif edildiğinde ödeme işlemi yetkili ödeme hizmeti sağlayıcısının güvenli altyapısı üzerinden yürütülür.
 
-## 3. Toplama yöntemleri ve işleme amaçları
+## 3. İşleme faaliyetleri, toplama yöntemleri ve hukuki sebepleri
 
-Kişisel veriler internet sitesi, müşteri hesabı, sipariş ve iletişim formları, telefon, e-posta, WhatsApp ve teslimat/montaj/servis süreçleri üzerinden elektronik veya gerektiğinde fiziksel yollarla elde edilebilir.
+Aşağıdaki tablo, Ege Teknik'in fiilen gerçekleştirdiği her işleme faaliyetini; işlenen veri kategorisi, işleme amacı, veri toplama yöntemi ve hukuki sebebiyle birlikte gösterir. Tablo yalnızca uygulamada gerçekten bulunan faaliyetleri içerir; gerçekleşmeyen bir işleme veya aktarım bu metinde yer almaz.
 
-Veriler, uygun olduğu ölçüde aşağıdaki amaçlarla işlenebilir:
+| # | İşleme faaliyeti | İşlenen veri kategorisi | Toplama yöntemi | Hukuki sebep (KVKK m.5) |
+|---|---|---|---|---|
+| F1 | **Sipariş oluşturma ve sözleşmenin ifası** (sipariş, teslimat, montaj ve servis süreçlerinin yürütülmesi) | Ad-soyad, telefon, e-posta, teslimat adresi (il/ilçe/adres), sipariş edilen ürünler, tutarlar, teslimat ve montaj tercihi, sipariş notu | İnternet sitesi checkout formu ve sipariş özeti ekranı | **m.5/3** — sözleşmenin kurulması ve ifasıyla doğrudan ilgili |
+| F2 | **Ön bilgilendirme ve sözleşme kabulünün kaydı** | Sipariş numarası, kabul edilen belge sürümü, kabul zamanı | Checkout'ta elektronik teyit | **m.5/3** — sözleşmenin ifasıyla doğrudan ilgili; ayrıca ispat güvence amaçlı **m.5/5** |
+| F3 | **Ödeme, fatura ve muhasebe işlemleri** | Sipariş tutarları, ödeme durumu, faturalandırma için gereken bilgiler | Sipariş kaydı üzerinden | **m.5/4** — hukuki yükümlülüğün yerine getirilmesi (vergi/fatura mevzuatı) |
+| F4 | **Cayma, iade, ayıplı mal, servis ve şikâyet yönetimi** | Ad-soyad, telefon, e-posta, talebin içeriği, sipariş bilgisi | İletişim/servis formları, e-posta, telefon | **m.5/3** ve **m.5/5** |
+| F5 | **Müşteri hesabı ve kimlik doğrulama** | Ad-soyad, telefon, e-posta, adres, müşteri hesabı sağlayıcısının kullanıcı kimliği | `/account` sayfası üzerinden | **m.5/3** — hesabın oluşturulması ve hizmetin sunulması |
+| F6 | **Misafir sipariş takibi** | Sipariş numarası ve siparişe kayıtlı e-posta adresi | `order-lookup.html` sayfası | **m.5/3** — tüketicinin kendi siparişine erişim talebi |
+| F7 | **Teknik güvenlik, hız sınırlama ve kötüye kullanımın önlenmesi** | Talebin IP adresi, kullanıcı aracısı bilgisi, istek zamanı | İnternet sitesi formları ve uygulama | **m.5/3** ve **m.5/5**; ayrıca **m.5/6** — temel hak ve özgürlüklerin korunması |
+| F8 | **Yalnızca tercih verilirse ziyaretçi analitiği** | Rastgele ziyaretçi kimliği, görüntülenen sayfa/ürün, cihaz kategorisi, yönlendiren kaynağın alan adı | İnternet sitesi | **m.5/2** — açık rıza (tercih verilmemişse bu faaliyet hiç yürütülmez) |
+| F9 | **Ticari elektronik ileti/pazarlama** | Ad-soyad, e-posta/telefon, tercih kaydı ve kanal | Tercih formu | **m.5/2** — açık rıza; siparişin koşulu değildir |
+| F10 | **Yönetici personeli ve yetkili kullanıcı işlemleri** | Yetkili kullanıcı kimliği, oturum kaydı, işlem denetimi | Yönetim paneli | **m.5/4** ve **m.5/5** |
 
-- siparişin kurulması ve yerine getirilmesi,
-- ürün teslimatı, klima montajı ve servis süreçlerinin yürütülmesi,
-- cayma, iade, ayıplı mal ve müşteri taleplerinin yönetilmesi,
-- fatura, muhasebe ve diğer hukuki yükümlülüklerin yerine getirilmesi,
-- müşteri hesabı ve kimlik doğrulama işlemleri,
-- bilgi güvenliği, kötüye kullanımın önlenmesi ve teknik sorunların teşhisi,
-- uyuşmazlıklarda hakların tesisi, kullanılması veya korunması.
+**Açık rıza genel bir hukuki sebep olarak kullanılmaz.** F1-F7 faaliyetlerinin hukuki sebebi rıza değil, sözleşme, hukuki yükümlülük, hakkın korunması ve temel hakların korunmasıdır. Açık rıza yalnızca F8 (analitik) ve F9 (pazarlama) faaliyetlerinde, ayrı ve isteğe bağlı bir tercih olarak istenir.
 
-İşleme faaliyetine göre KVKK'da düzenlenen sözleşmenin kurulması veya ifasıyla doğrudan ilgili olma, hukuki yükümlülüğün yerine getirilmesi, bir hakkın tesisi/kullanılması/korunması ve temel hak ve özgürlüklere zarar vermemek kaydıyla meşru menfaat gibi uygun işleme şartları esas alınabilir.
+**Özel nitelikli kişisel veri (KVKK m.6) işlenmemektedir.** Sitede sağlık, biyometrik, genetik, etnik köken, siyasi görüş, sendika üyeliği, felsefi/dini inanç veya cinsel yönelim bilgisi hiçbir form alanında talep edilmemekte ve sipariş kaydında tutulmamaktadır. Bu nedenle m.6 için ayrıca yazılı açık rıza alınmaz.
 
 Ticari elektronik ileti/pazarlama izni siparişten ve bu aydınlatmadan ayrıdır. Pazarlama izninin verilmemesi sipariş verilmesini engellemez.
 
-## 4. Alıcı grupları ve teknik hizmet sağlayıcıları
+## 4. Alıcı grupları ve aktarımın amacı
 
-İşlemin gerektirdiği ölçüde ve uygun hukuki şartların bulunması halinde kişisel veriler;
+Aşağıdaki tablo, verilerin **fiilen aktarıldığı** alıcı gruplarını ve aktarım amacını gösterir. Durum sütunu, aktarımın o sağlayıcı fiilen devrede olduğu anlamına gelir.
 
-- teslimat/kargo hizmet sağlayıcılarına,
-- ödeme hizmeti sağlayıcılarına,
-- yetkili servis veya montaj hizmeti sağlayıcılarına,
-- mali müşavir, muhasebe ve e-belge hizmet sağlayıcılarına,
-- bilgi teknolojileri, barındırma, veritabanı, kimlik doğrulama ve güvenlik hizmet sağlayıcılarına,
-- kanunen yetkili kamu kurumları ile adli/idari mercilere
+| Alıcı grup | Aktarım amacı | Durum |
+|---|---|---|
+| Vercel — barındırma/deployment | Uygulamanın çalıştırılması, isteklerin işlenmesi | **Aktif** |
+| Neon — PostgreSQL veritabanı barındırma | Sipariş, müşteri, talep, güvenlik ve içerik kayıtlarının saklanması | **Aktif** |
+| Clerk — müşteri hesabı/kimlik doğrulama | Yalnızca `/account` özelliği kullanıldığında hesap oluşturma ve oturum yönetimi | **Koşula bağlı** |
+| Resend — e-posta gönderimi | Yalnızca e-posta gönderimi yapılandırıldığında davet/parola sıfırlama ve bildirim e-postaları | **Koşula bağlı** |
+| Sentry — hata izleme/teşhis | Yalnızca Sentry DSN yapılandırıldığında hata ve performans telemetrisi | **Koşula bağlı** |
+| Ödeme hizmeti sağlayıcısı | Yalnızca kartlı ödeme aktif olduğunda ödeme işleminin yürütülmesi; kart doğrulama bilgileri Ege Teknik'e aktarılmaz | **Aktif değil** |
+| Teslimat/kargo veya montaj taşıyıcısı | Yalnızca ilgili hizmet sağlayıcı fiilen görevlendirildiğinde ad-soyad, adres ve iletişim bilgisi | **Aktif değil** |
+| Yetkili montaj/servis sağlayıcısı | Yalnızca montaj/servis fiilen yönlendirildiğinde adres ve randevu bilgisi | **Aktif değil** |
+| Mali müşavir, muhasebe ve e-belge sağlayıcısı | Faturalama ve muhasebe işlemleri için ilgili kayıtlar | **Aktif değil** |
+| Kanunen yetkili kamu kurumları ile adli/idari merciler | Hukuki yükümlülük, talep ve uyuşmazlık hâllerinde | **Yasal zorunluluk** |
 
-aktarılabilir veya bu hizmetlerin sunulması kapsamında erişilebilir hale gelebilir.
+"Aktif değil" satırlarındaki sağlayıcıların devreye alınması hâlinde aktarım kapsamı ve amacı bu metnin yeni bir sürümüyle güncellenir. Gerçekleşmeyen bir aktarım, metinde var olan bir alıcı gibi gösterilmez.
 
-Mevcut teknik mimaride Vercel barındırma/deployment, Neon PostgreSQL veritabanı ve Clerk müşteri hesabı/kimlik doğrulama hizmetlerinde kullanılmaktadır.
-
-Sentry, hata izleme ve teknik teşhis amacıyla geçici deneme kapsamında kullanılmaktadır. Sentry entegrasyonunda veri minimizasyonu uygulanmakta; uygulama yapılandırmasında kullanıcı bilgisinin ve HTTP request body içeriğinin telemetry'ye kasıtlı olarak eklenmesi kapatılmış, performans izleme örnekleme oranı sınırlandırılmıştır. Deneme sona erdiğinde Sentry kapatılabilir ve bu metin yeni sürümle güncellenir.
+**Sentry hakkında fiili durum.** Hata izleme yalnızca Sentry DSN değişkeni yapılandırılmışsa etkindir. Yapılandırmada kullanıcı bilgisi (userInfo) kapatılmış, HTTP istek/yanıt gövdeleri (httpBodies) toplama dışı bırakılmış ve performans izleme örnekleme oranı sınırlandırılmıştır. Bu ayarlar dışında kalan Sentry veri kategorileri (çerez, HTTP başlıkları, URL sorgu parametreleri, veritabanı sorgu ayrıntıları) sağlayıcının varsayılan toplama davranışıyla işlenir. Deneme sona erdiğinde Sentry kapatılır ve bu metin yeni sürümle güncellenir.
 
 ## 5. Yurt dışına veri aktarımı
 

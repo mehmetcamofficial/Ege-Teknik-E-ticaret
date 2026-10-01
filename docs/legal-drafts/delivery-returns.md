@@ -92,9 +92,9 @@ Tüketici, cayma bildirimini yönelttiği tarihten itibaren **14 gün içerisind
 
 ## 8. Geri ödeme
 
-Geçerli bir cayma halinde geri ödeme, yürürlükteki Mesafeli Sözleşmeler Yönetmeliği ve ilgili mevzuata uygun şekilde yapılır.
+Geçerli bir cayma hâlinde geri ödeme, satıcının teslimat masrafları dâhil ödemelerin tamamını **14 gün içinde** iade etmesi kuralı uyarınca yapılır. Geri ödeme, tüketicinin satın alma sırasında kullandığı ödeme aracına uygun olarak, ürün taksitle satın alınmış olsa dahi tek seferde ve tüketicinin ilave masraf veya yükümlülük taşımadığı şekilde gerçekleştirilir.
 
-Mal iadesinin hangi taşıyıcıyla yapıldığına ve ürünün henüz teslim edilip edilmediğine göre iade süresinin başlangıcı mevzuattaki güncel kurallara göre belirlenir. İade, kullanılan ödeme aracına uygun şekilde ve tüketiciye ilave masraf yüklemeyecek biçimde gerçekleştirilir.
+İade süresinin başlangıcı, iadenin hangi taşıyıcıyla yapıldığına ve ürünün henüz teslim edilip edilmediğine göre mevzuattaki güncel kurallara göre belirlenir: mal kargoya teslim edildiği tarihten itibaren işlemeye başlar; iade ön bilgilendirmede belirtilenden farklı bir kargo şirketiyle yapılmışsa ürünün satıcıya ulaştığı tarihte başlar; henüz teslim edilmemiş ürünlerde ise cayma bildiriminin iletildiği tarihten itibaren başlar.
 
 ## 9. Cayma hakkı istisnaları
 

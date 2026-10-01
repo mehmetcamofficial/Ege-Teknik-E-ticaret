@@ -90,13 +90,11 @@ Satıcı malı kendisinin geri alacağını teklif etmedikçe Alıcı, cayma bil
 
 İade için anlaşmalı taşıyıcı henüz kesinleşmemiştir. Ön bilgilendirmede iade için taşıyıcı belirtilmemiş olması halinde tüketici iadeye ilişkin masraflardan sorumlu tutulmaz. Taşıyıcı kesinleştiğinde yeni belge sürümü yayımlanır.
 
-Geri ödemeler yürürlükteki mevzuatta öngörülen süre ve koşullarda, tüketicinin satın alma sırasında kullandığı ödeme aracına uygun ve tüketiciye ilave masraf yüklemeyecek şekilde gerçekleştirilir.
+Geri ödeme, satıcının teslimat masrafları dâhil ödemelerin tamamını **14 gün içinde** iade etmesi kuralı uyarınca yapılır. Bu süre, tüketicinin malı kargoya teslim ettiği tarihten itibaren başlar; iade işlemi ön bilgilendirmede belirtilenden farklı bir kargo şirketiyle yapılmışsa süre, ürünün satıcıya ulaştığı tarihte başlar. Henüz teslim edilmemiş ürünlerde ise süre, tüketicinin cayma bildirimini ilettiği tarihten itibaren işlemeye başlar. Geri ödeme, tüketicinin satın alma sırasında kullandığı ödeme aracına uygun olarak, ürün taksitle satın alınmış olsa dahi tek seferde ve tüketicinin ilave masraf veya yükümlülük taşımadığı şekilde gerçekleştirilir.
 
 ### 7.1. Cayma hakkı istisnaları
 
-Cayma hakkının bulunmadığı durumlar yürürlükteki mevzuata göre uygulanır. Bunlar arasında ilgili şartların gerçekleşmesi halinde tüketicinin özel istek/ihtiyaçlarına göre hazırlanan mallar, sağlık-hijyen nedeniyle iadesi uygun olmayan ve koruyucu unsurları açılmış mallar, tüketicinin onayıyla cayma süresi dolmadan ifasına başlanan hizmetler ve tanıtma/kullanma kılavuzunda satıcı veya yetkili servis tarafından kurulum/montaj yapılacağı belirtilen ve kurulumu/montajı gerçekleştirilmiş mallar bulunabilir.
-
-Bir istisnanın somut ürüne uygulanabilirliği ürünün niteliğine ve yürürlükteki mevzuata göre değerlendirilir; "Spot Ürün" etiketi tek başına cayma hakkını kaldırmaz.
+Cayma hakkının bulunmadığı durumlar yürürlükteki mevzuata uygulanır. Bunlar arasında ilgili şartların gerçekleşmesi hâlinde tüketicinin özel istek/ihtiyaçlarına göre hazırlanan mallar, sağlık-hijyen nedeniyle iadesi uygun olmayan ve koruyucu unsurları açılmış mallar, tüketicinin onayıyla cayma süresi dolmadan ifasına başlanan hizmetler ve tanıtma/kullanma kılavuzunda satıcı veya yetkili servis tarafından kurulum/montaj yapılacağı belirtilen ve kurulumu/montajı gerçekleştirilmiş mallar sayılabilir. Bir istisnanın somut ürüne uygulanabilirliği ürünün niteliğine ve yürürlükteki mevzuata göre değerlendirilir; hiçbir istisna tüm klima satışlarını kapsayan otomatik bir genel kural olarak yorumlanmaz. "Spot Ürün" etiketi tek başına cayma hakkını kaldırmaz.
 
 ## 8. Spot Ürünler
 

@@ -4,6 +4,22 @@
 >
 > Bu dosya müşteri-facing legal metin değildir. Amaç, release candidate metinlerde kullanılan başlıca resmî kaynakları ve hangi noktalarda ayrıca hukukçu/işletme doğrulaması gerektiğini kaydetmektir. Random sözleşme şablonları kaynak olarak kullanılmaz.
 
+## 0. P3-LEGAL-1 (1 Ekim 2026) doğrulama kaydı
+
+Bu turda yalnızca birincil resmî kaynaklar kullanıldı; hukukçu blogu veya SEO içeriği kaynak olarak alınmadı.
+
+**Bu turda doğrudan alıntılanarak doğrulanan kaynaklar:**
+
+| Kaynak | URL | Alınan doğrulama |
+|---|---|---|
+| T.C. Ticaret Bakanlığı, Tüketicinin Korunması ve Piyasa Gözetimi GD — "Mesafeli Sözleşmeler Hakkında Bilgilendirme" | https://tuketici.ticaret.gov.tr/yayinlar/tuketici-bilgi-rehberi/mesafeli-sozlesmeler-hakkinda-bilgilendirme | Cayma süresi **14 gün**; tüketici cayma bildiriminden itibaren **14 gün** içinde malı geri göndermek zorundadır; satıcı teslimat masrafları dâhil ödemelerin **tamamını 14 gün içinde** iade etmelidir; iade için kargo şirketi belirtilmemişse tüketici iade masraflarından sorumlu tutulamaz; geri ödeme tek seferde ve tüketicinin kullandığı ödeme aracına uygun yapılır. İstisna listesinde "**tüketicinin onayı ile ifasına başlanan hizmetler**" yer alır; **kurulum/montaj yapılmış mal için bağımsız, otomatik bir iade yasağı listelenmemiştir.** |
+| KVKK Kurumu — "Aydınlatma Yükümlülüğü" | https://www.kvkk.gov.tr/Icerik/2033/Aydinlatma-Yukumlulugu- | KVKK m.10 uyarınca aydınlatmada veri sorumlusunun kimliği, verilerin **hangi amaçla** işleneceği, **kimlere ve hangi amaçla** aktarılabileceği, **veri toplama yöntemi ve hukuki sebebi** ile m.11'deki diğer hakların ilgili kişiye sağlanması gerekir. Aydınlatma ile açık rıza ayrıdır; rıza aranmaksızın da aydınlatma yükümlülüğü devam eder. |
+
+**Bu turda makine-çekimiyle alınamayan ve doğrulaması hukukçuya bırakılan nokta:**
+
+- **KVKK m.5 bent numaralarının (1-7) ve m.6'nın birebir madde metni.** kvkk.gov.tr kanun sayfası bu oturumda JavaScript ile üretildiği için ham metin alınamadı; mevzuat.gov.tr PDF'i zaman aşımına uğradı. `kvkk.md` §3'te kullanılan **m.5/2 (açık rıza), m.5/3 (sözleşme), m.5/4 (hukuki yükümlülük), m.5/5 (hak), m.5/6 (temel haklar)** atıfları bu nedenle **yayın öncesi Resmî Gazete / mevzuat.gov.tr metni üzerinden ayrıca doğrulanmalıdır.** Bu doğrulama yapılmadan metin yayımlanmamalıdır.
+- **Aynı şekilde mesafeli sözleşme istisnalarının madde/dayanak numaraları** (Mesafeli Sözleşmeler Yönetmeliği) bu turda madde metni olarak çekilemedi; yukarıdaki içerik Bakanlık bilgilendirme metninden alınmıştır ve yürürlükteki Yönetmelik metniyle karşılaştırılmalıdır.
+
 ## 1. Mesafeli satış / tüketici
 
 ### S1 — Ticaret Bakanlığı, “Mesafeli Sözleşmeler Hakkında Bilgilendirme”
