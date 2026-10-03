@@ -18,6 +18,10 @@ import { resetState, state } from "./support/order-route-fakes.ts";
 
 register("./support/order-route-hooks.mjs", import.meta.url);
 const { POST } = await import("../app/api/orders/route.ts");
+// P3-LEGAL-3C.4/P2: the order route now requires a signed legal preview. Every post() below obtains a real one
+// through the REAL preview route first, so these tests keep exercising the same handler end-to-end.
+const { POST: legalPreviewPOST } = await import("../app/api/checkout/legal-preview/route.ts");
+const { legalPreviewTokenFor } = await import("./support/legal-preview-harness.ts");
 
 const PRODUCT = { id: "synthetic-ac-12000", name: "Sentetik Klima 12000 BTU/h", sku: "SYN-12000", slug: "synthetic-ac-12000", category: "Duvar Tipi", capacity: "12000 BTU/h", price: 30_000, vatRateBps: 2000, deliveryClass: "installed_delivery", status: "published", saleMode: "online" };
 const REQUIRED = [{ slug: "distance-sales", title: "Mesafeli Satış Sözleşmesi", versionId: "ver-distance-sales" }, { slug: "pre-information", title: "Ön Bilgilendirme Formu", versionId: "ver-pre-information" }];
@@ -37,7 +41,9 @@ const payload = (extra: Record<string, unknown> = {}) => ({
 
 let requests = 0;
 async function post(body: unknown, key = `marketing-consent-test-${++requests}`) {
-  const response = await POST(new Request("https://shop.test/api/orders", { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify(body) }));
+  const token = await legalPreviewTokenFor(legalPreviewPOST, body);
+  const withPreview = token ? { ...(body as Record<string, unknown>), legalPreviewToken: token } : body;
+  const response = await POST(new Request("https://shop.test/api/orders", { method: "POST", headers: { "content-type": "application/json", "idempotency-key": key }, body: JSON.stringify(withPreview) }));
   return { status: response.status, body: (await response.json()) as Record<string, unknown> };
 }
 const written = () => state.committed.map((write) => write.table).sort();

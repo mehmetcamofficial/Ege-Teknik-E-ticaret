@@ -58,12 +58,16 @@ export type CheckoutAuthority = CheckoutAuthorityRefusal | CheckoutAuthorityCont
 const refuse = (status: number, body: CheckoutAuthorityRefusal["body"]): CheckoutAuthorityRefusal => ({ ok: false, status, body });
 
 /**
- * Resolve the authoritative checkout context, or the first refusal that applies.
+ * LAYER 1 - preflight: what any checkout interaction needs before anything can be priced.
  *
- * The sequence below is load-bearing: it is the canonical order of checks and must not be reordered, because the
- * first matching refusal decides which message the customer sees.
+ * Product visibility, the closed marketing gate, and the currently required checkout legal versions. The legal
+ * PREVIEW calls this too: a preview legitimately happens BEFORE the customer has accepted anything, so it must not
+ * depend on an acceptance assertion.
  */
-export async function resolveCheckoutAuthority(parsed: { data: OrderRequest }, requested: ReadonlyMap<string, number>): Promise<CheckoutAuthority> {
+export async function resolveCheckoutPreflight(
+  parsed: { data: OrderRequest },
+  requested: ReadonlyMap<string, number>,
+): Promise<{ ok: true; requiredLegal: RequiredLegalVersion[] } | CheckoutAuthorityRefusal> {
   if ([...requested.keys()].some((productId) => !isCustomerVisibleProduct(productId))) {
     return refuse(409, { error: "Sepette satışa açık olmayan bir ürün var.", code: "PRODUCT_NOT_SELLABLE" });
   }
@@ -73,7 +77,21 @@ export async function resolveCheckoutAuthority(parsed: { data: OrderRequest }, r
   }
   const legal = await loadRequiredCheckoutLegalVersions();
   if (!legal.ok) return refuse(503, { error: "Yasal metinler şu anda yayında değil; sipariş alınamıyor.", code: "LEGAL_DOCUMENTS_UNAVAILABLE" });
-  const acceptance = checkLegalAcceptance(legal.required, parsed.data.legalAcceptances);
+  return { ok: true, requiredLegal: legal.required };
+}
+
+/**
+ * LAYER 2 - order-SUBMISSION-only legal gates. Deliberately NOT part of a preview.
+ *
+ * These assert that the customer actually accepted every required version, and that the KVKK notice is published. A
+ * preview runs before acceptance, so requiring acceptance here would be circular; and a preview never takes personal
+ * data, so the notice gate belongs to the moment data is collected.
+ */
+export async function assertOrderSubmissionLegalGates(
+  parsed: { data: OrderRequest },
+  requiredLegal: readonly RequiredLegalVersion[],
+): Promise<CheckoutAuthorityRefusal | null> {
+  const acceptance = checkLegalAcceptance(requiredLegal, parsed.data.legalAcceptances);
   if (!acceptance.ok) {
     const missing = acceptance.code === "LEGAL_ACCEPTANCE_REQUIRED";
     return refuse(missing ? 422 : 409, {
@@ -85,6 +103,15 @@ export async function resolveCheckoutAuthority(parsed: { data: OrderRequest }, r
   if (missingNoticeSlugs((await loadCurrentLegalIndex()).map((doc) => doc.slug)).length) {
     return refuse(503, { error: "Aydınlatma metni şu anda yayında değil; sipariş alınamıyor.", code: "LEGAL_NOTICE_UNAVAILABLE" });
   }
+  return null;
+}
+
+/** LAYER 3 - the authoritative pricing/delivery/totals calculation. Pure reads and arithmetic; writes nothing. */
+export async function resolveCheckoutCalculation(
+  parsed: { data: OrderRequest },
+  requested: ReadonlyMap<string, number>,
+  requiredLegal: readonly RequiredLegalVersion[],
+): Promise<CheckoutAuthorityContext | CheckoutAuthorityRefusal> {
   const rows = await getDb().select({ product: products }).from(products).innerJoin(inventory, eq(inventory.productId, products.id))
     .where(and(inArray(products.id, [...requested.keys()]), eq(products.status, "published"), eq(products.saleMode, "online")));
   if (rows.length !== requested.size) return refuse(409, { error: "Sepette satışa açık olmayan bir ürün var.", code: "PRODUCT_NOT_SELLABLE" });
@@ -116,8 +143,21 @@ export async function resolveCheckoutAuthority(parsed: { data: OrderRequest }, r
     total,
     shippingTotal,
     installationTotal,
-    requiredLegal: legal.required,
+    requiredLegal: [...requiredLegal],
     customer: { firstName: nameParts.join(" "), lastName },
   };
 }
 
+/**
+ * The full order-submission authority: preflight, then the submission-only legal gates, then the calculation.
+ *
+ * The sequence is load-bearing and unchanged from canonical - the first matching refusal decides which message the
+ * customer sees. It stays a single composed entry point so `POST /api/orders` behaviour cannot drift.
+ */
+export async function resolveCheckoutAuthority(parsed: { data: OrderRequest }, requested: ReadonlyMap<string, number>): Promise<CheckoutAuthority> {
+  const preflight = await resolveCheckoutPreflight(parsed, requested);
+  if (!preflight.ok) return preflight;
+  const legalGate = await assertOrderSubmissionLegalGates(parsed, preflight.requiredLegal);
+  if (legalGate) return legalGate;
+  return resolveCheckoutCalculation(parsed, requested, preflight.requiredLegal);
+}

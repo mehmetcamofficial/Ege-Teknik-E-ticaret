@@ -18,6 +18,30 @@ export async function loadRequiredCheckoutLegalVersions(now = new Date()) {
   return selectRequiredLegalVersions(publishedOnly(rows), now);
 }
 
+/**
+ * Read-only: the acceptance-required checkout legal versions WITH their bodies, for server-side rendering.
+ *
+ * Mirrors `loadRequiredCheckoutLegalVersions` exactly - same rows, same deterministic selection rule - so the
+ * preview and the order submission always agree on WHICH version is required. `/api/legal/required` still returns
+ * ids and titles only, never bodies; bodies leave the server solely through the preview response.
+ */
+export async function loadRequiredCheckoutLegalDocuments(now = new Date()) {
+  const rows = await getDb()
+    .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, body: legalDocumentVersions.body, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
+    .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
+    .where(and(inArray(legalDocuments.slug, [...CHECKOUT_LEGAL_SLUGS]), isNotNull(legalDocumentVersions.publishedAt), isNotNull(legalDocumentVersions.effectiveAt)));
+  const selected = selectRequiredLegalVersions(publishedOnly(rows), now);
+  if (!selected.ok) return selected;
+  const byId = new Map(publishedOnly(rows).map((row) => [row.id, row]));
+  return {
+    ok: true as const,
+    required: selected.required.map((doc) => {
+      const row = byId.get(doc.versionId)!;
+      return { slug: doc.slug, title: doc.title, versionId: doc.versionId, version: row.version, body: row.body };
+    }),
+  };
+}
+
 /** Read-only: all versions of one document, resolved for public viewing (published versions only). */
 export async function loadPublicLegalVersion(slug: string, requestedVersionId: string | null, now = new Date()) {
   const rows = await getDb()

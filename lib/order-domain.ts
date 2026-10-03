@@ -61,6 +61,10 @@ export const orderRequestSchema = z.object({
   // required; these are only checked against that set, never trusted as the source of truth.
   // The total shown to the customer. A guard only: the server recomputes every amount and refuses on mismatch.
   expectedTotal: z.number().int().min(0).max(100_000_000),
+  // P3-LEGAL-3C.4/P2: the signed proof that this exact order context was rendered and shown BEFORE acceptance.
+  // It is NEVER optional for a new order; the field is optional only so an idempotent replay of an already
+  // committed order can still be answered without a live token. Absent + new order => fail closed.
+  legalPreviewToken: z.string().min(16).max(8000).optional(),
   // Optional, channel-specific marketing permission. Only an explicit `true` counts; omitted/false = no permission.
   marketing: z.object({ sms: z.boolean().default(false), email: z.boolean().default(false), whatsapp: z.boolean().default(false) }).default({ sms: false, email: false, whatsapp: false }),
   legalAcceptances: z.array(z.string().min(1).max(100)).max(10).refine((ids) => new Set(ids).size === ids.length, "Duplicate legal acceptance").default([]),

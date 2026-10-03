@@ -251,6 +251,8 @@ test("a hostile order number in the server response is shown as text", async () 
   await store.fn<() => Promise<void>>("loadCatalog")();
   await store.fn<() => Promise<unknown>>("loadLegalRequirements")();
   await store.fn<() => Promise<unknown>>("loadCheckoutCharges")();
+  // P3-LEGAL-3C.4: an order requires a signed legal preview, so the client obtains one before submitting.
+  await store.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(form);
   await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: form });
   const numberCell = box.children["[data-confirmation-number]"];
   assert.match(numberCell.innerHTML, /Takip numarası/);
