@@ -10,7 +10,43 @@ import { sendAdmin, useAdminJson, type Order } from "@/components/admin/use-admi
 import { orderStatusLabel, orderStatusTone, trDate, tryCurrency } from "@/lib/admin-ui";
 import { describeOrderDelivery } from "@/lib/order-delivery";
 
-type OrderDetailResponse = { order: Order };
+type OrderDetailResponse = { order: Order; legalAcceptances: AcceptedLegalDocumentView[] };
+/** P3-LEGAL-3B: one accepted legal version, as the admin order API reports it (no legal body). */
+type AcceptedLegalDocumentView = { slug: string; title: string; version: number; documentVersionId: string; acceptedAt: string };
+/** Exact-version public URL, built from slug + id rather than persisted anywhere. */
+const acceptedLegalHref = (d: AcceptedLegalDocumentView) => `/legal/${encodeURIComponent(d.slug)}?version=${encodeURIComponent(d.documentVersionId)}`;
+
+/**
+ * Legal acceptance evidence for this order. The version text itself is NOT rendered here: the accepted
+ * version is immutable, so the exact-version link always opens precisely what the customer accepted.
+ * An order with no rows is pre-feature history, shown neutrally - never backfilled, never called corrupt.
+ */
+function LegalAcceptancePanel({ acceptances }: { acceptances: AcceptedLegalDocumentView[] }) {
+  return (
+    <Panel title="Hukuki Kabul Kayıtları" description="Sipariş sırasında kabul edilen hukuki metinlerin tam sürümleri.">
+      {!acceptances.length ? (
+        <p className="text-sm text-muted-foreground">
+          Bu sipariş için kayıtlı hukuki kabul bulunmuyor.
+          <span className="block">Bu kayıt, hukuki kabul kaydı özelliğinden önce oluşturulmuş olabilir.</span>
+        </p>
+      ) : (
+        <ul className="divide-y">
+          {acceptances.map((d) => (
+            <li key={d.documentVersionId} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0">
+                <p className="font-medium">{d.title}</p>
+                <p className="text-xs text-muted-foreground">Sürüm: {d.version} · Kabul tarihi: {trDate(d.acceptedAt, true)}</p>
+              </div>
+              <a href={acceptedLegalHref(d)} target="_blank" rel="noopener" className="text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                Kabul edilen metni görüntüle
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
 import OrderItemsPanel from "./order-items-panel";
 import { PaymentActionPanels, PaymentHistoryPanel, PaymentSummaryPanel, paymentActionCount, useOrderLedger } from "./order-payments-panel";
 
@@ -92,6 +128,7 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
           </div>
         </div>
         <OrderItemsPanel orderId={order.id} />
+        <LegalAcceptancePanel acceptances={data?.legalAcceptances ?? []} />
         <PaymentHistoryPanel ledger={ledger} />
         {canWrite && (
           <div className={controlsGrid[paymentActionCount(ledger.data) + 1]}>

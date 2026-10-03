@@ -127,7 +127,8 @@ const confirmationInput = {
 };
 test("toOrderConfirmation exposes only real order data: no order/customer/address id, no idempotency key", () => {
   const confirmation = toOrderConfirmation(confirmationInput);
-  assert.deepEqual(Object.keys(confirmation).sort(), ["createdAt", "delivery", "installationTotal", "items", "orderNumber", "shippingTotal", "status", "statusLabel", "subtotal", "total", "vatTotal"]);
+  // P3-LEGAL-3B adds `legalAcceptances` (accepted-version summary). Everything else stays closed.
+  assert.deepEqual(Object.keys(confirmation).sort(), ["createdAt", "delivery", "installationTotal", "items", "legalAcceptances", "orderNumber", "shippingTotal", "status", "statusLabel", "subtotal", "total", "vatTotal"]);
   assert.deepEqual(Object.keys(confirmation.delivery).sort(), ["address", "city", "district", "email", "installation", "method", "name", "phone"]);
   for (const forbidden of ["id", "customerId", "addressId", "idempotencyKey", "requestFingerprint"]) {
     assert.equal(forbidden in confirmation, false, forbidden);

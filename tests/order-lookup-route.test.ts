@@ -25,6 +25,9 @@ const createdAt = new Date("2026-02-03T04:05:06.000Z");
 const PUBLIC_KEYS = [
   "orderNumber", "status", "statusLabel", "createdAt", "items",
   "subtotal", "vatTotal", "shippingTotal", "installationTotal", "total", "delivery",
+  // P3-LEGAL-3B: the key exists for shape stability, but the guest lookup must NEVER populate it -
+  // accepted-version evidence is only ever returned to the buyer who just checked out, or to an operator.
+  "legalAcceptances",
 ].sort();
 const DELIVERY_KEYS = ["name", "phone", "email", "city", "district", "address", "installation", "method"].sort();
 const ITEM_KEYS = ["lineTotal", "productName", "quantity", "unitPrice"];
@@ -145,4 +148,12 @@ test("the lookup only ever reads", async () => {
   await lookup({ orderNumber: ORDER_NUMBER, email: EMAIL });
   assert.deepEqual(state.committed, []);
   assert.deepEqual(state.storeCalls, [`find:${ORDER_NUMBER}`, `items:${INTERNAL_ID}`]);
+});
+// P3-LEGAL-3B security: the unauthenticated order lookup must never return accepted-version evidence.
+// The confirmation shape carries the key for stability, but the guest path has no rows to fill it with.
+test("the guest order lookup never exposes accepted legal version evidence", async () => {
+  const response = await lookup({ orderNumber: ORDER_NUMBER, email: EMAIL });
+  const body = await response.json() as { order: Record<string, unknown> };
+  assert.ok(Array.isArray(body.order.legalAcceptances), "the key is present for shape stability");
+  assert.deepEqual(body.order.legalAcceptances, [], "but it must always be empty on the unauthenticated path");
 });

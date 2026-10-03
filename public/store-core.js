@@ -59,7 +59,7 @@ let legalRequirements=null;
 async function loadLegalRequirements(){legalRequirements=null;try{const response=await fetch('/api/legal/required');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents)&&data.documents.length)legalRequirements=data.documents}catch{}renderLegalConsents();return legalRequirements}
 /* Exact-version link: opens the very version whose id the box submits; opening it never ticks the box. */
 function legalVersionHref(d){return '/legal/'+encodeURIComponent(d.slug)+'?version='+encodeURIComponent(d.versionId)}
-function renderLegalConsents(){const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" data-legal-version="${esc(d.versionId)}"><span><a href="${esc(legalVersionHref(d))}" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
+function renderLegalConsents(){const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" required data-legal-version="${esc(d.versionId)}"><span><a href="${esc(legalVersionHref(d))}" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
 function acceptedLegalVersionIds(boxes){return Array.from(boxes||[]).filter(box=>box.checked).map(box=>box.dataset.legalVersion)}
 function legalConsentsComplete(requirements,acceptedIds){return Boolean(requirements&&requirements.length)&&requirements.every(d=>acceptedIds.includes(d.versionId))}
 function orderAttemptKey(store){let key=null;try{key=store.getItem('ege-order-attempt')}catch{}if(!key){key=crypto.randomUUID();try{store.setItem('ege-order-attempt',key)}catch{}}return key}
@@ -237,6 +237,13 @@ function deliveryMethodText(d,data){
   if(d.method==='pickup')return 'Mağazadan teslim · Ücretsiz';
   if(d.method==='shipping')return 'Kargo · '+money(data.shippingTotal);
   return money(data.shippingTotal)}
+/* Accepted legal documents, straight from the server response: exact version ids only, never client state. */
+function renderConfirmationLegal(data){
+  const root=document.querySelector('[data-confirmation-legal]');if(!root)return;
+  const docs=Array.isArray(data.legalAcceptances)?data.legalAcceptances:[];
+  root.innerHTML=docs.map(d=>`<li><a href="${esc('/legal/'+encodeURIComponent(d.slug)+'?version='+encodeURIComponent(d.documentVersionId))}" target="_blank" rel="noopener">${esc(d.title)} — Sürüm ${esc(d.version)}</a></li>`).join('');
+  root.hidden=!docs.length
+}
 function renderOrderConfirmation(data){
   const box=document.querySelector('[data-order-confirmation]');if(!box)return;
   const items=Array.isArray(data.items)?data.items:[],d=data.delivery||{};
@@ -247,6 +254,7 @@ function renderOrderConfirmation(data){
   box.querySelector('[data-confirmation-shipping]').textContent=deliveryMethodText(d,data);
   box.querySelector('[data-confirmation-total]').textContent=money(data.total);
   box.querySelector('[data-confirmation-delivery]').innerHTML=`${esc(d.name)}<br>${esc(d.phone)} · ${esc(d.email)}<br>${esc([d.address,[d.district,d.city].filter(Boolean).join(' / ')].filter(Boolean).join(', '))}<br><small>${esc(deliveryMethodText(d,data))}</small>`;
+  renderConfirmationLegal(data);
   box.hidden=false;
   const form=document.querySelector('[data-checkout-form]');if(form)form.hidden=true;
   const heading=box.querySelector('[data-confirmation-heading]');heading?.focus();

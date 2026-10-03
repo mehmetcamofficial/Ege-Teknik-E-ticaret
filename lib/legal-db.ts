@@ -1,8 +1,8 @@
 import "server-only";
 import { getDb } from "@/db";
-import { legalDocumentVersions, legalDocuments } from "@/db/schema";
-import { CHECKOUT_LEGAL_SLUGS, resolvePublicLegalVersion, selectCurrentLegalVersions, selectRequiredLegalVersions } from "@/lib/legal";
-import { and, eq, inArray, isNotNull } from "drizzle-orm";
+import { legalDocumentVersions, legalDocuments, orderLegalAcceptances } from "@/db/schema";
+import { CHECKOUT_LEGAL_SLUGS, resolvePublicLegalVersion, selectCurrentLegalVersions, selectRequiredLegalVersions, toAcceptedLegalDocuments } from "@/lib/legal";
+import { and, asc, eq, inArray, isNotNull } from "drizzle-orm";
 
 /** Drafts (null publication columns) are excluded in SQL; this narrows the types and drops them again defensively. */
 function publishedOnly<T extends { effectiveAt: Date | null; publishedAt: Date | null }>(rows: readonly T[]) {
@@ -34,4 +34,31 @@ export async function loadCurrentLegalIndex(now = new Date()) {
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
     .where(and(isNotNull(legalDocumentVersions.publishedAt), isNotNull(legalDocumentVersions.effectiveAt)));
   return selectCurrentLegalVersions(publishedOnly(rows), now);
+}
+
+/**
+ * Read-only: the legal documents ONE order actually accepted, joined through
+ * order_legal_acceptances -> legal_document_versions -> legal_documents.
+ *
+ * The legal BODY is deliberately never selected: the exact historical text is already reachable, immutable,
+ * through the public exact-version route, so an order payload never carries a full legal text. Returns an
+ * empty array for pre-feature orders that have no acceptance rows - that is real history, not an error.
+ */
+export async function loadOrderAcceptedLegalDocuments(orderId: string) {
+  const rows = await getDb()
+    .select({
+      documentVersionId: orderLegalAcceptances.documentVersionId,
+      acceptedAt: orderLegalAcceptances.acceptedAt,
+      slug: legalDocuments.slug,
+      title: legalDocumentVersions.title,
+      version: legalDocumentVersions.version,
+      publishedAt: legalDocumentVersions.publishedAt,
+      effectiveAt: legalDocumentVersions.effectiveAt,
+    })
+    .from(orderLegalAcceptances)
+    .innerJoin(legalDocumentVersions, eq(legalDocumentVersions.id, orderLegalAcceptances.documentVersionId))
+    .innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
+    .where(eq(orderLegalAcceptances.orderId, orderId))
+    .orderBy(asc(orderLegalAcceptances.acceptedAt), asc(orderLegalAcceptances.id));
+  return rows.map((row) => ({ ...toAcceptedLegalDocuments([row])[0], acceptedAt: row.acceptedAt.toISOString(), publishedAt: row.publishedAt?.toISOString() ?? null, effectiveAt: row.effectiveAt?.toISOString() ?? null }));
 }

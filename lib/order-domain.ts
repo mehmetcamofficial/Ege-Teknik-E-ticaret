@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { readDeliverySnapshot } from "./order-delivery.ts";
+import { toAcceptedLegalDocuments, type AcceptedLegalDocument } from "./legal.ts";
 
 export const orderStatuses = ["pending_payment", "paid", "preparing", "shipped", "delivery", "delivered", "installation", "completed", "cancelled", "returned", "service"] as const;
 export type OrderStatus = typeof orderStatuses[number];
@@ -121,6 +122,11 @@ export type PublicOrderConfirmation = {
   installationTotal: number;
   total: number;
   delivery: { name: string; phone: string; email: string; city: string; district: string; address: string; installation: string; method: string };
+  /**
+   * P3-LEGAL-3B: the exact legal versions accepted for this order, so the customer can open the very text
+   * they accepted. Defaults to an empty list, never absent, so the confirmation UI has one stable shape.
+   */
+  legalAcceptances: AcceptedLegalDocument[];
 };
 
 export function toPublicOrderItem(line: { product: { name: string }; quantity: number; lineTotal: number }, unitPrice: number): PublicOrderItem {
@@ -145,6 +151,8 @@ export function toOrderConfirmation(input: {
   address: string;
   installation: string;
   deliveryMethod?: string;
+  /** P3-LEGAL-3B: the exact legal versions the SERVER accepted for this order (never client input). */
+  legalAcceptances?: readonly AcceptedLegalDocument[];
 }): PublicOrderConfirmation {
   return {
     orderNumber: input.orderNumber,
@@ -158,6 +166,8 @@ export function toOrderConfirmation(input: {
     installationTotal: input.installationTotal,
     total: input.total,
     delivery: { name: input.customerName, phone: input.phone, email: input.email, city: input.city, district: input.district ?? "", address: input.address, installation: input.installation, method: input.deliveryMethod ?? "" },
+    // Sorted through the shared helper so the customer view and the admin view order these identically.
+    legalAcceptances: toAcceptedLegalDocuments(input.legalAcceptances ?? []),
   };
 }
 

@@ -114,3 +114,32 @@ export function selectCurrentLegalVersions(rows: readonly LegalVersionRow[], now
 export function legalVersionPath(slug: string, versionId: string): string {
   return `/legal/${encodeURIComponent(slug)}?version=${encodeURIComponent(versionId)}`;
 }
+
+/**
+ * One accepted legal document, as shown to an operator or handed back to the customer.
+ * Deliberately minimal: identity + display fields only. The body stays behind legalVersionPath, so an
+ * order payload never carries a full legal text.
+ */
+export type AcceptedLegalDocument = { slug: string; title: string; version: number; documentVersionId: string };
+
+/** The joinable row shape every caller reads it from: order_legal_acceptances -> versions -> documents. */
+export type AcceptedLegalRow = AcceptedLegalDocument & { acceptedAt?: Date | string | null };
+
+/**
+ * Display order for accepted documents: pre-information, then distance-sales, then everything else
+ * alphabetically. Fixed only as a PRESENTATION preference - unknown or additional acceptances are still
+ * listed, never filtered out, so a future checkout slug can never be silently hidden here.
+ */
+const ACCEPTED_DISPLAY_ORDER: readonly string[] = ["pre-information", "distance-sales"];
+
+/**
+ * Builds the accepted-document summary from the rows the SERVER persisted/validated. Both the admin order
+ * detail and the customer's order confirmation use this, so the two can never disagree about what was
+ * accepted. Accepts rows from either the acceptance join or the required-version resolver.
+ */
+export function toAcceptedLegalDocuments(rows: readonly AcceptedLegalRow[]): AcceptedLegalDocument[] {
+  const rank = (slug: string) => { const i = ACCEPTED_DISPLAY_ORDER.indexOf(slug); return i === -1 ? ACCEPTED_DISPLAY_ORDER.length : i; };
+  return rows
+    .map((row) => ({ slug: row.slug, title: row.title, version: row.version, documentVersionId: row.documentVersionId }))
+    .sort((a, b) => rank(a.slug) - rank(b.slug) || a.slug.localeCompare(b.slug, "tr"));
+}
