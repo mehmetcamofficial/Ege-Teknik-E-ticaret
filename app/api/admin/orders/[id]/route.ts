@@ -1,5 +1,6 @@
 import { getDb } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
+import { loadOrderAcceptedLegalDocuments } from "@/lib/legal-db";
 import { getAdminUser } from "@/lib/admin-auth";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -29,7 +30,12 @@ export async function GET(_request:Request,context:{params:Promise<{id:string}>}
   const rows=await db.select({id:orderItems.id,productName:orderItems.productName,productSku:orderItems.productSku,productSnapshot:orderItems.productSnapshot,quantity:orderItems.quantity,unitPrice:orderItems.unitPrice,vatRateBps:orderItems.vatRateBps,vatAmount:orderItems.vatAmount,lineTotal:orderItems.lineTotal,imageUrl:products.imageUrl})
     .from(orderItems).leftJoin(products,eq(products.id,orderItems.productId)).where(eq(orderItems.orderId,id)).orderBy(asc(orderItems.createdAt),asc(orderItems.id));
   const items=rows.map(({productSnapshot,imageUrl,...r})=>{const snap=(productSnapshot&&typeof productSnapshot==="object"?productSnapshot:{}) as {capacity?:unknown};return{...r,capacity:typeof snap.capacity==="string"?snap.capacity:"",imageUrl:safeImage(imageUrl)}});
-  return Response.json({order:{...order,createdAt:order.createdAt.toISOString()},items},{headers:{"cache-control":"no-store"}});
+  // Legal acceptance evidence (P3-LEGAL-3B): joined order_legal_acceptances -> versions -> documents so an
+  // operator can see WHICH exact version was accepted and open that historical text. The body is never
+  // returned here; the immutable version is reachable at /legal/{slug}?version={id}. Empty array = a
+  // pre-feature order, which is real history rather than an error.
+  const legalAcceptances=await loadOrderAcceptedLegalDocuments(id);
+  return Response.json({order:{...order,createdAt:order.createdAt.toISOString()},items,legalAcceptances},{headers:{"cache-control":"no-store"}});
 }
 
 const schema=z.object({status:z.enum(orderStatuses),expectedStatus:z.enum(orderStatuses)});

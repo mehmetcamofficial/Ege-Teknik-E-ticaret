@@ -80,7 +80,7 @@ test("the internal order id reads the items but never reaches the response", asy
   const result = await lookup({ orderNumber: "ETS-20260203-AB12CD", email: "Ada@Example.com" }, store);
   assert.deepEqual(calls, ["find:ETS-20260203-AB12CD", "items:order-internal-uuid-0001"]);
   assert.equal(JSON.stringify(result).includes("order-internal-uuid-0001"), false);
-  assert.deepEqual(Object.keys(result.ok ? result.order : {}).sort(), ["createdAt", "delivery", "installationTotal", "items", "orderNumber", "shippingTotal", "status", "statusLabel", "subtotal", "total", "vatTotal"]);
+  assert.deepEqual(Object.keys(result.ok ? result.order : {}).sort(), ["createdAt", "delivery", "installationTotal", "items", "legalAcceptances", "orderNumber", "shippingTotal", "status", "statusLabel", "subtotal", "total", "vatTotal"]);
 });
 
 // ---- the one failure ----------------------------------------------------------------------------------------------------

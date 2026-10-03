@@ -119,6 +119,14 @@ export async function loadRequiredCheckoutLegalVersions() {
 export async function loadCurrentLegalIndex() {
   return state.notices.map((slug) => ({ slug }));
 }
+/**
+ * P3-LEGAL-3B: the route reads the accepted versions back after the transaction. The fake derives them
+ * from the same `state.required` it validated against, so a test sees exactly the versions the order
+ * would really have persisted - no separate fixture to drift.
+ */
+export async function loadOrderAcceptedLegalDocuments() {
+  return state.required.map((d) => ({ slug: d.slug, title: d.title, version: 1, documentVersionId: d.versionId, acceptedAt: new Date(0).toISOString(), publishedAt: null, effectiveAt: null }));
+}
 
 // ---- "@/lib/request-security" (same rule as the real module, with the real validator) ---------------
 /** The real module exports this too. Mirrored here so a route that reaches for it is exercised rather
