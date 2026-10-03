@@ -17,6 +17,8 @@ const read = (f: string) => readFileSync(f, "utf8");
 const adminRoute = () => read("app/api/admin/orders/[id]/route.ts");
 const legalDb = () => read("lib/legal-db.ts");
 const orderRoute = () => read("app/api/orders/route.ts");
+// P3-LEGAL-3C.3/P1: the server-authoritative checkout calculation now lives in its own read-and-calculate module.
+const authoritySrc = read("lib/checkout-authority.ts");
 const orderView = () => read("app/admin/(panel)/orders/order-detail-view.tsx");
 
 const row = (slug: string, over: Partial<AcceptedLegalRow> = {}): AcceptedLegalRow => ({
@@ -221,9 +223,9 @@ test("an idempotent replay yields an equivalent legal summary to the first respo
 
 test("server-side legal validation, transaction rollback and idempotency are untouched", () => {
   const src = orderRoute();
-  assert.match(src, /loadRequiredCheckoutLegalVersions\(\)/, "the server still resolves the required versions itself");
-  assert.match(src, /checkLegalAcceptance\(legal\.required, parsed\.data\.legalAcceptances\)/, "client ids are still re-validated");
-  assert.match(src, /LEGAL_DOCUMENTS_UNAVAILABLE/, "fail-closed behaviour is preserved");
+  assert.match(authoritySrc, /loadRequiredCheckoutLegalVersions\(\)/, "the server still resolves the required versions itself");
+  assert.match(authoritySrc, /checkLegalAcceptance\(legal\.required, parsed\.data\.legalAcceptances\)/, "client ids are still re-validated");
+  assert.match(authoritySrc, /LEGAL_DOCUMENTS_UNAVAILABLE/, "fail-closed behaviour is preserved");
   assert.match(src, /db\.transaction\(async \(tx\) => \{/, "the write stays inside one transaction");
   assert.match(src, /IdempotentReplay/, "idempotency replay is preserved");
 });
@@ -259,15 +261,14 @@ test("KVKK stays notice-only and is never turned into a checkbox", () => {
   assert.doesNotMatch(kvkkCode, /kvkk[^\n]*checkbox/i, "KVKK must never become an acceptance box");
   assert.doesNotMatch(kvkkCode, /data-legal-version[^\n]*kvkk/i);
   // And the server still treats it as a notice, not an acceptance.
-  assert.match(orderRoute(), /missingNoticeSlugs/);
+  assert.match(authoritySrc, /missingNoticeSlugs/);
   assert.doesNotMatch(orderRoute(), /kvkk[^\n]*checkLegalAcceptance/);
 });
 
 test("no marketing consent is introduced anywhere in checkout", () => {
   assert.doesNotMatch(storefrontCoreSource(), /data-marketing-channel[\s\S]{0,80}type="checkbox"/, "no marketing checkbox is rendered");
-  const route = orderRoute();
-  assert.match(route, /marketingConsentRequested\(parsed\.data\.marketing\)/, "marketing stays refused server-side");
-  assert.match(route, /MARKETING_CONSENT_DISABLED/, "the disabled marker is unchanged");
+  assert.match(authoritySrc, /marketingConsentRequested\(parsed\.data\.marketing\)/, "marketing stays refused server-side");
+  assert.match(authoritySrc, /MARKETING_CONSENT_DISABLED/, "the disabled marker is unchanged");
 });
 
 // ---- exact-version route safety (relied upon, deliberately unchanged) -------------------------

@@ -7,6 +7,11 @@ import { computeOrderTotals, marketingChannels, orderRequestFingerprint, orderRe
 import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 const route = readFileSync("app/api/orders/route.ts", "utf8");
+// P3-LEGAL-3C.3/P1: the server-authoritative calculation now lives in its own read-and-calculate module, which the
+// route delegates to. `flow` is what the server decides overall; ordering claims are still made against `route`.
+const authority = readFileSync("lib/checkout-authority.ts", "utf8");
+const authorityBody = authority.slice(authority.indexOf("export async function resolveCheckoutAuthority"));
+const flow = `${route}\n${authority}`;
 const html = readFileSync("public/checkout.html", "utf8");
 const store = storefrontCoreSource();
 const migration = readFileSync("drizzle-pg/0006_checkout_charges_and_marketing_consents.sql", "utf8");
@@ -58,19 +63,22 @@ test("client shipping/installation/tax/total fields are stripped and never reach
   for (const key of ["shipping", "shippingFee", "shippingTotal", "shippingAmount", "installation", "installationAmount", "installationPrice", "tax", "vatTotal", "subtotal", "total", "price", "deliveryClass", "installationIncluded"]) assert.equal(key in parsed, false, key);
 });
 test("the order route takes every amount and every delivery fact from the server", () => {
-  assert.match(route, /planDelivery\(\{ classes: rows\.map\(\(\{ product \}\) => product\.deliveryClass\)/, "the delivery class is read from the DB row");
-  assert.match(route, /finalizeOrderTotals\(computeOrderTotals\(lines\), plan\.shipping\)/);
-  assert.match(route, /shippingTotal, installationTotal, total/);
-  assert.doesNotMatch(route, /parsed\.data\.(shipping|installationAmount|total|subtotal|installation\b)/);
-  assert.match(route, /totalMatchesDisplayed\(total, parsed\.data\.expectedTotal\)/);
+  assert.match(flow, /planDelivery\(\{ classes: rows\.map\(\(\{ product \}\) => product\.deliveryClass\)/, "the delivery class is read from the DB row");
+  assert.match(flow, /finalizeOrderTotals\(computeOrderTotals\(lines\), plan\.shipping\)/);
+  assert.match(flow, /shippingTotal, installationTotal, total/);
+  assert.doesNotMatch(flow, /parsed\.data\.(shipping|installationAmount|total|subtotal|installation\b)/);
+  assert.match(flow, /totalMatchesDisplayed\(total, parsed\.data\.expectedTotal\)/);
 });
 test("every compliance refusal happens before the transaction (no order, no stock, no acceptance)", () => {
-  const tx = route.indexOf("db.transaction");
+  // Each refusal is raised by the authority module, and the route delegates to that module before it opens the
+  // transaction or touches inventory, so a refusal still writes nothing.
   for (const code of ["LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "planDelivery(", "delivery.error.code", "PRICE_CHANGED"]) {
-    const at = route.indexOf(code);
-    assert.ok(at > 0 && at < tx, `${code} must be checked before the transaction`);
+    assert.ok(authority.includes(code), `${code} must be refused by the checkout authority`);
   }
-  assert.ok(route.indexOf("planDelivery(") < route.indexOf("tx.update(inventory)"), "the delivery plan precedes inventory changes");
+  const tx = route.indexOf("db.transaction");
+  assert.ok(tx > 0, "the route must still open a transaction");
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < tx, "the authority refusal runs before the transaction");
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("tx.update(inventory)"), "the authority runs before inventory changes");
 });
 test("expectedTotal is required by the request schema", () => {
   const withoutTotal: Record<string, unknown> = { ...base };
@@ -97,9 +105,10 @@ test("a different marketing choice is a different request (idempotency conflict)
 test("the order route writes no marketing permission until the İYS flow is ready: an opt-in is refused before any write", () => {
   const tx = route.slice(route.indexOf("db.transaction"));
   assert.doesNotMatch(route, /marketingConsents|granted: true/, "the route neither imports nor writes marketing_consents");
-  assert.match(route, /if \(marketingConsentRequested\(parsed\.data\.marketing\)\) return Response\.json\(\{ error: MARKETING_CONSENT_DISABLED\.error, code: MARKETING_CONSENT_DISABLED\.code \}, \{ status: MARKETING_CONSENT_DISABLED\.status \}\)/);
-  assert.ok(route.indexOf("marketingConsentRequested(") < route.indexOf("db.transaction"), "refused before the transaction");
-  assert.ok(route.indexOf("await replay()") < route.indexOf("marketingConsentRequested("), "an idempotent replay of an existing order is still answered first");
+  assert.match(authority, /if \(marketingConsentRequested\(parsed\.data\.marketing\)\) \{\n\s*return refuse\(MARKETING_CONSENT_DISABLED\.status, \{ error: MARKETING_CONSENT_DISABLED\.error, code: MARKETING_CONSENT_DISABLED\.code \}\)/, "the authority refuses an explicit marketing opt-in");
+  assert.ok(authorityBody.indexOf("marketingConsentRequested(") < authorityBody.indexOf("loadRequiredCheckoutLegalVersions"), "the marketing refusal precedes any legal or product read");
+  assert.ok(route.indexOf("await replay()") < route.indexOf("await resolveCheckoutAuthority("), "an idempotent replay of an existing order is still answered first");
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("db.transaction"), "refused before the transaction");
   assert.match(tx, /tx\.insert\(orderLegalAcceptances\)/, "legal acceptances are still recorded");
 });
 test("checkout markup: no marketing consent is collected until the İYS/consent flow is ready", () => {
@@ -127,7 +136,7 @@ test("the KVKK notice is informational: never a checkbox, and its absence blocks
   assert.deepEqual(missingNoticeSlugs(["kvkk"]), []);
   assert.match(html, /data-kvkk-notice/);
   assert.doesNotMatch(html.match(/<p[^>]*data-kvkk-notice[^>]*>/)![0], /checkbox/);
-  assert.match(route, /LEGAL_NOTICE_UNAVAILABLE/);
+  assert.match(flow, /LEGAL_NOTICE_UNAVAILABLE/);
   assert.match(store, /KVKK Aydınlatma Metni<\/a>'ni inceleyebilirsiniz/);
   assert.match(store, /KVKK Aydınlatma Metni henüz yayınlanmamıştır/);
   assert.match(readFileSync("public/contact.html", "utf8"), /data-kvkk-notice/);

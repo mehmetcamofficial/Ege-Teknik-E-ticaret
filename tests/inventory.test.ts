@@ -7,6 +7,7 @@ import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
 const route = readFileSync("app/api/orders/route.ts", "utf8");
 const tx = route.slice(route.indexOf("db.transaction"));
 const beforeTx = route.slice(0, route.indexOf("db.transaction"));
+const authority = readFileSync("lib/checkout-authority.ts", "utf8");
 const stockUpdate = tx.slice(tx.indexOf("tx.update(inventory)"), tx.indexOf("OUT_OF_STOCK"));
 
 const reserveOrThrow = (row: InventoryRow, qty: number) => { const r = reserveUnits(row, qty); assert.ok(r.ok); return r.ok ? r.next : row; };
@@ -80,7 +81,7 @@ test("an out-of-stock throw aborts the whole transaction (no order, items, accep
 // ---- nothing that fails validation may reach the stock write -----------------------------------
 test("replay, key conflict, marketing opt-in, legal, notice, delivery-plan and pricing failures all return BEFORE the transaction", () => {
   for (const marker of ["IDEMPOTENCY_KEY_REUSED", "MARKETING_CONSENT_DISABLED", "LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "planDelivery(", "PRICE_CHANGED", "orderRequestSchema.safeParse"]) {
-    assert.ok(beforeTx.includes(marker), `${marker} is checked before the transaction`);
+    assert.ok(beforeTx.includes(marker) || authority.includes(marker), `${marker} is checked before the transaction`);
   }
   assert.doesNotMatch(beforeTx, /update\(inventory\)/);
 });

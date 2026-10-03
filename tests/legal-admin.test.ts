@@ -147,7 +147,7 @@ test("public loaders exclude drafts in SQL and preview is auth-only", () => {
 });
 test("checkout is unchanged: still resolves required versions server-side and links exact versions", () => {
   const orders = readFileSync("app/api/orders/route.ts", "utf8");
-  assert.match(orders, /loadRequiredCheckoutLegalVersions/);
+  assert.match(readFileSync("lib/checkout-authority.ts", "utf8"), /loadRequiredCheckoutLegalVersions/);
   assert.match(orders, /acceptedAt = new Date\(\)/);
   assert.match(storefrontCoreSource(), /function legalVersionHref\(d\)/);
 });

@@ -1,14 +1,12 @@
 import { getDb } from "@/db";
-import { isCustomerVisibleProduct } from "@/lib/catalog-visibility";
-import { addresses, customers, inventory, orderItems, orderLegalAcceptances, orders, products } from "@/db/schema";
-import { finalizeOrderTotals, totalMatchesDisplayed } from "@/lib/checkout-charges";
-import { deliveryTraits, planDelivery, type DeliveryClass } from "@/lib/delivery";
-import { checkLegalAcceptance, missingNoticeSlugs } from "@/lib/legal";
-import { loadCurrentLegalIndex, loadOrderAcceptedLegalDocuments, loadRequiredCheckoutLegalVersions } from "@/lib/legal-db";
-import { MARKETING_CONSENT_DISABLED, computeOrderTotals, deliverySummaryFromSnapshot, installationPreferenceFor, marketingConsentRequested, orderRequestFingerprint, orderRequestSchema, priceOrderLines, toOrderConfirmation, toPublicOrderItem } from "@/lib/order-domain";
+import { addresses, customers, inventory, orderItems, orderLegalAcceptances, orders } from "@/db/schema";
+import { resolveCheckoutAuthority } from "@/lib/checkout-authority";
+import { deliveryTraits, type DeliveryClass } from "@/lib/delivery";
+import { loadOrderAcceptedLegalDocuments } from "@/lib/legal-db";
+import { deliverySummaryFromSnapshot, installationPreferenceFor, orderRequestFingerprint, orderRequestSchema, toOrderConfirmation, toPublicOrderItem } from "@/lib/order-domain";
 import { idempotencyKey } from "@/lib/request-security";
 import { publicRoute, rateLimit, readJson } from "@/lib/http-security";
-import { and, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 
 class IdempotentReplay extends Error {}
 
@@ -36,34 +34,17 @@ async function createOrder(request: Request) {
     return Response.json({ ok: true, ...toOrderConfirmation({ orderNumber: existing.orderNumber, status: existing.status, createdAt: existing.createdAt, items, subtotal: existing.subtotal, vatTotal: existing.vatTotal, shippingTotal: existing.shippingTotal, installationTotal: existing.installationTotal, total: existing.total, customerName: existing.customerName, phone: existing.phone, email: existing.email, city: existing.city, address: existing.address, installation: existing.installationPreference ?? "none", legalAcceptances, ...deliverySummaryFromSnapshot(existing.shippingAddressSnapshot) }) });
   };
   const replayed = await replay(); if (replayed) return replayed;
-  if ([...requested.keys()].some((productId) => !isCustomerVisibleProduct(productId))) return Response.json({ error: "Sepette satışa açık olmayan bir ürün var." }, { status: 409 });
-  // Marketing permission is closed until the İYS / izin-ret flow is ready: an explicit opt-in is refused, never recorded.
-  if (marketingConsentRequested(parsed.data.marketing)) return Response.json({ error: MARKETING_CONSENT_DISABLED.error, code: MARKETING_CONSENT_DISABLED.code }, { status: MARKETING_CONSENT_DISABLED.status });
-  const legal = await loadRequiredCheckoutLegalVersions();
-  if (!legal.ok) return Response.json({ error: "Yasal metinler şu anda yayında değil; sipariş alınamıyor.", code: "LEGAL_DOCUMENTS_UNAVAILABLE" }, { status: 503 });
-  const acceptance = checkLegalAcceptance(legal.required, parsed.data.legalAcceptances);
-  if (!acceptance.ok) return Response.json(acceptance.code === "LEGAL_ACCEPTANCE_REQUIRED" ? { error: "Devam etmek için tüm yasal metinleri kabul etmelisiniz.", code: acceptance.code } : { error: "Yasal metinler güncellendi; lütfen sayfayı yenileyip tekrar onaylayın.", code: acceptance.code }, { status: acceptance.code === "LEGAL_ACCEPTANCE_REQUIRED" ? 422 : 409 });
-  // The KVKK disclosure is informational (never a checkbox) but must be published before personal data is collected.
-  if (missingNoticeSlugs((await loadCurrentLegalIndex()).map((doc) => doc.slug)).length) return Response.json({ error: "Aydınlatma metni şu anda yayında değil; sipariş alınamıyor.", code: "LEGAL_NOTICE_UNAVAILABLE" }, { status: 503 });
-  const rows = await db.select({ product: products }).from(products).innerJoin(inventory, eq(inventory.productId, products.id)).where(and(inArray(products.id, [...requested.keys()]), eq(products.status, "published"), eq(products.saleMode, "online")));
-  if (rows.length !== requested.size) return Response.json({ error: "Sepette satışa açık olmayan bir ürün var." }, { status: 409 });
-  const nameParts = parsed.data.customerName.split(/\s+/), lastName = nameParts.length > 1 ? nameParts.pop()! : "-", firstName = nameParts.join(" ");
+  // P3-LEGAL-3C.3 / P1: every server-authoritative fact about this checkout - required legal versions, database
+  // prices, the delivery plan and all totals - is resolved by the shared read-and-calculate module, so a future
+  // pre-acceptance legal preview and this order cannot disagree. It opens no transaction and writes nothing.
+  const authority = await resolveCheckoutAuthority({ data: parsed.data }, requested);
+  if (!authority.ok) return Response.json(authority.body, { status: authority.status });
+  const { lines, plan, subtotal, vatTotal, total, shippingTotal, installationTotal } = authority;
   const id = crypto.randomUUID(), customerId = crypto.randomUUID(), addressId = crypto.randomUUID(), orderNumber = `ETS-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${id.slice(0, 6).toUpperCase()}`;
-  const lines = priceOrderLines(rows.map(({ product }) => product), requested);
-  // Delivery plan, server-authoritative and fail-closed: the products' stored delivery classes decide installation,
-  // shipping eligibility and the service area; the province is validated; any shipping fee is priced here. A refusal
-  // (outside the Ege service area, shipping not available, invalid method) happens BEFORE anything is written.
-  const delivery = planDelivery({ classes: rows.map(({ product }) => product.deliveryClass), province: parsed.data.city, district: parsed.data.district, method: parsed.data.delivery });
-  if (!delivery.ok) return Response.json({ error: delivery.error.message, code: delivery.error.code }, { status: delivery.error.status });
-  const plan = delivery.plan;
-  // Store pickup needs no address; dealer delivery and carrier shipping do.
-  if (plan.method !== "pickup" && parsed.data.address.length < 8) return Response.json({ error: "Lütfen teslimat adresinizi girin.", code: "ADDRESS_REQUIRED" }, { status: 400 });
-  const { subtotal, vatTotal, total, shippingTotal, installationTotal } = finalizeOrderTotals(computeOrderTotals(lines), plan.shipping);
-  if (!totalMatchesDisplayed(total, parsed.data.expectedTotal)) return Response.json({ error: "Sipariş tutarı güncellendi; lütfen yeni tutarı kontrol edip tekrar onaylayın.", code: "PRICE_CHANGED", total }, { status: 409 });
   const acceptedAt = new Date(); // server-generated; the client never supplies it
   try {
     await db.transaction(async (tx) => {
-      await tx.insert(customers).values({ id: customerId, firstName, lastName, phone: parsed.data.phone, email: parsed.data.email });
+      await tx.insert(customers).values({ id: customerId, firstName: authority.customer.firstName, lastName: authority.customer.lastName, phone: parsed.data.phone, email: parsed.data.email });
       await tx.insert(addresses).values({ id: addressId, customerId, recipientName: parsed.data.customerName, phone: parsed.data.phone, city: plan.province, district: plan.district, line1: parsed.data.address });
       const snapshot = { recipientName: parsed.data.customerName, phone: parsed.data.phone, city: plan.province, district: plan.district, line1: parsed.data.address, delivery: { method: plan.method, region: plan.region, shippingFee: shippingTotal, installationIncluded: plan.installationIncluded } };
       const claimed = await tx.insert(orders).values({ id, orderNumber, customerId, idempotencyKey: key, requestFingerprint: fingerprint, installationPreference: installationPreferenceFor(plan.installationIncluded), notes: parsed.data.note, customerName: parsed.data.customerName, phone: parsed.data.phone, email: parsed.data.email, city: plan.province, address: parsed.data.address, shippingAddressSnapshot: snapshot, billingAddressSnapshot: snapshot, subtotal, vatTotal, shippingTotal, installationTotal, total, createdAt: acceptedAt }).onConflictDoNothing({ target: orders.idempotencyKey }).returning({ id: orders.id });
@@ -73,7 +54,7 @@ async function createOrder(request: Request) {
       // Inventory invariant (lib/inventory.ts): on_hand is the sellable stock, so the guard is on_hand >= qty; `reserved` is bookkeeping only and is NOT subtracted again.
       for (const line of lines) { const changed = await tx.update(inventory).set({ onHand: sql`${inventory.onHand} - ${line.quantity}`, reserved: sql`${inventory.reserved} + ${line.quantity}`, version: sql`${inventory.version} + 1`, updatedAt: new Date() }).where(and(eq(inventory.productId, line.product.id), gte(inventory.onHand, line.quantity))).returning({ id: inventory.id }); if (!changed.length) throw new Error(`OUT_OF_STOCK:${line.product.name}`); }
       await tx.insert(orderItems).values(lines.map(({ product, quantity, lineTotal, vatAmount }) => ({ id: crypto.randomUUID(), orderId: id, productId: product.id, productName: product.name, productSku: product.sku, productSlug: product.slug, unitPrice: product.price, vatRateBps: product.vatRateBps, vatAmount, quantity, lineTotal, productSnapshot: { name: product.name, sku: product.sku, slug: product.slug, category: product.category, capacity: product.capacity, unitPrice: product.price, vatRateBps: product.vatRateBps, deliveryClass: product.deliveryClass, installationIncluded: deliveryTraits(product.deliveryClass as DeliveryClass).installationIncluded, shippingEligible: deliveryTraits(product.deliveryClass as DeliveryClass).shippingEligible } })));
-      await tx.insert(orderLegalAcceptances).values(legal.required.map((version) => ({ id: crypto.randomUUID(), orderId: id, documentVersionId: version.versionId, acceptedAt })));
+      await tx.insert(orderLegalAcceptances).values(authority.requiredLegal.map((version) => ({ id: crypto.randomUUID(), orderId: id, documentVersionId: version.versionId, acceptedAt })));
     });
   } catch (error) { if (error instanceof IdempotentReplay) return (await replay()) ?? Response.json({ error: "İstek işlenemedi." }, { status: 409 }); if (error instanceof Error && error.message.startsWith("OUT_OF_STOCK:")) return Response.json({ error: `${error.message.slice(13)} için yeterli stok yok.` }, { status: 409 }); throw error; }
   const items = lines.map((line) => toPublicOrderItem(line, line.product.price));
