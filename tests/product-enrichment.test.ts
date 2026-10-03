@@ -53,7 +53,7 @@ test("blocked products are explicit: 9 asset blocks and the Pular conflict, each
 });
 test("all reviewed blocked products are excluded from list, detail and new orders without changing database rows", () => {
   for (const decision of dataset.decisions) assert.equal(isCustomerVisibleProduct(decision.productId), !decision.importStatus.startsWith("BLOCKED_"), decision.productId);
-  for (const file of ["app/api/products/route.ts", "app/api/products/[id]/route.ts", "app/api/orders/route.ts"]) {
+  for (const file of ["app/api/products/route.ts", "app/api/products/[id]/route.ts", "lib/checkout-authority.ts"]) {
     assert.match(readFileSync(file, "utf8"), /isCustomerVisibleProduct\(/, file);
   }
 });

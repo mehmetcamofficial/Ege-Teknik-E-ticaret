@@ -1,7 +1,9 @@
 import type { PublicLegalVersion, LegalVersionStatus } from "@/lib/legal";
 
-const escapeHtml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-const dateTr = (date: Date) => new Intl.DateTimeFormat("tr-TR", { dateStyle: "long", timeZone: "Europe/Istanbul" }).format(date);
+/** THE single HTML escaping primitive for legal output. Customer data must never bypass it. */
+export const escapeHtml = (value: string): string => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+/** THE single legal date formatter: explicit Europe/Istanbul, never the machine's local zone. */
+export const dateTr = (date: Date): string => new Intl.DateTimeFormat("tr-TR", { dateStyle: "long", timeZone: "Europe/Istanbul" }).format(date);
 const statusText: Record<LegalVersionStatus, string> = { effective: "Yürürlükte olan güncel sürüm", scheduled: "İleri tarihte yürürlüğe girecek sürüm", superseded: "Bu sürümün yerini daha yeni bir sürüm almıştır (arşiv görünümü)" };
 
 /** Plain text only: everything is escaped; blank lines split paragraphs, single newlines become <br>. */

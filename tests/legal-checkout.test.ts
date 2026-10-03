@@ -90,7 +90,7 @@ test("legal acceptances are inserted last, after the order and its items (any fa
 });
 
 test("acceptance rows reference the server-selected version ids, not client input", () => {
-  assert.match(txBody, /legal\.required\.map\(\(version\) => \(\{[^}]*documentVersionId: version\.versionId/);
+  assert.match(txBody, /authority\.requiredLegal\.map\(\(version\) => \(\{[^}]*documentVersionId: version\.versionId/);
   assert.doesNotMatch(txBody, /parsed\.data\.legalAcceptances/);
 });
 

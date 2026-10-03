@@ -12,6 +12,8 @@ import { computeOrderTotals, orderRequestFingerprint, orderRequestSchema, priceO
 /** Phase 3.4 - delivery domain, checkout charges and their migration. No payment, no DB: pure rules plus source/SQL guards. */
 const read = (f: string) => readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
 const route = read("app/api/orders/route.ts");
+const authority = read("lib/checkout-authority.ts");
+const flow = route + "\n" + authority;
 const deliverySrc = read("lib/delivery.ts");
 const configuredShipping = (amount: number): CheckoutTariffs => ({ shipping: { status: "configured", amount, vatRateBps: 2000 } });
 const AC = "installed_delivery", PART = "shippable", HEAVY = "local_delivery";
@@ -86,7 +88,7 @@ test("8 a heavy part that cannot be shipped: dealer delivery only, Ege only, nev
 });
 test("9 second-hand products are not part of the order flow: the route only sells products from the products table", () => {
   assert.doesNotMatch(route, /usedProducts|secondHand|used_products|second_hand/);
-  assert.match(route, /eq\(products\.status, "published"\), eq\(products\.saleMode, "online"\)/);
+  assert.match(flow, /eq\(products\.status, "published"\), eq\(products\.saleMode, "online"\)/);
 });
 test("11 every service-area province is a valid dealer-delivery address", () => {
   for (const province of EGE_TEKNIK_SERVICE_PROVINCES) {
@@ -139,7 +141,7 @@ test("15-17 client tampering: shipping fee, product price and VAT fields never s
 test("16 the price comes from the database row: a ₺50.000 product is charged in full whatever the client claimed", () => {
   const lines = priceOrderLines([{ id: "p", price: 50_000, vatRateBps: 2000 }], new Map([["p", 1]]));
   assert.equal(computeOrderTotals(lines).total, 50_000);
-  assert.match(route, /priceOrderLines\(rows\.map\(\(\{ product \}\) => product\), requested\)/);
+  assert.match(flow, /priceOrderLines\(rows\.map\(\(\{ product \}\) => product\), requested\)/);
   assert.match(route, /unitPrice: product\.price/);
 });
 test("18-19 stock: an out-of-stock quantity cannot be reserved, and the route uses one atomic conditional update", () => {
@@ -153,14 +155,14 @@ test("20 idempotency: the same request has one fingerprint, a different delivery
   const q = new Map([["p1", 1]]);
   assert.equal(orderRequestFingerprint(data, q), orderRequestFingerprint({ ...data }, q));
   assert.notEqual(orderRequestFingerprint(data, q), orderRequestFingerprint({ ...data, delivery: "pickup" }, q));
-  assert.ok(route.indexOf("const replayed = await replay()") < route.indexOf("planDelivery("));
-  assert.ok(route.indexOf("planDelivery(") < route.indexOf("db.transaction"));
+  assert.ok(route.indexOf("const replayed = await replay()") < route.indexOf("await resolveCheckoutAuthority("));
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("db.transaction"));
 });
 test("21-22 an empty cart and an invalid/unsellable product are refused before anything is written", () => {
   assert.equal(orderRequestSchema.safeParse({ customerName: "A B", phone: "0500000000", email: "a@b.test", city: "İzmir", address: "Adres satırı 1", paymentProvider: "discovery", items: [], expectedTotal: 0 }).success, false);
   assert.equal(err(planDelivery({ classes: [], province: "İzmir" })).code, "EMPTY_CART");
   assert.equal(err(planDelivery({ classes: ["not-a-class"], province: "İzmir" })).code, "INVALID_PRODUCT_DELIVERY");
-  assert.match(route, /rows\.length !== requested\.size\) return Response\.json\(\{ error: "Sepette satışa açık olmayan bir ürün var\." \}, \{ status: 409 \}\)/);
+  assert.match(authority, /rows\.length !== requested\.size\) return refuse\(409, \{ error: "Sepette satışa açık olmayan bir ürün var\."/);
 });
 test("23 an invalid delivery method is rejected by the schema and, for the wrong cart, by the plan", () => {
   const base = { customerName: "A B", phone: "0500000000", email: "a@b.test", city: "İzmir", address: "Adres satırı 1", paymentProvider: "discovery", items: [{ productId: "p", quantity: 1 }], expectedTotal: 1 };
