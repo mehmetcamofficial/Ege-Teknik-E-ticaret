@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import ts from "typescript";
 import { toAcceptedLegalDocuments, type AcceptedLegalRow } from "../lib/legal.ts";
 import { toOrderConfirmation, type PublicOrderItem } from "../lib/order-domain.ts";
 import { storefrontCoreSource } from "./support/storefront-sandbox.ts";
@@ -25,6 +26,90 @@ const row = (slug: string, over: Partial<AcceptedLegalRow> = {}): AcceptedLegalR
   documentVersionId: `${slug}-id-v3`,
   ...over,
 });
+
+/**
+ * STRUCTURAL GUARD - declared FIRST, on purpose.
+ *
+ * CI run 37144033239 failed on Node 22 while passing on Node 24: a test had lost its closing `});`,
+ * so eight later tests became lexically nested inside its callback. Node 22's runner correctly tracks
+ * nested `test()` as subtests of a synchronous parent and fails it (`subtestsFailed`); Node 24 tolerates
+ * it entirely. An earlier indentation-based guard could NOT see this, because the swallowed declarations
+ * all sit at column 0 - only their lexical position betrays them.
+ *
+ * This guard parses the file with the repository's own TypeScript compiler and walks the real AST, so it
+ * detects containment regardless of formatting. It is deliberately the first test in the file: if a later
+ * test ever swallows the rest of the file again, this one has already run and reported the truth.
+ */
+const TEST_DECLARATION_NAMES = new Set(["test", "it", "describe", "suite"]);
+
+function findNestedTestDeclarations(fileName: string): { name: string; line: number; inside: string }[] {
+  const source = ts.createSourceFile(fileName, read(fileName), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const nested: { name: string; line: number; inside: string }[] = [];
+  // Stack of enclosing test-callback functions. A test call is illegal if this stack is non-empty.
+  const stack: { name: string; line: number }[] = [];
+  const visit = (node: ts.Node) => {
+    let pushed = false;
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && TEST_DECLARATION_NAMES.has(node.expression.text)) {
+      const name = node.expression.text;
+      const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
+      if (stack.length > 0) nested.push({ name, line, inside: `${stack[stack.length - 1].name}() @ line ${stack[stack.length - 1].line}` });
+      // Only the arrow/function argument is a callback scope; the callee arguments are not.
+      const callback = node.arguments.find((arg) => ts.isArrowFunction(arg) || ts.isFunctionExpression(arg));
+      if (callback) {
+        stack.push({ name, line });
+        pushed = true;
+      }
+    }
+    ts.forEachChild(node, visit);
+    if (pushed) stack.pop();
+  };
+  visit(source);
+  return nested;
+}
+
+test("STRUCTURAL GUARD: no test() call is lexically nested inside another test callback (AST)", () => {
+  const file = "tests/legal-evidence-visibility.test.ts";
+  const nested = findNestedTestDeclarations(file);
+  assert.deepEqual(nested, [], `test declarations must be top-level; found nesting: ${JSON.stringify(nested)}`);
+  assert.deepEqual(syntaxErrors(read(file), file), [], "this file must be syntactically valid");
+});
+
+test("STRUCTURAL GUARD: the AST walker actually detects nesting (it is not a no-op check)", () => {
+  // Self-test on an intentionally broken sample, so a future refactor cannot silently neuter the guard.
+  const sample = [
+    'import test from "node:test";',
+    'test("parent", () => {',
+    '  test("child", () => {});',
+    '});',
+  ].join("\n");
+  const parser = ts.createSourceFile("sample.ts", sample, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const found: string[] = [];
+  const stack: string[] = [];
+  const walk = (node: ts.Node) => {
+    let pushed = false;
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && TEST_DECLARATION_NAMES.has(node.expression.text)) {
+      if (stack.length > 0) found.push(node.expression.text);
+      if (node.arguments.some((a) => ts.isArrowFunction(a) || ts.isFunctionExpression(a))) { stack.push(node.expression.text); pushed = true; }
+    }
+    ts.forEachChild(node, walk);
+    if (pushed) stack.pop();
+  };
+  walk(parser);
+  assert.deepEqual(found, ["test"], "the walker must flag a nested test() declaration");
+  // The orphan `});` that caused CI run 37144033239 was ALSO a syntax error, so the sample must compile
+  // cleanly - proving the transpile-based check below has something real to detect.
+  assert.deepEqual(syntaxErrors(sample, "sample.ts"), [], "the sample must parse cleanly");
+});
+
+/**
+ * Syntax errors via the public transpile API (`SourceFile.parseDiagnostics` is not public API).
+ * A swallowed/duplicated declaration leaves stray `});` behind, which this catches even on runtimes
+ * whose test runner tolerates the resulting mis-nesting.
+ */
+function syntaxErrors(source: string, fileName: string): string[] {
+  const result = ts.transpileModule(source, { fileName, reportDiagnostics: true, compilerOptions: { target: ts.ScriptTarget.ESNext, isolatedModules: true } });
+  return (result.diagnostics ?? []).filter((d) => d.category === ts.DiagnosticCategory.Error).map((d) => ts.flattenDiagnosticMessageText(d.messageText, " "));
+}
 
 // ---- ADMIN: the evidence join ---------------------------------------------------------------
 test("admin order detail returns legal acceptances joined through versions and documents", () => {
@@ -74,6 +159,9 @@ test("the admin exact-version URL is built from slug + id and always carries the
   const src = orderView();
   assert.match(src, /acceptedLegalHref = \(d: AcceptedLegalDocumentView\) => `\/legal\/\$\{encodeURIComponent\(d\.slug\)\}\?version=\$\{encodeURIComponent\(d\.documentVersionId\)\}`/);
   // Never a bare /legal/{slug}: that would drift to whatever is effective now.
+  assert.doesNotMatch(src, /href=\{`\/legal\/\$\{d\.slug\}`\}/);
+});
+
 // ---- shared ordering -------------------------------------------------------------------------
 test("accepted documents are ordered pre-information, then distance-sales, then the rest", () => {
   const out = toAcceptedLegalDocuments([row("distance-sales"), row("privacy"), row("pre-information")]);
@@ -139,8 +227,6 @@ test("server-side legal validation, transaction rollback and idempotency are unt
   assert.match(src, /db\.transaction\(async \(tx\) => \{/, "the write stays inside one transaction");
   assert.match(src, /IdempotentReplay/, "idempotency replay is preserved");
 });
-  assert.doesNotMatch(src, /href=\{`\/legal\/\$\{d\.slug\}`\}/);
-});
 
 test("a legacy order with zero acceptances renders a neutral message, not an error or corruption claim", () => {
   const src = orderView();
@@ -200,13 +286,4 @@ test("no schema, migration or dependency file was touched by this slice", () => 
   assert.doesNotMatch(schema, /acceptanceSnapshot|acceptedTitle|acceptedVersion|acceptedSlug/);
   assert.match(read("app/api/orders/route.ts"), /orderLegalAcceptances\)\.values\(/, "acceptances are still written the same way");
   assert.match(read("tests/legal-checkout.test.ts"), /checkLegalAcceptance/, "the pre-existing rejection tests still exist");
-});
-
-test("every test in this file is top-level (guards the Node 22 nested-test regression)", () => {
-  const CALL = "test" + "(";
-  const lines = read("tests/legal-evidence-visibility.test.ts").split("\n");
-  assert.equal(lines.filter((l) => l.startsWith(CALL)).length, 22, "all twenty-two tests are top-level");
-  // Only an INDENTED `test(` can be a nested declaration; a column-0 one is top-level by construction.
-  const indented = lines.filter((l) => l.startsWith("  " + CALL));
-  assert.equal(indented.length, 0, "no test may be declared inside another test body");
 });
