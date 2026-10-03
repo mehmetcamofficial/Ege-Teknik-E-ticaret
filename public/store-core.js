@@ -59,9 +59,76 @@ let legalRequirements=null;
 async function loadLegalRequirements(){legalRequirements=null;try{const response=await fetch('/api/legal/required');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents)&&data.documents.length)legalRequirements=data.documents}catch{}renderLegalConsents();return legalRequirements}
 /* Exact-version link: opens the very version whose id the box submits; opening it never ticks the box. */
 function legalVersionHref(d){return '/legal/'+encodeURIComponent(d.slug)+'?version='+encodeURIComponent(d.versionId)}
-function renderLegalConsents(){const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" required data-legal-version="${esc(d.versionId)}"><span><a href="${esc(legalVersionHref(d))}" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
+function renderLegalConsents(){const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" required data-legal-version="${esc(d.versionId)}"${legalPreview?'':' disabled'}><span><a href="${esc(legalVersionHref(d))}" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
 function acceptedLegalVersionIds(boxes){return Array.from(boxes||[]).filter(box=>box.checked).map(box=>box.dataset.legalVersion)}
 function legalConsentsComplete(requirements,acceptedIds){return Boolean(requirements&&requirements.length)&&requirements.every(d=>acceptedIds.includes(d.versionId))}
+/* ---- P3-LEGAL-3C.4 / P2.2: pre-acceptance legal preview ---------------------------------------------
+   The customer must read the FULL order-specific legal text BEFORE ticking acceptance. The server renders it,
+   signs what it showed with a short-lived stateless token, and POST /api/orders re-proves the same context.
+   The token lives ONLY in page memory: never localStorage, sessionStorage, cookies, the URL, or the console. */
+let legalPreview=null;
+let legalPreviewLoading=false;
+
+/* The client invalidation set. Every field the SERVER binds into the canonical preview context must appear here, or a
+   customer could edit it and still submit a preview of the old text. Locked by a test against the server context. */
+const LEGAL_PREVIEW_FIELDS=['customerName','phone','email','city','district','address','delivery','note'];
+function legalPreviewRelevantField(name){return LEGAL_PREVIEW_FIELDS.includes(name)}
+/* Cart identity/quantity changes matter too, and they are not form fields. */
+function legalPreviewCartChanged(){return true}
+
+function legalPreviewExpired(at,now){return !at||!(now<=at)}
+function legalPreviewAcceptanceIds(preview,checkedIds){return preview.documents.filter(d=>checkedIds.includes(d.documentVersionId)).map(d=>d.documentVersionId)}
+
+/* THE single invalidation boundary. Everything else calls this - never a partial reset. */
+function invalidateLegalPreview(){
+  legalPreview=null;legalPreviewLoading=false;
+  for(const box of document.querySelectorAll('[data-legal-version]')){box.checked=false;box.disabled=true}
+  const status=document.querySelector('[data-legal-preview-status]');if(status)status.textContent='Hukuki metinler değişti. Onaylamadan önce metinleri yeniden oluşturmanız gerekiyor.';
+  renderLegalPreview()
+}
+
+/* The rendered body is SERVER PLAIN TEXT. It is written with textContent only - never innerHTML - so a customer value
+   can never become markup. Line breaks are preserved by rendering the text into a <pre>-like block element. */
+function renderLegalPreview(){
+  const host=document.querySelector('[data-legal-preview]');if(!host)return
+  host.replaceChildren();
+  if(!legalPreview)return
+  const head=document.createElement('p');head.className='field-help';head.setAttribute('role','status');
+  head.textContent='Sipariş numarası: '+legalPreview.orderNumber;host.appendChild(head);
+  for(const doc of legalPreview.documents){
+    const details=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('div');
+    summary.textContent=doc.title+' — Sürüm '+doc.version;details.appendChild(summary);
+    body.className='legal-preview-body';body.style.whiteSpace='pre-wrap';body.textContent=doc.renderedBody;details.appendChild(body);host.appendChild(details)
+  }
+  for(const box of document.querySelectorAll('[data-legal-version]')){box.disabled=false}
+}
+
+async function requestLegalPreview(form){
+  if(legalPreviewLoading)return legalPreview
+  const host=document.querySelector('[data-legal-preview]'),status=document.querySelector('[data-legal-preview-status]'),button=document.querySelector('[data-legal-preview-prepare]');
+  legalPreviewLoading=true;if(button)button.disabled=true;
+  if(status){status.textContent='Hukuki metinler hazırlanıyor…';status.setAttribute('aria-busy','true')}
+  const payload=checkoutRequestPayload(form);
+  try{
+    const response=await fetch('/api/checkout/legal-preview',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+    const data=await response.json().catch(()=>({}));
+    if(response.status===429){invalidateLegalPreview();if(status)status.textContent='Hukuki metin istekleri sınırına ulaşıldı. Lütfen biraz sonra tekrar deneyin.';return null}
+    if(!response.ok||!data.legalPreviewToken||!Array.isArray(data.documents)||!data.documents.length){invalidateLegalPreview();if(status)status.textContent=(data.error||'Hukuki metinler oluşturulamadı.');return null}
+    legalPreview={token:data.legalPreviewToken,orderNumber:data.orderNumber,orderIssuedAt:data.orderIssuedAt,expiresAt:data.expiresAt,documents:data.documents};
+    if(status){status.textContent='Metinleri okudum, onaylayabilirim.';status.setAttribute('aria-busy','false')}
+    /* Acceptance ids come from the PREVIEW only - never from a separately fetched current-version list. */
+    renderLegalConsents();renderLegalPreview();return legalPreview
+  }catch{invalidateLegalPreview();if(status)status.textContent='Bağlantı kurulamadı. Lütfen tekrar deneyin.';return null}
+  finally{legalPreviewLoading=false;if(button){button.disabled=false;button.textContent=legalPreview?'Hukuki metinleri güncelle':'Hukuki metinleri hazırla'}}
+}
+
+/* ONE checkout payload builder, used by BOTH the preview and the order so the two can never drift. */
+function checkoutRequestPayload(form){
+  const entries=getCart(),products=getProducts(),payload=buildOrderPayload({customerName:'',phone:'',email:'',city:'',address:'',paymentProvider:''},entries,products);
+  const d=new FormData(form),lines=cartLines(entries,products),choice=deliveryChoice(lines,{city:d.get('city'),district:d.get('district'),delivery:d.get('delivery')}),summary=checkoutSummary(cartTotal(lines),choice);
+  Object.assign(payload,{expectedTotal:summary.total,delivery:choice.method,district:d.get('district')||'',marketing:marketingChoices(form.querySelectorAll('[data-marketing-channel]')),customerName:d.get('customerName')||'',phone:d.get('phone')||'',email:d.get('email')||'',city:d.get('city')||'',address:d.get('address')||''});
+  return payload
+}
 function orderAttemptKey(store){let key=null;try{key=store.getItem('ege-order-attempt')}catch{}if(!key){key=crypto.randomUUID();try{store.setItem('ege-order-attempt',key)}catch{}}return key}
 function clearOrderAttemptKey(store){try{store.removeItem('ege-order-attempt')}catch{}}
 function readCartRaw(){try{return JSON.parse(localStorage.getItem('ege-cart')||'[]')}catch{return []}}
@@ -268,14 +335,23 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=
   if(!legalConsentsComplete(legalRequirements,accepted)){say(legalRequirements?'Devam etmek için tüm yasal metinleri kabul etmelisiniz.':'Yasal metinler yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.');return}
   const d=new FormData(f),lines=cartLines(entries,products),choice=deliveryChoice(lines,{city:d.get('city'),district:d.get('district'),delivery:d.get('delivery')}),summary=checkoutSummary(cartTotal(lines),choice);
   if(summary.total===null){say(checkoutNotice(summary.blocked));return}
-  Object.assign(payload,{expectedTotal:summary.total,delivery:choice.method,district:d.get('district')||'',marketing:marketingChoices(f.querySelectorAll('[data-marketing-channel]')),customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city')||'',address:d.get('address')||'',paymentProvider:d.get('provider'),note:d.get('note')||'',legalAcceptances:accepted});
+  /* P3-LEGAL-3C.4: no order may be submitted without a live, accepted legal preview. The browser expiry check is UX
+     only - the server re-verifies the token authoritatively. */
+  if(!legalPreview||!legalPreview.token){say('Siparişi tamamlamak için önce hukuki metinleri oluşturup onaylamanız gerekiyor.');return}
+  if(legalPreviewExpired(legalPreview.expiresAt,Date.now())){invalidateLegalPreview();say('Hukuki metinlerin geçerlilik süresi doldu. Siparişi tamamlamadan önce metinleri yeniden oluşturup onaylayın.');return}
+  const previewAccepted=legalPreviewAcceptanceIds(legalPreview,acceptedLegalVersionIds(f.querySelectorAll('[data-legal-version]')));
+  if(previewAccepted.length!==legalPreview.documents.length){invalidateLegalPreview();say('Hukuki metinlerin tümünü onaylamanız gerekiyor.');return}
+  Object.assign(payload,{expectedTotal:summary.total,delivery:choice.method,district:d.get('district')||'',marketing:marketingChoices(f.querySelectorAll('[data-marketing-channel]')),customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city')||'',address:d.get('address')||'',paymentProvider:d.get('provider'),note:d.get('note')||'',legalAcceptances:previewAccepted,legalPreviewToken:legalPreview.token});
   const attemptKey=orderAttemptKey(sessionStorage);
   if(button){button.disabled=true;button.textContent='Sipariş kaydediliyor…'}
   try{
     const response=await fetch('/api/orders',{method:'POST',headers:{'content-type':'application/json','idempotency-key':attemptKey},body:JSON.stringify(payload)});
     const data=await response.json().catch(()=>({}));
     /* The attempt key is released only when the server rejected the request itself (invalid, legal version changed, key reused for a different request), so the corrected form gets a fresh key. Stock conflicts, 5xx and network failures keep it so a retry dedupes. */
-    if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();throw new Error(data.error||'Sipariş kaydedilemedi')}
+    if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);
+      /* P3-LEGAL-3C.4: the server rejected our preview. Keep the customer's data and cart, drop the stale preview,
+         uncheck + disable acceptance, and never retry automatically - the customer must read and re-accept. */
+      if(data.code==='LEGAL_PREVIEW_INVALID'){invalidateLegalPreview();say('Hukuki metinler güncellendi. Devam etmek için metinleri yeniden oluşturup onaylayın.');return}if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();throw new Error(data.error||'Sipariş kaydedilemedi')}
     // Cart and attempt key are cleared only once the server has confirmed the order.
     clearOrderAttemptKey(sessionStorage);writeCart([]);
     renderOrderConfirmation(data);
@@ -333,7 +409,18 @@ document.addEventListener('change',e=>{if(e.target.matches?.('[data-review-sort]
 document.addEventListener('change',e=>{const input=e.target.closest?.('[data-product-quantity]');if(input)input.value=String(normalizeProductQuantity(input.value,productDetail?.stock)||1)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('help-panel')?.hidden===false){setHelpOpen(false);return}if(e.key==='Escape'&&document.querySelector('.catalog-filters.open')){setFiltersOpen(false);document.querySelector('[data-action="toggle-filters"]')?.focus();return}if(e.key==='Escape'){const open=document.querySelector('.store-nav>[data-action="toggle-menu"][aria-expanded="true"]');if(open){setMenu(open,false);open.focus();return}}const thumb=e.target.closest?.('[data-action="gallery-select"]');if(!thumb||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const count=approvedGallery(productDetail).length;if(!count)return;const current=Number(thumb.dataset.index),next=e.key==='Home'?0:e.key==='End'?count-1:(current+(e.key==='ArrowRight'?1:-1)+count)%count;selectProductGallery(next);document.querySelector(`[data-action="gallery-select"][data-index="${next}"]`)?.focus()});
 
-document.addEventListener('DOMContentLoaded',()=>{updateCartCount();updateFavoritesCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);if(document.querySelector('[data-legal-consents]'))void loadLegalRequirements();if(document.querySelector('[data-charge-summary]'))void loadCheckoutCharges();document.querySelector('[data-checkout-form]')?.addEventListener('change',e=>{const t=e.target;if(!t||!t.matches)return;if(t.matches('[name=city]'))onProvinceChange();else if(t.matches('[name=district],[name=delivery]'))renderChargeSummary()});void renderKvkkNotices();document.querySelectorAll('[name=category]').forEach(x=>x.addEventListener('change',renderCatalog));document.querySelector('#catalog-search')?.addEventListener('input',renderCatalog);void loadCatalog()});
+/* P3-LEGAL-3C.4: the single legal-review control plus ONE invalidation boundary for every relevant edit.
+   There is deliberately no automatic preview request here: the endpoint is limited to 8 per 15 minutes, so the
+   customer asks for the texts explicitly and edits only invalidate what they already prepared. */
+function wireLegalPreview(){
+  const form=document.querySelector('[data-checkout-form]');if(!form)return;
+  const prepare=document.querySelector('[data-legal-preview-prepare]');
+  if(prepare)prepare.addEventListener('click',()=>{void requestLegalPreview(form)});
+  form.addEventListener('change',e=>{const t=e.target;if(t&&t.name&&legalPreviewRelevantField(t.name))invalidateLegalPreview()});
+  form.addEventListener('input',e=>{const t=e.target;if(t&&t.name&&legalPreviewRelevantField(t.name))invalidateLegalPreview()});
+}
+
+document.addEventListener("DOMContentLoaded",()=>{if(document.querySelector("[data-checkout-form]"))wireLegalPreview();updateCartCount();updateFavoritesCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);if(document.querySelector('[data-legal-consents]'))void loadLegalRequirements();if(document.querySelector('[data-charge-summary]'))void loadCheckoutCharges();document.querySelector('[data-checkout-form]')?.addEventListener('change',e=>{const t=e.target;if(!t||!t.matches)return;if(t.matches('[name=city]'))onProvinceChange();else if(t.matches('[name=district],[name=delivery]'))renderChargeSummary()});void renderKvkkNotices();document.querySelectorAll('[name=category]').forEach(x=>x.addEventListener('change',renderCatalog));document.querySelector('#catalog-search')?.addEventListener('input',renderCatalog);void loadCatalog()});
 
 const business={name:'Ege Teknik',phone:'0542 795 75 60',phoneHref:'tel:+905427957560',wa:'https://wa.me/905427957560',email:'info@egeteknik.tr',address:'İkiçeşmelik Mahallesi Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın',map:'https://share.google/YHInB4tNwB2khqC10'};
 /* Catalog navigation is static (categories/series/capacities the catalog carries); counts and prices are never hard-coded here. */

@@ -211,13 +211,34 @@ test("E: installation remains server-derived", () => {
 });
 test("E2: the authority returns exactly the values the route already used, and refuses in the original order", () => {
   const authority = checkoutAuthoritySource();
-  const body = authority.slice(authority.indexOf("export async function resolveCheckoutAuthority"));
-  const order = ["isCustomerVisibleProduct", "marketingConsentRequested", "loadRequiredCheckoutLegalVersions", "checkLegalAcceptance", "missingNoticeSlugs", "getDb().select", "priceOrderLines", "planDelivery", "finalizeOrderTotals", "totalMatchesDisplayed"];
+  // P3-LEGAL-3C.4/P2 split the authority into layers so a preview can stop before the acceptance gate. The
+  // COMPOSED entry point must still run them in the canonical order, and each layer's own checks must keep theirs.
+  const composed = authority.slice(authority.indexOf("export async function resolveCheckoutAuthority"));
+  const composedOrder = ["resolveCheckoutPreflight", "assertOrderSubmissionLegalGates", "resolveCheckoutCalculation"];
   let cursor = -1;
-  for (const marker of order) {
-    const at = body.indexOf(marker);
+  for (const marker of composedOrder) {
+    const at = composed.indexOf(marker);
     assert.ok(at > cursor, `${marker} must run in the canonical order`);
     cursor = at;
+  }
+  const preflight = authority.slice(authority.indexOf("export async function resolveCheckoutPreflight"), authority.indexOf("export async function assertOrderSubmissionLegalGates"));
+  const gates = authority.slice(authority.indexOf("export async function assertOrderSubmissionLegalGates"), authority.indexOf("export async function resolveCheckoutCalculation"));
+  const calculation = authority.slice(authority.indexOf("export async function resolveCheckoutCalculation"), authority.indexOf("export async function resolveCheckoutAuthority"));
+  for (const marker of ["isCustomerVisibleProduct", "marketingConsentRequested", "loadRequiredCheckoutLegalVersions"]) {
+    assert.ok(preflight.includes(marker), `preflight must still run ${marker}`);
+  }
+  let gateCursor = -1;
+  for (const marker of ["checkLegalAcceptance", "missingNoticeSlugs"]) {
+    const at = gates.indexOf(marker);
+    assert.ok(at > gateCursor, `${marker} must run in the canonical order`);
+    gateCursor = at;
+  }
+  const calcOrder = ["getDb().select", "priceOrderLines", "planDelivery", "finalizeOrderTotals", "totalMatchesDisplayed"];
+  let calcCursor = -1;
+  for (const marker of calcOrder) {
+    const at = calculation.indexOf(marker);
+    assert.ok(at > calcCursor, `${marker} must run in the canonical order`);
+    calcCursor = at;
   }
 });
 

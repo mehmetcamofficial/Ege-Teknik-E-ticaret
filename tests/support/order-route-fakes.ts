@@ -25,6 +25,11 @@ export const state = {
   existingOrder: null as Row | null,
   required: [] as { slug: string; title: string; versionId: string }[],
   notices: [] as string[],
+  /**
+   * P3-LEGAL-3C.4/P2: the published BODY of each required legal version. A test can mutate this between a preview
+   * and the order to simulate a template change, which must invalidate the preview.
+   */
+  legalBodies: {} as Record<string, string>,
   /** P3-A3: the guest lookup's in-memory order and items, plus what the store was asked for. */
   lookupOrder: null as Row | null,
   lookupItems: [] as Row[],
@@ -41,6 +46,8 @@ export function resetState() {
   state.existingOrder = null;
   state.required = [];
   state.notices = ["kvkk"];
+  // P3-LEGAL-3C.4/P2: must be cleared too, or a template mutated by one test leaks into the next.
+  for (const key of Object.keys(state.legalBodies)) delete state.legalBodies[key];
   state.lookupOrder = null;
   state.lookupItems = [];
   state.storeCalls.length = 0;
@@ -115,6 +122,18 @@ export function getDb() {
 // ---- "@/lib/legal-db" --------------------------------------------------------------------------------
 export async function loadRequiredCheckoutLegalVersions() {
   return { ok: true as const, required: state.required };
+}
+/**
+ * P3-LEGAL-3C.4/P2: the preview and the order re-render from the CURRENT published bodies, so the fake must expose
+ * a body per required version. Derived from the same `state.required` the order validates against, so a test sees
+ * exactly the versions that would really be used.
+ */
+export const DEFAULT_LEGAL_TEMPLATE_BODY = "Sözleşme {{ALICI_AD_SOYAD}} / {{TESLIMAT_ADRESI}} / {{SIPARIS_NO}} / {{SIPARIS_TARIHI}} / {{TESLIMAT_YONTEMI}} / {{ALICI_EPOSTA}} / {{ALICI_TELEFON}} / {{URUN_SATIRLARI}} / {{URUN_TOPLAMI}} / {{TOPLAM_TUTAR}} / {{KARGO_UCRETI}} / {{DIGER_EK_MASRAFLAR}} / {{FATURA_BILGILERI}}";
+export async function loadRequiredCheckoutLegalDocuments() {
+  return {
+    ok: true as const,
+    required: state.required.map((d) => ({ slug: d.slug, title: d.title, versionId: d.versionId, version: 1, body: state.legalBodies[d.versionId] ?? DEFAULT_LEGAL_TEMPLATE_BODY })),
+  };
 }
 export async function loadCurrentLegalIndex() {
   return state.notices.map((slug) => ({ slug }));

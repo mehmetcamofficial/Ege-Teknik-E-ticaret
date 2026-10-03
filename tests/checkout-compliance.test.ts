@@ -10,7 +10,7 @@ const route = readFileSync("app/api/orders/route.ts", "utf8");
 // P3-LEGAL-3C.3/P1: the server-authoritative calculation now lives in its own read-and-calculate module, which the
 // route delegates to. `flow` is what the server decides overall; ordering claims are still made against `route`.
 const authority = readFileSync("lib/checkout-authority.ts", "utf8");
-const authorityBody = authority.slice(authority.indexOf("export async function resolveCheckoutAuthority"));
+const authorityBody = authority.slice(authority.indexOf("export async function resolveCheckoutPreflight"), authority.indexOf("export async function resolveCheckoutCalculation"));
 const flow = `${route}\n${authority}`;
 const html = readFileSync("public/checkout.html", "utf8");
 const store = storefrontCoreSource();

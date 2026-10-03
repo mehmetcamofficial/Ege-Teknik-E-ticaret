@@ -36,6 +36,8 @@ type StorefrontApi = {
   acceptedLegalVersionIds: (boxes: unknown) => string[];
   legalConsentsComplete: (requirements: unknown, acceptedIds: string[]) => boolean;
   submitOrder: (event: unknown) => Promise<void>;
+  /** P3-LEGAL-3C.4: the client obtains its order-specific legal text from a signed preview before accepting. */
+  requestLegalPreview: (form: unknown) => Promise<{ token?: string; orderNumber?: string } | null>;
   addCart: (id: string) => void;
   removeCart: (id: string) => void;
   pruneCart: () => number;
@@ -98,7 +100,24 @@ const catalogFetch = (orderResponse?: () => Promise<unknown>) => (url: string) =
   url === "/api/products" ? jsonResponse(200, { products: apiProducts })
     : url === "/api/legal/required" ? jsonResponse(200, { documents: legalDocuments })
     : url === "/api/checkout/charges" ? jsonResponse(200, DEFAULT_CHARGES)
+    // P3-LEGAL-3C.4: checkout now obtains its order-specific legal text from a signed preview before accepting.
+    : url === "/api/checkout/legal-preview" ? jsonResponse(200, {
+        ok: true, orderNumber: "ETS-20261003-PREVIEW", orderIssuedAt: 1757000000000, expiresAt: 4102444800000,
+        legalPreviewToken: "preview.payload.signature",
+        documents: legalDocuments.map((d) => ({ slug: d.slug, title: d.title, version: 1, documentVersionId: d.versionId, renderedBody: `Sozlesme: ${d.title}` })),
+      })
     : (orderResponse ? orderResponse() : Promise.reject(new Error("offline")));
+
+/**
+ * P3-LEGAL-3C.4: the order contract is now "preview -> accept -> submit". Existing tests keep their ORIGINAL intent
+ * (payload minimisation, cart preservation, refusal handling) and gain ONE explicit setup step: obtain the preview.
+ * Tests that must observe "cannot submit without acceptance" simply do not call this.
+ */
+const prepareLegalPreview = async (ctx: { requestLegalPreview: (form: unknown) => Promise<unknown> }, form: unknown) => {
+  const preview = (await ctx.requestLegalPreview(form)) as { token?: string } | null;
+  assert.ok(preview && preview.token, "the test must obtain a legal preview before submitting an order");
+  return preview;
+};
 
 const checkoutForm = (ticked: string[] = legalDocuments.map((d) => d.versionId)) => {
   const button = { disabled: false, textContent: "Siparişi tamamla" };
@@ -113,7 +132,7 @@ const checkoutForm = (ticked: string[] = legalDocuments.map((d) => d.versionId))
 
 test("storefront exposes its cart logic and is not authoritative before the API answers", () => {
   const { ctx } = loadStorefront();
-  for (const fn of ["normalizeCartEntries", "cartLines", "cartTotal", "orderItemsPayload", "buildOrderPayload", "orderAttemptKey", "submitOrder", "loadCatalog"]) {
+  for (const fn of ["normalizeCartEntries", "cartLines", "cartTotal", "orderItemsPayload", "buildOrderPayload", "orderAttemptKey", "submitOrder", "loadCatalog", "requestLegalPreview"]) {
     assert.equal(typeof (ctx as unknown as Record<string, unknown>)[fn], "function", `${fn} should be available`);
   }
   assert.equal(ctx.catalogAuthoritative(), false);
@@ -210,6 +229,7 @@ test("checkout posts id and quantity only, with an Idempotency-Key header", asyn
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
+  await prepareLegalPreview(ctx, checkoutForm().form);
   await ctx.submitOrder(checkoutForm().event);
   const order = calls.find((c) => c.url === "/api/orders")!;
   assert.ok(order, "an order request should have been sent");
@@ -224,6 +244,7 @@ test("a confirmed order clears the cart and the attempt key", async () => {
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
+  await prepareLegalPreview(ctx, checkoutForm().form);
   await ctx.submitOrder(checkoutForm().event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), []);
   assert.equal(sessionStorage.getItem("ege-order-attempt"), null);
@@ -235,11 +256,13 @@ test("a network failure keeps the cart and reuses the same key on retry", async 
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
   const first = checkoutForm();
+  await prepareLegalPreview(ctx, first.form);
   await ctx.submitOrder(first.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 2 }], "cart must survive a failure");
   const keyAfterFailure = sessionStorage.getItem("ege-order-attempt");
   assert.ok(keyAfterFailure);
   assert.equal(first.button.disabled, false, "the button must be re-enabled for a retry");
+  await prepareLegalPreview(ctx, checkoutForm().form);
   await ctx.submitOrder(checkoutForm().event);
   const orderCalls = calls.filter((c) => c.url === "/api/orders");
   assert.equal(orderCalls.length, 2);
@@ -252,6 +275,7 @@ test("an out-of-stock rejection keeps the cart and surfaces the server message",
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
   const checkout = checkoutForm();
+  await prepareLegalPreview(ctx, checkout.form);
   await ctx.submitOrder(checkout.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 2 }]);
   assert.match(checkout.result.textContent, /stok yok/);
@@ -264,6 +288,7 @@ test("a validation rejection keeps the cart intact", async () => {
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
   const checkout = checkoutForm();
+  await prepareLegalPreview(ctx, checkout.form);
   await ctx.submitOrder(checkout.event);
   assert.deepEqual(JSON.parse(localStorage.getItem("ege-cart")!), [{ productId: BACKEND_ID, quantity: 1 }]);
   assert.match(checkout.result.textContent, /kontrol edin/);
@@ -285,6 +310,7 @@ test("checkout refuses when nothing in the cart is sellable", async () => {
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
   const checkout = checkoutForm();
+  await prepareLegalPreview(ctx, checkout.form);
   await ctx.submitOrder(checkout.event);
   assert.equal(calls.filter((c) => c.url === "/api/orders").length, 0);
   assert.match(checkout.result.textContent, /satın alınabilir ürün yok/);
@@ -297,6 +323,7 @@ test("checkout blocks submission when a required legal box is unticked", async (
   await ctx.loadCheckoutCharges();
   for (const ticked of [[], ["ver-ds-1"], ["ver-pi-1"]]) {
     const checkout = checkoutForm(ticked);
+    await prepareLegalPreview(ctx, checkout.form);
     await ctx.submitOrder(checkout.event);
     assert.match(checkout.result.textContent, /yasal metinleri kabul/);
   }
@@ -319,6 +346,7 @@ test("the order request carries the ticked legal version ids, sorted as the serv
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
+  await prepareLegalPreview(ctx, checkoutForm().form);
   await ctx.submitOrder(checkoutForm().event);
   const body = JSON.parse(calls.find((c) => c.url === "/api/orders")!.body);
   assert.deepEqual(body.legalAcceptances, ["ver-ds-1", "ver-pi-1"]);
@@ -331,6 +359,7 @@ test("a legal version mismatch releases the attempt key and reloads the requirem
   await ctx.loadCatalog();
   await ctx.loadLegalRequirements();
   await ctx.loadCheckoutCharges();
+  await prepareLegalPreview(ctx, checkoutForm().form);
   await ctx.submitOrder(checkoutForm().event);
   assert.equal(sessionStorage.getItem("ege-order-attempt"), null, "a corrected request must not reuse the rejected key");
   assert.equal(calls.filter((c) => c.url === "/api/legal/required").length, 2, "requirements are reloaded after a mismatch");

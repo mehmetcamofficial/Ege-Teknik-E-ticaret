@@ -142,7 +142,7 @@ test("admin UI section is rendered only for legal:write holders and published ve
 // ---- public side ---------------------------------------------------------------------------------
 test("public loaders exclude drafts in SQL and preview is auth-only", () => {
   const db = readFileSync("lib/legal-db.ts", "utf8");
-  assert.equal((db.match(/isNotNull\(legalDocumentVersions\.publishedAt\)/g) ?? []).length, 3);
+  assert.equal((db.match(/isNotNull\(legalDocumentVersions\.publishedAt\)/g) ?? []).length, 4);
   assert.doesNotMatch(readFileSync("app/legal/[slug]/route.ts", "utf8"), /renderLegalDraftPreview/);
 });
 test("checkout is unchanged: still resolves required versions server-side and links exact versions", () => {

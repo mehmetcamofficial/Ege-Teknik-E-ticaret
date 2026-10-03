@@ -224,7 +224,7 @@ test("an idempotent replay yields an equivalent legal summary to the first respo
 test("server-side legal validation, transaction rollback and idempotency are untouched", () => {
   const src = orderRoute();
   assert.match(authoritySrc, /loadRequiredCheckoutLegalVersions\(\)/, "the server still resolves the required versions itself");
-  assert.match(authoritySrc, /checkLegalAcceptance\(legal\.required, parsed\.data\.legalAcceptances\)/, "client ids are still re-validated");
+  assert.match(authoritySrc, /checkLegalAcceptance\(requiredLegal, parsed\.data\.legalAcceptances\)/, "client ids are still re-validated");
   assert.match(authoritySrc, /LEGAL_DOCUMENTS_UNAVAILABLE/, "fail-closed behaviour is preserved");
   assert.match(src, /db\.transaction\(async \(tx\) => \{/, "the write stays inside one transaction");
   assert.match(src, /IdempotentReplay/, "idempotency replay is preserved");

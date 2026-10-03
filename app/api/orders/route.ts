@@ -2,7 +2,9 @@ import { getDb } from "@/db";
 import { addresses, customers, inventory, orderItems, orderLegalAcceptances, orders } from "@/db/schema";
 import { resolveCheckoutAuthority } from "@/lib/checkout-authority";
 import { deliveryTraits, type DeliveryClass } from "@/lib/delivery";
-import { loadOrderAcceptedLegalDocuments } from "@/lib/legal-db";
+import { loadOrderAcceptedLegalDocuments, loadRequiredCheckoutLegalDocuments } from "@/lib/legal-db";
+import { resolveLegalPreviewBinding } from "@/lib/legal-preview-binding";
+import { legalPreviewSigningSecret } from "@/lib/legal-preview-token";
 import { deliverySummaryFromSnapshot, installationPreferenceFor, orderRequestFingerprint, orderRequestSchema, toOrderConfirmation, toPublicOrderItem } from "@/lib/order-domain";
 import { idempotencyKey } from "@/lib/request-security";
 import { publicRoute, rateLimit, readJson } from "@/lib/http-security";
@@ -40,7 +42,27 @@ async function createOrder(request: Request) {
   const authority = await resolveCheckoutAuthority({ data: parsed.data }, requested);
   if (!authority.ok) return Response.json(authority.body, { status: authority.status });
   const { lines, plan, subtotal, vatTotal, total, shippingTotal, installationTotal } = authority;
-  const id = crypto.randomUUID(), customerId = crypto.randomUUID(), addressId = crypto.randomUUID(), orderNumber = `ETS-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${id.slice(0, 6).toUpperCase()}`;
+  const customerId = crypto.randomUUID(), addressId = crypto.randomUUID();
+  // P3-LEGAL-3C.4 / P2: the order may only exist if it is the SAME order context whose legal text the customer
+  // already read and accepted. The signed preview token is verified cryptographically AND re-checked against
+  // current server state: the context is rebuilt from live prices/tariffs/versions, the required legal documents
+  // are re-rendered, and every digest must match. Anything else fails closed and asks for a fresh preview.
+  // Idempotent replay returned above, so a retry never needs a live token to read back a committed order.
+  const legalDocuments = await loadRequiredCheckoutLegalDocuments();
+  if (!legalDocuments.ok) return Response.json({ error: "Yasal metinler şu anda yayında değil; sipariş alınamıyor.", code: "LEGAL_DOCUMENTS_UNAVAILABLE" }, { status: 503 });
+  const binding = resolveLegalPreviewBinding({
+    data: parsed.data,
+    calculation: authority,
+    documents: legalDocuments.required,
+    token: parsed.data.legalPreviewToken,
+    secret: legalPreviewSigningSecret(),
+    billing: `${parsed.data.customerName} / ${parsed.data.city}`,
+  });
+  if (!binding.ok) return Response.json({ error: "Yasal metinler güncellendi; lütfen metinleri yeniden inceleyip onaylayın.", code: "LEGAL_PREVIEW_INVALID" }, { status: 409 });
+  // Reuse the identity minted at preview time. NEVER regenerate it here: the contract the customer accepted names it.
+  const id = crypto.randomUUID();
+  const orderNumber = binding.orderNumber;
+  // The legally displayed order timestamp is frozen at preview; the acceptance moment is recorded separately.
   const acceptedAt = new Date(); // server-generated; the client never supplies it
   try {
     await db.transaction(async (tx) => {

@@ -32,7 +32,14 @@ async function prepared(api: Record<string, unknown> = {}, storage: Record<strin
   await store.fn<() => Promise<void>>("loadCheckoutCharges")();
   return store;
 }
-const submit = (store: Awaited<ReturnType<typeof prepared>>, f: unknown) => store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
+const submit = async (store: Awaited<ReturnType<typeof prepared>>, f: unknown) => {
+  // P3-LEGAL-3C.4: the order contract is "preview -> accept -> submit". Every test that reaches an order goes
+  // through the SAME one explicit setup step here, so each keeps its original intent (payload minimisation, cart
+  // preservation, refusal handling) and none needs its own copy of preview boilerplate.
+  const preview = await store.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(f);
+  assert.ok(preview, "the client must obtain a legal preview before it can submit an order");
+  return store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
+};
 const body = (store: Awaited<ReturnType<typeof prepared>>) => JSON.parse(store.orderBodies[0]);
 
 // ---- air conditioner (installed_delivery) --------------------------------------------------------------

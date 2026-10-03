@@ -202,6 +202,11 @@ export function loadStorefront(options: {
       if (url === "/api/second-hand") return respond(api.secondHand, "products");
       if (url === "/api/blog") return respond(api.blog, "posts");
       if (url === "/api/legal/required") return Promise.resolve({ ok: true, status: 200, json: async () => ({ documents: [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", versionId: "ver-ds-1" }] }) });
+      if (url === "/api/checkout/legal-preview") return Promise.resolve({ ok: true, status: 200, json: async () => ({
+        ok: true, orderNumber: "ETS-20261003-PREVIEW", orderIssuedAt: 1757000000000, expiresAt: 4102444800000,
+        legalPreviewToken: "preview.payload.signature",
+        documents: [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", version: 1, documentVersionId: "ver-ds-1", renderedBody: "Sozlesme metni" }],
+      }) });
       if (url === "/api/checkout/charges") return Promise.resolve({ ok: true, status: 200, json: async () => api.charges ?? DEFAULT_CHARGES });
       if (url === "/api/orders" && api.order) return api.order();
       return Promise.reject(new Error(`unexpected fetch ${url}`));
