@@ -368,6 +368,7 @@ test("hostile product names and delivery details in the server response are show
 test("no online payment was actually taken: the confirmation states this honestly", () => {
   assert.match(checkoutHtml, /data-confirmation-payment-notice/);
   assert.match(checkoutHtml, /Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi/);
+});
 
 // ---- P2.3: browser-observable cart invalidation (strengthened regression) ----------------------------------
 /**
@@ -477,4 +478,3 @@ test("a successful order clears the cart and the preview through the real succes
   assert.equal((wire.match(/requestLegalPreview\(/g) ?? []).length, 1, "no automatic replacement preview may be requested");
 });
 const plainCart = (store: unknown) => JSON.parse((store as { storage: Map<string, string> }).storage.get("ege-cart") ?? "[]");
-});
