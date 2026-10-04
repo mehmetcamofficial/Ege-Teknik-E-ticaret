@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import type { FakeElement } from "./support/storefront-sandbox.js";
 import { CONFIGURED_SHIPPING, DEFAULT_CHARGES, LIVE_HANDLER_ATTR, apiProduct, confirmationBox, fakeElement, loadStorefront, storefrontCoreSource } from "./support/storefront-sandbox.ts";
 
 /**
@@ -186,9 +187,10 @@ test("the KVKK notice reuses the exact-version link builder", () => {
 // ---- what the page shows -------------------------------------------------------------------------------
 const checkoutHtml = readFileSync("public/checkout.html", "utf8");
 const storeJs = storefrontCoreSource();
-function checkoutPage(opts: { cart?: unknown[]; charges?: Record<string, unknown>; products?: Record<string, unknown>[]; city?: string; district?: string; delivery?: string } = {}) {
+function checkoutPage(opts: { cart?: unknown[]; charges?: Record<string, unknown>; products?: Record<string, unknown>[]; city?: string; district?: string; delivery?: string; elements?: Record<string, FakeElement | FakeElement[]> } = {}) {
   const submitButton = { disabled: /data-submit-order disabled/.test(checkoutHtml), textContent: "" }; // starts exactly as the shipped HTML does
   const elements = { "[data-submit-order]": submitButton, "[data-cart-items]": fakeElement(), "[data-subtotal]": fakeElement(), "[data-vat]": fakeElement(), "[data-charge-summary]": fakeElement(), "[data-total]": fakeElement(), "[data-charge-notice]": { ...fakeElement(), hidden: true }, "[data-delivery-options]": fakeElement(), "[name=city]": { value: opts.city ?? "İzmir" }, "[name=district]": { value: opts.district ?? "Bornova", required: false }, "[data-district]": { ...fakeElement(), disabled: true, value: "" }, "[data-province]": { ...fakeElement(), value: opts.city ?? "İzmir" }, "[name=address]": { value: "" }, "[name=delivery]:checked": opts.delivery ? { value: opts.delivery } : null, "[data-address-hint]": fakeElement() } as unknown as Record<string, ReturnType<typeof fakeElement>>;
+  Object.assign(elements, opts.elements);
   const store = loadStorefront({ path: "checkout.html", elements, storage: { "ege-cart": opts.cart ?? [{ productId: "synthetic-product-1", quantity: 1 }] }, api: { products: opts.products ?? [AC(), PART()], charges: opts.charges } });
   return { store, submitButton, elements };
 }
@@ -366,4 +368,113 @@ test("hostile product names and delivery details in the server response are show
 test("no online payment was actually taken: the confirmation states this honestly", () => {
   assert.match(checkoutHtml, /data-confirmation-payment-notice/);
   assert.match(checkoutHtml, /Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi/);
+
+// ---- P2.3: browser-observable cart invalidation (strengthened regression) ----------------------------------
+/**
+ * Reproduces the manual-browser failure and asserts what a CUSTOMER can see, not an internal reference. The legal
+ * acceptance boxes are registered as REAL elements, so `invalidateLegalPreview()` - which queries document-level
+ * '[data-legal-version]' - actually mutates these objects.
+ *
+ * Path exercised: removeCart -> writeCart -> invalidateLegalPreview. The test never calls invalidateLegalPreview.
+ */
+const legalBoxes = () => [{ ...fakeElement(), type: "checkbox", required: true, checked: false, disabled: true, dataset: { legalVersion: "ver-ds-1" } }];
+
+const CART_MUTATIONS: [string, (store: { fn: <T>(n: string) => T }) => void][] = [
+  ["removeCart", (s) => s.fn<(id: string) => void>("removeCart")("synthetic-product-1")],
+  ["addCart", (s) => s.fn<(id: string, q?: number) => void>("addCart")("synthetic-product-1", 1)],
+  ["writeCart (clear)", (s) => s.fn<(e: unknown[]) => void>("writeCart")([])],
+  ["writeCart (quantity)", (s) => s.fn<(e: unknown[]) => void>("writeCart")([{ productId: "synthetic-product-1", quantity: 3 }])],
+];
+
+for (const [label, mutate] of CART_MUTATIONS) {
+  test(`${label}: the cart funnel invalidates the preview and re-locks every acceptance box`, async () => {
+    const boxes = legalBoxes();
+    const page = checkoutPage({ elements: { "[data-legal-version]": boxes } as never });
+    await page.store.fn<() => Promise<void>>("loadCatalog")();
+    const preview = (await page.store.fn<(f: unknown) => Promise<unknown>>("requestLegalPreview")(form({}).f)) as { token?: string } | null;
+    assert.ok(preview && preview.token, "must start from a valid legal preview");
+    for (const box of boxes) { box.checked = true; box.disabled = false; }
+
+    mutate(page.store as never); // the real client entry point
+
+    assert.equal(page.store.fn<() => unknown>("currentLegalPreview")(), null, "the stale preview must be invalid and unusable");
+    for (const box of boxes) {
+      assert.equal(box.checked, false, `${label}: every acceptance box must be UNCHECKED`);
+      assert.equal(box.disabled, true, `${label}: every acceptance box must be DISABLED`);
+      assert.equal(box.required, true, `${label}: native required must be retained`);
+    }
+    const core = storefrontCoreSource();
+    const wire = core.slice(core.indexOf("function wireLegalPreview("));
+    assert.equal((wire.match(/requestLegalPreview\(/g) ?? []).length, 1, "only the explicit control may request a preview");
+  });
+}
+
+test("cart invalidation preserves the customer's checkout form values", async () => {
+  const page = checkoutPage({ elements: { "[data-legal-version]": legalBoxes() } as never });
+  const custForm = form({});
+  await page.store.fn<() => Promise<void>>("loadCatalog")();
+  const preview = (await page.store.fn<(f: unknown) => Promise<unknown>>("requestLegalPreview")(custForm.f)) as { token?: string } | null;
+  assert.ok(preview && preview.token, "must start from a valid preview");
+  const before = { ...custForm.f.fields };
+  page.store.fn<(id: string) => void>("removeCart")("synthetic-product-1");
+  assert.deepEqual(custForm.f.fields, before, "invalidating a preview must never clear the customer's form");
+  assert.equal(page.store.fn<() => unknown>("currentLegalPreview")(), null);
+});
+
+/**
+ * P2.3 gap A - the REAL prune/unavailable entry point. Traced from source: `pruneCart()` is the only function that
+ * drops cart lines whose ids the served catalog no longer knows ("legacy ids such as aphro-09 disappear"), and
+ * `loadCatalog()` is its only production caller. It reaches writeCart() itself when the pruned length differs.
+ * Exercised through that real function, never writeCart() directly.
+ */
+test("pruneCart(): removing a line the catalog no longer knows invalidates the preview and re-locks the boxes", async () => {
+  const boxes = legalBoxes();
+  const page = await ready({ elements: { "[data-legal-version]": boxes } as never });
+  // seeded AFTER loadCatalog, so the real pruneCart() call below has genuine work to do
+  page.store.storage.set("ege-cart", JSON.stringify([{ productId: "legacy-gone-01", quantity: 1 }]));
+  const custForm = form({});
+  const preview = (await page.store.fn<(f: unknown) => Promise<unknown>>("requestLegalPreview")(custForm.f)) as { token?: string } | null;
+  assert.ok(preview && preview.token, "must start from a valid legal preview");
+  for (const box of boxes) { box.checked = true; box.disabled = false; }
+
+  const removed = page.store.fn<() => number>("pruneCart")(); // the real unavailable/prune entry point
+
+  assert.equal(removed, 1, "pruneCart must actually drop the unknown line");
+  assert.equal(page.store.fn<() => unknown>("currentLegalPreview")(), null, "the stale preview must be invalid and unusable");
+  for (const box of boxes) {
+    assert.equal(box.checked, false, "every acceptance box must be UNCHECKED");
+    assert.equal(box.disabled, true, "every acceptance box must be DISABLED");
+    assert.equal(box.required, true, "native required must be retained");
+  }
+  const wire = storefrontCoreSource().slice(storefrontCoreSource().indexOf("function wireLegalPreview("));
+  assert.equal((wire.match(/requestLegalPreview\(/g) ?? []).length, 1, "no automatic preview retry may exist");
+});
+
+/**
+ * P2.3 gap B - the REAL post-success cart clear. Traced from source: the cart is emptied only inside submitOrder,
+ * on the success branch, immediately after the server confirms the order ("Cart and attempt key are cleared only
+ * once the server has confirmed the order"). The test drives the existing submit() fake-route path, so no real
+ * external order is ever created.
+ */
+test("a successful order clears the cart and the preview through the real success path", async () => {
+  const boxes = legalBoxes();
+  // the SAME three-step setup prepared() uses, plus the real acceptance boxes
+  const store = loadStorefront({ storage: cart, api: { products: [AC(), PART()], order: okOrder }, elements: { "[data-legal-version]": boxes } as never });
+  await store.fn<() => Promise<void>>("loadCatalog")();
+  await store.fn<() => Promise<unknown>>("loadLegalRequirements")();
+  await store.fn<() => Promise<void>>("loadCheckoutCharges")();
+  assert.ok(JSON.parse(store.storage.get("ege-cart") ?? "[]").length > 0, "the cart must start non-empty");
+  await submit(store as never, form({}).f); // real submitOrder success branch, fake route only
+
+  assert.deepEqual(plainCart(store), [], "the cart must be empty after the server confirms the order");
+  assert.equal(store.fn<() => unknown>("currentLegalPreview")(), null, "the preview must be invalid after the cart is cleared");
+  for (const box of boxes) {
+    assert.equal(box.checked, false, "every acceptance box must be UNCHECKED");
+    assert.equal(box.disabled, true, "every acceptance box must be DISABLED");
+    assert.equal(box.required, true, "native required must be retained");
+  }
+  const wire = storefrontCoreSource().slice(storefrontCoreSource().indexOf("function wireLegalPreview("));
+  assert.equal((wire.match(/requestLegalPreview\(/g) ?? []).length, 1, "no automatic replacement preview may be requested");
+});
+const plainCart = (store: unknown) => JSON.parse((store as { storage: Map<string, string> }).storage.get("ege-cart") ?? "[]");
 });

@@ -76,6 +76,10 @@ function legalPreviewRelevantField(name){return LEGAL_PREVIEW_FIELDS.includes(na
 /* Cart identity/quantity changes matter too, and they are not form fields. */
 function legalPreviewCartChanged(){return true}
 
+/* Read-only accessor: the security-critical invalidation must be OBSERVABLE in tests, and `legalPreview` is a
+   module-level binding that a sandbox cannot read. Returns the live preview object, or null when invalidated. */
+function currentLegalPreview(){return legalPreview}
+
 function legalPreviewExpired(at,now){return !at||!(now<=at)}
 function legalPreviewAcceptanceIds(preview,checkedIds){return preview.documents.filter(d=>checkedIds.includes(d.documentVersionId)).map(d=>d.documentVersionId)}
 
@@ -133,7 +137,12 @@ function orderAttemptKey(store){let key=null;try{key=store.getItem('ege-order-at
 function clearOrderAttemptKey(store){try{store.removeItem('ege-order-attempt')}catch{}}
 function readCartRaw(){try{return JSON.parse(localStorage.getItem('ege-cart')||'[]')}catch{return []}}
 function knownProductIds(){return catalogAuthoritative()?new Set(getProducts().map(p=>p.id)):null}
-function writeCart(entries){localStorage.setItem('ege-cart',JSON.stringify(normalizeCartEntries(entries,null)));updateCartCount()}
+/* P3-LEGAL-3C.4 / P2.3: writeCart is the SINGLE funnel every cart mutation passes through (add, remove, quantity,
+   save, prune, and the post-order clear). Any of those changes checkout authority, so the legal preview MUST be
+   invalidated here. P2 originally only listened for form input/change events, which cart buttons never fire -
+   that is why removing a cart item left a stale, still-acceptable preview on screen. One boundary, no bespoke
+   checkbox resets in individual handlers, and no automatic preview refresh. */
+function writeCart(entries){localStorage.setItem('ege-cart',JSON.stringify(normalizeCartEntries(entries,null)));updateCartCount();invalidateLegalPreview()}
 /* Drops cart lines whose ids are not in the served catalog, so legacy ids such as
    "aphro-09" disappear instead of failing at checkout. */
 function pruneCart(){if(!catalogAuthoritative())return 0;const before=normalizeCartEntries(readCartRaw(),null),after=normalizeCartEntries(before,knownProductIds());if(after.length!==before.length)writeCart(after);return before.length-after.length}

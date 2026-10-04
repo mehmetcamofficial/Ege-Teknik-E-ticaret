@@ -38,8 +38,12 @@ type StorefrontApi = {
   submitOrder: (event: unknown) => Promise<void>;
   /** P3-LEGAL-3C.4: the client obtains its order-specific legal text from a signed preview before accepting. */
   requestLegalPreview: (form: unknown) => Promise<{ token?: string; orderNumber?: string } | null>;
-  addCart: (id: string) => void;
+  currentLegalPreview: () => { token?: string; documents?: unknown[] } | null;
+  renderLegalConsents: () => void;
+  writeCart: (entries: unknown[]) => void;
+  addCart: (id: string, quantity?: number) => void;
   removeCart: (id: string) => void;
+  saveCart: (entries: unknown[]) => void;
   pruneCart: () => number;
   getProducts?: unknown;
 };
@@ -132,7 +136,7 @@ const checkoutForm = (ticked: string[] = legalDocuments.map((d) => d.versionId))
 
 test("storefront exposes its cart logic and is not authoritative before the API answers", () => {
   const { ctx } = loadStorefront();
-  for (const fn of ["normalizeCartEntries", "cartLines", "cartTotal", "orderItemsPayload", "buildOrderPayload", "orderAttemptKey", "submitOrder", "loadCatalog", "requestLegalPreview"]) {
+  for (const fn of ["normalizeCartEntries", "cartLines", "cartTotal", "orderItemsPayload", "buildOrderPayload", "orderAttemptKey", "submitOrder", "loadCatalog", "requestLegalPreview", "currentLegalPreview", "renderLegalConsents", "writeCart", "addCart", "removeCart"]) {
     assert.equal(typeof (ctx as unknown as Record<string, unknown>)[fn], "function", `${fn} should be available`);
   }
   assert.equal(ctx.catalogAuthoritative(), false);
@@ -371,4 +375,18 @@ test("legalConsentsComplete requires every server-listed version to be ticked", 
   assert.equal(ctx.legalConsentsComplete(legalDocuments, ["ver-ds-1"]), false);
   assert.equal(ctx.legalConsentsComplete(null, []), false);
   assert.equal(ctx.legalConsentsComplete([], []), false);
+});
+
+// ---- P2.3: cart-mutation invalidation (defect found in the manual browser smoke) ----
+test("removing a cart item invalidates the legal preview and re-locks acceptance (browser defect)", async () => {
+  const { ctx } = loadStorefront({ fetch: catalogFetch() });
+  await ctx.loadCatalog();
+  const { form } = checkoutForm();
+  const preview = await prepareLegalPreview(ctx, form);
+  assert.ok(preview.token, "must start from a valid preview");
+  ctx.renderLegalConsents();
+  const boxes = form.querySelectorAll("[data-legal-version]") as unknown as { checked: boolean; disabled: boolean }[];
+  for (const box of boxes) box.checked = true;
+  ctx.removeCart("synthetic-ac-12000"); // the browser path
+  assert.equal(ctx.currentLegalPreview(), null, "the stale preview must be invalidated, not left acceptable");
 });

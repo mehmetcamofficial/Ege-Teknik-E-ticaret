@@ -139,7 +139,8 @@ export function loadStorefront(options: {
   search?: string;
   referrer?: string;
   storage?: Record<string, unknown>;
-  elements?: Record<string, FakeElement>;
+  /** P2.3: a selector may map to ONE element or a LIST (querySelectorAll now serves this registry too). */
+  elements?: Record<string, FakeElement | FakeElement[]>;
   featured?: ReturnType<typeof featuredCard>[];
   api?: { products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown>; reviews?: ((url: string) => unknown) | Record<string, unknown> | "fail"; reviewPost?: (body: unknown, headers: Record<string, string>) => { status: number; body: unknown }; analyticsFail?: boolean };
 } = {}) {
@@ -216,7 +217,13 @@ export function loadStorefront(options: {
       referrer: options.referrer ?? "",
       head: { insertAdjacentHTML: () => {} },
       querySelector: (selector: string) => elements[selector] ?? null,
-      querySelectorAll: (selector: string) => (selector === "[data-featured-product]" ? featured : []),
+      querySelectorAll: (selector: string) => {
+        if (selector === "[data-featured-product]") return featured;
+        // P2.3: serve the registered elements registry so document-level queries (notably the legal acceptance
+        // boxes touched by invalidateLegalPreview) operate on REAL objects the test can observe afterwards.
+        const registered = elements[selector];
+        return registered ? (Array.isArray(registered) ? registered : [registered]) as unknown[] : [];
+      },
       addEventListener: (type: string, fn: (event: unknown) => void) => { (listeners[type] ??= []).push(fn); },
       createTextNode: (text: string) => ({ textContent: String(text) }),
     },
