@@ -167,8 +167,18 @@ test("13: tampered, malformed and substituted tokens are rejected", async () => 
   const p = await preview();
   const token = p.body.legalPreviewToken as string;
   const [payloadB64, signature] = token.split(".");
-  assert.equal((await order({ ...body(), legalPreviewToken: `${payloadB64.slice(0, -2)}AA.${signature}` })).status, 409, "payload tamper");
-  assert.equal((await order({ ...body(), legalPreviewToken: `${payloadB64}.${signature.slice(0, -2)}AA` })).status, 409, "signature tamper");
+  const mutateBytes = (segment: string): string => {
+    const original = Buffer.from(segment, "base64url");
+    const mutated = Buffer.from(original);
+    assert.ok(mutated.length > 0);
+    mutated[0] ^= 1;
+    assert.notDeepEqual(mutated, original, "tamper must change raw bytes");
+    const encoded = mutated.toString("base64url");
+    assert.notEqual(encoded, segment, "tamper must never be a no-op");
+    return encoded;
+  };
+  assert.equal((await order({ ...body(), legalPreviewToken: `${mutateBytes(payloadB64)}.${signature}` })).status, 409, "payload tamper");
+  assert.equal((await order({ ...body(), legalPreviewToken: `${payloadB64}.${mutateBytes(signature)}` })).status, 409, "signature tamper");
   assert.equal((await order({ ...body(), legalPreviewToken: "not-a-token-at-all" })).status, 409, "malformed");
   assert.equal((await order({ ...body(), legalPreviewToken: "a.b.c.a.b.c.a.b.c" })).status, 409, "malformed base64url");
   assert.equal(orderRows().length, 0, "nothing may be written by any tampered token");

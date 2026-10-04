@@ -139,9 +139,14 @@ export function verifyLegalPreviewToken(token: unknown, secret: string, now: num
   if (typeof token !== "string" || token.length < 16 || token.length > 8000) return { ok: false, reason: "malformed" };
   const dot = token.indexOf(".");
   if (dot <= 0 || dot === token.length - 1 || token.indexOf(".", dot + 1) !== -1) return { ok: false, reason: "malformed" };
-  const payloadBytes = fromB64url(token.slice(0, dot));
-  const signatureBytes = fromB64url(token.slice(dot + 1));
+  const payloadSegment = token.slice(0, dot);
+  const signatureSegment = token.slice(dot + 1);
+  const payloadBytes = fromB64url(payloadSegment);
+  const signatureBytes = fromB64url(signatureSegment);
   if (!payloadBytes || !signatureBytes || signatureBytes.length !== 32) return { ok: false, reason: "malformed" };
+  // Reject alternate spellings of the same bytes, including nonzero unused padding bits.
+  // This checks raw encoding only; JSON remains unparsed until HMAC verification succeeds.
+  if (payloadBytes.toString("base64url") !== payloadSegment || signatureBytes.toString("base64url") !== signatureSegment) return { ok: false, reason: "malformed" };
   if (!timingSafeEqual(signatureBytes, createHmac("sha256", secret).update(payloadBytes).digest())) return { ok: false, reason: "bad_signature" };
   let decoded: unknown;
   try {
