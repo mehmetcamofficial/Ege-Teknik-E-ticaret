@@ -1,3 +1,5 @@
+import { isLegacyLegalFixtureVersionId } from "./legal-fixture-registry.ts";
+
 /**
  * Centralised identification of the legacy PREVIEW test fixtures in the legal registry.
  *
@@ -14,16 +16,26 @@
  * when APP_ENV=preview - Production shows the complete, unfiltered history.
  */
 
-/** Identities the fixture scripts wrote into `published_by`. Verifiable, but not sufficient on their own. */
+/** Identities the fixture scripts wrote into `published_by`. Verifiable, but NOT sufficient on their own. */
 export const LEGACY_FIXTURE_PUBLISHERS = ["preview-fixture-script", "pg-test-3b3-script"] as const;
 
 /**
- * Title markers, each one verified against the Preview inventory on 2026-10-01 against all 16 rows.
- * Chosen to be unambiguous: none of them can occur in one of the seven real RC drafts, and none of
- * them matches the `DRAFT — LEGAL REVIEW REQUIRED — …` title the admin UI itself generates for a
- * genuinely new draft (see createDraft in app/admin/legal-admin.tsx).
+ * P2-FIXTURE-A: the admin list now classifies by the authoritative immutable-id registry, not by this heuristic.
+ *
+ * The heuristic was wrong in both directions. It MISSED `preview-test-ver-distance-sales-1` and
+ * `preview-test-ver-pre-information-1` (they share the exact title and publisher of their v2 rows, so the
+ * (title, publisher) model deduplicated them away), and it also matched on title text, so a legitimate real document
+ * whose title happened to contain a marker could be hidden. The markers below are therefore retained ONLY as a
+ * drift/anomaly signal for rows that are NOT in the registry - never as a grant of fixture status.
  */
 export const LEGACY_FIXTURE_TITLE_MARKERS = ["PHASE 3B.3", "PREVIEW TEST", "NOT LEGAL TEXT", "DO NOT COPY TO PRODUCTION"] as const;
+
+/** Title/publisher evidence for a row that is NOT in the authoritative registry. Diagnostic only - never authoritative. */
+export function hasLegacyFixtureMarkerEvidence(row: LegalFixtureCandidate): boolean {
+  const title = row.title.toUpperCase();
+  if (LEGACY_FIXTURE_TITLE_MARKERS.some((marker) => title.includes(marker))) return true;
+  return row.publishedBy !== null && (LEGACY_FIXTURE_PUBLISHERS as readonly string[]).includes(row.publishedBy);
+}
 
 /** The seven real RC drafts, kept here only so a test can prove none of them is ever classified as a fixture. */
 export const REAL_RC_DRAFT_TITLES = [
@@ -37,24 +49,14 @@ export const REAL_RC_DRAFT_TITLES = [
 ] as const;
 
 export type LegalFixtureCandidate = { title: string; publishedBy: string | null };
-
 /**
- * Case-folds the title for marker matching.
+ * P2-FIXTURE-A: identity-authoritative. A row is a fixture because its immutable id is in the registry.
  *
- * NOTE: this must NOT use toLocaleUpperCase("tr"). In Turkish casing, "i" uppercases to "İ", so
- * "PREVIEW TEST" would fold to "PREVİEW TEST" and never match the ASCII marker - silently disabling
- * fixture detection for any row whose title is re-entered in lower case. toUpperCase() is
- * locale-independent and keeps "i" -> "I", which is what these ASCII markers expect.
+ * `title` is retained on the input type for compatibility with existing callers and for marker-based DRIFT
+ * reporting, but it is no longer consulted to decide classification.
  */
-function foldForMarkerMatch(title: string): string {
-  return title.toUpperCase();
-}
-
-/** True only for a verified legacy fixture row. Pure, so the classification is unit-testable. */
-export function isLegacyLegalFixture(row: LegalFixtureCandidate): boolean {
-  const title = foldForMarkerMatch(row.title);
-  if (LEGACY_FIXTURE_TITLE_MARKERS.some((marker) => title.includes(marker))) return true;
-  return row.publishedBy !== null && (LEGACY_FIXTURE_PUBLISHERS as readonly string[]).includes(row.publishedBy);
+export function isLegacyLegalFixture(row: LegalFixtureCandidate & { id?: string }): boolean {
+  return row.id !== undefined && isLegacyLegalFixtureVersionId(row.id);
 }
 
 /**
@@ -62,7 +64,7 @@ export function isLegacyLegalFixture(row: LegalFixtureCandidate): boolean {
  * A fixture is NEVER dropped from `all`, so the toggle can always bring the history back and the
  * hidden count can be reported honestly.
  */
-export function partitionLegalVersions<T extends LegalFixtureCandidate>(versions: readonly T[]): { visible: T[]; hidden: T[] } {
+export function partitionLegalVersions<T extends LegalFixtureCandidate & { id?: string }>(versions: readonly T[]): { visible: T[]; hidden: T[] } {
   const visible: T[] = [];
   const hidden: T[] = [];
   for (const version of versions) (isLegacyLegalFixture(version) ? hidden : visible).push(version);
