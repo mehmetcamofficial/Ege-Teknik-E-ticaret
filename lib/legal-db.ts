@@ -2,7 +2,7 @@ import "server-only";
 import { getDb } from "@/db";
 import { legalDocumentVersions, legalDocuments, orderLegalAcceptances } from "@/db/schema";
 import { CHECKOUT_LEGAL_SLUGS, resolvePublicLegalVersion, selectCurrentLegalVersions, selectRequiredLegalVersions, toAcceptedLegalDocuments } from "@/lib/legal";
-import { inspectLegalFixtureContamination, isLegalFixtureContaminated } from "@/lib/legal-fixture-registry";
+import { inspectLegalFixtureContamination, isLegalFixtureContaminated, reservedPreviewCheckoutDocuments } from "@/lib/legal-fixture-registry";
 import { and, asc, eq, inArray, isNotNull } from "drizzle-orm";
 
 /** Drafts (null publication columns) are excluded in SQL; this narrows the types and drops them again defensively. */
@@ -42,6 +42,12 @@ const FIXTURE_CONTAMINATION_REFUSAL = { ok: false as const, missing: [...CHECKOU
 /** Read-only: loads the versions of the checkout legal documents and applies the deterministic selection rule. */
 export async function loadRequiredCheckoutLegalVersions(now = new Date()) {
   if (await legalFixtureContaminated()) return FIXTURE_CONTAMINATION_REFUSAL;
+  // P2-FIXTURE-B: in the verified Preview environment the checkout authority is served from the CODE-OWNED reserved
+  // fixtures instead of the legacy Preview DB rows. This is the ONLY path that can serve them. The ids returned here
+  // are the same ones `loadRequiredCheckoutLegalDocuments` renders and the same ones `checkLegalAcceptance` later
+  // demands, so the preview token and the order submission agree on identity without any special-casing.
+  const reserved = reservedPreviewCheckoutDocuments(process.env);
+  if (reserved) return { ok: true as const, required: reserved.map((d) => ({ slug: d.slug, title: d.title, versionId: d.versionId })) };
   const rows = await getDb()
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
@@ -58,6 +64,10 @@ export async function loadRequiredCheckoutLegalVersions(now = new Date()) {
  */
 export async function loadRequiredCheckoutLegalDocuments(now = new Date()) {
   if (await legalFixtureContaminated()) return FIXTURE_CONTAMINATION_REFUSAL;
+  // P2-FIXTURE-B: the same code-owned substitution, so the BODIES rendered into the preview token and the ids bound
+  // into the order are the reserved fixtures - never the legacy Preview rows and never the unpublished RC v3.
+  const reserved = reservedPreviewCheckoutDocuments(process.env);
+  if (reserved) return { ok: true as const, required: reserved.map(({ versionId, slug, title, version, body }) => ({ slug, title, version, versionId, body })) };
   const rows = await getDb()
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, body: legalDocumentVersions.body, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
