@@ -32,7 +32,7 @@ export const LEGAL_PREVIEW_SECRET_MIN_LENGTH = 32;
 export const LEGAL_PREVIEW_SIGNING_SECRET_ENV = "LEGAL_PREVIEW_SIGNING_SECRET";
 
 /** One acceptance-required document, bound by the SHA-256 of the EXACT plain text shown to the customer. */
-export type LegalPreviewDocument = { slug: string; documentVersionId: string; renderedSha256: string };
+export type LegalPreviewDocument = { slug: string; documentVersionId: string; renderedSha256: string; templateContentHash?: string };
 
 export type LegalPreviewTokenPayload = {
   v: number;
@@ -43,6 +43,8 @@ export type LegalPreviewTokenPayload = {
   orderNumber: string;
   /** The frozen order timestamp the legal document was rendered with (epoch ms). */
   orderIssuedAt: number;
+  /** Version of the application semantics used to build and render the canonical context; absent legacy tokens are v1. */
+  renderContextVersion?: 1 | 2;
   /** SHA-256 of the canonical checkout/legal context. */
   contextDigest: string;
   /** Deterministically sorted, so the signed bytes are stable. */
@@ -114,21 +116,24 @@ function parsePayload(value: unknown): LegalPreviewTokenPayload | null {
   if (typeof expiresAt !== "number" || !Number.isFinite(expiresAt)) return null;
   if (typeof orderNumber !== "string" || orderNumber.length < 4 || orderNumber.length > 100) return null;
   if (typeof orderIssuedAt !== "number" || !Number.isFinite(orderIssuedAt)) return null;
+  const renderContextVersion = value.renderContextVersion === undefined ? 1 : value.renderContextVersion;
+  if (renderContextVersion !== 1 && renderContextVersion !== 2) return null;
   if (typeof contextDigest !== "string" || !/^[0-9a-f]{64}$/.test(contextDigest)) return null;
   if (!Array.isArray(documents) || documents.length === 0 || documents.length > 20) return null;
   const seen = new Set<string>();
   const parsed: LegalPreviewDocument[] = [];
   for (const entry of documents) {
     if (!isPlainObject(entry)) return null;
-    const { slug, documentVersionId, renderedSha256 } = entry;
+    const { slug, documentVersionId, renderedSha256, templateContentHash } = entry;
     if (typeof slug !== "string" || !/^[a-z0-9-]{1,100}$/.test(slug)) return null;
     if (typeof documentVersionId !== "string" || documentVersionId.length < 1 || documentVersionId.length > 200) return null;
     if (typeof renderedSha256 !== "string" || !/^[0-9a-f]{64}$/.test(renderedSha256)) return null;
+    if (templateContentHash !== undefined && (typeof templateContentHash !== "string" || !/^[0-9a-f]{64}$/.test(templateContentHash))) return null;
     if (seen.has(slug)) return null; // a slug may never be bound twice
     seen.add(slug);
-    parsed.push({ slug, documentVersionId, renderedSha256 });
+    parsed.push({ slug, documentVersionId, renderedSha256, ...(templateContentHash === undefined ? {} : { templateContentHash }) });
   }
-  return { v, issuedAt, expiresAt, orderNumber, orderIssuedAt, contextDigest, documents: canonicalPreviewDocuments(parsed) };
+  return { v, issuedAt, expiresAt, orderNumber, orderIssuedAt, renderContextVersion, contextDigest, documents: canonicalPreviewDocuments(parsed) };
 }
 
 /**

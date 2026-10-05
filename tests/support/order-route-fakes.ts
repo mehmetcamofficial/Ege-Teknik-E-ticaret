@@ -15,6 +15,7 @@
 import { getTableName, type Table } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { containsCardData, isValidIdempotencyKey, trustedClientIp } from "../../lib/security-policy.ts";
+import { hashLegalDocument } from "../../lib/legal.ts";
 
 type Row = Record<string, unknown>;
 export type Write = { kind: "insert" | "update"; table: string; values: unknown };
@@ -132,7 +133,10 @@ export const DEFAULT_LEGAL_TEMPLATE_BODY = "Sözleşme {{ALICI_AD_SOYAD}} / {{TE
 export async function loadRequiredCheckoutLegalDocuments() {
   return {
     ok: true as const,
-    required: state.required.map((d) => ({ slug: d.slug, title: d.title, versionId: d.versionId, version: 1, body: state.legalBodies[d.versionId] ?? DEFAULT_LEGAL_TEMPLATE_BODY })),
+    required: state.required.map((d) => {
+      const body = state.legalBodies[d.versionId] ?? DEFAULT_LEGAL_TEMPLATE_BODY;
+      return { slug: d.slug, title: d.title, versionId: d.versionId, version: 1, contentHash: hashLegalDocument({ title: d.title, body }), body };
+    }),
   };
 }
 export async function loadCurrentLegalIndex() {

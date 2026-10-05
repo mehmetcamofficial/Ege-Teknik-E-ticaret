@@ -13,7 +13,18 @@ import { randomUUID } from "node:crypto";
  */
 export type OrderIdentity = { id: string; orderNumber: string };
 
+function istanbulCalendarDate(issuedAt: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(issuedAt);
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}${values.month}${values.day}`;
+}
+
 export function createOrderIdentity(issuedAt: Date): OrderIdentity {
   const id = randomUUID();
-  return { id, orderNumber: `ETS-${issuedAt.toISOString().slice(0, 10).replaceAll("-", "")}-${id.slice(0, 6).toUpperCase()}` };
+  return { id, orderNumber: `ETS-${istanbulCalendarDate(issuedAt)}-${id.slice(0, 6).toUpperCase()}` };
 }

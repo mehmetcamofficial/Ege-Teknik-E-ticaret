@@ -1,6 +1,8 @@
 import type { CheckoutAuthorityContext } from "@/lib/checkout-authority";
-import { buildCanonicalLegalContext, canonicalContextDigest, renderLegalPreviewDocuments, type RenderedLegalPreviewDocument } from "@/lib/legal-preview-context";
+import { buildCanonicalLegalContext, canonicalContextDigest, renderLegalPreviewDocuments } from "@/lib/legal-preview-context";
 import { digestRenderedLegalBody, verifyLegalPreviewToken, type LegalPreviewDocument } from "@/lib/legal-preview-token";
+import { isReservedPreviewFixtureVersionId } from "@/lib/legal-fixture-registry";
+import type { VerifiedLegalPreviewEvidence } from "@/lib/legal-evidence";
 import { timingSafeEqual } from "node:crypto";
 
 /**
@@ -18,9 +20,8 @@ export type LegalPreviewBinding = {
   ok: true;
   /** The order number minted at preview time - reused verbatim, never regenerated. */
   orderNumber: string;
-  /** The frozen order timestamp the legal text was rendered with. */
-  orderIssuedAt: Date;
-  rendered: RenderedLegalPreviewDocument[];
+  /** One verified representation, ready for a future P3-B transaction; not persisted in P3-A. */
+  evidence: VerifiedLegalPreviewEvidence;
 };
 
 const equal = (a: string, b: string): boolean => {
@@ -33,15 +34,18 @@ const equal = (a: string, b: string): boolean => {
 export function resolveLegalPreviewBinding(input: {
   data: { customerName: string; email: string; phone: string; address: string; city: string; district: string; legalAcceptances: string[] };
   calculation: CheckoutAuthorityContext;
-  documents: readonly { slug: string; title: string; versionId: string; version: number; body: string }[];
+  documents: readonly { slug: string; title: string; versionId: string; version: number; contentHash: string; body: string }[];
   token: unknown;
   secret: string;
   billing: string;
+  acceptedAt: Date;
   now?: number;
 }): LegalPreviewBinding | { ok: false } {
   const verified = verifyLegalPreviewToken(input.token, input.secret, input.now ?? Date.now());
   if (!verified.ok) return { ok: false };
   const payload = verified.payload;
+  if (payload.documents.some((doc) => isReservedPreviewFixtureVersionId(doc.documentVersionId))) return { ok: false };
+  const renderContextVersion = payload.renderContextVersion ?? 1;
 
   // Rebuild the canonical context with the token's FROZEN identity - never a freshly minted one.
   const canonical = buildCanonicalLegalContext({
@@ -50,18 +54,20 @@ export function resolveLegalPreviewBinding(input: {
     billing: input.billing,
     orderNumber: payload.orderNumber,
     orderIssuedAt: payload.orderIssuedAt,
+    renderContextVersion,
   });
   if (!equal(canonicalContextDigest(canonical), payload.contextDigest)) return { ok: false };
 
   // Re-render from CURRENT server state and require byte-identical text.
   const rendered = renderLegalPreviewDocuments({ canonical, documents: input.documents });
-  const current: LegalPreviewDocument[] = rendered.map((doc) => ({ slug: doc.slug, documentVersionId: doc.documentVersionId, renderedSha256: doc.renderedSha256 }));
+  const current: LegalPreviewDocument[] = rendered.map((doc) => ({ slug: doc.slug, documentVersionId: doc.documentVersionId, renderedSha256: doc.renderedSha256, templateContentHash: doc.templateContentHash }));
   if (current.length !== payload.documents.length) return { ok: false };
   for (const expected of payload.documents) {
     const actual = current.find((doc) => doc.slug === expected.slug);
     if (!actual) return { ok: false };
     if (actual.documentVersionId !== expected.documentVersionId) return { ok: false };
     if (!equal(actual.renderedSha256, expected.renderedSha256)) return { ok: false };
+    if (renderContextVersion === 2 && (!expected.templateContentHash || !actual.templateContentHash || !equal(actual.templateContentHash, expected.templateContentHash))) return { ok: false };
   }
 
   // The submitted acceptance must be exactly the token-bound document set - no more, no fewer.
@@ -69,7 +75,15 @@ export function resolveLegalPreviewBinding(input: {
   const submitted = [...input.data.legalAcceptances].sort();
   if (boundIds.length !== submitted.length || boundIds.some((id, index) => id !== submitted[index])) return { ok: false };
 
-  return { ok: true, orderNumber: payload.orderNumber, orderIssuedAt: new Date(payload.orderIssuedAt), rendered };
+  const acceptedAt = input.acceptedAt;
+  return {
+    ok: true,
+    orderNumber: payload.orderNumber,
+    evidence: {
+      orderIssuedAt: new Date(payload.orderIssuedAt),
+      documents: rendered.map((doc) => ({ ...doc, acceptedAt })),
+    },
+  };
 }
 
 /** The digest a preview must bind, exposed so the preview endpoint and the tests build it identically. */
@@ -79,6 +93,7 @@ export const previewContextDigest = (input: {
   billing: string;
   orderNumber: string;
   orderIssuedAt: number;
+  renderContextVersion?: 1 | 2;
 }): string => canonicalContextDigest(buildCanonicalLegalContext(input));
 
 export { digestRenderedLegalBody };

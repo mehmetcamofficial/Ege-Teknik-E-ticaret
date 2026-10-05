@@ -1,7 +1,7 @@
 import "server-only";
 import { getDb } from "@/db";
 import { legalDocumentVersions, legalDocuments, orderLegalAcceptances } from "@/db/schema";
-import { CHECKOUT_LEGAL_SLUGS, resolvePublicLegalVersion, selectCurrentLegalVersions, selectRequiredLegalVersions, toAcceptedLegalDocuments } from "@/lib/legal";
+import { CHECKOUT_LEGAL_SLUGS, hashLegalDocument, resolvePublicLegalVersion, selectCurrentLegalVersions, selectRequiredLegalVersions, toAcceptedLegalDocuments } from "@/lib/legal";
 import { inspectLegalFixtureContamination, isLegalFixtureContaminated, reservedPreviewCheckoutDocuments } from "@/lib/legal-fixture-registry";
 import { and, asc, eq, inArray, isNotNull } from "drizzle-orm";
 
@@ -67,9 +67,9 @@ export async function loadRequiredCheckoutLegalDocuments(now = new Date()) {
   // P2-FIXTURE-B: the same code-owned substitution, so the BODIES rendered into the preview token and the ids bound
   // into the order are the reserved fixtures - never the legacy Preview rows and never the unpublished RC v3.
   const reserved = reservedPreviewCheckoutDocuments(process.env);
-  if (reserved) return { ok: true as const, required: reserved.map(({ versionId, slug, title, version, body }) => ({ slug, title, version, versionId, body })) };
+  if (reserved) return { ok: true as const, required: reserved.map(({ versionId, slug, title, version, body }) => ({ slug, title, version, versionId, contentHash: hashLegalDocument({ title, body }), body })) };
   const rows = await getDb()
-    .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, body: legalDocumentVersions.body, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
+    .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, contentHash: legalDocumentVersions.contentHash, body: legalDocumentVersions.body, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
     .where(and(inArray(legalDocuments.slug, [...CHECKOUT_LEGAL_SLUGS]), isNotNull(legalDocumentVersions.publishedAt), isNotNull(legalDocumentVersions.effectiveAt)));
   const selected = selectRequiredLegalVersions(publishedOnly(rows), now);
@@ -79,7 +79,7 @@ export async function loadRequiredCheckoutLegalDocuments(now = new Date()) {
     ok: true as const,
     required: selected.required.map((doc) => {
       const row = byId.get(doc.versionId)!;
-      return { slug: doc.slug, title: doc.title, versionId: doc.versionId, version: row.version, body: row.body };
+      return { slug: doc.slug, title: doc.title, versionId: doc.versionId, version: row.version, contentHash: row.contentHash, body: row.body };
     }),
   };
 }

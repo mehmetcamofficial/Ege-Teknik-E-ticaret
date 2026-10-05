@@ -3,6 +3,8 @@ import { deliveryTraits, type DeliveryClass } from "@/lib/delivery";
 import { canonicalJson, digestCanonicalContext, digestRenderedLegalBody, type LegalPreviewDocument } from "@/lib/legal-preview-token";
 import { renderOrderLegalDocument, type OrderLegalContext } from "@/lib/legal-template";
 
+export type LegalRenderContextVersion = 1 | 2;
+
 /**
  * P3-LEGAL-3C.4 / P2 - the canonical legal-context binding.
  *
@@ -18,7 +20,7 @@ import { renderOrderLegalDocument, type OrderLegalContext } from "@/lib/legal-te
 
 /** The exact, explicit inputs the digest binds. Field names are the canonical serialisation's key order. */
 export type CanonicalLegalContext = {
-  v: 1;
+  v: LegalRenderContextVersion;
   identity: { orderNumber: string; orderIssuedAt: number };
   customer: { name: string; email: string; phone: string; address: string; billing: string };
   delivery: { city: string; district: string; method: string; region: string; shippingAmount: number; installationAmount: number; installationIncluded: boolean };
@@ -39,10 +41,15 @@ export function buildCanonicalLegalContext(input: {
   billing: string;
   orderNumber: string;
   orderIssuedAt: number;
+  renderContextVersion?: LegalRenderContextVersion;
 }): CanonicalLegalContext {
   const { calculation, data, orderNumber, orderIssuedAt } = input;
+  const renderContextVersion = input.renderContextVersion ?? 1;
+  const lines = renderContextVersion === 2
+    ? [...calculation.lines].sort((a, b) => a.product.id < b.product.id ? -1 : a.product.id > b.product.id ? 1 : 0)
+    : calculation.lines;
   return {
-    v: 1,
+    v: renderContextVersion,
     identity: { orderNumber, orderIssuedAt },
     customer: { name: data.customerName, email: data.email, phone: data.phone, address: data.address, billing: input.billing },
     delivery: {
@@ -56,8 +63,7 @@ export function buildCanonicalLegalContext(input: {
       // product between installed and local delivery must invalidate a preview even though no money moves.
       installationIncluded: calculation.lines.every((line) => deliveryTraits(line.product.deliveryClass as DeliveryClass).installationIncluded),
     },
-    // `calculation.lines` is already the authoritative, stably ordered set - never re-sorted here.
-    lines: calculation.lines.map((line) => ({
+    lines: lines.map((line) => ({
       productId: line.product.id,
       sku: line.product.sku,
       name: line.product.name,
@@ -85,12 +91,15 @@ export const canonicalContextDigest = (context: CanonicalLegalContext): string =
 
 /** The renderer context for one acceptance-required document, derived from the same canonical context. */
 export function buildLegalRenderContext(context: CanonicalLegalContext): OrderLegalContext {
+  const method = context.delivery.method;
+  const deliveryMethod = context.v === 1 ? method : legalDeliveryMethod(method);
+  const deliveryAddress = context.v === 1 ? context.customer.address : legalDeliveryAddress(context);
   return {
     ALICI_AD_SOYAD: context.customer.name,
     ALICI_EPOSTA: context.customer.email,
     ALICI_TELEFON: context.customer.phone,
-    TESLIMAT_ADRESI: context.customer.address,
-    TESLIMAT_YONTEMI: context.delivery.method,
+    TESLIMAT_ADRESI: deliveryAddress,
+    TESLIMAT_YONTEMI: deliveryMethod,
     SIPARIS_NO: context.identity.orderNumber,
     SIPARIS_TARIHI: new Date(context.identity.orderIssuedAt),
     URUN_SATIRLARI: context.lines.map((line) => ({ productName: line.name, quantity: line.quantity, unitPrice: line.unitPrice, lineTotal: line.lineTotal })),
@@ -102,7 +111,33 @@ export function buildLegalRenderContext(context: CanonicalLegalContext): OrderLe
   };
 }
 
-export type RenderedLegalPreviewDocument = LegalPreviewDocument & { title: string; version: number; renderedBody: string };
+function legalDeliveryMethod(method: string): string {
+  switch (method) {
+    case "dealer": return "Adrese teslim (Ege Teknik)";
+    case "pickup": return "Mağazadan teslim";
+    case "shipping": return "Kargo";
+    default: throw new Error("Teslimat yöntemi yasal metne çevrilemiyor.");
+  }
+}
+
+function legalDeliveryAddress(context: CanonicalLegalContext): string {
+  if (context.delivery.method === "pickup") return "Mağazadan teslim — teslimat adresi uygulanmaz";
+  if (context.delivery.method !== "dealer" && context.delivery.method !== "shipping") {
+    throw new Error("Teslimat adresi yasal metne çevrilemiyor.");
+  }
+  const { address } = context.customer;
+  const { district, city } = context.delivery;
+  if (!address.trim() || !district.trim() || !city.trim()) throw new Error("Yasal teslimat adresi eksik.");
+  return `${address}, ${district} / ${city}`;
+}
+
+export type RenderedLegalPreviewDocument = LegalPreviewDocument & {
+  title: string;
+  version: number;
+  templateContentHash: string;
+  renderContextVersion: LegalRenderContextVersion;
+  renderedBody: string;
+};
 
 /**
  * Render every acceptance-required document and bind each by the SHA-256 of the EXACT plain text produced.
@@ -112,13 +147,22 @@ export type RenderedLegalPreviewDocument = LegalPreviewDocument & { title: strin
  */
 export function renderLegalPreviewDocuments(input: {
   canonical: CanonicalLegalContext;
-  documents: readonly { slug: string; title: string; versionId: string; version: number; body: string }[];
+  documents: readonly { slug: string; title: string; versionId: string; version: number; contentHash: string; body: string }[];
 }): RenderedLegalPreviewDocument[] {
   const renderContext = buildLegalRenderContext(input.canonical);
   return input.documents.map((doc) => {
     const renderedBody = renderOrderLegalDocument(doc.body, renderContext);
     // Bind the EXACT plain text shown to the customer, so order submission can re-render and compare it byte-for-byte.
-    return { slug: doc.slug, title: doc.title, version: doc.version, documentVersionId: doc.versionId, renderedBody, renderedSha256: digestRenderedLegalBody(renderedBody) };
+    return {
+      slug: doc.slug,
+      title: doc.title,
+      version: doc.version,
+      documentVersionId: doc.versionId,
+      templateContentHash: doc.contentHash,
+      renderContextVersion: input.canonical.v,
+      renderedBody,
+      renderedSha256: digestRenderedLegalBody(renderedBody),
+    };
   });
 }
 
