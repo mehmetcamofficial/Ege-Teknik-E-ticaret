@@ -40,7 +40,7 @@ export type CheckoutAuthorityContext = {
   lines: PricedLines;
   /** The server's delivery decision: method, canonical province/district, region and the shipping charge. */
   plan: DeliveryPlan;
-  /** Product rows in the database's own select order - the authoritative line ordering. */
+  /** Product rows in the database's select order; SQL does not promise a stable order. */
   products: ProductRow[];
   subtotal: number;
   vatTotal: number;

@@ -45,6 +45,7 @@ export const POST = publicRoute(async (request: Request) => {
     billing: `${parsed.data.customerName} / ${parsed.data.city}`,
     orderNumber,
     orderIssuedAt: orderIssuedAt.getTime(),
+    renderContextVersion: 2,
   });
   // Fail-closed: renderOrderLegalDocument throws on any unresolved token, so nothing partial is ever returned.
   const rendered = renderLegalPreviewDocuments({ canonical, documents: documents.required });
@@ -57,8 +58,9 @@ export const POST = publicRoute(async (request: Request) => {
     expiresAt: issuedAt + LEGAL_PREVIEW_TTL_MS,
     orderNumber,
     orderIssuedAt: issuedAt,
+    renderContextVersion: 2,
     contextDigest: canonicalContextDigest(canonical),
-    documents: rendered.map(({ slug, documentVersionId, renderedSha256 }): LegalPreviewDocument => ({ slug, documentVersionId, renderedSha256 })),
+    documents: rendered.map(({ slug, documentVersionId, renderedSha256, templateContentHash }): LegalPreviewDocument => ({ slug, documentVersionId, renderedSha256, templateContentHash })),
   }, secret);
 
   return Response.json({

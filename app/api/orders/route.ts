@@ -43,6 +43,7 @@ async function createOrder(request: Request) {
   if (!authority.ok) return Response.json(authority.body, { status: authority.status });
   const { lines, plan, subtotal, vatTotal, total, shippingTotal, installationTotal } = authority;
   const customerId = crypto.randomUUID(), addressId = crypto.randomUUID();
+  const acceptedAt = new Date();
   // P3-LEGAL-3C.4 / P2: the order may only exist if it is the SAME order context whose legal text the customer
   // already read and accepted. The signed preview token is verified cryptographically AND re-checked against
   // current server state: the context is rebuilt from live prices/tariffs/versions, the required legal documents
@@ -57,13 +58,13 @@ async function createOrder(request: Request) {
     token: parsed.data.legalPreviewToken,
     secret: legalPreviewSigningSecret(),
     billing: `${parsed.data.customerName} / ${parsed.data.city}`,
+    acceptedAt,
   });
   if (!binding.ok) return Response.json({ error: "Yasal metinler güncellendi; lütfen metinleri yeniden inceleyip onaylayın.", code: "LEGAL_PREVIEW_INVALID" }, { status: 409 });
   // Reuse the identity minted at preview time. NEVER regenerate it here: the contract the customer accepted names it.
   const id = crypto.randomUUID();
   const orderNumber = binding.orderNumber;
-  // The legally displayed order timestamp is frozen at preview; the acceptance moment is recorded separately.
-  const acceptedAt = new Date(); // server-generated; the client never supplies it
+  // The legally displayed order timestamp is frozen at preview; acceptance time is server-generated above.
   try {
     await db.transaction(async (tx) => {
       await tx.insert(customers).values({ id: customerId, firstName: authority.customer.firstName, lastName: authority.customer.lastName, phone: parsed.data.phone, email: parsed.data.email });
