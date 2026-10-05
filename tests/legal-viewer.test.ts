@@ -67,7 +67,16 @@ test("rendered pages escape content and never show admin fields", () => {
 });
 test("public API/index endpoints select no draft/admin data and are read-only", () => {
   const db = readFileSync("lib/legal-db.ts", "utf8");
-  assert.doesNotMatch(db, /publishedBy/);
+  // P2-FIXTURE-A: the containment guard reads `publishedBy` for registry-drift detection, but ONLY inside the
+  // internal inventory loader, whose result never leaves the module. This assertion is therefore narrowed to the
+  // invariant it was actually protecting: no PUBLIC loader may select or return an admin field.
+  const publicLoaders = db.split(/\n(?=export async function)/).filter((s) => /^export async function (loadPublicLegalVersion|loadCurrentLegalIndex|loadRequiredCheckoutLegal)/.test(s));
+  assert.ok(publicLoaders.length >= 3, "the public legal loaders must still exist");
+  for (const loader of publicLoaders) assert.doesNotMatch(loader, /publishedBy/);
+  // And the drift read stays confined to the private inventory loader.
+  const inventory = db.slice(db.indexOf("async function loadCompleteLegalVersionInventory"), db.indexOf("async function legalFixtureContaminated"));
+  assert.match(inventory, /publishedBy/, "drift detection must still compare the recorded publisher");
+  assert.doesNotMatch(db.slice(db.indexOf("function legalFixtureContaminated")), /publishedBy/, "no exported loader may read publishedBy");
   for (const f of ["app/api/legal/documents/route.ts", "app/api/legal/required/route.ts"]) assert.doesNotMatch(readFileSync(f, "utf8"), /export async function (POST|PUT|PATCH|DELETE)|body/);
 });
 test("policies.html is an index backed by the API, with no duplicated document bodies", () => {

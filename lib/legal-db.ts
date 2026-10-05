@@ -2,6 +2,7 @@ import "server-only";
 import { getDb } from "@/db";
 import { legalDocumentVersions, legalDocuments, orderLegalAcceptances } from "@/db/schema";
 import { CHECKOUT_LEGAL_SLUGS, resolvePublicLegalVersion, selectCurrentLegalVersions, selectRequiredLegalVersions, toAcceptedLegalDocuments } from "@/lib/legal";
+import { inspectLegalFixtureContamination, isLegalFixtureContaminated } from "@/lib/legal-fixture-registry";
 import { and, asc, eq, inArray, isNotNull } from "drizzle-orm";
 
 /** Drafts (null publication columns) are excluded in SQL; this narrows the types and drops them again defensively. */
@@ -9,8 +10,38 @@ function publishedOnly<T extends { effectiveAt: Date | null; publishedAt: Date |
   return rows.filter((row): row is T & { effectiveAt: Date; publishedAt: Date } => row.effectiveAt !== null && row.publishedAt !== null);
 }
 
+/**
+ * P2-FIXTURE-A: the COMPLETE legal version inventory, read before ANY filtering - no slug filter, no published or
+ * effective filter, no highest-version selection, no admin visibility rule.
+ *
+ * Containment has to see every row. If this query filtered to checkout slugs or to published-and-effective rows, a
+ * fixture could hide behind being superseded, future-effective, sitting on a non-checkout slug, or shadowed by an
+ * ordinary version - and the boundary would stop covering precisely the rows that need covering.
+ */
+async function loadCompleteLegalVersionInventory() {
+  return getDb()
+    .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, publishedBy: legalDocumentVersions.publishedBy, contentHash: legalDocumentVersions.contentHash })
+    .from(legalDocumentVersions)
+    .innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId));
+}
+
+/**
+ * Fail-closed fixture containment. Returns true when legal authority must NOT be established.
+ *
+ * The environment is read from server-owned process env only. It is never taken from a hostname, a request header or
+ * any client input, because a caller-supplied signal would let a request opt itself into the fixture branch.
+ */
+async function legalFixtureContaminated(): Promise<boolean> {
+  const inventory = await loadCompleteLegalVersionInventory();
+  return isLegalFixtureContaminated(inspectLegalFixtureContamination(inventory, process.env));
+}
+
+/** The single refusal result shared by every fixture-contaminated path. Mapped to LEGAL_DOCUMENTS_UNAVAILABLE by callers. */
+const FIXTURE_CONTAMINATION_REFUSAL = { ok: false as const, missing: [...CHECKOUT_LEGAL_SLUGS] };
+
 /** Read-only: loads the versions of the checkout legal documents and applies the deterministic selection rule. */
 export async function loadRequiredCheckoutLegalVersions(now = new Date()) {
+  if (await legalFixtureContaminated()) return FIXTURE_CONTAMINATION_REFUSAL;
   const rows = await getDb()
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
@@ -26,6 +57,7 @@ export async function loadRequiredCheckoutLegalVersions(now = new Date()) {
  * ids and titles only, never bodies; bodies leave the server solely through the preview response.
  */
 export async function loadRequiredCheckoutLegalDocuments(now = new Date()) {
+  if (await legalFixtureContaminated()) return FIXTURE_CONTAMINATION_REFUSAL;
   const rows = await getDb()
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, body: legalDocumentVersions.body, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
@@ -44,6 +76,8 @@ export async function loadRequiredCheckoutLegalDocuments(now = new Date()) {
 
 /** Read-only: all versions of one document, resolved for public viewing (published versions only). */
 export async function loadPublicLegalVersion(slug: string, requestedVersionId: string | null, now = new Date()) {
+  // P2-FIXTURE-A: a classified fixture must never be readable through the public exact-version route either.
+  if (await legalFixtureContaminated()) return { ok: false as const, missing: [slug] };
   const rows = await getDb()
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, body: legalDocumentVersions.body, contentHash: legalDocumentVersions.contentHash, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
@@ -53,6 +87,9 @@ export async function loadPublicLegalVersion(slug: string, requestedVersionId: s
 
 /** Read-only: metadata of the currently effective version of every document (no bodies). */
 export async function loadCurrentLegalIndex(now = new Date()) {
+  // P2-FIXTURE-A: the public index resolves the CURRENT version per slug, which is exactly how a published fixture
+  // under cookies/terms would be advertised. Serve nothing rather than advertise fixture content.
+  if (await legalFixtureContaminated()) return [];
   const rows = await getDb()
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))

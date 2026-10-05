@@ -5,6 +5,7 @@ import {
   LEGACY_FIXTURE_PUBLISHERS,
   LEGACY_FIXTURE_TITLE_MARKERS,
   REAL_RC_DRAFT_TITLES,
+  hasLegacyFixtureMarkerEvidence,
   isLegacyLegalFixture,
   legacyFixtureHidingActive,
   partitionLegalVersions,
@@ -12,19 +13,28 @@ import {
 
 const read = (f: string) => readFileSync(f, "utf8");
 
-/** The legacy fixture rows inventoried on the Preview branch (br-nameless-mountain-awib28a9), 2026-10-01. */
-const FIXTURES: { title: string; publishedBy: string | null }[] = [
-  { title: "DRAFT — PHASE 3B.3 ADMIN TEST — LEGAL REVIEW REQUIRED (v1)", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
-  { title: "DRAFT — PHASE 3B.3 ADMIN TEST — LEGAL REVIEW REQUIRED (v2)", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
-  { title: "DRAFT — PHASE 3B.3 ADMIN TEST — LEGAL REVIEW REQUIRED (v3)", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
-  { title: "PREVIEW TEST — distance-sales", publishedBy: "preview-fixture-script" },
-  { title: "PREVIEW TEST — pre-information", publishedBy: "preview-fixture-script" },
-  { title: "PREVIEW TEST — kvkk — NOT LEGAL TEXT — DO NOT COPY TO PRODUCTION", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
-  { title: "DRAFT — PHASE 3B.3 POSTGRES TEST — NOT LEGAL TEXT (edited)", publishedBy: "pg-test-3b3-script" },
+/**
+ * P2-FIXTURE-A: the COMPLETE legacy fixture inventory, keyed by immutable version id - the real Preview inventory of
+ * 2026-10-04 (16 versions: 7 real RC + 9 fixtures).
+ *
+ * The previous list was keyed by (title, publishedBy) and held only SEVEN entries. That model silently lost
+ * `preview-test-ver-distance-sales-1` and `preview-test-ver-pre-information-1`, which share the exact title and
+ * publisher of their v2 rows. Identity keying restores all nine.
+ */
+const FIXTURES: { id: string; title: string; publishedBy: string | null }[] = [
+  { id: "69ffd5c6-b930-4300-a183-878c99a5d02c", title: "DRAFT — PHASE 3B.3 ADMIN TEST — LEGAL REVIEW REQUIRED (v1)", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
+  { id: "f62b7e17-98dc-48e4-8630-c2fffbfe6fa8", title: "DRAFT — PHASE 3B.3 ADMIN TEST — LEGAL REVIEW REQUIRED (v2)", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
+  { id: "22826878-973e-4c0d-912c-6700ace0e843", title: "DRAFT — PHASE 3B.3 ADMIN TEST — LEGAL REVIEW REQUIRED (v3)", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
+  { id: "c58b9077-dd52-4f32-bf3f-1dca51ba471e", title: "PREVIEW TEST — kvkk — NOT LEGAL TEXT — DO NOT COPY TO PRODUCTION", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" },
+  { id: "preview-test-ver-distance-sales-1", title: "PREVIEW TEST — distance-sales", publishedBy: "preview-fixture-script" },
+  { id: "preview-test-ver-distance-sales-2", title: "PREVIEW TEST — distance-sales", publishedBy: "preview-fixture-script" },
+  { id: "preview-test-ver-pre-information-1", title: "PREVIEW TEST — pre-information", publishedBy: "preview-fixture-script" },
+  { id: "preview-test-ver-pre-information-2", title: "PREVIEW TEST — pre-information", publishedBy: "preview-fixture-script" },
+  { id: "pg-test-3b3-ver-1", title: "DRAFT — PHASE 3B.3 POSTGRES TEST — NOT LEGAL TEXT (edited)", publishedBy: "pg-test-3b3-script" },
 ];
 
 /** The 7 real RC drafts, all unpublished, that must never be hidden. */
-const REAL_DRAFTS: { title: string; publishedBy: string | null }[] = REAL_RC_DRAFT_TITLES.map((title) => ({ title, publishedBy: null }));
+const REAL_DRAFTS: { id: string; title: string; publishedBy: string | null }[] = REAL_RC_DRAFT_TITLES.map((title, i) => ({ id: `real-rc-`, title, publishedBy: null }));
 
 // ---- classification -------------------------------------------------------------------------------
 test("every inventoried legacy fixture is recognised as a fixture", () => {
@@ -37,32 +47,41 @@ test("none of the seven real RC drafts is ever classified as a fixture", () => {
 test("a genuine new draft created by the admin UI is never mistaken for a fixture", () => {
   // createDraft() in app/admin/legal-admin.tsx generates exactly this title for a real, new draft.
   for (const label of ["Mesafeli Satış Sözleşmesi", "KVKK Aydınlatma Metni", "Çerez Politikası"]) {
-    assert.equal(isLegacyLegalFixture({ title: `DRAFT — LEGAL REVIEW REQUIRED — ${label}`, publishedBy: null }), false);
+    assert.equal(isLegacyLegalFixture({ id: `new-draft-`, title: `DRAFT — LEGAL REVIEW REQUIRED — ${label}`, publishedBy: null }), false);
   }
 });
 test("a future real document that happens to contain the word 'test' is NOT hidden", () => {
   // The markers are deliberately specific phrases, not the bare word "test": over-matching would hide a
   // legitimate document with no way to recover it from the default view.
   for (const title of ["Test ve Ölçüm Koşulları", "Cihaz Test Prosedürü", "Sözleşme Testi", "Abortif"]) {
-    assert.equal(isLegacyLegalFixture({ title, publishedBy: null }), false, `over-matched: ${title}`);
+    assert.equal(isLegacyLegalFixture({ id: `real-test-`, title, publishedBy: null }), false, `over-matched: ${title}`);
   }
 });
-test("classification is case-insensitive, and does not fall into the Turkish dotted-I trap", () => {
-  assert.equal(isLegacyLegalFixture({ title: "preview test — distance-sales", publishedBy: null }), true);
-  assert.equal(isLegacyLegalFixture({ title: "phase 3b.3 admin test", publishedBy: null }), true);
-  // "admin" contains an 'i'. Under toLocaleUpperCase("tr") that folds to "ADMİN" (dotted capital I),
-  // which would NOT match the ASCII marker "PHASE 3B.3" ... and would silently stop hiding the fixture.
-  assert.equal("admin".toLocaleUpperCase("tr"), "ADMİN", "the trap this test guards against is real");
-  assert.equal("admin".toUpperCase(), "ADMIN", "locale-independent folding is what the markers need");
-  assert.equal(isLegacyLegalFixture({ title: "PHASE 3B.3 ADMİN TEST", publishedBy: null }), true, "marker part still matches");
-  assert.equal(isLegacyLegalFixture({ title: "DRAFT — phase 3b.3 admin test — legal review required", publishedBy: null }), true);
+test("classification is identity-based, so title case and wording are irrelevant", () => {
+  // Same registered id, wildly different title text and publisher: still a fixture. Identity is the boundary.
+  for (const title of ["preview test — distance-sales", "PHASE 3B.3 ADMİN TEST", "GERÇEK BELGE", ""]) {
+    for (const publishedBy of [null, "preview-fixture-script", "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c"]) {
+      assert.equal(isLegacyLegalFixture({ id: "preview-test-ver-distance-sales-1", title, publishedBy }), true, `${title}/${publishedBy}`);
+    }
+  }
+  assert.equal("admin".toLocaleUpperCase("tr"), "ADMİN", "the Turkish dotted-I trap this used to depend on");
+  assert.equal("admin".toUpperCase(), "ADMIN", "folding no longer affects classification at all");
 });
-test("a fixture script identity alone is enough, even if its title were later reworded", () => {
+test("marker text and fixture publishers alone NEVER grant fixture authority", () => {
+  // P2-FIXTURE-A: the decisive inversion. Under the old heuristic each of these returned true. Now an unregistered
+  // id is ordinary no matter how loudly its title or publisher claims to be a fixture, so a marker can never
+  // manufacture containment authority - only a registered id can.
+  for (const title of ["PREVIEW TEST — distance-sales", "phase 3b.3 admin test", "NOT LEGAL TEXT", "DO NOT COPY TO PRODUCTION"]) {
+    assert.equal(isLegacyLegalFixture({ id: "unregistered-id-a", title, publishedBy: null }), false, `title marker granted authority: ${title}`);
+  }
   for (const publisher of LEGACY_FIXTURE_PUBLISHERS) {
-    assert.equal(isLegacyLegalFixture({ title: "Belge Başlığı", publishedBy: publisher }), true, publisher);
+    assert.equal(isLegacyLegalFixture({ id: "unregistered-id-b", title: "Belge Başlığı", publishedBy: publisher }), false, `publisher granted authority: ${publisher}`);
   }
-  // A real admin's published_by is NOT a fixture signal.
-  assert.equal(isLegacyLegalFixture({ title: "GERÇEK BELGE", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" }), false);
+  // A real admin's published_by is not a fixture signal either.
+  assert.equal(isLegacyLegalFixture({ id: "unregistered-id-c", title: "GERÇEK BELGE", publishedBy: "e7c9a5ef-adf0-4d65-84a6-6dc92c4fe72c" }), false);
+  // Marker evidence is still available, but only as a diagnostic for non-registered rows.
+  assert.equal(hasLegacyFixtureMarkerEvidence({ title: "PREVIEW TEST — distance-sales", publishedBy: null }), true);
+  assert.equal(hasLegacyFixtureMarkerEvidence({ title: "GERÇEK BELGE", publishedBy: null }), false);
 });
 
 // ---- partitioning ---------------------------------------------------------------------------------
