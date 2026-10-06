@@ -90,7 +90,7 @@ test("legal acceptances are inserted last, after the order and its items (any fa
 });
 
 test("acceptance rows reference the server-selected version ids, not client input", () => {
-  assert.match(txBody, /authority\.requiredLegal\.map\(\(version\) => \(\{[^}]*documentVersionId: version\.versionId/);
+  assert.match(txBody, /binding\.evidence\.documents\.map\(\(doc\) => \(\{[^}]*documentVersionId: doc\.documentVersionId/);
   assert.doesNotMatch(txBody, /parsed\.data\.legalAcceptances/);
 });
 
@@ -152,7 +152,7 @@ test("the idempotency key is claimed before inventory is touched, so a duplicate
 
 test("a same-key request is compared by fingerprint: replay returns the original, a different request conflicts", () => {
   assert.match(route, /existing\.requestFingerprint !== fingerprint\) return Response\.json\([^)]*IDEMPOTENCY_KEY_REUSED[^)]*\{ status: 409 \}/);
-  assert.match(route, /catch \(error\) \{ if \(error instanceof IdempotentReplay\) return \(await replay\(\)\)/);
+  assert.match(route, /catch \(error\) \{\s*const committed = await replay\(\);\s*if \(committed\) return committed;/);
 });
 
 // ---- installation note ----

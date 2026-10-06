@@ -177,8 +177,8 @@ test("A: POST /api/orders delegates to the authority and keeps every write in it
   const route = orderRouteSource();
   const authority = checkoutAuthoritySource();
   assert.ok(route.includes("await resolveCheckoutAuthority("), "the route must consume the shared authority");
-  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("db.transaction"), "the authority runs before the transaction");
-  // The transaction shell itself is untouched by the extraction.
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("tx.insert(customers)"), "the authority runs inside the locked transaction before writes");
+  // All writes remain inside the transaction after locked authority verification.
   for (const marker of ["db.transaction(async (tx) => {", "tx.insert(customers)", "tx.insert(addresses)", "tx.insert(orders)", "tx.insert(orderItems)", "tx.insert(orderLegalAcceptances)", "onConflictDoNothing", "throw new IdempotentReplay()", "OUT_OF_STOCK:", "const acceptedAt = new Date();"]) {
     assert.ok(route.includes(marker), `the route must still contain ${marker}`);
   }
@@ -233,7 +233,7 @@ test("E2: the authority returns exactly the values the route already used, and r
     assert.ok(at > gateCursor, `${marker} must run in the canonical order`);
     gateCursor = at;
   }
-  const calcOrder = ["getDb().select", "priceOrderLines", "planDelivery", "finalizeOrderTotals", "totalMatchesDisplayed"];
+  const calcOrder = ["db.select", "priceOrderLines", "planDelivery", "finalizeOrderTotals", "totalMatchesDisplayed"];
   let calcCursor = -1;
   for (const marker of calcOrder) {
     const at = calculation.indexOf(marker);

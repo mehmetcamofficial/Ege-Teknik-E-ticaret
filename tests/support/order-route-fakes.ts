@@ -12,6 +12,7 @@
  *
  * Not a *.test.ts file, so the test runner's glob does not execute it on its own.
  */
+import { PgDialect } from "drizzle-orm/pg-core";
 import { getTableName, type Table } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { containsCardData, isValidIdempotencyKey, trustedClientIp } from "../../lib/security-policy.ts";
@@ -83,7 +84,18 @@ function tableName(table: unknown) {
 
 function selectResult(calls: ReadonlyMap<string, unknown[]>) {
   const from = tableName(calls.get("from")?.[0]);
-  if (from === "orders") return state.existingOrder ? [state.existingOrder] : [];
+  if (from === "orders") {
+    if (state.existingOrder) return [state.existingOrder];
+    const where = calls.get("where")?.[0];
+    const key = where ? new PgDialect().sqlToQuery(where as Parameters<PgDialect["sqlToQuery"]>[0]).params[0] : undefined;
+    const row = state.committed.find((w) => w.kind === "insert" && w.table === "orders" && (w.values as Row).idempotencyKey === key)?.values as Row | undefined;
+    return row ? [{ ...row, status: "pending_payment" }] : [];
+  }
+  if (from === "order_legal_acceptances") {
+    const where = calls.get("where")?.[0];
+    const id = where ? new PgDialect().sqlToQuery(where as Parameters<PgDialect["sqlToQuery"]>[0]).params[0] : undefined;
+    return state.committed.filter((w) => w.table === from).flatMap((w) => w.values as Row[]).filter((r) => r.orderId === id);
+  }
   if (from === "products") return state.products.map((product) => ({ product }));
   return [];
 }
@@ -91,6 +103,7 @@ function selectResult(calls: ReadonlyMap<string, unknown[]>) {
 function makeDb(sink: Write[]) {
   return {
     select: () => builder(selectResult),
+    execute: async () => undefined,
     insert: (table: unknown) => {
       let values: unknown;
       return builder(

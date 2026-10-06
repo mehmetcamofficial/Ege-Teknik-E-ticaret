@@ -156,7 +156,7 @@ test("20 idempotency: the same request has one fingerprint, a different delivery
   assert.equal(orderRequestFingerprint(data, q), orderRequestFingerprint({ ...data }, q));
   assert.notEqual(orderRequestFingerprint(data, q), orderRequestFingerprint({ ...data, delivery: "pickup" }, q));
   assert.ok(route.indexOf("const replayed = await replay()") < route.indexOf("await resolveCheckoutAuthority("));
-  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("db.transaction"));
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("tx.insert(customers)"));
 });
 test("21-22 an empty cart and an invalid/unsellable product are refused before anything is written", () => {
   assert.equal(orderRequestSchema.safeParse({ customerName: "A B", phone: "0500000000", email: "a@b.test", city: "İzmir", address: "Adres satırı 1", paymentProvider: "discovery", items: [], expectedTotal: 0 }).success, false);

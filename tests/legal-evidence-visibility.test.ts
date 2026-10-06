@@ -208,9 +208,9 @@ test("the confirmation never embeds a legal body, hash or publisher", () => {
 
 test("the order route returns the summary on BOTH the fresh write and the idempotent replay", () => {
   const src = orderRoute();
-  assert.match(src, /const legalAcceptances = await loadOrderAcceptedLegalDocuments\(id\)/, "fresh path reads back what it persisted");
-  assert.match(src, /const legalAcceptances = await loadOrderAcceptedLegalDocuments\(existing\.id\)/, "replay reads back the same rows");
-  assert.equal((src.match(/loadOrderAcceptedLegalDocuments\(/g) ?? []).length, 2, "both response paths must load it");
+  assert.match(src, /loadOrderLegalEvidenceSummary\(existing\.id, existing, reader\)/, "replay reads persisted evidence");
+  assert.match(src, /const result = await replay\(\);[\s\S]*new Response\(result.body, \{ status: 201/, "fresh response uses that same persisted-read path");
+  assert.equal((src.match(/toOrderConfirmation\(/g) ?? []).length, 1);
 });
 
 test("an idempotent replay yields an equivalent legal summary to the first response", () => {
@@ -223,7 +223,7 @@ test("an idempotent replay yields an equivalent legal summary to the first respo
 
 test("server-side legal validation, transaction rollback and idempotency are untouched", () => {
   const src = orderRoute();
-  assert.match(authoritySrc, /loadRequiredCheckoutLegalVersions\(\)/, "the server still resolves the required versions itself");
+  assert.match(authoritySrc, /loadRequiredCheckoutLegalVersions\(now, db\)/, "the server still resolves the required versions itself");
   assert.match(authoritySrc, /checkLegalAcceptance\(requiredLegal, parsed\.data\.legalAcceptances\)/, "client ids are still re-validated");
   assert.match(authoritySrc, /LEGAL_DOCUMENTS_UNAVAILABLE/, "fail-closed behaviour is preserved");
   assert.match(src, /db\.transaction\(async \(tx\) => \{/, "the write stays inside one transaction");
