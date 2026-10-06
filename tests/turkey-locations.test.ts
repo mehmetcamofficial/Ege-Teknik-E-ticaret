@@ -148,7 +148,7 @@ test("the order route validates the pair server-side, refuses before any write, 
   // P3-LEGAL-3C.3/P1: the province/district validation and delivery plan moved into the checkout authority module.
   const authority = read("lib/checkout-authority.ts");
   assert.match(authority, /planDelivery\(\{ classes: rows\.map\(\(\{ product \}\) => product\.deliveryClass\), province: parsed\.data\.city, district: parsed\.data\.district, method: parsed\.data\.delivery \}\)/);
-  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("db.transaction"));
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("tx.insert(customers)"));
   assert.match(authority, /if \(!delivery\.ok\) return refuse\(delivery\.error\.status, \{ error: delivery\.error\.message, code: delivery\.error\.code \}\)/);
   assert.match(route, /city: plan\.province, district: plan\.district, line1/);
   assert.doesNotMatch(route, /district: parsed\.data\.district, line1|city: parsed\.data\.city, address/);

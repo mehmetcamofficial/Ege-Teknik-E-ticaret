@@ -3,6 +3,7 @@ import { buildCanonicalLegalContext, canonicalContextDigest, renderLegalPreviewD
 import { digestRenderedLegalBody, verifyLegalPreviewToken, type LegalPreviewDocument } from "@/lib/legal-preview-token";
 import { isReservedPreviewFixtureVersionId } from "@/lib/legal-fixture-registry";
 import type { VerifiedLegalPreviewEvidence } from "@/lib/legal-evidence";
+import { hashLegalDocument } from "./legal.ts";
 import { timingSafeEqual } from "node:crypto";
 
 /**
@@ -57,6 +58,8 @@ export function resolveLegalPreviewBinding(input: {
     renderContextVersion,
   });
   if (!equal(canonicalContextDigest(canonical), payload.contextDigest)) return { ok: false };
+
+  if (renderContextVersion === 2 && input.documents.some((doc) => hashLegalDocument({ title: doc.title, body: doc.body }) !== doc.contentHash)) return { ok: false };
 
   // Re-render from CURRENT server state and require byte-identical text.
   const rendered = renderLegalPreviewDocuments({ canonical, documents: input.documents });

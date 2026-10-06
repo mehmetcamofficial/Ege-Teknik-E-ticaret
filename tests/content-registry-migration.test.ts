@@ -71,8 +71,8 @@ test("ordering is enforced by the schema, not only by convention", () => {
 });
 
 
-test("0014 is journaled contiguously as the new head, and the offline gate accepts it", () => {
-  const head = journal.entries[journal.entries.length - 1];
+test("0014 remains journaled contiguously beneath additive successors, and the offline gate accepts it", () => {
+  const head = journal.entries[14];
   assert.equal(head.idx, 14);
   assert.equal(head.tag, "0014_content_registry");
   assert.ok(head.when > journal.entries[13].when, "timestamps keep increasing");

@@ -23,6 +23,8 @@ import { and, eq, inArray } from "drizzle-orm";
  * was inlined in `POST /api/orders` before this module existed.
  */
 
+type CheckoutReadDb = Pick<ReturnType<typeof getDb>, "select">;
+
 type ProductRow = typeof products.$inferSelect;
 type PricedLines = ReturnType<typeof priceOrderLines<ProductRow>>;
 
@@ -67,6 +69,8 @@ const refuse = (status: number, body: CheckoutAuthorityRefusal["body"]): Checkou
 export async function resolveCheckoutPreflight(
   parsed: { data: OrderRequest },
   requested: ReadonlyMap<string, number>,
+  db: CheckoutReadDb = getDb(),
+  now = new Date(),
 ): Promise<{ ok: true; requiredLegal: RequiredLegalVersion[] } | CheckoutAuthorityRefusal> {
   if ([...requested.keys()].some((productId) => !isCustomerVisibleProduct(productId))) {
     return refuse(409, { error: "Sepette satışa açık olmayan bir ürün var.", code: "PRODUCT_NOT_SELLABLE" });
@@ -75,7 +79,7 @@ export async function resolveCheckoutPreflight(
   if (marketingConsentRequested(parsed.data.marketing)) {
     return refuse(MARKETING_CONSENT_DISABLED.status, { error: MARKETING_CONSENT_DISABLED.error, code: MARKETING_CONSENT_DISABLED.code });
   }
-  const legal = await loadRequiredCheckoutLegalVersions();
+  const legal = await loadRequiredCheckoutLegalVersions(now, db);
   if (!legal.ok) return refuse(503, { error: "Yasal metinler şu anda yayında değil; sipariş alınamıyor.", code: "LEGAL_DOCUMENTS_UNAVAILABLE" });
   return { ok: true, requiredLegal: legal.required };
 }
@@ -90,6 +94,8 @@ export async function resolveCheckoutPreflight(
 export async function assertOrderSubmissionLegalGates(
   parsed: { data: OrderRequest },
   requiredLegal: readonly RequiredLegalVersion[],
+  db: CheckoutReadDb = getDb(),
+  now = new Date(),
 ): Promise<CheckoutAuthorityRefusal | null> {
   const acceptance = checkLegalAcceptance(requiredLegal, parsed.data.legalAcceptances);
   if (!acceptance.ok) {
@@ -100,7 +106,7 @@ export async function assertOrderSubmissionLegalGates(
     });
   }
   // The KVKK disclosure is informational (never a checkbox) but must be published before personal data is collected.
-  if (missingNoticeSlugs((await loadCurrentLegalIndex()).map((doc) => doc.slug)).length) {
+  if (missingNoticeSlugs((await loadCurrentLegalIndex(now, db)).map((doc) => doc.slug)).length) {
     return refuse(503, { error: "Aydınlatma metni şu anda yayında değil; sipariş alınamıyor.", code: "LEGAL_NOTICE_UNAVAILABLE" });
   }
   return null;
@@ -111,8 +117,9 @@ export async function resolveCheckoutCalculation(
   parsed: { data: OrderRequest },
   requested: ReadonlyMap<string, number>,
   requiredLegal: readonly RequiredLegalVersion[],
+  db: CheckoutReadDb = getDb(),
 ): Promise<CheckoutAuthorityContext | CheckoutAuthorityRefusal> {
-  const rows = await getDb().select({ product: products }).from(products).innerJoin(inventory, eq(inventory.productId, products.id))
+  const rows = await db.select({ product: products }).from(products).innerJoin(inventory, eq(inventory.productId, products.id))
     .where(and(inArray(products.id, [...requested.keys()]), eq(products.status, "published"), eq(products.saleMode, "online")));
   if (rows.length !== requested.size) return refuse(409, { error: "Sepette satışa açık olmayan bir ürün var.", code: "PRODUCT_NOT_SELLABLE" });
 
@@ -154,10 +161,10 @@ export async function resolveCheckoutCalculation(
  * The sequence is load-bearing and unchanged from canonical - the first matching refusal decides which message the
  * customer sees. It stays a single composed entry point so `POST /api/orders` behaviour cannot drift.
  */
-export async function resolveCheckoutAuthority(parsed: { data: OrderRequest }, requested: ReadonlyMap<string, number>): Promise<CheckoutAuthority> {
-  const preflight = await resolveCheckoutPreflight(parsed, requested);
+export async function resolveCheckoutAuthority(parsed: { data: OrderRequest }, requested: ReadonlyMap<string, number>, db: CheckoutReadDb = getDb(), now = new Date()): Promise<CheckoutAuthority> {
+  const preflight = await resolveCheckoutPreflight(parsed, requested, db, now);
   if (!preflight.ok) return preflight;
-  const legalGate = await assertOrderSubmissionLegalGates(parsed, preflight.requiredLegal);
+  const legalGate = await assertOrderSubmissionLegalGates(parsed, preflight.requiredLegal, db, now);
   if (legalGate) return legalGate;
-  return resolveCheckoutCalculation(parsed, requested, preflight.requiredLegal);
+  return resolveCheckoutCalculation(parsed, requested, preflight.requiredLegal, db);
 }

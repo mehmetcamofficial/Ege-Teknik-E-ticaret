@@ -69,15 +69,14 @@ test("the order route takes every amount and every delivery fact from the server
   assert.doesNotMatch(flow, /parsed\.data\.(shipping|installationAmount|total|subtotal|installation\b)/);
   assert.match(flow, /totalMatchesDisplayed\(total, parsed\.data\.expectedTotal\)/);
 });
-test("every compliance refusal happens before the transaction (no order, no stock, no acceptance)", () => {
-  // Each refusal is raised by the authority module, and the route delegates to that module before it opens the
-  // transaction or touches inventory, so a refusal still writes nothing.
+test("every compliance refusal happens before transactional writes (no order, no stock, no acceptance)", () => {
+  // Authority runs under transaction locks; every refusal still precedes customer/order/inventory writes.
   for (const code of ["LEGAL_DOCUMENTS_UNAVAILABLE", "acceptance.ok", "LEGAL_NOTICE_UNAVAILABLE", "planDelivery(", "delivery.error.code", "PRICE_CHANGED"]) {
     assert.ok(authority.includes(code), `${code} must be refused by the checkout authority`);
   }
   const tx = route.indexOf("db.transaction");
   assert.ok(tx > 0, "the route must still open a transaction");
-  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < tx, "the authority refusal runs before the transaction");
+  assert.ok(route.indexOf("await resolveCheckoutAuthority(") > tx && route.indexOf("if (!authority.ok)") < route.indexOf("tx.insert(customers)"), "locked authority refuses before the first write");
   assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("tx.update(inventory)"), "the authority runs before inventory changes");
 });
 test("expectedTotal is required by the request schema", () => {
@@ -108,7 +107,7 @@ test("the order route writes no marketing permission until the İYS flow is read
   assert.match(authority, /if \(marketingConsentRequested\(parsed\.data\.marketing\)\) \{\n\s*return refuse\(MARKETING_CONSENT_DISABLED\.status, \{ error: MARKETING_CONSENT_DISABLED\.error, code: MARKETING_CONSENT_DISABLED\.code \}\)/, "the authority refuses an explicit marketing opt-in");
   assert.ok(authorityBody.indexOf("marketingConsentRequested(") < authorityBody.indexOf("loadRequiredCheckoutLegalVersions"), "the marketing refusal precedes any legal or product read");
   assert.ok(route.indexOf("await replay()") < route.indexOf("await resolveCheckoutAuthority("), "an idempotent replay of an existing order is still answered first");
-  assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("db.transaction"), "refused before the transaction");
+  assert.ok(route.indexOf("marketingConsentRequested(parsed.data.marketing)") < route.indexOf("db.transaction"), "marketing is refused before the transaction");
   assert.match(tx, /tx\.insert\(orderLegalAcceptances\)/, "legal acceptances are still recorded");
 });
 test("checkout markup: no marketing consent is collected until the İYS/consent flow is ready", () => {
@@ -178,14 +177,15 @@ test("the post-order account offer is optional, non-blocking and never claims th
 });
 test("both the just-created and the idempotent-replay response are built by the same allow-list function", () => {
   const matches = [...route.matchAll(/toOrderConfirmation\(/g)];
-  assert.equal(matches.length, 2, "toOrderConfirmation must be called exactly twice: create and replay");
+  assert.equal(matches.length, 1, "one persisted-read projection serves create and replay");
+  assert.match(route, /const result = await replay\(\);[\s\S]*new Response\(result.body, \{ status: 201/);
 });
 test("neither order response ever inlines an internal id: only the allow-list helpers construct the JSON body", () => {
   for (const forbidden of [/Response\.json\(\{[^}]*\bid:\s*(id|existing\.id)\b/, /Response\.json\(\{[^}]*\bcustomerId\b/, /Response\.json\(\{[^}]*\baddressId\b/, /Response\.json\(\{[^}]*idempotencyKey:\s*key\b/]) assert.doesNotMatch(route, forbidden);
 });
 test("the idempotency key is claimed before inventory is ever touched - a concurrent duplicate can never reserve stock twice", () => {
   const claim = route.indexOf("onConflictDoNothing({ target: orders.idempotencyKey })");
-  const throwReplay = route.indexOf("throw new IdempotentReplay()");
+  const throwReplay = route.indexOf("if (!claimed.length) throw new IdempotentReplay()");
   const inventoryUpdate = route.indexOf("tx.update(inventory)");
   assert.ok(claim > 0 && throwReplay > claim && throwReplay < inventoryUpdate, "claim -> replay-check -> inventory, in that order");
 });

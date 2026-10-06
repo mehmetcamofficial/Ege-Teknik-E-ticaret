@@ -175,7 +175,7 @@ test("every legal-authority loader is guarded, and the guard precedes any select
   for (const loader of ["loadRequiredCheckoutLegalVersions", "loadRequiredCheckoutLegalDocuments", "loadPublicLegalVersion", "loadCurrentLegalIndex"]) {
     const start = db.indexOf(`export async function ${loader}`);
     assert.ok(start > 0, `loader missing: ${loader}`);
-    const guard = db.indexOf("legalFixtureContaminated()", start);
+    const guard = db.indexOf(loader === "loadPublicLegalVersion" ? "legalFixtureContaminated()" : "legalFixtureContaminated(db)", start);
     assert.ok(guard > start, `${loader} has no containment guard`);
     // The guard must come before the first row-selection query in that loader.
     const firstQuery = db.indexOf(".from(legalDocumentVersions)", start);

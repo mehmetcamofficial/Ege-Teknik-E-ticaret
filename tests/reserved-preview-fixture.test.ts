@@ -155,7 +155,7 @@ test("J/K: checkout and public legal loaders route through the one containment g
   for (const loader of ["loadRequiredCheckoutLegalVersions", "loadRequiredCheckoutLegalDocuments", "loadPublicLegalVersion", "loadCurrentLegalIndex"]) {
     const start = db.indexOf(`export async function ${loader}`);
     assert.ok(start > 0, `missing loader ${loader}`);
-    assert.ok(db.indexOf("legalFixtureContaminated()", start) > start, `${loader} lost its guard`);
+    assert.ok(db.indexOf("legalFixtureContaminated(db)", start) > start, `${loader} lost its guard`);
   }
   assert.match(db, /isLegalFixtureContaminated\(inspectLegalFixtureContamination\(/, "the reserved class must reach the loaders via the one guard");
 });

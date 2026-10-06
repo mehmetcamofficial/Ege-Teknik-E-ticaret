@@ -5,6 +5,8 @@ import { CHECKOUT_LEGAL_SLUGS, hashLegalDocument, resolvePublicLegalVersion, sel
 import { inspectLegalFixtureContamination, isLegalFixtureContaminated, reservedPreviewCheckoutDocuments } from "@/lib/legal-fixture-registry";
 import { and, asc, eq, inArray, isNotNull } from "drizzle-orm";
 
+export type LegalReadDb = Pick<ReturnType<typeof getDb>, "select">;
+
 /** Drafts (null publication columns) are excluded in SQL; this narrows the types and drops them again defensively. */
 function publishedOnly<T extends { effectiveAt: Date | null; publishedAt: Date | null }>(rows: readonly T[]) {
   return rows.filter((row): row is T & { effectiveAt: Date; publishedAt: Date } => row.effectiveAt !== null && row.publishedAt !== null);
@@ -18,8 +20,8 @@ function publishedOnly<T extends { effectiveAt: Date | null; publishedAt: Date |
  * fixture could hide behind being superseded, future-effective, sitting on a non-checkout slug, or shadowed by an
  * ordinary version - and the boundary would stop covering precisely the rows that need covering.
  */
-async function loadCompleteLegalVersionInventory() {
-  return getDb()
+async function loadCompleteLegalVersionInventory(db: LegalReadDb = getDb()) {
+  return db
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, publishedBy: legalDocumentVersions.publishedBy, contentHash: legalDocumentVersions.contentHash })
     .from(legalDocumentVersions)
     .innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId));
@@ -31,8 +33,8 @@ async function loadCompleteLegalVersionInventory() {
  * The environment is read from server-owned process env only. It is never taken from a hostname, a request header or
  * any client input, because a caller-supplied signal would let a request opt itself into the fixture branch.
  */
-async function legalFixtureContaminated(): Promise<boolean> {
-  const inventory = await loadCompleteLegalVersionInventory();
+async function legalFixtureContaminated(db: LegalReadDb = getDb()): Promise<boolean> {
+  const inventory = await loadCompleteLegalVersionInventory(db);
   return isLegalFixtureContaminated(inspectLegalFixtureContamination(inventory, process.env));
 }
 
@@ -40,15 +42,15 @@ async function legalFixtureContaminated(): Promise<boolean> {
 const FIXTURE_CONTAMINATION_REFUSAL = { ok: false as const, missing: [...CHECKOUT_LEGAL_SLUGS] };
 
 /** Read-only: loads the versions of the checkout legal documents and applies the deterministic selection rule. */
-export async function loadRequiredCheckoutLegalVersions(now = new Date()) {
-  if (await legalFixtureContaminated()) return FIXTURE_CONTAMINATION_REFUSAL;
+export async function loadRequiredCheckoutLegalVersions(now = new Date(), db: LegalReadDb = getDb()) {
+  if (await legalFixtureContaminated(db)) return FIXTURE_CONTAMINATION_REFUSAL;
   // P2-FIXTURE-B: in the verified Preview environment the checkout authority is served from the CODE-OWNED reserved
   // fixtures instead of the legacy Preview DB rows. This is the ONLY path that can serve them. The ids returned here
   // are the same ones `loadRequiredCheckoutLegalDocuments` renders and the same ones `checkLegalAcceptance` later
   // demands, so the preview token and the order submission agree on identity without any special-casing.
   const reserved = reservedPreviewCheckoutDocuments(process.env);
   if (reserved) return { ok: true as const, required: reserved.map((d) => ({ slug: d.slug, title: d.title, versionId: d.versionId })) };
-  const rows = await getDb()
+  const rows = await db
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
     .where(and(inArray(legalDocuments.slug, [...CHECKOUT_LEGAL_SLUGS]), isNotNull(legalDocumentVersions.publishedAt), isNotNull(legalDocumentVersions.effectiveAt)));
@@ -62,13 +64,13 @@ export async function loadRequiredCheckoutLegalVersions(now = new Date()) {
  * preview and the order submission always agree on WHICH version is required. `/api/legal/required` still returns
  * ids and titles only, never bodies; bodies leave the server solely through the preview response.
  */
-export async function loadRequiredCheckoutLegalDocuments(now = new Date()) {
-  if (await legalFixtureContaminated()) return FIXTURE_CONTAMINATION_REFUSAL;
+export async function loadRequiredCheckoutLegalDocuments(now = new Date(), db: LegalReadDb = getDb()) {
+  if (await legalFixtureContaminated(db)) return FIXTURE_CONTAMINATION_REFUSAL;
   // P2-FIXTURE-B: the same code-owned substitution, so the BODIES rendered into the preview token and the ids bound
   // into the order are the reserved fixtures - never the legacy Preview rows and never the unpublished RC v3.
   const reserved = reservedPreviewCheckoutDocuments(process.env);
   if (reserved) return { ok: true as const, required: reserved.map(({ versionId, slug, title, version, body }) => ({ slug, title, version, versionId, contentHash: hashLegalDocument({ title, body }), body })) };
-  const rows = await getDb()
+  const rows = await db
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, contentHash: legalDocumentVersions.contentHash, body: legalDocumentVersions.body, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
     .where(and(inArray(legalDocuments.slug, [...CHECKOUT_LEGAL_SLUGS]), isNotNull(legalDocumentVersions.publishedAt), isNotNull(legalDocumentVersions.effectiveAt)));
@@ -96,11 +98,11 @@ export async function loadPublicLegalVersion(slug: string, requestedVersionId: s
 }
 
 /** Read-only: metadata of the currently effective version of every document (no bodies). */
-export async function loadCurrentLegalIndex(now = new Date()) {
+export async function loadCurrentLegalIndex(now = new Date(), db: LegalReadDb = getDb()) {
   // P2-FIXTURE-A: the public index resolves the CURRENT version per slug, which is exactly how a published fixture
   // under cookies/terms would be advertised. Serve nothing rather than advertise fixture content.
-  if (await legalFixtureContaminated()) return [];
-  const rows = await getDb()
+  if (await legalFixtureContaminated(db)) return [];
+  const rows = await db
     .select({ id: legalDocumentVersions.id, slug: legalDocuments.slug, version: legalDocumentVersions.version, title: legalDocumentVersions.title, effectiveAt: legalDocumentVersions.effectiveAt, publishedAt: legalDocumentVersions.publishedAt })
     .from(legalDocumentVersions).innerJoin(legalDocuments, eq(legalDocuments.id, legalDocumentVersions.documentId))
     .where(and(isNotNull(legalDocumentVersions.publishedAt), isNotNull(legalDocumentVersions.effectiveAt)));
@@ -115,8 +117,8 @@ export async function loadCurrentLegalIndex(now = new Date()) {
  * through the public exact-version route, so an order payload never carries a full legal text. Returns an
  * empty array for pre-feature orders that have no acceptance rows - that is real history, not an error.
  */
-export async function loadOrderAcceptedLegalDocuments(orderId: string) {
-  const rows = await getDb()
+export async function loadOrderAcceptedLegalDocuments(orderId: string, db: LegalReadDb = getDb()) {
+  const rows = await db
     .select({
       documentVersionId: orderLegalAcceptances.documentVersionId,
       acceptedAt: orderLegalAcceptances.acceptedAt,

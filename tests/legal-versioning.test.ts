@@ -46,8 +46,10 @@ test("schema and migration enforce unique (order_id, document_version_id)", () =
 });
 
 test("legal tables carry no IP or user-agent columns", () => {
-  const legalSchema = schema.split("\n").filter((line) => /legal/i.test(line)).join("\n");
-  assert.doesNotMatch(legalSchema, /ip|user_?agent/i);
+  const legalLines = schema.split("\n").filter((line) => /export const (legalDocuments|legalDocumentVersions|orderLegalAcceptances)\s*=/.test(line));
+  assert.equal(legalLines.length, 3, "all three legal table declarations must be inspected");
+  const legalSchema = legalLines.join("\n");
+  assert.doesNotMatch(legalSchema, /\b(ip|ipAddress|userAgent|user_agent)\s*:/i);
 });
 
 test("no application code mutates published legal versions", () => {
