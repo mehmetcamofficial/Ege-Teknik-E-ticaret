@@ -1,4 +1,4 @@
-import { getDb } from "@/db";
+import { getCheckoutDb } from "@/db";
 import { addresses, customers, inventory, orderItems, orderLegalAcceptances, orders, legalDocuments, products } from "@/db/schema";
 import { resolveCheckoutAuthority } from "@/lib/checkout-authority";
 import { deliveryTraits, type DeliveryClass } from "@/lib/delivery";
@@ -20,10 +20,10 @@ class CheckoutRefusal extends Error {
 }
 
 async function createOrder(request: Request) {
-  await rateLimit(request,"order-create",8,15*60_000);
+  const db = getCheckoutDb();
+  await rateLimit(request,"order-create",8,15*60_000,db);
   const key = idempotencyKey(request); if (!key) return Response.json({ error: "Güvenli istek anahtarı eksik." }, { status: 400 });
   const parsed = orderRequestSchema.safeParse(await readJson(request)); if (!parsed.success) return Response.json({ error: "Sipariş bilgilerini kontrol edin." }, { status: 400 });
-  const db = getDb();
   const requested = new Map(parsed.data.items.map((item) => [item.productId, item.quantity]));
   const fingerprint = orderRequestFingerprint(parsed.data, requested);
   // Same key + same request => the original result; same key + different request => conflict.

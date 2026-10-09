@@ -132,7 +132,9 @@ test("the request reaches the shared limiter with the P3-S1A client identity, an
   const httpSecurity = readFileSync("lib/http-security.ts", "utf8");
   assert.match(httpSecurity, /const key=`\$\{scope\}:\$\{await hashWithSecret\(clientIp\(request\)\)\}`/, "scope + salted hash, no raw address");
   assert.match(httpSecurity, /import \{ clientIp, hashWithSecret, type HeaderSource \} from "@\/lib\/admin-auth"/, "through the P3-S1A identity path");
-  assert.match(httpSecurity, /claimRateLimit\(createRateLimitStore\(getDb\(\)\)/, "and into the atomic store");
+  assert.match(httpSecurity, /claimRateLimit\(store,\{key,limit,windowMs,now\}\)/, "and into the atomic store");
+  assert.match(httpSecurity, /store=createRateLimitStore\(db\)/, "the limiter uses its selected DB store");
+  assert.match(httpSecurity, /db:ReturnType<typeof getDb>=getDb\(\)/, "non-checkout routes retain the legacy default");
   assert.equal(state.committed.filter((write) => write.table === "rate_limit_buckets").length, 0, "the route itself writes no bucket row");
 });
 
