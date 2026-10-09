@@ -56,7 +56,9 @@ test("checkout routes share the same explicitly selected database", () => {
   const orders = readFileSync("app/api/orders/route.ts", "utf8");
   const preview = readFileSync("app/api/checkout/legal-preview/route.ts", "utf8");
   assert.match(orders, /const db = getCheckoutDb\(\)/);
+  assert.match(orders, /rateLimit\(request,"order-create",8,15\*60_000,db\)/);
   assert.match(preview, /const db = getCheckoutDb\(\)/);
+  assert.match(preview, /rateLimit\(request, "legal-preview", 8, 15 \* 60_000, db\)/);
   assert.match(preview, /resolveCheckoutPreflight\(\{ data: parsed\.data \}, requested, db\)/);
   assert.match(preview, /resolveCheckoutCalculation\(\{ data: parsed\.data \}, requested, preflight\.requiredLegal, db\)/);
   assert.match(preview, /loadRequiredCheckoutLegalDocuments\(orderIssuedAt, db\)/);
