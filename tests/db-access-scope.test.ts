@@ -64,3 +64,13 @@ test("checkout routes share the same explicitly selected database", () => {
   assert.match(index, /scopedCheckoutEnabled\(process\.env\.CHECKOUT_SCOPED_DB_ENABLED\) \? getStorefrontDb\(\) : getDb\(\)/);
   assert.match(readFileSync("tests/support/order-route-fakes.ts", "utf8"), /export function getCheckoutDb\(\)/);
 });
+
+test("scoped endpoints must remain on the same database and branch", () => {
+  assert.throws(() => resolveScopedDatabaseUrl("storefront", { ...configured, STOREFRONT_DATABASE_URL: "postgresql://storefront_role:secret@another.example.test/app" }), /endpoints must match/);
+  assert.throws(() => resolveScopedDatabaseUrl("admin", { ...configured, ADMIN_DATABASE_URL: "postgresql://admin_role:secret@db.example.test/other" }), /endpoints must match/);
+  assert.throws(() => resolveScopedDatabaseUrl("admin", { STOREFRONT_DATABASE_URL: storefront, ADMIN_DATABASE_URL: admin }), /DATABASE_URL is required/);
+  const direct = "postgresql://owner:secret@ep-example.c-12.us-east-1.aws.neon.tech/neondb";
+  const pooledStorefront = "postgresql://storefront_role:secret@ep-example-pooler.c-12.us-east-1.aws.neon.tech/neondb";
+  const directAdmin = "postgresql://admin_role:secret@ep-example.c-12.us-east-1.aws.neon.tech/neondb";
+  assert.equal(resolveScopedDatabaseUrl("storefront", { DATABASE_URL: direct, STOREFRONT_DATABASE_URL: pooledStorefront, ADMIN_DATABASE_URL: directAdmin }), pooledStorefront);
+});
