@@ -273,6 +273,125 @@ test("7. audit transaction: a forced audit-insert failure rolls the admin mutati
   assert.equal(await one("select count(*)::int n from audit_logs where entity_id='u-audit'"), 1, "success commits both, exactly one audit row");
 });
 
+
+test("8. checkout lock: SECURITY DEFINER works under a restricted role without products UPDATE", opts, async () => {
+  await pool.query("CREATE ROLE sprintb_checkout_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOINHERIT");
+  await pool.query("GRANT USAGE ON SCHEMA public TO sprintb_checkout_runtime");
+  await pool.query("GRANT SELECT ON public.products TO sprintb_checkout_runtime");
+  await pool.query("GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO sprintb_checkout_runtime");
+  await db.insert(schema.products).values({ id: "lock-a", slug: "lock-a", name: "Lock A", sku: "lock-a" });
+
+  const acl = (await pool.query(`SELECT
+    has_table_privilege('sprintb_checkout_runtime','public.products','UPDATE') AS can_update,
+    has_table_privilege('sprintb_checkout_runtime','public.products','SELECT') AS can_select,
+    has_function_privilege('sprintb_checkout_runtime','public.lock_checkout_products(text[])','EXECUTE') AS can_execute,
+    has_function_privilege('public','public.lock_checkout_products(text[])','EXECUTE') AS public_can_execute`)).rows[0];
+  assert.deepEqual(acl, { can_update: false, can_select: true, can_execute: true, public_can_execute: false });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SET LOCAL ROLE sprintb_checkout_runtime");
+    assert.equal((await client.query("SELECT current_user AS role")).rows[0].role, "sprintb_checkout_runtime");
+    await client.query("SELECT public.lock_checkout_products($1::text[])", [["lock-a"]]);
+    assert.equal((await client.query("SELECT count(*)::int AS n FROM public.products WHERE id='lock-a'")).rows[0].n, 1);
+    await assert.rejects(
+      client.query("UPDATE public.products SET name='FORBIDDEN' WHERE id='lock-a'"),
+      (error: unknown) => (error as { code?: string }).code === "42501",
+      "the storefront role must not acquire product UPDATE rights",
+    );
+  } finally {
+    await client.query("ROLLBACK");
+    client.release();
+  }
+  assert.equal((await pool.query("SELECT name FROM public.products WHERE id='lock-a'")).rows[0].name, "Lock A");
+});
+
+test("8b. checkout lock: malformed, duplicate and missing product IDs fail closed under restricted role", opts, async () => {
+  const cases: { ids: (string | null)[] | null; code: string }[] = [
+    { ids: null, code: "22023" },
+    { ids: [], code: "22023" },
+    { ids: ["lock-a", null], code: "22023" },
+    { ids: ["lock-a", "lock-a"], code: "22023" },
+    { ids: Array.from({ length: 26 }, (_, i) => `lock-${i}`), code: "22023" },
+    { ids: ["lock-does-not-exist"], code: "23514" },
+  ];
+  const client = await pool.connect();
+  try {
+    for (const { ids, code } of cases) {
+      await client.query("BEGIN");
+      try {
+        await client.query("SET LOCAL ROLE sprintb_checkout_runtime");
+        await assert.rejects(
+          client.query("SELECT public.lock_checkout_products($1::text[])", [ids]),
+          (error: unknown) => (error as { code?: string }).code === code,
+          `expected SQLSTATE ${code} for ${JSON.stringify(ids)}`,
+        );
+      } finally {
+        await client.query("ROLLBACK");
+      }
+    }
+  } finally {
+    client.release();
+  }
+});
+
+test("8c. checkout lock: product UPDATE waits for the shared lock and rollback releases it", opts, async () => {
+  const checkout = await pool.connect();
+  const admin = await pool.connect();
+  try {
+    await checkout.query("BEGIN");
+    await checkout.query("SET LOCAL ROLE sprintb_checkout_runtime");
+    await checkout.query("SELECT public.lock_checkout_products($1::text[])", [["lock-a"]]);
+
+    await admin.query("BEGIN");
+    await admin.query("SET LOCAL lock_timeout = '250ms'");
+    await assert.rejects(
+      admin.query("UPDATE public.products SET name='BLOCKED' WHERE id='lock-a'"),
+      (error: unknown) => (error as { code?: string }).code === "55P03",
+      "admin UPDATE must not bypass the checkout's FOR SHARE row lock",
+    );
+    await admin.query("ROLLBACK");
+    assert.equal((await pool.query("SELECT name FROM public.products WHERE id='lock-a'")).rows[0].name, "Lock A");
+
+    await checkout.query("ROLLBACK");
+    await admin.query("BEGIN");
+    const updated = await admin.query("UPDATE public.products SET name='AFTER LOCK' WHERE id='lock-a'");
+    assert.equal(updated.rowCount, 1, "rollback must release the product lock");
+    await admin.query("ROLLBACK");
+    assert.equal((await pool.query("SELECT name FROM public.products WHERE id='lock-a'")).rows[0].name, "Lock A");
+  } finally {
+    await Promise.allSettled([checkout.query("ROLLBACK"), admin.query("ROLLBACK")]);
+    checkout.release();
+    admin.release();
+  }
+});
+
+test("8d. checkout lock: concurrent shared locks with opposite product order do not deadlock", opts, async () => {
+  await db.insert(schema.products).values({ id: "lock-b", slug: "lock-b", name: "Lock B", sku: "lock-b" });
+  const left = await pool.connect();
+  const right = await pool.connect();
+  try {
+    await Promise.all([left.query("BEGIN"), right.query("BEGIN")]);
+    await Promise.all([
+      left.query("SET LOCAL ROLE sprintb_checkout_runtime"),
+      right.query("SET LOCAL ROLE sprintb_checkout_runtime"),
+    ]);
+    await Promise.all([
+      left.query("SET LOCAL statement_timeout = '3s'"),
+      right.query("SET LOCAL statement_timeout = '3s'"),
+    ]);
+    await Promise.all([
+      left.query("SELECT public.lock_checkout_products($1::text[])", [["lock-b", "lock-a"]]),
+      right.query("SELECT public.lock_checkout_products($1::text[])", [["lock-a", "lock-b"]]),
+    ]);
+  } finally {
+    await Promise.allSettled([left.query("ROLLBACK"), right.query("ROLLBACK")]);
+    left.release();
+    right.release();
+  }
+});
+
 test("invariants: no negative inventory, no over-reservation, no duplicate release, no deadlock, no lingering transactions", opts, async () => {
   assert.equal(await one("select count(*)::int n from inventory where on_hand < 0 or reserved < 0"), 0);
   assert.equal(await one("select count(*)::int n from (select product_id, count(*) c from second_hand_reservations where expires_at > now() group by product_id) x join used_products u on u.id = x.product_id where x.c > u.stock"), 0);
