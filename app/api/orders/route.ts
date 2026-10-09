@@ -57,7 +57,14 @@ async function createOrder(request: Request) {
       if (await replay(tx)) throw new IdempotentReplay();
       // Legal-version writers lock these parent rows (migration 0015); no broad table lock.
       await tx.select({ id: legalDocuments.id }).from(legalDocuments).orderBy(asc(legalDocuments.id)).for("share");
-      await tx.select({ id: products.id }).from(products).where(inArray(products.id, [...requested.keys()])).orderBy(asc(products.id)).for("share");
+      if (process.env.CHECKOUT_SCOPED_DB_ENABLED === "true") {
+        // SECURITY DEFINER grants a narrow product-row lock without products UPDATE ACL.
+        // The function is unavailable until migration 0017 and its explicit EXECUTE grant.
+        await tx.execute(sql`SELECT public.lock_checkout_products(ARRAY[${sql.join([...requested.keys()].map((productId) => sql`${productId}`), sql`, `)}]::text[])`);
+      } else {
+        // Legacy checkout retains the existing lock until scoped rollout is approved.
+        await tx.select({ id: products.id }).from(products).where(inArray(products.id, [...requested.keys()])).orderBy(asc(products.id)).for("share");
+      }
       const acceptedAt = new Date();
       const authority = await resolveCheckoutAuthority({ data: parsed.data }, requested, tx, acceptedAt);
       if (!authority.ok) throw new CheckoutRefusal(Response.json(authority.body, { status: authority.status }));

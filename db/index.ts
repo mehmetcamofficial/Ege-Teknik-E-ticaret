@@ -18,7 +18,15 @@ function databaseUrl() {
 function assertEnvironmentIsolation(){const appEnv=process.env.APP_ENV,branchId=process.env.NEON_BRANCH_ID;if(!appEnv||!branchId)throw new Error("APP_ENV and NEON_BRANCH_ID must be configured.");if(!["development","preview","production"].includes(appEnv))throw new Error("APP_ENV is invalid.");const expected=process.env[`EXPECTED_NEON_${appEnv.toUpperCase()}_BRANCH_ID`];if(!expected||expected!==branchId)throw new Error("Database environment guard rejected the configured Neon branch.")}
 
 function createPool(connectionString: string): Pool {
-  return new Pool({ connectionString, max: 10, idleTimeoutMillis: 20_000, connectionTimeoutMillis: 10_000, ssl: { rejectUnauthorized: true } });
+  const target = new URL(connectionString);
+  // Disposable CI/local PostgreSQL does not expose TLS. Only development
+  // loopback databases with the dedicated sprintb prefix may opt out.
+  // Preview and Production always require certificate verification.
+  const disposableLocal = process.env.APP_ENV === "development"
+    && ["127.0.0.1", "localhost", "::1"].includes(target.hostname)
+    && target.pathname.slice(1).startsWith("sprintb");
+  return new Pool({ connectionString, max: 10, idleTimeoutMillis: 20_000, connectionTimeoutMillis: 10_000,
+    ssl: disposableLocal ? false : { rejectUnauthorized: true } });
 }
 
 /** Legacy connection, retained until every caller has been migrated and tested. */

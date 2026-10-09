@@ -158,7 +158,12 @@ test("the bootstrap is test-only: nothing in the application imports it", () => 
   const importers = execFileSync("grep", ["-rl", "disposable-postgres-bootstrap", "app", "lib", "db", "components", "scripts", "public"], { encoding: "utf8" })
     .split("\n").filter(Boolean).sort();
   assert.ok(existsSync(BOOTSTRAP), "the bootstrap module must exist");
-  assert.deepEqual(importers, [RUNNER], "only the commerce runner may use the disposable bootstrap");
+  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", RUNNER].sort(),
+    "only the two disposable PostgreSQL CI runners may import the destructive bootstrap");
+  const httpRunner = readFileSync("scripts/test-checkout-http-e2e.mjs", "utf8");
+  assert.match(httpRunner, /process\.env\.CI !== "true"/, "HTTP E2E must refuse non-CI execution");
+  assert.match(httpRunner, /target\.pathname\.slice\(1\)\.startsWith\("sprintb"\)/, "HTTP E2E must refuse non-disposable databases");
+  assert.match(httpRunner, /\["127\.0\.0\.1", "localhost", "::1"\]/, "HTTP E2E must refuse remote databases");
   assert.doesNotMatch(bootstrapSource, /DATABASE_URL_UNPOOLED|NEON_BRANCH_ID|MIGRATION_TARGET_ENV/);
   assert.doesNotMatch(bootstrapSource, /process\.env/, "it has no environment of its own: the caller passes the URL in");
 });

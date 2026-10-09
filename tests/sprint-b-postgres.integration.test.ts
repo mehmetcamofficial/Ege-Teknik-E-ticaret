@@ -15,6 +15,7 @@
  * pooled connections, so every "concurrent" case is several independent PostgreSQL transactions.
  */
 import assert from "node:assert/strict";
+import { createHash, randomBytes } from "node:crypto";
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -94,6 +95,40 @@ test("setup: the disposable database is migrated to head through the real migrat
   assert.equal(await one("select count(*)::int n from drizzle.__drizzle_migrations"), headCount);
   assert.equal(await one("select count(*)::int n from admin_users where role='super_admin' and active"), 1);
   assert.equal(await one("select count(*)::int n from admin_users where role='owner'"), 0);
+});
+
+test("setup: migration 0017 is recorded exactly once in Drizzle with the source hash and locked-down function ACL", opts, async () => {
+  const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
+  const entry = journal.entries.find((item: { tag: string }) => item.tag === "0017_checkout_product_lock");
+  assert.ok(entry, "migration 0017 must exist in the journal");
+  assert.equal(journal.entries.length, 19, "the migration ledger should contain 0000 through 0018");
+
+  const source = readFileSync(`drizzle-pg/${entry.tag}.sql`, "utf8");
+  const expectedHash = createHash("sha256").update(source).digest("hex");
+  const migrations = (await pool.query(
+    "SELECT hash, created_at::text AS created_at FROM drizzle.__drizzle_migrations WHERE created_at = $1::bigint",
+    [String(entry.when)],
+  )).rows;
+  assert.equal(migrations.length, 1, "the Drizzle migrator must record 0017 exactly once");
+  assert.equal(migrations[0].hash, expectedHash, "recorded hash must match the migration file");
+  assert.equal(migrations[0].created_at, String(entry.when));
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 19);
+
+  const functions = (await pool.query(`SELECT p.prosecdef AS security_definer,
+    pg_get_userbyid(p.proowner) AS owner,
+    EXISTS (
+      SELECT 1 FROM aclexplode(p.proacl) AS acl
+      WHERE acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+    ) AS public_can_execute
+    FROM pg_proc AS p
+    WHERE p.oid = 'public.lock_checkout_products(text[])'::regprocedure`)).rows;
+  assert.equal(functions.length, 1, "migration must install the checkout lock function");
+  assert.equal(functions[0].security_definer, true);
+  assert.equal(functions[0].public_can_execute, false, "PUBLIC EXECUTE must be revoked by the same migration");
+
+  // Re-running the migrator must not append a second 0017 record.
+  await migrate(db, { migrationsFolder: "drizzle-pg" });
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 19);
 });
 
 test("1. second-hand: stock=1 and two genuinely concurrent independent transactions => exactly one reservation", opts, async () => {
@@ -271,6 +306,251 @@ test("7. audit transaction: a forced audit-insert failure rolls the admin mutati
   });
   assert.equal((await pool.query("select name from used_products where id='u-audit'")).rows[0].name, "OK");
   assert.equal(await one("select count(*)::int n from audit_logs where entity_id='u-audit'"), 1, "success commits both, exactly one audit row");
+});
+
+
+test("8. checkout lock: SECURITY DEFINER works under a restricted role without products UPDATE", opts, async () => {
+  await pool.query("CREATE ROLE sprintb_checkout_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOINHERIT");
+  await pool.query("GRANT USAGE ON SCHEMA public TO sprintb_checkout_runtime");
+  await pool.query("GRANT SELECT ON public.products TO sprintb_checkout_runtime");
+  await pool.query("GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO sprintb_checkout_runtime");
+  await db.insert(schema.products).values({ id: "lock-a", slug: "lock-a", name: "Lock A", sku: "lock-a" });
+
+  const acl = (await pool.query(`SELECT
+    has_table_privilege('sprintb_checkout_runtime','public.products','UPDATE') AS can_update,
+    has_table_privilege('sprintb_checkout_runtime','public.products','SELECT') AS can_select,
+    has_function_privilege('sprintb_checkout_runtime','public.lock_checkout_products(text[])','EXECUTE') AS can_execute,
+    NOT EXISTS (
+      SELECT 1 FROM pg_proc p, aclexplode(p.proacl) acl
+      WHERE p.oid = 'public.lock_checkout_products(text[])'::regprocedure
+        AND acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+    ) AS public_execute_revoked`)).rows[0];
+  assert.deepEqual(acl, { can_update: false, can_select: true, can_execute: true, public_execute_revoked: true });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SET LOCAL ROLE sprintb_checkout_runtime");
+    assert.equal((await client.query("SELECT current_user AS role")).rows[0].role, "sprintb_checkout_runtime");
+    await client.query("SELECT public.lock_checkout_products($1::text[])", [["lock-a"]]);
+    assert.equal((await client.query("SELECT count(*)::int AS n FROM public.products WHERE id='lock-a'")).rows[0].n, 1);
+    await assert.rejects(
+      client.query("UPDATE public.products SET name='FORBIDDEN' WHERE id='lock-a'"),
+      (error: unknown) => (error as { code?: string }).code === "42501",
+      "the storefront role must not acquire product UPDATE rights",
+    );
+  } finally {
+    await client.query("ROLLBACK");
+    client.release();
+  }
+  assert.equal((await pool.query("SELECT name FROM public.products WHERE id='lock-a'")).rows[0].name, "Lock A");
+});
+
+test("8b. checkout lock: malformed, duplicate and missing product IDs fail closed under restricted role", opts, async () => {
+  const cases: { ids: (string | null)[] | null; code: string }[] = [
+    { ids: null, code: "22023" },
+    { ids: [], code: "22023" },
+    { ids: ["lock-a", null], code: "22023" },
+    { ids: ["lock-a", "lock-a"], code: "22023" },
+    { ids: Array.from({ length: 26 }, (_, i) => `lock-${i}`), code: "22023" },
+    { ids: ["lock-does-not-exist"], code: "23514" },
+  ];
+  const client = await pool.connect();
+  try {
+    for (const { ids, code } of cases) {
+      await client.query("BEGIN");
+      try {
+        await client.query("SET LOCAL ROLE sprintb_checkout_runtime");
+        await assert.rejects(
+          client.query("SELECT public.lock_checkout_products($1::text[])", [ids]),
+          (error: unknown) => (error as { code?: string }).code === code,
+          `expected SQLSTATE ${code} for ${JSON.stringify(ids)}`,
+        );
+      } finally {
+        await client.query("ROLLBACK");
+      }
+    }
+  } finally {
+    client.release();
+  }
+});
+
+test("8c. checkout lock: product UPDATE waits for the shared lock and rollback releases it", opts, async () => {
+  const checkout = await pool.connect();
+  const admin = await pool.connect();
+  try {
+    await checkout.query("BEGIN");
+    await checkout.query("SET LOCAL ROLE sprintb_checkout_runtime");
+    await checkout.query("SELECT public.lock_checkout_products($1::text[])", [["lock-a"]]);
+
+    await admin.query("BEGIN");
+    await admin.query("SET LOCAL lock_timeout = '250ms'");
+    await assert.rejects(
+      admin.query("UPDATE public.products SET name='BLOCKED' WHERE id='lock-a'"),
+      (error: unknown) => (error as { code?: string }).code === "55P03",
+      "admin UPDATE must not bypass the checkout's FOR SHARE row lock",
+    );
+    await admin.query("ROLLBACK");
+    assert.equal((await pool.query("SELECT name FROM public.products WHERE id='lock-a'")).rows[0].name, "Lock A");
+
+    await checkout.query("ROLLBACK");
+    await admin.query("BEGIN");
+    const updated = await admin.query("UPDATE public.products SET name='AFTER LOCK' WHERE id='lock-a'");
+    assert.equal(updated.rowCount, 1, "rollback must release the product lock");
+    await admin.query("ROLLBACK");
+    assert.equal((await pool.query("SELECT name FROM public.products WHERE id='lock-a'")).rows[0].name, "Lock A");
+  } finally {
+    await Promise.allSettled([checkout.query("ROLLBACK"), admin.query("ROLLBACK")]);
+    checkout.release();
+    admin.release();
+  }
+});
+
+test("8d. checkout lock: concurrent shared locks with opposite product order do not deadlock", opts, async () => {
+  await db.insert(schema.products).values({ id: "lock-b", slug: "lock-b", name: "Lock B", sku: "lock-b" });
+  const left = await pool.connect();
+  const right = await pool.connect();
+  try {
+    await Promise.all([left.query("BEGIN"), right.query("BEGIN")]);
+    await Promise.all([
+      left.query("SET LOCAL ROLE sprintb_checkout_runtime"),
+      right.query("SET LOCAL ROLE sprintb_checkout_runtime"),
+    ]);
+    await Promise.all([
+      left.query("SET LOCAL statement_timeout = '3s'"),
+      right.query("SET LOCAL statement_timeout = '3s'"),
+    ]);
+    await Promise.all([
+      left.query("SELECT public.lock_checkout_products($1::text[])", [["lock-b", "lock-a"]]),
+      right.query("SELECT public.lock_checkout_products($1::text[])", [["lock-a", "lock-b"]]),
+    ]);
+  } finally {
+    await Promise.allSettled([left.query("ROLLBACK"), right.query("ROLLBACK")]);
+    left.release();
+    right.release();
+  }
+});
+
+test("8e. migration 0018 keeps legal guard owner-only and puts pg_temp last", opts, async () => {
+  const rows = (await pool.query(`SELECT p.prosecdef AS security_definer,
+    p.proconfig AS settings,
+    EXISTS (
+      SELECT 1 FROM aclexplode(p.proacl) AS acl
+      WHERE acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+    ) AS public_can_execute
+    FROM pg_proc AS p
+    WHERE p.oid = 'public.order_legal_evidence_guard()'::regprocedure`)).rows;
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].security_definer, true);
+  assert.deepEqual(rows[0].settings, ["search_path=pg_catalog, public, pg_temp"]);
+  assert.equal(rows[0].public_can_execute, false);
+});
+
+test("8e. scoped checkout: restricted LOGIN role commits stock, order and immutable legal evidence on disposable PostgreSQL", opts, async () => {
+  // The role is local to the loopback sprintb database; no Neon roles, credentials or environments are changed.
+  const password = randomBytes(24).toString("hex");
+  await pool.query(`ALTER ROLE sprintb_checkout_runtime LOGIN PASSWORD '${password}'`);
+  await pool.query(`GRANT SELECT ON public.inventory, public.orders, public.order_items,
+    public.legal_documents, public.legal_document_versions, public.order_legal_acceptances,
+    public.rate_limit_buckets TO sprintb_checkout_runtime`);
+  await pool.query(`GRANT INSERT ON public.customers, public.addresses, public.orders,
+    public.order_items, public.order_legal_acceptances, public.rate_limit_buckets TO sprintb_checkout_runtime`);
+  await pool.query("GRANT UPDATE (on_hand, reserved, version, updated_at) ON public.inventory TO sprintb_checkout_runtime");
+  await pool.query("GRANT UPDATE (count, window_started_at, expires_at) ON public.rate_limit_buckets TO sprintb_checkout_runtime");
+  await pool.query("GRANT DELETE ON public.rate_limit_buckets TO sprintb_checkout_runtime");
+  // PostgreSQL requires UPDATE privilege to acquire FOR SHARE on legal_documents.
+  // Migration 0016's trigger prevents mutation of created_at even with this narrow grant.
+  await pool.query("GRANT UPDATE (created_at) ON public.legal_documents TO sprintb_checkout_runtime");
+  await db.insert(schema.inventory).values({ id: "lock-inventory-a", productId: "lock-a", onHand: 3, reserved: 0 });
+
+  const slugs = ["distance-sales", "pre-information"];
+  for (const slug of slugs) {
+    await db.insert(schema.legalDocuments).values({ id: `lock-legal-${slug}`, slug });
+    await db.insert(schema.legalDocumentVersions).values({
+      id: `lock-version-${slug}`, documentId: `lock-legal-${slug}`, version: 1,
+      title: `Checkout ${slug}`, body: "Disposable legal fixture", contentHash: "a".repeat(64),
+      publishedAt: new Date("2020-01-01T00:00:00Z"), effectiveAt: new Date("2020-01-01T00:00:00Z"),
+      publishedBy: "owner-1",
+    });
+  }
+
+  const url = new URL(URL_ENV!);
+  url.username = "sprintb_checkout_runtime";
+  url.password = password;
+  const scoped = new pg.Pool({ connectionString: url.toString(), max: 2, connectionTimeoutMillis: 3000 });
+  try {
+    const role = (await scoped.query("SELECT current_user AS role")).rows[0].role;
+    assert.equal(role, "sprintb_checkout_runtime", "must authenticate as the restricted role, not SET ROLE");
+    const privileges = (await scoped.query(`SELECT
+      has_table_privilege(current_user, 'public.products', 'UPDATE') AS products_update,
+      has_table_privilege(current_user, 'public.orders', 'UPDATE') AS orders_update,
+      has_column_privilege(current_user, 'public.orders', 'updated_at', 'UPDATE') AS order_timestamp_update,
+      has_column_privilege(current_user, 'public.inventory', 'on_hand', 'UPDATE') AS inventory_update,
+      has_function_privilege(current_user, 'public.lock_checkout_products(text[])', 'EXECUTE') AS can_lock,
+      (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls FROM pg_roles WHERE rolname=current_user) AS privileged`)).rows[0];
+    assert.deepEqual(privileges, { products_update: false, orders_update: false, order_timestamp_update: false, inventory_update: true, can_lock: true, privileged: false });
+
+    const client = await scoped.connect();
+    const acceptedAt = new Date();
+    const rendered = "Rendered disposable checkout evidence";
+    const digest = createHash("sha256").update(rendered).digest("hex");
+    let committed = false;
+    try {
+      await client.query("BEGIN");
+      await client.query("SET LOCAL lock_timeout = '5s'");
+      await client.query(`INSERT INTO rate_limit_buckets (key, count, expires_at)
+        VALUES ('scoped-checkout-test', 1, now() + interval '15 minutes')
+        ON CONFLICT (key) DO UPDATE SET count = rate_limit_buckets.count + 1`);
+      await client.query("SELECT id FROM legal_documents ORDER BY id FOR SHARE");
+      await client.query("SELECT public.lock_checkout_products($1::text[])", [["lock-a"]]);
+      await client.query(`INSERT INTO customers (id, first_name, last_name, phone)
+        VALUES ('scoped-customer', 'Test', 'Checkout', '05000000000')`);
+      await client.query(`INSERT INTO addresses (id, customer_id, recipient_name, phone, city, line1)
+        VALUES ('scoped-address', 'scoped-customer', 'Test Checkout', '05000000000', 'İzmir', 'Test street')`);
+      await client.query(`INSERT INTO orders (id, order_number, customer_id, idempotency_key,
+        customer_name, phone, city, address, order_issued_at, legal_evidence_version, created_at)
+        VALUES ('scoped-order', 'SCOPED-ORDER-1', 'scoped-customer', 'scoped-order-key',
+        'Test Checkout', '05000000000', 'İzmir', 'Test street', $1, 1, $1)`, [acceptedAt]);
+      const changed = await client.query(`UPDATE inventory
+        SET on_hand = on_hand - 1, reserved = reserved + 1, version = version + 1,
+          updated_at = now()
+        WHERE product_id = 'lock-a' AND on_hand >= 1 RETURNING id`);
+      assert.equal(changed.rowCount, 1);
+      await client.query(`INSERT INTO order_items (id, order_id, product_id, product_name,
+        unit_price, vat_rate_bps, vat_amount, quantity, line_total)
+        VALUES ('scoped-item', 'scoped-order', 'lock-a', 'Lock A', 100, 2000, 17, 1, 100)`);
+      for (const slug of slugs) {
+        await client.query(`INSERT INTO order_legal_acceptances
+          (id, order_id, document_version_id, slug, title, version, template_content_hash,
+           rendered_body, rendered_sha256, render_context_version, acceptance_type, accepted_at)
+          VALUES ($1, 'scoped-order', $2, $3, $4, 1, $5, $6, $7, 2, 'checkout_required', $8)`,
+          [`scoped-evidence-${slug}`, `lock-version-${slug}`, slug, `Checkout ${slug}`,
+            "a".repeat(64), rendered, digest, acceptedAt]);
+      }
+      await client.query("COMMIT");
+      committed = true;
+    } finally {
+      if (!committed) await client.query("ROLLBACK");
+      client.release();
+    }
+
+    assert.equal((await pool.query("SELECT count(*)::int AS n FROM orders WHERE id='scoped-order'")).rows[0].n, 1);
+    assert.equal((await pool.query("SELECT count(*)::int AS n FROM order_legal_acceptances WHERE order_id='scoped-order'")).rows[0].n, 2);
+    assert.deepEqual((await pool.query("SELECT on_hand, reserved FROM inventory WHERE product_id='lock-a'")).rows[0], { on_hand: 2, reserved: 1 });
+    assert.equal((await pool.query("SELECT count(*)::int AS n FROM rate_limit_buckets WHERE key='scoped-checkout-test'")).rows[0].n, 1);
+    await assert.rejects(
+      scoped.query("UPDATE orders SET updated_at = now() WHERE id='scoped-order'"),
+      (error: unknown) => (error as { code?: string }).code === "42501",
+      "storefront must not update even an order timestamp",
+    );
+    await assert.rejects(
+      scoped.query("UPDATE products SET name='forbidden' WHERE id='lock-a'"),
+      (error: unknown) => (error as { code?: string }).code === "42501",
+      "a real restricted login must not update catalog products",
+    );
+  } finally {
+    await scoped.end();
+  }
 });
 
 test("invariants: no negative inventory, no over-reservation, no duplicate release, no deadlock, no lingering transactions", opts, async () => {
