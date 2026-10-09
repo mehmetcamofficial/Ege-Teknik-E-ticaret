@@ -35,7 +35,8 @@ export function resolveScopedDatabaseUrl(scope: DatabaseScope, env: DatabaseEnv)
     throw new Error("Storefront and admin database connections must use different PostgreSQL roles.");
   }
   const legacy = env.DATABASE_URL;
-  if (legacy) {
+  if (!legacy) throw new Error("DATABASE_URL is required to verify scoped database branch isolation.");
+  {
     const legacyUrl = parsePostgresUrl(legacy, "DATABASE_URL");
     if (storefrontUrl.username === legacyUrl.username || adminUrl.username === legacyUrl.username) {
       throw new Error("Scoped database connections cannot reuse the legacy database role.");
