@@ -133,6 +133,9 @@ export function getDb() {
   return db;
 }
 
+/** Keep the checkout canary on the in-memory DB in route tests. */
+export function getCheckoutDb() { return getDb(); }
+
 // ---- "@/lib/legal-db" --------------------------------------------------------------------------------
 export async function loadRequiredCheckoutLegalVersions() {
   return { ok: true as const, required: state.required };
