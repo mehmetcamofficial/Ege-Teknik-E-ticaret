@@ -60,7 +60,7 @@ async function createOrder(request: Request) {
       if (process.env.CHECKOUT_SCOPED_DB_ENABLED === "true") {
         // SECURITY DEFINER grants a narrow product-row lock without products UPDATE ACL.
         // The function is unavailable until migration 0017 and its explicit EXECUTE grant.
-        await tx.execute(sql`SELECT public.lock_checkout_products(${[...requested.keys()]}::text[])`);
+        await tx.execute(sql`SELECT public.lock_checkout_products(ARRAY[${sql.join([...requested.keys()].map((productId) => sql`${productId}`), sql`, `)}]::text[])`);
       } else {
         // Legacy checkout retains the existing lock until scoped rollout is approved.
         await tx.select({ id: products.id }).from(products).where(inArray(products.id, [...requested.keys()])).orderBy(asc(products.id)).for("share");
