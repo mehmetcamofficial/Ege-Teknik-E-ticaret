@@ -441,6 +441,10 @@ test("8e. scoped checkout: restricted LOGIN role commits stock, order and immuta
   await pool.query(`GRANT INSERT ON public.customers, public.addresses, public.orders,
     public.order_items, public.order_legal_acceptances, public.rate_limit_buckets TO sprintb_checkout_runtime`);
   await pool.query("GRANT UPDATE (on_hand, reserved, version, updated_at) ON public.inventory TO sprintb_checkout_runtime");
+  // The 0015 legal-evidence trigger locks its parent order FOR KEY SHARE, which
+  // requires at least one UPDATE-able column under PostgreSQL row-lock ACLs.
+  // Do not grant table-wide UPDATE or access to immutable order identity columns.
+  await pool.query("GRANT UPDATE (updated_at) ON public.orders TO sprintb_checkout_runtime");
   await pool.query("GRANT UPDATE (count, window_started_at, expires_at) ON public.rate_limit_buckets TO sprintb_checkout_runtime");
   await pool.query("GRANT DELETE ON public.rate_limit_buckets TO sprintb_checkout_runtime");
   // PostgreSQL requires UPDATE privilege to acquire FOR SHARE on legal_documents.
