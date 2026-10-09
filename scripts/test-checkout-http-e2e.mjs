@@ -14,6 +14,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
+import { signLegalPreviewToken } from "../lib/legal-preview-token.ts";
 
 const raw = process.env.CHECKOUT_HTTP_PG_URL;
 const target = (() => { try { return new URL(raw); } catch { return null; } })();
@@ -24,7 +25,7 @@ if (process.env.CI !== "true" || !target || !["127.0.0.1", "localhost", "::1"].i
 }
 const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
 const secret = () => randomBytes(24).toString("hex");
-const storePassword = secret(), adminPassword = secret();
+const storePassword = secret(), adminPassword = secret(), signingSecret = secret();
 const owner = new pg.Pool({ connectionString: raw, max: 3 });
 const dbUrl = (role, password) => { const u = new URL(raw); u.username = role; u.password = password; return u.toString(); };
 const storefrontUrl = dbUrl("sprintb_http_storefront", storePassword);
@@ -88,7 +89,7 @@ try {
     { env: { ...process.env, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci",
       EXPECTED_NEON_DEVELOPMENT_BRANCH_ID: "disposable-http-ci",
       DATABASE_URL: raw, STOREFRONT_DATABASE_URL: storefrontUrl, ADMIN_DATABASE_URL: adminUrl,
-      CHECKOUT_SCOPED_DB_ENABLED: "true", LEGAL_PREVIEW_SIGNING_SECRET: secret(),
+      CHECKOUT_SCOPED_DB_ENABLED: "true", LEGAL_PREVIEW_SIGNING_SECRET: signingSecret,
       IP_HASH_SALT: secret(), LOCAL_BUILD_NO_UPLOAD: "1", NEXT_TELEMETRY_DISABLED: "1" },
       stdio: ["ignore", "pipe", "pipe"] });
   server.stdout.on("data", (chunk) => log(chunk.toString()));
@@ -120,6 +121,12 @@ try {
   const missingToken = await request("/api/orders", { ...accepted, legalPreviewToken: undefined }, "http-no-token");
   assertStatus(missingToken, 409, "missing preview token");
   assert.equal(missingToken.data.code, "LEGAL_PREVIEW_INVALID");
+  const payload = JSON.parse(Buffer.from(preview.data.legalPreviewToken.split(".")[0], "base64url").toString("utf8"));
+  const expiredToken = signLegalPreviewToken({ ...payload, issuedAt: Date.now() - 20 * 60_000,
+    expiresAt: Date.now() - 5 * 60_000, orderIssuedAt: Date.now() - 20 * 60_000 }, signingSecret);
+  const expired = await request("/api/orders", { ...accepted, legalPreviewToken: expiredToken }, "http-expired-token");
+  assertStatus(expired, 409, "expired signed legal preview token");
+  assert.equal(expired.data.code, "LEGAL_PREVIEW_INVALID");
   const marketing = await request("/api/orders", { ...accepted, marketing: { sms: true, email: false, whatsapp: false } }, "http-marketing");
   assertStatus(marketing, 422, "marketing opt-in disabled");
   assert.equal(marketing.data.code, "MARKETING_CONSENT_DISABLED");
@@ -165,7 +172,7 @@ try {
     assert.equal(Object.hasOwn(response, "idempotencyKey"), false);
     assert.doesNotMatch(JSON.stringify(response), /postgres(?:ql)?:|sprintb_http_|DATABASE_URL/i);
   }
-  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, token, price, marketing and stock refusals");
+  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, missing/expired token, price, marketing and stock refusals");
 } catch (error) {
   console.error("[http-checkout] FAIL:", error instanceof Error ? error.message : String(error));
   console.error("[http-checkout] Local server diagnostics (last 1200 chars):", serverOutput.slice(-1200).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]"));
