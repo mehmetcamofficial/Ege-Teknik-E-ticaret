@@ -36,15 +36,13 @@ export function resolveScopedDatabaseUrl(scope: DatabaseScope, env: DatabaseEnv)
   }
   const legacy = env.DATABASE_URL;
   if (!legacy) throw new Error("DATABASE_URL is required to verify scoped database branch isolation.");
-  {
-    const legacyUrl = parsePostgresUrl(legacy, "DATABASE_URL");
-    if (storefrontUrl.username === legacyUrl.username || adminUrl.username === legacyUrl.username) {
-      throw new Error("Scoped database connections cannot reuse the legacy database role.");
-    }
-    const expected = databaseEndpoint(legacyUrl);
-    if (databaseEndpoint(storefrontUrl) !== expected || databaseEndpoint(adminUrl) !== expected) {
-      throw new Error("Scoped database endpoints must match the configured legacy database branch and name.");
-    }
+  const legacyUrl = parsePostgresUrl(legacy, "DATABASE_URL");
+  if (storefrontUrl.username === legacyUrl.username || adminUrl.username === legacyUrl.username) {
+    throw new Error("Scoped database connections cannot reuse the legacy database role.");
+  }
+  const expected = databaseEndpoint(legacyUrl);
+  if (databaseEndpoint(storefrontUrl) !== expected || databaseEndpoint(adminUrl) !== expected) {
+    throw new Error("Scoped database endpoints must match the configured legacy database branch and name.");
   }
   return scope === "storefront" ? storefront : admin;
 }
