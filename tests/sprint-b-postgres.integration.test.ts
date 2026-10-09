@@ -15,6 +15,7 @@
  * pooled connections, so every "concurrent" case is several independent PostgreSQL transactions.
  */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { cpSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -94,6 +95,40 @@ test("setup: the disposable database is migrated to head through the real migrat
   assert.equal(await one("select count(*)::int n from drizzle.__drizzle_migrations"), headCount);
   assert.equal(await one("select count(*)::int n from admin_users where role='super_admin' and active"), 1);
   assert.equal(await one("select count(*)::int n from admin_users where role='owner'"), 0);
+});
+
+test("setup: migration 0017 is recorded exactly once in Drizzle with the source hash and locked-down function ACL", opts, async () => {
+  const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
+  const entry = journal.entries.find((item: { tag: string }) => item.tag === "0017_checkout_product_lock");
+  assert.ok(entry, "migration 0017 must exist in the journal");
+  assert.equal(journal.entries.length, 18, "the migration ledger should contain 0000 through 0017");
+
+  const source = readFileSync(`drizzle-pg/${entry.tag}.sql`, "utf8");
+  const expectedHash = createHash("sha256").update(source).digest("hex");
+  const migrations = (await pool.query(
+    "SELECT hash, created_at::text AS created_at FROM drizzle.__drizzle_migrations WHERE created_at = $1::bigint",
+    [String(entry.when)],
+  )).rows;
+  assert.equal(migrations.length, 1, "the Drizzle migrator must record 0017 exactly once");
+  assert.equal(migrations[0].hash, expectedHash, "recorded hash must match the migration file");
+  assert.equal(migrations[0].created_at, String(entry.when));
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 18);
+
+  const functions = (await pool.query(`SELECT p.prosecdef AS security_definer,
+    pg_get_userbyid(p.proowner) AS owner,
+    EXISTS (
+      SELECT 1 FROM aclexplode(p.proacl) AS acl
+      WHERE acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+    ) AS public_can_execute
+    FROM pg_proc AS p
+    WHERE p.oid = 'public.lock_checkout_products(text[])'::regprocedure`)).rows;
+  assert.equal(functions.length, 1, "migration must install the checkout lock function");
+  assert.equal(functions[0].security_definer, true);
+  assert.equal(functions[0].public_can_execute, false, "PUBLIC EXECUTE must be revoked by the same migration");
+
+  // Re-running the migrator must not append a second 0017 record.
+  await migrate(db, { migrationsFolder: "drizzle-pg" });
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 18);
 });
 
 test("1. second-hand: stock=1 and two genuinely concurrent independent transactions => exactly one reservation", opts, async () => {
