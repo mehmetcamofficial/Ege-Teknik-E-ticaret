@@ -22,11 +22,11 @@ import { orderRequestSchema } from "@/lib/order-domain";
  * service, no new dependency.
  */
 export const POST = publicRoute(async (request: Request) => {
-  await rateLimit(request, "legal-preview", 8, 15 * 60_000);
+  const db = getCheckoutDb();
+  await rateLimit(request, "legal-preview", 8, 15 * 60_000, db);
   const parsed = orderRequestSchema.safeParse(await readJson(request));
   if (!parsed.success) return Response.json({ error: "Sipariş bilgilerinizi kontrol edin.", code: "INVALID_CHECKOUT" }, { status: 400 });
 
-  const db = getCheckoutDb();
   const requested = new Map(parsed.data.items.map((item) => [item.productId, item.quantity]));
   // Layer 1 only: a preview legitimately happens BEFORE the customer has accepted anything.
   const preflight = await resolveCheckoutPreflight({ data: parsed.data }, requested, db);
