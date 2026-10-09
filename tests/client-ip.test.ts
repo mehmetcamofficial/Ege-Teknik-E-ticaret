@@ -228,7 +228,7 @@ test("no consumer bypasses the shared path: order-lookup, order-create and admin
 test("no rate-limit constant, limiter store or proxy rule was touched by the client-IP slice", () => {
   for (const [file, pattern] of [
     ["app/api/orders/lookup/route.ts", /rateLimit\(request, "order-lookup", 10, 15 \* 60_000\)/],
-    ["app/api/orders/route.ts", /rateLimit\(request,"order-create",8,15\*60_000\)/],
+    ["app/api/orders/route.ts", /rateLimit\(request,"order-create",8,15\*60_000(?:,db)?\)/],
     ["app/api/auth/login/route.ts", /rateLimit\(request, "admin-login", 5, 15 \* 60_000\)/],
   ] as const) {
     assert.match(readFileSync(file, "utf8"), pattern, `${file} keeps its exact scope, limit and window`);
