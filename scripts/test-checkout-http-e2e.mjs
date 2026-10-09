@@ -117,6 +117,17 @@ try {
   const badToken = await request("/api/orders", { ...accepted, legalPreviewToken: preview.data.legalPreviewToken + "tamper" }, "http-bad-token");
   assertStatus(badToken, 409, "tampered token");
   assert.equal(await count("orders"), 0);
+  const missingToken = await request("/api/orders", { ...accepted, legalPreviewToken: undefined }, "http-no-token");
+  assertStatus(missingToken, 409, "missing preview token");
+  assert.equal(missingToken.data.code, "LEGAL_PREVIEW_INVALID");
+  const marketing = await request("/api/orders", { ...accepted, marketing: { sms: true, email: false, whatsapp: false } }, "http-marketing");
+  assertStatus(marketing, 422, "marketing opt-in disabled");
+  assert.equal(marketing.data.code, "MARKETING_CONSENT_DISABLED");
+  const wrongTotal = await request("/api/orders", { ...accepted, expectedTotal: 10001 }, "http-wrong-total");
+  assertStatus(wrongTotal, 409, "stale displayed price");
+  assert.equal(wrongTotal.data.code, "PRICE_CHANGED");
+  assert.equal(await count("orders"), 0, "refused requests must not create an order");
+  assert.deepEqual(await stock(), before, "refused requests must not reserve stock");
   const created = await request("/api/orders", accepted, "http-idempotent-1");
   assertStatus(created, 201, "create order");
   assert.equal(created.data.ok, true);
@@ -133,7 +144,28 @@ try {
   assertStatus(conflict, 409, "idempotency conflict");
   assert.equal(conflict.data.code, "IDEMPOTENCY_KEY_REUSED");
   assert.equal(await count("orders"), 1);
-  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay and conflict with restricted LOGIN");
+  // The remaining stock is two. Preview is read-only; the order transaction
+  // must refuse quantity three and roll back every inserted row.
+  const oversized = { ...cart, items: [{ productId: "http-product", quantity: 3 }], expectedTotal: 30000 };
+  const overPreview = await request("/api/checkout/legal-preview", oversized);
+  assertStatus(overPreview, 200, "oversized cart preview");
+  const outOfStock = await request("/api/orders", {
+    ...oversized, legalPreviewToken: overPreview.data.legalPreviewToken,
+    legalAcceptances: overPreview.data.documents.map((doc) => doc.documentVersionId),
+  }, "http-out-of-stock");
+  assertStatus(outOfStock, 409, "out-of-stock order");
+  assert.equal(await count("orders"), 1, "stock failure must roll back the order");
+  assert.equal(await count("order_items"), 1);
+  assert.equal(await count("order_legal_acceptances"), 2);
+  assert.deepEqual(await stock(), { on_hand: 2, reserved: 1 });
+  assert.equal(await count("marketing_consents"), 0, "no marketing consent is collected at checkout");
+  for (const response of [created.data, replay.data]) {
+    assert.equal(Object.hasOwn(response, "id"), false);
+    assert.equal(Object.hasOwn(response, "customerId"), false);
+    assert.equal(Object.hasOwn(response, "idempotencyKey"), false);
+    assert.doesNotMatch(JSON.stringify(response), /postgres(?:ql)?:\\/\\/|sprintb_http_|DATABASE_URL/i);
+  }
+  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, token, price, marketing and stock refusals");
 } catch (error) {
   console.error("[http-checkout] FAIL:", error instanceof Error ? error.message : String(error));
   console.error("[http-checkout] Local server diagnostics (last 1200 chars):", serverOutput.slice(-1200).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]"));
