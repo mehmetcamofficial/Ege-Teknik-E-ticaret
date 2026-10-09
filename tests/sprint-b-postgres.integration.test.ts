@@ -101,7 +101,7 @@ test("setup: migration 0017 is recorded exactly once in Drizzle with the source 
   const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
   const entry = journal.entries.find((item: { tag: string }) => item.tag === "0017_checkout_product_lock");
   assert.ok(entry, "migration 0017 must exist in the journal");
-  assert.equal(journal.entries.length, 18, "the migration ledger should contain 0000 through 0017");
+  assert.equal(journal.entries.length, 19, "the migration ledger should contain 0000 through 0018");
 
   const source = readFileSync(`drizzle-pg/${entry.tag}.sql`, "utf8");
   const expectedHash = createHash("sha256").update(source).digest("hex");
@@ -112,7 +112,7 @@ test("setup: migration 0017 is recorded exactly once in Drizzle with the source 
   assert.equal(migrations.length, 1, "the Drizzle migrator must record 0017 exactly once");
   assert.equal(migrations[0].hash, expectedHash, "recorded hash must match the migration file");
   assert.equal(migrations[0].created_at, String(entry.when));
-  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 18);
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 19);
 
   const functions = (await pool.query(`SELECT p.prosecdef AS security_definer,
     pg_get_userbyid(p.proowner) AS owner,
@@ -128,7 +128,7 @@ test("setup: migration 0017 is recorded exactly once in Drizzle with the source 
 
   // Re-running the migrator must not append a second 0017 record.
   await migrate(db, { migrationsFolder: "drizzle-pg" });
-  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 18);
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 19);
 });
 
 test("1. second-hand: stock=1 and two genuinely concurrent independent transactions => exactly one reservation", opts, async () => {
@@ -441,10 +441,6 @@ test("8e. scoped checkout: restricted LOGIN role commits stock, order and immuta
   await pool.query(`GRANT INSERT ON public.customers, public.addresses, public.orders,
     public.order_items, public.order_legal_acceptances, public.rate_limit_buckets TO sprintb_checkout_runtime`);
   await pool.query("GRANT UPDATE (on_hand, reserved, version, updated_at) ON public.inventory TO sprintb_checkout_runtime");
-  // The 0015 legal-evidence trigger locks its parent order FOR KEY SHARE, which
-  // requires at least one UPDATE-able column under PostgreSQL row-lock ACLs.
-  // Do not grant table-wide UPDATE or access to immutable order identity columns.
-  await pool.query("GRANT UPDATE (updated_at) ON public.orders TO sprintb_checkout_runtime");
   await pool.query("GRANT UPDATE (count, window_started_at, expires_at) ON public.rate_limit_buckets TO sprintb_checkout_runtime");
   await pool.query("GRANT DELETE ON public.rate_limit_buckets TO sprintb_checkout_runtime");
   // PostgreSQL requires UPDATE privilege to acquire FOR SHARE on legal_documents.
@@ -472,10 +468,12 @@ test("8e. scoped checkout: restricted LOGIN role commits stock, order and immuta
     assert.equal(role, "sprintb_checkout_runtime", "must authenticate as the restricted role, not SET ROLE");
     const privileges = (await scoped.query(`SELECT
       has_table_privilege(current_user, 'public.products', 'UPDATE') AS products_update,
+      has_table_privilege(current_user, 'public.orders', 'UPDATE') AS orders_update,
+      has_column_privilege(current_user, 'public.orders', 'updated_at', 'UPDATE') AS order_timestamp_update,
       has_column_privilege(current_user, 'public.inventory', 'on_hand', 'UPDATE') AS inventory_update,
       has_function_privilege(current_user, 'public.lock_checkout_products(text[])', 'EXECUTE') AS can_lock,
       (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls FROM pg_roles WHERE rolname=current_user) AS privileged`)).rows[0];
-    assert.deepEqual(privileges, { products_update: false, inventory_update: true, can_lock: true, privileged: false });
+    assert.deepEqual(privileges, { products_update: false, orders_update: false, order_timestamp_update: false, inventory_update: true, can_lock: true, privileged: false });
 
     const client = await scoped.connect();
     const acceptedAt = new Date();
@@ -525,6 +523,11 @@ test("8e. scoped checkout: restricted LOGIN role commits stock, order and immuta
     assert.equal((await pool.query("SELECT count(*)::int AS n FROM order_legal_acceptances WHERE order_id='scoped-order'")).rows[0].n, 2);
     assert.deepEqual((await pool.query("SELECT on_hand, reserved FROM inventory WHERE product_id='lock-a'")).rows[0], { on_hand: 2, reserved: 1 });
     assert.equal((await pool.query("SELECT count(*)::int AS n FROM rate_limit_buckets WHERE key='scoped-checkout-test'")).rows[0].n, 1);
+    await assert.rejects(
+      scoped.query("UPDATE orders SET updated_at = now() WHERE id='scoped-order'"),
+      (error: unknown) => (error as { code?: string }).code === "42501",
+      "storefront must not update even an order timestamp",
+    );
     await assert.rejects(
       scoped.query("UPDATE products SET name='forbidden' WHERE id='lock-a'"),
       (error: unknown) => (error as { code?: string }).code === "42501",
