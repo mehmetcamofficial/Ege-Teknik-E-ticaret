@@ -431,6 +431,21 @@ test("8d. checkout lock: concurrent shared locks with opposite product order do 
   }
 });
 
+test("8e. migration 0018 keeps legal guard owner-only and puts pg_temp last", opts, async () => {
+  const rows = (await pool.query(`SELECT p.prosecdef AS security_definer,
+    p.proconfig AS settings,
+    EXISTS (
+      SELECT 1 FROM aclexplode(p.proacl) AS acl
+      WHERE acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+    ) AS public_can_execute
+    FROM pg_proc AS p
+    WHERE p.oid = 'public.order_legal_evidence_guard()'::regprocedure`)).rows;
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].security_definer, true);
+  assert.deepEqual(rows[0].settings, ["search_path=pg_catalog, public, pg_temp"]);
+  assert.equal(rows[0].public_can_execute, false);
+});
+
 test("8e. scoped checkout: restricted LOGIN role commits stock, order and immutable legal evidence on disposable PostgreSQL", opts, async () => {
   // The role is local to the loopback sprintb database; no Neon roles, credentials or environments are changed.
   const password = randomBytes(24).toString("hex");
