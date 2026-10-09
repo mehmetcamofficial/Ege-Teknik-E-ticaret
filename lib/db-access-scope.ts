@@ -15,6 +15,13 @@ function parsePostgresUrl(value: string, key: string): URL {
   return url;
 }
 
+/** Direct and Neon -pooler endpoints for the same branch are equivalent. */
+function databaseEndpoint(url: URL): string {
+  const hostname = url.hostname.replace(/^([^.]+)-pooler\./, "$1.");
+  const port = url.port || "5432";
+  return `${hostname}:${port}${url.pathname}`;
+}
+
 /** Never silently fall back to the legacy owner connection. */
 export function resolveScopedDatabaseUrl(scope: DatabaseScope, env: DatabaseEnv): string {
   if (scope !== "storefront" && scope !== "admin") throw new Error("Invalid database access scope.");
@@ -32,6 +39,10 @@ export function resolveScopedDatabaseUrl(scope: DatabaseScope, env: DatabaseEnv)
     const legacyUrl = parsePostgresUrl(legacy, "DATABASE_URL");
     if (storefrontUrl.username === legacyUrl.username || adminUrl.username === legacyUrl.username) {
       throw new Error("Scoped database connections cannot reuse the legacy database role.");
+    }
+    const expected = databaseEndpoint(legacyUrl);
+    if (databaseEndpoint(storefrontUrl) !== expected || databaseEndpoint(adminUrl) !== expected) {
+      throw new Error("Scoped database endpoints must match the configured legacy database branch and name.");
     }
   }
   return scope === "storefront" ? storefront : admin;
