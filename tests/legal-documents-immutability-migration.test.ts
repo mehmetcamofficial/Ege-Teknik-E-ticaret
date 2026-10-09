@@ -8,8 +8,8 @@ const migration = readFileSync(migrationPath, "utf8");
 
 test("0016 is registered as the next migration without modifying the frozen chain", () => {
   const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
-  assert.equal(journal.entries.at(-1)?.idx, 16);
-  assert.equal(journal.entries.at(-1)?.tag, "0016_legal_documents_immutability_guard");
+  assert.equal(journal.entries[16]?.idx, 16);
+  assert.equal(journal.entries[16]?.tag, "0016_legal_documents_immutability_guard");
   assert.deepEqual(verifyMigrationIntegrity(process.cwd()), []);
 });
 
