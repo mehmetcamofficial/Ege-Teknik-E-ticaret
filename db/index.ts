@@ -2,7 +2,7 @@ import "server-only";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
-import { resolveScopedDatabaseUrl, type DatabaseScope } from "../lib/db-access-scope";
+import { resolveScopedDatabaseUrl, scopedCheckoutEnabled, type DatabaseScope } from "../lib/db-access-scope";
 
 const globalForDb = globalThis as unknown as {
   egeTeknikPool?: Pool;
@@ -41,3 +41,8 @@ export function getScopedPool(scope: DatabaseScope): Pool {
 
 export function getStorefrontDb() { return drizzle(getScopedPool("storefront"), { schema }); }
 export function getAdminDb() { return drizzle(getScopedPool("admin"), { schema }); }
+
+/** Checkout-only canary. No caller is moved unless the flag is explicitly true. */
+export function getCheckoutDb() {
+  return scopedCheckoutEnabled(process.env.CHECKOUT_SCOPED_DB_ENABLED) ? getStorefrontDb() : getDb();
+}
