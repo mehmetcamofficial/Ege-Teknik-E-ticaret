@@ -19,6 +19,15 @@
 3. Verify Preview Vercel `APP_ENV=preview`, `NEON_BRANCH_ID=br-nameless-mountain-awib28a9`, and `EXPECTED_NEON_PREVIEW_BRANCH_ID` match, **without reading or printing secret values**. Confirm `DATABASE_URL` points to this Preview branch and `CHECKOUT_SCOPED_DB_ENABLED` is unset or `false`.
 4. Schedule a short maintenance/test window. Use synthetic orders only in a deliberately isolated QA environment, not active Preview containing real orders.
 
+## Preview backup capability check (2026-10-10)
+
+- User authorized **backup + restore verification only**, not migrations, role changes or deployment.
+- Neon native `create_snapshot` was attempted on the explicitly selected active Preview branch and rejected with **HTTP 400: `not allowed to snapshot non-root branch`**. **No native snapshot was created.**
+- Neon Free v3 project has **10/10 branches** in use; no additional restore branch was created or any existing branch deleted.
+- The assistant execution environment has no reachable PostgreSQL network endpoint or local `pg_dump`/`pg_restore` executables, and cannot run commands on the user's Mac. **No independent backup has yet been taken or restored.**
+- The guarded local script `scripts/backup-preview-verify.sh` is available for the user to run on their own trusted Mac. It verifies the exact Preview host/role/database, checks the migration/order baseline, creates a custom-format dump, restores into an isolated Docker PostgreSQL 18 container, checks row counts, encrypts the backup, verifies decryption and prints a SHA-256 checksum. The script requires PostgreSQL 18 CLI tools, Docker, Python 3 and OpenSSL.
+- The script refuses Production endpoints and makes no Neon database writes. **Do not advance to Phase 2 until the user supplies the backup file path, SHA-256 and offline restore PASS result (not credentials or the backup file itself).**
+
 ## Phase 1 — backup gate (NO MIGRATION BEFORE VERIFIED RESTORE)
 
 1. Recheck branch ID, database name, migration ledger count/hash, table counts and relevant function definitions read-only. Stop if anything differs from the baseline unexpectedly.
