@@ -30,8 +30,8 @@ const owner = new pg.Pool({ connectionString: raw, max: 3 });
 const dbUrl = (role, password) => { const u = new URL(raw); u.username = role; u.password = password; return u.toString(); };
 const storefrontUrl = dbUrl("sprintb_http_storefront", storePassword);
 const adminUrl = dbUrl("sprintb_http_admin", adminPassword);
-const port = 43000 + Math.floor(Math.random() * 1000);
-const base = `http://127.0.0.1:${port}`;
+let port = 43000 + Math.floor(Math.random() * 1000);
+let base = `http://127.0.0.1:${port}`;
 let server;
 let serverOutput = "";
 const log = (line) => { serverOutput = (serverOutput + line).slice(-6000); };
@@ -48,6 +48,40 @@ const count = async (table) => Number((await owner.query(`SELECT count(*)::int A
 const stock = async () => (await owner.query("SELECT on_hand, reserved FROM inventory WHERE product_id='http-product'")).rows[0];
 const assertStatus = (result, status, label) => {
   assert.equal(result.status, status, `${label}: HTTP ${result.status} / code ${result.data?.code ?? "none"}`);
+};
+const stopServer = async () => {
+  if (!server) return;
+  const child = server;
+  server = undefined;
+  child.kill("SIGTERM");
+  await Promise.race([
+    new Promise((resolve) => child.once("exit", resolve)),
+    new Promise((resolve) => setTimeout(resolve, 4000)),
+  ]);
+};
+const startServer = async (overrides) => {
+  port += 1;
+  base = `http://127.0.0.1:${port}`;
+  serverOutput = "";
+  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "-H", "127.0.0.1", "-p", String(port)],
+    { env: { ...process.env, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci",
+      EXPECTED_NEON_DEVELOPMENT_BRANCH_ID: "disposable-http-ci",
+      DATABASE_URL: raw, STOREFRONT_DATABASE_URL: storefrontUrl, ADMIN_DATABASE_URL: adminUrl,
+      CHECKOUT_SCOPED_DB_ENABLED: "true", LEGAL_PREVIEW_SIGNING_SECRET: signingSecret,
+      IP_HASH_SALT: secret(), LOCAL_BUILD_NO_UPLOAD: "1", NEXT_TELEMETRY_DISABLED: "1",
+      ...overrides }, stdio: ["ignore", "pipe", "pipe"] });
+  server.stdout.on("data", (chunk) => log(chunk.toString()));
+  server.stderr.on("data", (chunk) => log(chunk.toString()));
+  let ready = false;
+  for (let i = 0; i < 90; i++) {
+    if (server.exitCode !== null) throw Error("local Next server exited before readiness");
+    try {
+      const response = await fetch(base + "/api/health", { signal: AbortSignal.timeout(1000) });
+      if (response.status < 500) { ready = true; break; }
+    } catch { /* compile/startup */ }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  assert.ok(ready, "local Next server did not become ready");
 };
 try {
   await bootstrapDisposableDatabase({ Pool: pg.Pool, drizzle, migrate, url: raw, journal,
@@ -85,23 +119,7 @@ try {
       order_column_update: false, products_update: false, can_lock: true });
   } finally { await probe.end(); }
 
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "-H", "127.0.0.1", "-p", String(port)],
-    { env: { ...process.env, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci",
-      EXPECTED_NEON_DEVELOPMENT_BRANCH_ID: "disposable-http-ci",
-      DATABASE_URL: raw, STOREFRONT_DATABASE_URL: storefrontUrl, ADMIN_DATABASE_URL: adminUrl,
-      CHECKOUT_SCOPED_DB_ENABLED: "true", LEGAL_PREVIEW_SIGNING_SECRET: signingSecret,
-      IP_HASH_SALT: secret(), LOCAL_BUILD_NO_UPLOAD: "1", NEXT_TELEMETRY_DISABLED: "1" },
-      stdio: ["ignore", "pipe", "pipe"] });
-  server.stdout.on("data", (chunk) => log(chunk.toString()));
-  server.stderr.on("data", (chunk) => log(chunk.toString()));
-  let ready = false;
-  for (let i = 0; i < 90; i++) {
-    if (server.exitCode !== null) throw Error("local Next server exited before readiness");
-    try { const response = await fetch(base + "/api/health", { signal: AbortSignal.timeout(1000) }); if (response.status < 500) { ready = true; break; } }
-    catch { /* compile/startup */ }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-  assert.ok(ready, "local Next server did not become ready");
+  await startServer({});
   const cart = { customerName: "Test Customer", phone: "05000000000", email: "customer@example.test",
     city: "İzmir", district: "Bornova", address: "Disposable address test street 10",
     paymentProvider: "discovery", items: [{ productId: "http-product", quantity: 1 }],
@@ -189,21 +207,63 @@ try {
   assertStatus(updatedPreview, 200, "new legal version preview");
   assert.ok(updatedPreview.data.documents.some((d) => d.documentVersionId === "http-version-distance-sales-v2"));
   assert.equal(await count("marketing_consents"), 0, "no marketing consent is collected at checkout");
+
+  // OFF switch: the legacy owner-backed HTTP checkout must still work on the
+  // same disposable database even when scoped credentials are deliberately invalid.
+  await stopServer();
+  await owner.query("DELETE FROM rate_limit_buckets");
+  await startServer({ CHECKOUT_SCOPED_DB_ENABLED: "false",
+    STOREFRONT_DATABASE_URL: "intentionally-invalid", ADMIN_DATABASE_URL: "intentionally-invalid" });
+  const legacyPreview = await request("/api/checkout/legal-preview", cart);
+  assertStatus(legacyPreview, 200, "legacy-off legal preview");
+  assert.ok(legacyPreview.data.documents.some((d) => d.documentVersionId === "http-version-distance-sales-v2"));
+  const legacyOrder = await request("/api/orders", { ...cart,
+    legalPreviewToken: legacyPreview.data.legalPreviewToken,
+    legalAcceptances: legacyPreview.data.documents.map((d) => d.documentVersionId),
+  }, "http-legacy-off-order");
+  assertStatus(legacyOrder, 201, "legacy-off order");
+  assert.equal(await count("orders"), 2);
+  assert.equal(await count("order_legal_acceptances"), 4);
+  assert.deepEqual(await stock(), { on_hand: 1, reserved: 2 });
+
+  // ON switch must fail closed: no fallback to the privileged DATABASE_URL.
+  // Check both a missing scoped configuration and a valid-shaped URL whose
+  // password is wrong. Neither may create orders or touch inventory.
+  await stopServer();
+  await owner.query("DELETE FROM rate_limit_buckets");
+  await startServer({ CHECKOUT_SCOPED_DB_ENABLED: "true",
+    STOREFRONT_DATABASE_URL: "", ADMIN_DATABASE_URL: adminUrl });
+  const missingScope = await request("/api/checkout/legal-preview", cart);
+  assert.ok(missingScope.status >= 500, "missing scoped URL must fail closed");
+  await stopServer();
+  const badScopedUrl = dbUrl("sprintb_http_storefront", "incorrect-disposable-password");
+  await startServer({ CHECKOUT_SCOPED_DB_ENABLED: "true",
+    STOREFRONT_DATABASE_URL: badScopedUrl, ADMIN_DATABASE_URL: adminUrl });
+  const badCredentials = await request("/api/checkout/legal-preview", cart);
+  assert.ok(badCredentials.status >= 500, "bad scoped LOGIN password must fail closed");
+  const badOrder = await request("/api/orders", { ...cart,
+    legalPreviewToken: legacyPreview.data.legalPreviewToken,
+    legalAcceptances: legacyPreview.data.documents.map((d) => d.documentVersionId),
+  }, "http-bad-credentials");
+  assert.ok(badOrder.status >= 500, "bad scoped LOGIN password must not fall back to legacy");
+  assert.equal(await count("orders"), 2);
+  assert.equal(await count("order_legal_acceptances"), 4);
+  assert.deepEqual(await stock(), { on_hand: 1, reserved: 2 });
+  for (const refused of [missingScope, badCredentials, badOrder]) {
+    assert.doesNotMatch(JSON.stringify(refused.data), /postgres(?:ql)?:|sprintb_http_|DATABASE_URL|incorrect-disposable-password/i);
+  }
   for (const response of [created.data, replay.data]) {
     assert.equal(Object.hasOwn(response, "id"), false);
     assert.equal(Object.hasOwn(response, "customerId"), false);
     assert.equal(Object.hasOwn(response, "idempotencyKey"), false);
     assert.doesNotMatch(JSON.stringify(response), /postgres(?:ql)?:|sprintb_http_|DATABASE_URL/i);
   }
-  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, missing/expired token, price, marketing, stock and stale legal version refusals");
+  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, missing/expired token, price, marketing, stock/stale-legal refusals, legacy-off checkout and scoped-on credential refusal");
 } catch (error) {
   console.error("[http-checkout] FAIL:", error instanceof Error ? error.message : String(error));
   console.error("[http-checkout] Local server diagnostics (last 1200 chars):", serverOutput.slice(-1200).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]"));
   process.exitCode = 1;
 } finally {
-  if (server) { server.kill("SIGTERM"); await Promise.race([
-    new Promise((resolve) => server.once("exit", resolve)),
-    new Promise((resolve) => setTimeout(resolve, 4000)),
-  ]); }
+  await stopServer();
   await owner.end();
 }
