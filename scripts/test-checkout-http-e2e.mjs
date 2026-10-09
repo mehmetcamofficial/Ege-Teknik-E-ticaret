@@ -153,6 +153,9 @@ try {
   assert.equal(await count("orders"), 1);
   // The remaining stock is two. Preview is read-only; the order transaction
   // must refuse quantity three and roll back every inserted row.
+  // Isolate the stock-rollback case from the 8-per-15-minute anti-abuse quota:
+  // all prior requests intentionally share one loopback client in this disposable DB.
+  await owner.query("DELETE FROM rate_limit_buckets");
   const oversized = { ...cart, items: [{ productId: "http-product", quantity: 3 }], expectedTotal: 30000 };
   const overPreview = await request("/api/checkout/legal-preview", oversized);
   assertStatus(overPreview, 200, "oversized cart preview");
