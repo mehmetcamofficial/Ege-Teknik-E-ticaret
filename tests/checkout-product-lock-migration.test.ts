@@ -23,7 +23,8 @@ test("product lock function has fixed search path, bounded arguments and sorted 
   assert.match(migration, /FROM public\.products AS p[\s\S]*ORDER BY p\.id\s+FOR SHARE/);
   assert.match(migration, /locked_count <> cardinality\(p_product_ids\)/);
   assert.match(migration, /REVOKE ALL ON FUNCTION public\.lock_checkout_products\(text\[\]\) FROM PUBLIC/);
-  assert.doesNotMatch(migration, /\bGRANT\s+(?:ALL|EXECUTE)\b/i, "runtime EXECUTE grant must be an explicit post-migration rollout step");
+  const executableSql = migration.split("\n").filter((line) => !line.trimStart().startsWith("--")).join("\n");
+  assert.doesNotMatch(executableSql, /\bGRANT\s+(?:ALL|EXECUTE)\b/i, "runtime EXECUTE grant must be an explicit post-migration rollout step");
   assert.doesNotMatch(migration, /\b(?:UPDATE|DELETE|INSERT|TRUNCATE)\s+(?:INTO\s+|FROM\s+)?public\.products\b/i);
 });
 
