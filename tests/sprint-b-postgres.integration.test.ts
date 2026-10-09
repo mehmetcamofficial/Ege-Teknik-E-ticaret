@@ -285,8 +285,12 @@ test("8. checkout lock: SECURITY DEFINER works under a restricted role without p
     has_table_privilege('sprintb_checkout_runtime','public.products','UPDATE') AS can_update,
     has_table_privilege('sprintb_checkout_runtime','public.products','SELECT') AS can_select,
     has_function_privilege('sprintb_checkout_runtime','public.lock_checkout_products(text[])','EXECUTE') AS can_execute,
-    has_function_privilege('public','public.lock_checkout_products(text[])','EXECUTE') AS public_can_execute`)).rows[0];
-  assert.deepEqual(acl, { can_update: false, can_select: true, can_execute: true, public_can_execute: false });
+    NOT EXISTS (
+      SELECT 1 FROM pg_proc p, aclexplode(p.proacl) acl
+      WHERE p.oid = 'public.lock_checkout_products(text[])'::regprocedure
+        AND acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+    ) AS public_execute_revoked`)).rows[0];
+  assert.deepEqual(acl, { can_update: false, can_select: true, can_execute: true, public_execute_revoked: true });
 
   const client = await pool.connect();
   try {
