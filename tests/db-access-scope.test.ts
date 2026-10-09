@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { resolveScopedDatabaseUrl } from "../lib/db-access-scope.ts";
+import { resolveScopedDatabaseUrl, scopedCheckoutEnabled } from "../lib/db-access-scope.ts";
 
 const legacy = "postgresql://owner:legacy-secret@db.example.test/app";
 const storefront = "postgresql://storefront_role:store-secret@db.example.test/app";
@@ -42,4 +42,25 @@ test("legacy callers remain unchanged; scoped helpers are opt-in", () => {
   assert.match(source, /export function getStorefrontDb\(\)/);
   assert.match(source, /export function getAdminDb\(\)/);
   assert.match(source, /assertEnvironmentIsolation\(\);\s*const connectionString = resolveScopedDatabaseUrl/);
+});
+
+test("checkout scope is opt-in and invalid flags fail closed", () => {
+  assert.equal(scopedCheckoutEnabled(undefined), false);
+  assert.equal(scopedCheckoutEnabled(""), false);
+  assert.equal(scopedCheckoutEnabled("false"), false);
+  assert.equal(scopedCheckoutEnabled("true"), true);
+  for (const value of ["TRUE", "1", "yes", "off"]) assert.throws(() => scopedCheckoutEnabled(value), /must be true or false/);
+});
+
+test("checkout routes share the same explicitly selected database", () => {
+  const orders = readFileSync("app/api/orders/route.ts", "utf8");
+  const preview = readFileSync("app/api/checkout/legal-preview/route.ts", "utf8");
+  assert.match(orders, /const db = getCheckoutDb\(\)/);
+  assert.match(preview, /const db = getCheckoutDb\(\)/);
+  assert.match(preview, /resolveCheckoutPreflight\(\{ data: parsed\.data \}, requested, db\)/);
+  assert.match(preview, /resolveCheckoutCalculation\(\{ data: parsed\.data \}, requested, preflight\.requiredLegal, db\)/);
+  assert.match(preview, /loadRequiredCheckoutLegalDocuments\(orderIssuedAt, db\)/);
+  const index = readFileSync("db/index.ts", "utf8");
+  assert.match(index, /scopedCheckoutEnabled\(process\.env\.CHECKOUT_SCOPED_DB_ENABLED\) \? getStorefrontDb\(\) : getDb\(\)/);
+  assert.match(readFileSync("tests/support/order-route-fakes.ts", "utf8"), /export function getCheckoutDb\(\)/);
 });
