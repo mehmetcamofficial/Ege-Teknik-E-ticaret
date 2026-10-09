@@ -5,7 +5,7 @@
 - Migration 0017 and 0018 are **not** applied to active Neon Preview or Production.
 - Disposable PostgreSQL 18 tests verify restricted LOGIN transaction and two legal acceptance records without any `orders` UPDATE grant.
 - `tests/checkout-scoped-http-contract.test.ts` checks source-level HTTP handler wiring; it is not an HTTP E2E test.
-- `scripts/test-checkout-http-e2e.mjs` launches real Next.js HTTP handlers against the CI-owned PostgreSQL 18 service container. [Run 37998508459](https://github.com/mehmetcamofficial/Ege-Teknik-E-ticaret/actions/runs/37998508459) passed preview/order/replay/conflict; new negative HTTP cases added in `aac3ca6` still require their own successful CI run.
+- `scripts/test-checkout-http-e2e.mjs` launches real Next.js HTTP handlers against the CI-owned PostgreSQL 18 service container. [Run 38000674472](https://github.com/mehmetcamofficial/Ege-Teknik-E-ticaret/actions/runs/38000674472) passed all four jobs, 22/22 integration tests, 38/38 commerce tests, and real HTTP preview/order/replay/conflict plus negative cases, stale legal version, legacy-off and invalid scoped-credential fail-closed.
 
 ## Required isolated test environment
 1. Start a **disposable local PostgreSQL 18 database** and apply migrations 0000–0018 with the repository migrator. Refuse any database URL that is not loopback with a database name starting `sprintb`. Never reuse active Preview/Production connection strings.
@@ -16,7 +16,7 @@
 
 ## HTTP scenarios (run against a real local Next.js server)
 
-The test runner currently covers valid preview, order 201, legal evidence, inventory reservation, replay and idempotency conflict. Commit `aac3ca6` adds missing-token, marketing opt-in, stale-price and stock-rollback cases; those are not verified until their CI run completes. The other scenarios below remain release gates, **not** claims of completed testing.
+Verified at HEAD `37f9bd4` on [CI 38000674472](https://github.com/mehmetcamofficial/Ege-Teknik-E-ticaret/actions/runs/38000674472): valid preview, order 201, legal evidence, inventory reservation, replay and idempotency conflict, missing/tampered/expired token, marketing opt-in, stale displayed total, out-of-stock rollback, stale published legal version, legacy flag OFF, invalid scoped credentials fail-closed and response leakage checks. **These were executed on disposable local PostgreSQL and Next.js, not on active Neon Preview or Production.**
 - `POST /api/checkout/legal-preview`: valid fictitious cart returns signed preview token and both rendered legal documents; no order or inventory mutation.
 - `POST /api/orders` with the exact preview token and accepted version IDs: HTTP 201; one order, one item, two immutable acceptance records, exactly one inventory decrement and reservation.
 - Identical idempotency key and body: replay returns the original order with no second stock decrement or evidence records.
@@ -27,4 +27,4 @@ The test runner currently covers valid preview, order 201, legal evidence, inven
 - With `CHECKOUT_SCOPED_DB_ENABLED=false`, legacy path remains operational on the same disposable database; missing/invalid scoped credentials must fail closed when enabled.
 
 ## Release hold
-Do **not** merge, run migrations on active Preview/Production, provision production credentials, or enable the scoped checkout flag based on these instructions alone. Obtain separate approval for the Preview rollout after all HTTP E2E scenarios have passed and the rollout plan has been reviewed.
+Do **not** merge, run migrations on active Preview/Production, provision production credentials, or enable the scoped checkout flag based on these instructions alone. See `docs/preview-scoped-checkout-rollout-runbook.md` for the exact approval-gated backup, migration, role, deployment and rollback gates.
