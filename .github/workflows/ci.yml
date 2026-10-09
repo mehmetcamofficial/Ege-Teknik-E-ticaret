@@ -81,6 +81,12 @@ jobs:
           # NOT named *_DATABASE_URL: tests/ci-workflow-policy.test.ts forbids that token here.
           COMMERCE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:commerce-postgres
+      - name: Real HTTP checkout with a restricted LOGIN and disposable PostgreSQL
+        env:
+          # The runner refuses non-CI, non-loopback or non-sprintb targets and owns
+          # the schema reset; no hosted connection or application credentials.
+          CHECKOUT_HTTP_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: pnpm test:http-checkout
 
   build:
     name: build
