@@ -120,6 +120,13 @@
       "when": 1791496077696,
       "tag": "0016_legal_documents_immutability_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791586800000,
+      "tag": "0017_checkout_product_lock",
+      "breakpoints": true
     }
   ]
 }
