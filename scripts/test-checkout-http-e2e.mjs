@@ -168,6 +168,26 @@ try {
   assert.equal(await count("order_items"), 1);
   assert.equal(await count("order_legal_acceptances"), 2);
   assert.deepEqual(await stock(), { on_hand: 2, reserved: 1 });
+  // A newly published and effective legal version must invalidate the
+  // earlier signed preview, even though the HMAC is authentic and unexpired.
+  // All writes are confined to this disposable CI database.
+  await owner.query("DELETE FROM rate_limit_buckets");
+  const revisedTitle = "Disposable distance-sales revision 2";
+  const revisedBody = "Local HTTP checkout revised distance sales terms.";
+  await owner.query(`INSERT INTO legal_document_versions
+    (id, document_id, version, title, body, content_hash, effective_at, published_at, published_by)
+    VALUES ($1, 'http-doc-distance-sales', 2, $2, $3, $4, '2020-01-01', '2020-01-01', 'owner-1')`,
+    ["http-version-distance-sales-v2", revisedTitle, revisedBody,
+      hashLegalDocument({ title: revisedTitle, body: revisedBody })]);
+  const staleLegal = await request("/api/orders", accepted, "http-stale-legal");
+  assertStatus(staleLegal, 409, "stale legal document version");
+  assert.equal(staleLegal.data.code, "LEGAL_PREVIEW_INVALID");
+  assert.equal(await count("orders"), 1, "stale legal version must not create an order");
+  assert.equal(await count("order_legal_acceptances"), 2, "stale legal version must not record acceptance");
+  assert.deepEqual(await stock(), { on_hand: 2, reserved: 1 });
+  const updatedPreview = await request("/api/checkout/legal-preview", cart);
+  assertStatus(updatedPreview, 200, "new legal version preview");
+  assert.ok(updatedPreview.data.documents.some((d) => d.documentVersionId === "http-version-distance-sales-v2"));
   assert.equal(await count("marketing_consents"), 0, "no marketing consent is collected at checkout");
   for (const response of [created.data, replay.data]) {
     assert.equal(Object.hasOwn(response, "id"), false);
@@ -175,7 +195,7 @@ try {
     assert.equal(Object.hasOwn(response, "idempotencyKey"), false);
     assert.doesNotMatch(JSON.stringify(response), /postgres(?:ql)?:|sprintb_http_|DATABASE_URL/i);
   }
-  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, missing/expired token, price, marketing and stock refusals");
+  console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, missing/expired token, price, marketing, stock and stale legal version refusals");
 } catch (error) {
   console.error("[http-checkout] FAIL:", error instanceof Error ? error.message : String(error));
   console.error("[http-checkout] Local server diagnostics (last 1200 chars):", serverOutput.slice(-1200).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]"));
