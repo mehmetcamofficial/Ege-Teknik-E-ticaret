@@ -108,13 +108,16 @@ for attempt in $(seq 1 45); do
 done
 if [ "$ready" -ne 1 ]; then echo "STOP: local PostgreSQL 18 did not start." >&2; exit 1; fi
 docker cp "$dump" "$container_name:/tmp/preview.dump" >/dev/null
-if ! docker exec "$container_name" pg_restore -U postgres -d postgres \
-  --no-owner --no-acl --exit-on-error /tmp/preview.dump \
+# Only the disposable Docker container is modified. A separate empty database
+# and --clean/--if-exists handle source archives that include the public schema.
+docker exec "$container_name" createdb -U postgres ege_restore
+if ! docker exec "$container_name" pg_restore -U postgres -d ege_restore \
+  --clean --if-exists --no-owner --no-acl --exit-on-error /tmp/preview.dump \
   >"$workdir/restore.log" 2>&1; then
   echo "STOP: offline PostgreSQL 18 restore failed; encrypted backup not produced." >&2
   exit 1
 fi
-restored="$(docker exec "$container_name" psql -X -qAt -v ON_ERROR_STOP=1 -U postgres -d postgres -c "$fingerprint_sql")"
+restored="$(docker exec "$container_name" psql -X -qAt -v ON_ERROR_STOP=1 -U postgres -d ege_restore -c "$fingerprint_sql")"
 if [ "$before" != "$restored" ]; then
   echo "STOP: restored counts differ from Preview baseline." >&2
   exit 1
