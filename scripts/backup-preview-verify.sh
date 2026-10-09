@@ -130,23 +130,21 @@ chmod 700 "$backup_dir"
 stamp="$(date +%Y%m%d-%H%M%S)"
 encrypted="$backup_dir/preview-pre-0017-0018-$stamp.dump.enc"
 echo "Encrypting verified archive with AES-256-CBC / PBKDF2."
-echo "Choose a NEW passphrase of at least 16 characters; it will be requested twice."
+echo "Create and SAVE a new 20+ character password in your password manager BEFORE entering it here."
+echo "Paste that saved password once. Terminal will not display any characters."
 passphrase=""
-passphrase_confirm=""
-matched=0
+accepted=0
 for attempt in 1 2 3; do
-  IFS= read -r -s -p "Backup passphrase (hidden): " passphrase
+  IFS= read -r -s -p "Saved backup passphrase (hidden; paste once): " passphrase
   printf '\n'
-  IFS= read -r -s -p "Repeat the same passphrase (hidden): " passphrase_confirm
-  printf '\n'
-  if [ "${#passphrase}" -ge 16 ] && [ "$passphrase" = "$passphrase_confirm" ]; then
-    matched=1
+  if [ "${#passphrase}" -ge 16 ]; then
+    accepted=1
     break
   fi
-  echo "Passphrases did not match, or were shorter than 16 characters. Retry ($attempt/3)." >&2
+  echo "Password must be at least 16 characters; retry ($attempt/3)." >&2
 done
-if [ "$matched" -ne 1 ]; then
-  echo "STOP: passphrase confirmation failed; no persistent backup was created." >&2
+if [ "$accepted" -ne 1 ]; then
+  echo "STOP: password length check failed; no persistent backup was created." >&2
   exit 1
 fi
 # A temporary mode-0600 passphrase file avoids passwords in command arguments
@@ -154,7 +152,7 @@ fi
 passfile="$workdir/backup-passphrase"
 printf '%s\n' "$passphrase" > "$passfile"
 chmod 600 "$passfile"
-unset passphrase passphrase_confirm
+unset passphrase
 openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
   -pass "file:$passfile" -in "$dump" -out "$encrypted"
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
