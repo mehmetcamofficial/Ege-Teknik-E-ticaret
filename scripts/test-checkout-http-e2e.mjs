@@ -163,7 +163,7 @@ try {
     assert.equal(Object.hasOwn(response, "id"), false);
     assert.equal(Object.hasOwn(response, "customerId"), false);
     assert.equal(Object.hasOwn(response, "idempotencyKey"), false);
-    assert.doesNotMatch(JSON.stringify(response), /postgres(?:ql)?:\\/\\/|sprintb_http_|DATABASE_URL/i);
+    assert.doesNotMatch(JSON.stringify(response), /postgres(?:ql)?:|sprintb_http_|DATABASE_URL/i);
   }
   console.log("[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, token, price, marketing and stock refusals");
 } catch (error) {
