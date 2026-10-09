@@ -24,6 +24,9 @@ test("HTTP checkout requires signed legal preview and preserves the legacy off-s
   assert.match(orders, /await tx\.insert\(orderLegalAcceptances\)/);
   assert.match(orders, /if \(process\.env\.CHECKOUT_SCOPED_DB_ENABLED === "true"\)/);
   assert.match(orders, /public\.lock_checkout_products\(/);
+  // A JS array interpolated directly into Drizzle SQL becomes a scalar parameter,
+  // not a PostgreSQL text[] (the first real HTTP E2E caught SQLSTATE 22P02).
+  assert.match(orders, /lock_checkout_products\(ARRAY\[\$\{sql\.join\(/);
   assert.match(orders, /\.for\("share"\)/);
 });
 
