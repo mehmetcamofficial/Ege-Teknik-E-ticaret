@@ -468,7 +468,7 @@ test("8e. scoped checkout: restricted LOGIN role commits stock, order and immuta
     assert.equal(role, "sprintb_checkout_runtime", "must authenticate as the restricted role, not SET ROLE");
     const privileges = (await scoped.query(`SELECT
       has_table_privilege(current_user, 'public.products', 'UPDATE') AS products_update,
-      has_table_privilege(current_user, 'public.inventory', 'UPDATE') AS inventory_update,
+      has_column_privilege(current_user, 'public.inventory', 'on_hand', 'UPDATE') AS inventory_update,
       has_function_privilege(current_user, 'public.lock_checkout_products(text[])', 'EXECUTE') AS can_lock,
       (SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolbypassrls FROM pg_roles WHERE rolname=current_user) AS privileged`)).rows[0];
     assert.deepEqual(privileges, { products_update: false, inventory_update: true, can_lock: true, privileged: false });
