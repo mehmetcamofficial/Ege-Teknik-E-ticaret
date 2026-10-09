@@ -199,7 +199,7 @@ try {
       hashLegalDocument({ title: revisedTitle, body: revisedBody })]);
   const staleLegal = await request("/api/orders", accepted, "http-stale-legal");
   assertStatus(staleLegal, 409, "stale legal document version");
-  assert.equal(staleLegal.data.code, "LEGAL_PREVIEW_INVALID");
+  assert.equal(staleLegal.data.code, "LEGAL_VERSION_MISMATCH");
   assert.equal(await count("orders"), 1, "stale legal version must not create an order");
   assert.equal(await count("order_legal_acceptances"), 2, "stale legal version must not record acceptance");
   assert.deepEqual(await stock(), { on_hand: 2, reserved: 1 });
