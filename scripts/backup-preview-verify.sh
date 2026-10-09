@@ -129,13 +129,38 @@ mkdir -p "$backup_dir"
 chmod 700 "$backup_dir"
 stamp="$(date +%Y%m%d-%H%M%S)"
 encrypted="$backup_dir/preview-pre-0017-0018-$stamp.dump.enc"
-echo "Encrypting verified archive with AES-256-CBC / PBKDF2 (choose a strong passphrase)."
+echo "Encrypting verified archive with AES-256-CBC / PBKDF2."
+echo "Choose a NEW passphrase of at least 16 characters; it will be requested twice."
+passphrase=""
+passphrase_confirm=""
+matched=0
+for attempt in 1 2 3; do
+  IFS= read -r -s -p "Backup passphrase (hidden): " passphrase
+  printf '\n'
+  IFS= read -r -s -p "Repeat the same passphrase (hidden): " passphrase_confirm
+  printf '\n'
+  if [ "${#passphrase}" -ge 16 ] && [ "$passphrase" = "$passphrase_confirm" ]; then
+    matched=1
+    break
+  fi
+  echo "Passphrases did not match, or were shorter than 16 characters. Retry ($attempt/3)." >&2
+done
+if [ "$matched" -ne 1 ]; then
+  echo "STOP: passphrase confirmation failed; no persistent backup was created." >&2
+  exit 1
+fi
+# A temporary mode-0600 passphrase file avoids passwords in command arguments
+# and prevents OpenSSL from asking independently during encrypt/decrypt.
+passfile="$workdir/backup-passphrase"
+printf '%s\n' "$passphrase" > "$passfile"
+chmod 600 "$passfile"
+unset passphrase passphrase_confirm
 openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
-  -in "$dump" -out "$encrypted"
-echo "Re-enter the passphrase to verify decryption."
+  -pass "file:$passfile" -in "$dump" -out "$encrypted"
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
-  -in "$encrypted" -out "$workdir/decrypted.dump"
+  -pass "file:$passfile" -in "$encrypted" -out "$workdir/decrypted.dump"
 cmp "$dump" "$workdir/decrypted.dump"
+rm -f "$passfile"
 chmod 600 "$encrypted"
 verified=1
 echo "SUCCESS: encrypted Preview backup and independent PostgreSQL 18 restore verified."
