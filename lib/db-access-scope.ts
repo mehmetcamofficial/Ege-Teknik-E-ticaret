@@ -36,3 +36,13 @@ export function resolveScopedDatabaseUrl(scope: DatabaseScope, env: DatabaseEnv)
   }
   return scope === "storefront" ? storefront : admin;
 }
+
+/**
+ * Explicit checkout-only rollout gate. An absent or false flag preserves the
+ * legacy connection; an enabled flag must use the scoped role (no fallback).
+ */
+export function scopedCheckoutEnabled(value: string | undefined): boolean {
+  if (value === undefined || value === "" || value === "false") return false;
+  if (value === "true") return true;
+  throw new Error("CHECKOUT_SCOPED_DB_ENABLED must be true or false.");
+}
