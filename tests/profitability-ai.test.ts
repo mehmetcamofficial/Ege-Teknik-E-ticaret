@@ -69,3 +69,14 @@ test("AI endpoint rejects unauthorized requests before config, database writes o
   assert.ok(post.indexOf("if (!(await authorize())) return unauthorized()") < post.indexOf("const config = aiConfig()"));
   assert.match(route, /private, no-store/);
 });
+
+test("finance visuals never invent profitability and gate the scenario entry", () => {
+  const visual = readFileSync("app/admin/(panel)/finance/finance-visuals.tsx", "utf8");
+  const page = readFileSync("app/admin/(panel)/finance/page.tsx", "utf8");
+  assert.match(visual, /summary\.collected/);
+  assert.match(visual, /summary\.outstanding/);
+  assert.match(visual, /methods\.map/);
+  assert.match(visual, /canViewProfitability \?/);
+  assert.match(visual, /Gerçek alış maliyetleri henüz kaydedilmediğinden/);
+  assert.match(page, /admin\.role === "super_admin"/);
+});
