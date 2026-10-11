@@ -50,7 +50,17 @@ export default function OrdersView() {
         ) : (
           <>
             <div className="px-1 pb-2 sm:px-2">
-              <Table>
+              <div className="grid gap-3 p-3 md:hidden">
+                {(data?.rows ?? []).map((o) => (
+                  <article key={o.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><h3 className="font-semibold">{o.orderNumber}</h3><p className="text-xs text-muted-foreground">{trDate(o.createdAt, true)}</p></div><StatusBadge tone={orderStatusTone[o.status] ?? "neutral"}>{orderStatusLabel[o.status] ?? o.status}</StatusBadge></div>
+                    <p className="mt-3 text-sm font-medium">{o.customerName} <span className="text-muted-foreground">· {o.city}</span></p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2"><span className="font-semibold tabular-nums">{tryCurrency(o.total)}</span><span className="text-xs text-muted-foreground">Ödeme: {paymentStatusLabel[o.paymentStatus] ?? o.paymentStatus}</span></div>
+                    <Button asChild variant="outline" className="mt-3 w-full"><Link href={`/admin/orders/${o.id}`}>Sipariş detayları</Link></Button>
+                  </article>
+                ))}
+              </div>
+              <div className="hidden md:block"><Table>
                 <TableHeader><TableRow><TableHead>Sipariş</TableHead><TableHead>Tarih</TableHead><TableHead>Müşteri</TableHead><TableHead className="text-right">Tutar</TableHead><TableHead>Ödeme</TableHead><TableHead>Durum</TableHead><TableHead><span className="sr-only">Detay</span></TableHead></TableRow></TableHeader>
                 <TableBody>
                   {(data?.rows ?? []).map((o) => (
@@ -65,7 +75,7 @@ export default function OrdersView() {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </Table></div>
             </div>
             {data && data.pageCount > 1 && (
               <nav aria-label="Sayfalama" className="flex items-center justify-between gap-3 border-t p-4 sm:px-5">
