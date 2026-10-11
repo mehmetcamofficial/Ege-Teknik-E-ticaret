@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FinanceVisuals } from "./finance-visuals";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +14,7 @@ import { orderPaymentStatuses, paymentMethodLabel, paymentMethods, type FinanceR
 const methodName = (m: string) => paymentMethodLabel[m as keyof typeof paymentMethodLabel] ?? "Belirtilmemiş";
 
 /** Every figure comes from GET /api/admin/finance, computed in SQL. Nothing here adds, estimates or fills a gap. */
-export default function FinanceView() {
+export default function FinanceView({ canViewProfitability }: { canViewProfitability: boolean }) {
   const [range, setRange] = useState("range=30d");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
@@ -71,6 +72,7 @@ export default function FinanceView() {
             <StatCard label="Net tahsilat" tone="info" value={tryCurrency(s.netCollected)} hint="Tahsil edilen − iade edilen" />
           </section>
 
+          <FinanceVisuals summary={s} methods={data.methods} canViewProfitability={canViewProfitability} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Panel title="KDV ayrımı" description="İptaller hariç sipariş tutarı; sipariş anındaki KDV kaydından (canlı fiyattan değil).">
               <dl className="grid gap-2 text-sm">
@@ -93,7 +95,7 @@ export default function FinanceView() {
             </Panel>
           </div>
 
-          <Panel title="Stok değeri ve kârlılık">
+          <Panel title="Gerçek maliyet verisi">
             <p className="text-sm text-muted-foreground">Maliyet verisi mevcut değil. Ürünlerde maliyet alanı bulunmadığı için stok değeri, brüt kâr ve marj hesaplanmaz; satış fiyatından tahmin yapılmaz.</p>
           </Panel>
 
