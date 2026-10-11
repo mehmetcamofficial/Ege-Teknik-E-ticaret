@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { calculateProfit } from "../lib/profitability.ts";
@@ -42,4 +43,12 @@ test("AI errors do not expose provider diagnostics", async () => {
     generateProfitAdvice(config, "Soru", async () => new Response("private diagnostic unit-test-key", { status: 500 })),
     (e: unknown) => e instanceof AiAdviceError && !e.message.includes("unit-test-key"),
   );
+});
+
+test("AI admin endpoint enforces same-origin and a distributed request cap", () => {
+  const route = readFileSync("app/api/admin/finance/profitability/ai/route.ts", "utf8");
+  assert.match(route, /assertSameOrigin\(request\)/);
+  assert.match(route, /await rateLimit\(request, "admin-profitability-ai", 10, 60 \* 60_000\)/);
+  assert.match(route, /await getAdminUser\("payments:configure"\)/);
+  assert.match(route, /user\?\.role === "super_admin"/);
 });
