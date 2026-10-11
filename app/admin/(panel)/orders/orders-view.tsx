@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,6 +14,7 @@ import type { OrderListPage } from "@/lib/orders-db";
 /** Every row comes from GET /api/admin/orders (P0-A #3), paginated server-side - no 100-row cap. */
 export default function OrdersView() {
   const [query, setQuery] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
 
@@ -25,20 +26,21 @@ export default function OrdersView() {
     return `/api/admin/orders?${q}`;
   }, [query, status, page]);
   const { data, error, loading } = useAdminJson<OrderListPage>(url);
-  const filter = <T,>(set: (v: T) => void) => (v: T) => { set(v); setPage(1); };
+  function resetFilters() { setSearchDraft(""); setQuery(""); setStatus(""); setPage(1); }
 
   return (
     <>
       <PageHeader title="Siparişler" description="Tüm siparişler, en yeniden eskiye." />
       {error && <Notice tone="error">{error}</Notice>}
       <Panel bodyClassName="p-0">
-        <div role="search" className="grid grid-cols-1 gap-3 border-b p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:p-5">
+        <div role="search" className="grid grid-cols-1 items-end gap-3 border-b p-4 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] sm:p-5">
           <FormField label="Ara" htmlFor="order-search">
-            <div className="relative"><Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" /><Input id="order-search" type="search" placeholder="Sipariş no, müşteri, il veya telefon" className="pl-9" value={query} onChange={(e) => filter(setQuery)(e.target.value)} /></div>
+            <div className="relative"><Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" /><Input id="order-search" type="search" placeholder="Sipariş no, müşteri, il veya telefon" className="pl-9" value={searchDraft} onChange={(e) => { setSearchDraft(e.target.value); setPage(1); setQuery(e.target.value); }} /></div>
           </FormField>
           <FormField label="Durum" htmlFor="order-status">
-            <select id="order-status" className={selectClass} value={status} onChange={(e) => filter(setStatus)(e.target.value)}><option value="">Tümü</option>{Object.entries(orderStatusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+            <select id="order-status" className={selectClass} value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}><option value="">Tümü</option>{Object.entries(orderStatusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
           </FormField>
+          <Button type="button" variant="outline" disabled={!query && !status} onClick={resetFilters}><RotateCcw aria-hidden="true" className="size-4" /> Temizle</Button>
         </div>
         <p className="px-4 pt-3 text-sm text-muted-foreground sm:px-5" aria-live="polite">
           {loading && !data ? "Yükleniyor…" : data ? `${data.total} sipariş${data.pageCount > 1 ? ` · sayfa ${data.page} / ${data.pageCount}` : ""}` : ""}
