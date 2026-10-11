@@ -80,3 +80,11 @@ test("finance visuals never invent profitability and gate the scenario entry", (
   assert.match(visual, /Gerçek alış maliyetleri henüz kaydedilmediğinden/);
   assert.match(page, /admin\.role === "super_admin"/);
 });
+
+test("finance report has mobile cards and direct authorized order detail links", () => {
+  const view = readFileSync("app/admin/(panel)/finance/finance-view.tsx", "utf8");
+  assert.match(view, /aria-label="Mobil satış raporu"/);
+  assert.match(view, /hidden lg:block/);
+  assert.match(view, /Sipariş ve ödeme detayları/);
+  assert.match(view, /href=\{`\/admin\/orders\/\$\{r\.orderId\}`\}/);
+});
