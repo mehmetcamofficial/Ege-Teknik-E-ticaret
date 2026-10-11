@@ -1,4 +1,5 @@
 import { getAdminUser } from "@/lib/admin-auth";
+import { claimProfitabilityAiMonthlyQuota } from "@/lib/ai/profitability-quota";
 import { readJson, assertSameOrigin, rateLimit, HttpError } from "@/lib/http-security";
 import { z } from "zod";
 import { aiConfig, aiReady, generateProfitAdvice, AiAdviceError } from "@/lib/ai/profitability-gateway";
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
     // Fail closed if the distributed rate-limit store cannot be reached.
     assertSameOrigin(request);
     await rateLimit(request, "admin-profitability-ai", 10, 60 * 60_000);
+    if (!(await claimProfitabilityAiMonthlyQuota())) return Response.json({ error: "Aylık AI istek kotası doldu." }, { status: 429, headers });
     const answer = await generateProfitAdvice(config, parsed.data.question);
     return Response.json({ answer }, { headers });
   } catch (e) {
