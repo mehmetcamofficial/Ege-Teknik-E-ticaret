@@ -102,7 +102,19 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
           <div className="p-4 sm:p-5"><EmptyState title={data.products.length ? "Filtreyle eşleşen ürün yok" : "Henüz ürün yok"} description={data.products.length ? "Aramayı veya filtreleri değiştirin." : undefined} /></div>
         ) : (
           <div className="px-1 pb-2 sm:px-2">
-            <Table>
+            <div className="grid gap-3 p-3 md:hidden">
+              {rows.map((p) => {
+                const level = stockLevel(p);
+                const blocked = getBlockedProductInfo(p.id);
+                return <article key={p.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0 flex-1"><h3 className="font-semibold">{p.name}</h3><p className="break-all text-xs text-muted-foreground">{p.sku || p.slug}</p></div><StatusBadge tone={publishTone[p.status] ?? "neutral"}>{publishLabel[p.status] ?? p.status}</StatusBadge></div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2"><span className="font-semibold tabular-nums">{tryCurrency(p.price)}</span><span className="text-sm text-muted-foreground">{p.stock} adet</span>{level !== "untracked" && <StatusBadge tone={stockTone[level]}>{stockLabel[level]}</StatusBadge>}{blocked && <StatusBadge tone="danger">Müşteriye kapalı</StatusBadge>}</div>
+                  <p className="mt-2 text-xs text-muted-foreground">{p.category}</p>
+                  {canWrite && <Button asChild variant="outline" className="mt-3 w-full"><Link href={`/admin/products/${p.id}`}>Ürünü düzenle</Link></Button>}
+                </article>;
+              })}
+            </div>
+            <div className="hidden md:block"><Table>
               <TableHeader><TableRow><TableHead>Ürün</TableHead><TableHead>Kategori</TableHead><TableHead className="text-right">Fiyat</TableHead><TableHead>Stok</TableHead><TableHead>Durum</TableHead>{canWrite && <TableHead className="sticky right-0 bg-card shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.18)]"><span className="sr-only">İşlem</span></TableHead>}</TableRow></TableHeader>
               <TableBody>
                 {rows.map((p) => {
@@ -126,7 +138,7 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
                   );
                 })}
               </TableBody>
-            </Table>
+            </Table></div>
           </div>
         )}
       </Panel>
