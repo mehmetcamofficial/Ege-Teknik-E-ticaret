@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { FinanceVisuals } from "./finance-visuals";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,7 +14,7 @@ import { orderPaymentStatuses, paymentMethodLabel, paymentMethods, type FinanceR
 const methodName = (m: string) => paymentMethodLabel[m as keyof typeof paymentMethodLabel] ?? "Belirtilmemiş";
 
 /** Every figure comes from GET /api/admin/finance, computed in SQL. Nothing here adds, estimates or fills a gap. */
-export default function FinanceView() {
+export default function FinanceView({ canViewProfitability }: { canViewProfitability: boolean }) {
   const [range, setRange] = useState("range=30d");
   const [paymentStatus, setPaymentStatus] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
@@ -71,6 +72,7 @@ export default function FinanceView() {
             <StatCard label="Net tahsilat" tone="info" value={tryCurrency(s.netCollected)} hint="Tahsil edilen − iade edilen" />
           </section>
 
+          <FinanceVisuals summary={s} methods={data.methods} canViewProfitability={canViewProfitability} />
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Panel title="KDV ayrımı" description="İptaller hariç sipariş tutarı; sipariş anındaki KDV kaydından (canlı fiyattan değil).">
               <dl className="grid gap-2 text-sm">
@@ -93,14 +95,40 @@ export default function FinanceView() {
             </Panel>
           </div>
 
-          <Panel title="Stok değeri ve kârlılık">
+          <Panel title="Gerçek maliyet verisi">
             <p className="text-sm text-muted-foreground">Maliyet verisi mevcut değil. Ürünlerde maliyet alanı bulunmadığı için stok değeri, brüt kâr ve marj hesaplanmaz; satış fiyatından tahmin yapılmaz.</p>
           </Panel>
 
           <Panel title="Satış raporu" description={`${s.orderCount} sipariş · sayfa ${data.page} / ${data.pageCount}`} bodyClassName="p-0">
             {data.rows.length ? (
               <div className="px-1 pb-2 sm:px-2">
-                <Table>
+                <div className="grid gap-3 p-3 lg:hidden" aria-label="Mobil satış raporu">
+                  {data.rows.map((r) => (
+                    <article key={r.orderId} className="rounded-xl border bg-card p-4 shadow-sm">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold">{r.orderNumber}</p>
+                          <p className="text-xs text-muted-foreground">{trDate(r.createdAt, true)}</p>
+                        </div>
+                        <StatusBadge tone={paymentStatusTone[r.paymentStatus] ?? "neutral"}>{paymentStatusLabel[r.paymentStatus] ?? r.paymentStatus}</StatusBadge>
+                      </div>
+                      <p className="mt-2 text-sm">{r.customerName}</p>
+                      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                        <div><dt className="text-xs text-muted-foreground">Sipariş tutarı</dt><dd className="font-semibold tabular-nums">{tryCurrency(r.total)}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Tahsil edilen</dt><dd className="font-semibold tabular-nums">{tryCurrency(r.collected)}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">KDV</dt><dd className="tabular-nums">{tryCurrency(r.vatTotal)}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">İade</dt><dd className="tabular-nums">{r.refunded > 0 ? tryCurrency(r.refunded) : "—"}</dd></div>
+                        <div className="col-span-2"><dt className="text-xs text-muted-foreground">Ödeme yöntemi</dt><dd>{r.methods.length ? r.methods.map(methodName).join(", ") : "—"}</dd></div>
+                      </dl>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <StatusBadge tone={orderStatusTone[r.orderStatus] ?? "neutral"}>{orderStatusLabel[r.orderStatus] ?? r.orderStatus}</StatusBadge>
+                        {r.storedPaymentStatus === "paid" && r.collected === 0 && <StatusBadge tone="danger">Kayıtsız ödendi</StatusBadge>}
+                      </div>
+                      <Button asChild variant="outline" className="mt-3 w-full"><Link href={`/admin/orders/${r.orderId}`}>Sipariş ve ödeme detayları</Link></Button>
+                    </article>
+                  ))}
+                </div>
+                <div className="hidden lg:block"><Table>
                   <TableHeader><TableRow>
                     <TableHead>Sipariş</TableHead><TableHead>Tarih</TableHead><TableHead>Müşteri</TableHead>
                     <TableHead className="text-right">Toplam</TableHead><TableHead className="text-right">KDV</TableHead><TableHead className="text-right">Tahsil</TableHead>
@@ -125,7 +153,7 @@ export default function FinanceView() {
                       </TableRow>
                     ))}
                   </TableBody>
-                </Table>
+                </Table></div>
               </div>
             ) : <div className="p-4 sm:p-5"><EmptyState title="Bu filtrelerle sipariş yok" description="Tarih aralığını veya filtreleri değiştirin." /></div>}
             {data.pageCount > 1 && (
