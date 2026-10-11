@@ -10,7 +10,7 @@ export type ProfitInput = {
   posFixedKurus?: number;
 };
 const MAX_KURUS = 100_000_000_000;
-const divRound = (n: bigint, d: bigint) => (n + d / 2n) / d;
+const divRound = (n: bigint, d: bigint) => (n + d / BigInt(2)) / d;
 const safe = (n: bigint) => {
   const value = Number(n);
   if (!Number.isSafeInteger(value)) throw new Error("Amount out of range");
@@ -23,8 +23,8 @@ export function calculateProfit(input: ProfitInput) {
   }
   if (input.saleVatBps > 10000 || input.posFeeBps > 10000) throw new Error("Invalid rate");
   const gross = BigInt(input.saleGrossKurus);
-  const revenue = divRound(gross * 10000n, BigInt(10000 + input.saleVatBps));
-  const pos = divRound(gross * BigInt(input.posFeeBps), 10000n) + BigInt(input.posFixedKurus ?? 0);
+  const revenue = divRound(gross * BigInt(10000), BigInt(10000 + input.saleVatBps));
+  const pos = divRound(gross * BigInt(input.posFeeBps), BigInt(10000)) + BigInt(input.posFixedKurus ?? 0);
   const costs = BigInt(input.purchaseNetKurus) + BigInt(input.shippingNetKurus)
     + BigInt(input.installationNetKurus) + BigInt(input.otherNetKurus) + pos;
   const contribution = revenue - costs;
@@ -33,7 +33,7 @@ export function calculateProfit(input: ProfitInput) {
     posFeeKurus: safe(pos),
     variableCostKurus: safe(costs),
     contributionKurus: safe(contribution),
-    contributionMarginBps: revenue === 0n ? null : safe(contribution * 10000n / revenue),
-    lossWarning: contribution < 0n,
+    contributionMarginBps: revenue === BigInt(0) ? null : safe(contribution * BigInt(10000) / revenue),
+    lossWarning: contribution < BigInt(0),
   };
 }
