@@ -52,3 +52,20 @@ test("AI admin endpoint enforces same-origin and a distributed request cap", () 
   assert.match(route, /await getAdminUser\("payments:configure"\)/);
   assert.match(route, /user\?\.role === "super_admin"/);
 });
+
+test("AI quota is global, atomic, and checked before any paid request", () => {
+  const route = readFileSync("app/api/admin/finance/profitability/ai/route.ts", "utf8");
+  const quota = readFileSync("lib/ai/profitability-quota.ts", "utf8");
+  assert.match(route, /await claimProfitabilityAiMonthlyQuota\(\)/);
+  assert.ok(route.indexOf("await claimProfitabilityAiMonthlyQuota()") < route.indexOf("await generateProfitAdvice("));
+  assert.match(quota, /limit: 100/);
+  assert.match(quota, /claimRateLimit\(createRateLimitStore\(getDb\(\)\)/);
+  assert.match(quota, /Date\.UTC\(year, month \+ 1, 1\)/);
+});
+test("AI endpoint rejects unauthorized requests before config, database writes or provider call", () => {
+  const route = readFileSync("app/api/admin/finance/profitability/ai/route.ts", "utf8");
+  const post = route.slice(route.indexOf("export async function POST"));
+  assert.match(post, /if \(!\(await authorize\(\)\)\) return unauthorized\(\)/);
+  assert.ok(post.indexOf("if (!(await authorize())) return unauthorized()") < post.indexOf("const config = aiConfig()"));
+  assert.match(route, /private, no-store/);
+});
