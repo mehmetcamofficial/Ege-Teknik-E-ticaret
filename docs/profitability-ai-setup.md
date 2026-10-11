@@ -35,7 +35,8 @@ Do not set Production AI variables before explicit approval.
 - The Gateway key stays server-side.
 - Input token/response limits and a 15s timeout are not a hard spend limit.
   Configure the actual budget in Vercel and verify Preview quota controls.
-- Before wider use add distributed per-identity rate limiting.
+- Active database-backed limits: 10 requests/hour per caller IP and 100 requests/month globally (UTC calendar month); these are request ceilings, not monetary budgets.
+- The per-IP limiter does not establish per-admin-user quotas. Consider authenticated-user quotas before enabling for multiple super-admins.
 - A confidential cost table requires separate storefront/admin DB users,
   ACL verification and a migration review. The existing shared DATABASE_URL
   is **not** acceptable evidence of cost-data separation.
