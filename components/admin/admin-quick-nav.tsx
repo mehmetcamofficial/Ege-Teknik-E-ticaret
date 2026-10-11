@@ -23,6 +23,7 @@ export function AdminQuickNav({ sections }: { sections: NavSection[] }) {
         setOpen((current) => !current);
       } else if (event.key === "Escape") {
         setOpen(false);
+        setQuery("");
       }
     };
     document.addEventListener("keydown", onKey);
@@ -31,14 +32,13 @@ export function AdminQuickNav({ sections }: { sections: NavSection[] }) {
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
-    else setQuery("");
   }, [open]);
 
   return (
     <div className="relative">
       <button type="button" aria-expanded={open} aria-controls="admin-quick-nav"
         aria-label="Yönetim sayfalarında ara"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => { setOpen((current) => !current); setQuery(""); }}
         className="flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
         <Search className="size-4" aria-hidden="true" />
         <span className="hidden md:inline">Sayfa ara</span>
@@ -47,7 +47,7 @@ export function AdminQuickNav({ sections }: { sections: NavSection[] }) {
       {open && (
         <>
           <button type="button" tabIndex={-1} aria-label="Aramayı kapat"
-            className="fixed inset-0 z-40 cursor-default bg-black/10" onClick={() => setOpen(false)} />
+            className="fixed inset-0 z-40 cursor-default bg-black/10" onClick={() => { setOpen(false); setQuery(""); }} />
           <div id="admin-quick-nav" className="fixed inset-x-3 top-20 z-50 mx-auto max-w-md rounded-xl border bg-background p-3 shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[22rem]"
             role="search" aria-label="Yönetim sayfaları">
             <div className="flex items-center gap-2">
