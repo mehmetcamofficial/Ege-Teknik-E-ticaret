@@ -1,5 +1,5 @@
 import { getAdminUser } from "@/lib/admin-auth";
-import { readJson } from "@/lib/http-security";
+import { readJson, assertSameOrigin, rateLimit, HttpError } from "@/lib/http-security";
 import { z } from "zod";
 import { aiConfig, aiReady, generateProfitAdvice, AiAdviceError } from "@/lib/ai/profitability-gateway";
 
@@ -25,11 +25,14 @@ export async function POST(request: Request) {
   const parsed = z.object({ question: z.string().trim().min(1).max(1000) }).strict().safeParse(body);
   if (!parsed.success) return Response.json({ error: "Geçersiz soru." }, { status: 400, headers });
   try {
+    // Fail closed if the distributed rate-limit store cannot be reached.
+    assertSameOrigin(request);
+    await rateLimit(request, "admin-profitability-ai", 10, 60 * 60_000);
     const answer = await generateProfitAdvice(config, parsed.data.question);
     return Response.json({ answer }, { headers });
   } catch (e) {
-    const status = e instanceof AiAdviceError ? e.status : 502;
-    const message = e instanceof AiAdviceError ? e.message : "AI yanıtı oluşturulamadı.";
+    const status = e instanceof AiAdviceError || e instanceof HttpError ? e.status : 502;
+    const message = e instanceof AiAdviceError || e instanceof HttpError ? e.message : "AI yanıtı oluşturulamadı.";
     return Response.json({ error: message }, { status, headers });
   }
 }
