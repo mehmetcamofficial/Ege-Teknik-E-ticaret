@@ -51,7 +51,7 @@ export function FinanceVisuals({ summary, methods, canViewProfitability }: {
         </div>
       </section>
       <Panel title="Tahsilat yöntemleri" description="Yönteme göre gerçekleşmiş ödeme kayıtlarının karşılaştırması; kaydı olmayan tutarlar dahil değildir.">
-        {methods.length && methodMaximum > 0 ? (
+        {methods.length > 0 && methodMaximum > 0 ? (
           <div className="grid gap-4">
             {methods.map((item) => (
               <div key={item.method}>
