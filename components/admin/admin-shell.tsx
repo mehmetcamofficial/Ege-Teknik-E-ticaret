@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AdminQuickNav } from "@/components/admin/admin-quick-nav";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { BarChart3, Boxes, CreditCard, ExternalLink, LayoutDashboard, LogOut, Menu, MessageSquare, Newspaper, Package, PanelLeftClose, PanelLeftOpen, Recycle, Scale, Settings, ShieldCheck, ShoppingCart, Tags, Wallet, Wrench, X, type LucideIcon } from "lucide-react";
@@ -116,6 +117,7 @@ export default function AdminShell({ email, role, sections, signOutPath, childre
               <Menu aria-hidden="true" className="size-5" />
             </SheetTrigger>
             <p className="min-w-0 flex-1 truncate text-sm font-medium text-muted-foreground"><span className="lg:hidden">Ege Teknik · </span>{activeLabel}</p>
+            <AdminQuickNav sections={sections} />
             <a href="/" target="_blank" rel="noopener" className="flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-primary hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
               <ExternalLink aria-hidden="true" className="size-4" /><span className="hidden sm:inline">Siteyi aç</span><span className="sr-only sm:hidden">Siteyi aç</span><span className="sr-only"> (yeni sekmede açılır)</span>
             </a>
