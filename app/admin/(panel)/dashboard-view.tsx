@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, Boxes, ClipboardList, PackagePlus, Wrench } from "lucide-react";
 import { EmptyState, Notice, PageHeader, Panel, StatCard, StatusBadge } from "@/components/admin/ui";
 import { useAdminJson, type Overview } from "@/components/admin/use-admin-data";
 import { LOW_STOCK_THRESHOLD, OPEN_SERVICE_STATUSES, orderStatusLabel, orderStatusTone, serviceStatusLabel, serviceStatusTone, stockLabel, stockLevel, stockTone, trDate, tryCurrency } from "@/lib/admin-ui";
@@ -11,7 +12,7 @@ const n = (v: number) => new Intl.NumberFormat("tr-TR").format(v);
 const linkCls = "text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring rounded-sm";
 
 /** "What requires my attention?" - every number here comes from an existing admin endpoint; nothing is estimated. */
-export default function DashboardView({ canModerateReviews }: { canModerateReviews: boolean }) {
+export default function DashboardView({ canModerateReviews, canViewProfitability }: { canModerateReviews: boolean; canViewProfitability: boolean }) {
   const overview = useAdminJson<Overview>("/api/admin/overview");
   const analytics = useAdminJson<AnalyticsSummary>("/api/admin/analytics?range=7d");
   const reviews = useAdminJson<{ reviews: PendingReview[] }>(canModerateReviews ? "/api/admin/reviews?status=pending" : null);
@@ -25,11 +26,43 @@ export default function DashboardView({ canModerateReviews }: { canModerateRevie
   return (
     <>
       <PageHeader title="Genel Bakış" description="Dikkat gerektiren işler ve güncel durum." />
+      <section aria-label="Hızlı işlemler" className="rounded-xl border bg-card p-4 shadow-sm sm:p-5">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div><h2 className="font-semibold">Hızlı işlemler</h2><p className="text-sm text-muted-foreground">En sık kullanılan ekranlara tek tıkla ulaşın.</p></div>
+          <span className="text-xs text-muted-foreground">⌘ K / Ctrl K</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
+          {([
+            { href: "/admin/orders", label: "Siparişler", icon: ClipboardList },
+            { href: "/admin/service-requests", label: "Servis talepleri", icon: Wrench },
+            { href: "/admin/products", label: "Ürün yönetimi", icon: PackagePlus },
+            { href: "/admin/inventory", label: "Stok kontrolü", icon: Boxes },
+            ...(canViewProfitability ? [{ href: "/admin/finance/profitability", label: "Kârlılık", icon: ClipboardList }] : []),
+          ]).map((action) => {
+            const Icon = action.icon;
+            return <Link key={action.href} href={action.href} className="flex min-h-14 items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm font-medium hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+              <Icon aria-hidden="true" className="size-4 shrink-0 text-primary" /><span className="min-w-0 flex-1">{action.label}</span><ArrowRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+            </Link>;
+          })}
+        </div>
+      </section>
       {overview.error && <Notice tone="error">{overview.error}</Notice>}
       {overview.loading && !d && <Notice tone="info">Yükleniyor…</Notice>}
 
       {d && (
         <>
+          <section aria-label="Öncelikli işler" className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 sm:p-5">
+            <h2 className="mb-3 text-base font-semibold">Öncelikli işler</h2>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {[
+                { label: "Yeni servis talepleri", count: newRequests.length, href: "/admin/service-requests" },
+                { label: "Stok uyarıları", count: stockAlerts.length, href: "/admin/inventory" },
+                { label: "Açık servis süreçleri", count: openRequests.length, href: "/admin/service-requests" },
+              ].map((item) => <Link href={item.href} key={item.label} className="flex min-h-14 items-center justify-between gap-3 rounded-lg border bg-white px-4 py-3 hover:border-emerald-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                <span className="text-sm font-medium">{item.label}</span><span className="rounded-md bg-slate-100 px-2 py-1 text-sm font-semibold tabular-nums">{n(item.count)}</span>
+              </Link>)}
+            </div>
+          </section>
           <section aria-label="Özet göstergeler" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
             <StatCard label="Ürün" value={n(d.products.length)} hint={`${n(published)} yayında`} href="/admin/products" />
             <StatCard label="Sipariş" value={n(d.orders.length)} hint={d.orders.length >= 100 ? "Son 100 kayıt gösteriliyor" : "Tüm kayıtlar"} href="/admin/orders" tone="info" />
