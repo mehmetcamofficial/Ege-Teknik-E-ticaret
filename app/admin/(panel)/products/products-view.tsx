@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
   const [visibility, setVisibility] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
   const [message, setMessage] = useState<{ tone: "info" | "success" | "error"; text: string } | null>(null);
 
   const categories = useMemo(() => [...new Set((data?.products ?? []).map((p) => p.category).filter(Boolean))].sort(collator.compare), [data]);
@@ -32,9 +33,12 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
       const blocked = getBlockedProductInfo(p.id) !== null;
       return (!category || p.category === category) && (!status || p.status === status)
         && (!visibility || (visibility === "blocked" ? blocked : !blocked))
+        && (!stockFilter || stockLevel(p) === stockFilter)
         && (!q || [p.name, p.sku, p.slug, p.series].some((v) => v?.toLocaleLowerCase("tr").includes(q)));
     });
-  }, [data, query, category, status, visibility]);
+  }, [data, query, category, status, visibility, stockFilter]);
+  const hasFilters = !!(query || category || status || visibility || stockFilter);
+  function resetFilters() { setQuery(""); setCategory(""); setStatus(""); setVisibility(""); setStockFilter(""); }
 
   async function importCatalog() {
     setMessage({ tone: "info", text: "GREE kataloğu veritabanına aktarılıyor…" });
@@ -78,6 +82,20 @@ export default function ProductsView({ canWrite }: { canWrite: boolean }) {
           <FormField label="Görünürlük" htmlFor="product-visibility" hint="Katalog incelemesinde engellenen ürünler müşteriye gösterilmez.">
             <select id="product-visibility" className={selectClass} value={visibility} onChange={(e) => setVisibility(e.target.value)}>{visibilityOptions.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
           </FormField>
+        </div>
+        <div className="flex flex-wrap items-end gap-3 border-b px-4 py-3 sm:px-5">
+          <FormField label="Stok durumu" htmlFor="product-stock">
+            <select id="product-stock" className={selectClass} value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
+              <option value="">Tüm stok durumları</option>
+              <option value="out">Tükendi</option>
+              <option value="low">Az stok</option>
+              <option value="ok">Stokta</option>
+              <option value="untracked">Takip dışı</option>
+            </select>
+          </FormField>
+          <Button type="button" variant="outline" disabled={!hasFilters} onClick={resetFilters}>
+            <RotateCcw aria-hidden="true" className="size-4" /> Filtreleri temizle
+          </Button>
         </div>
         <p className="px-4 pt-3 text-sm text-muted-foreground sm:px-5" aria-live="polite">{loading && !data ? "Yükleniyor…" : `${rows.length} / ${data?.products.length ?? 0} ürün${blockedCount ? ` · ${blockedCount} müşteriye kapalı` : ""}`}</p>
         {data && !rows.length ? (
