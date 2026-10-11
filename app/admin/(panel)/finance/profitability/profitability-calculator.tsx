@@ -31,7 +31,7 @@ export default function ProfitabilityCalculator() {
   const [error, setError] = useState("");
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
-  const outcome = calculateProfit(values);
+  const outcome = (() => { try { return calculateProfit(values); } catch { return null; } })();
   useEffect(() => {
     fetch("/api/admin/finance/profitability/ai", { cache: "no-store" })
       .then(r => r.ok ? r.json() : { enabled: false })
@@ -67,20 +67,21 @@ export default function ProfitabilityCalculator() {
               value={isRate ? values[key] / 100 : values[key] / 100}
               onChange={e => {
                 const x = Number(e.target.value);
-                if (!Number.isFinite(x) || x < 0 || (isRate && x > 100)) return;
+                if (!Number.isFinite(x) || x < 0 || (isRate && x > 100) || (!isRate && x > 1_000_000_000)) return;
                 const n = Math.round(x * 100);
                 setValues(old => ({ ...old, [key]: n }));
               }} />
           </label>;
         })}
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      {!outcome && <p role="alert" className="text-red-600">Tutarlar hesaplama sınırını aşıyor. Değerleri azaltın.</p>}
+      {outcome && <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg bg-muted p-4"><div className="text-xs text-muted-foreground">Net satış geliri</div><strong>{money(outcome.revenueNetKurus)}</strong></div>
         <div className="rounded-lg bg-muted p-4"><div className="text-xs text-muted-foreground">Değişken maliyetler</div><strong>{money(outcome.variableCostKurus)}</strong></div>
         <div className="rounded-lg bg-muted p-4"><div className="text-xs text-muted-foreground">Katkı tutarı</div><strong className={outcome.lossWarning ? "text-red-600" : ""}>{money(outcome.contributionKurus)}</strong></div>
-      </div>
-      <p className="text-sm">Katkı marjı: <strong>{outcome.contributionMarginBps === null ? "Hesaplanamaz" : (outcome.contributionMarginBps / 100).toFixed(2) + "%"}</strong>
-      {outcome.lossWarning && <span className="ml-2 text-red-600">Zarar riski!</span>}</p>
+      </div>}
+      {outcome && <p className="text-sm">Katkı marjı: <strong>{outcome.contributionMarginBps === null ? "Hesaplanamaz" : (outcome.contributionMarginBps / 100).toFixed(2) + "%"}</strong>
+      {outcome.lossWarning && <span className="ml-2 text-red-600">Zarar riski!</span>}</p>}
       <p className="text-xs text-muted-foreground">Bu hesap muhasebesel net kâr değildir; sabit giderler, iadeler ve vergi yükümlülükleri hariçtir.</p>
     </section>
     <section className="rounded-xl border bg-card p-5 space-y-3">
