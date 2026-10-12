@@ -1,4 +1,6 @@
 import { getCheckoutDb } from "@/db";
+import { scopedCheckoutEnabled } from "@/lib/db-access-scope";
+import { scopedCheckoutReplay } from "@/lib/scoped-checkout-replay";
 import { addresses, customers, inventory, orderItems, orderLegalAcceptances, orders, legalDocuments, products } from "@/db/schema";
 import { resolveCheckoutAuthority } from "@/lib/checkout-authority";
 import { deliveryTraits, type DeliveryClass } from "@/lib/delivery";
@@ -27,7 +29,10 @@ async function createOrder(request: Request) {
   const requested = new Map(parsed.data.items.map((item) => [item.productId, item.quantity]));
   const fingerprint = orderRequestFingerprint(parsed.data, requested);
   // Same key + same request => the original result; same key + different request => conflict.
-  const replay = async (reader: Pick<typeof db, "select"> = db) => {
+  const replay = async (reader: Pick<typeof db, "select" | "execute"> = db) => {
+    if (scopedCheckoutEnabled(process.env.CHECKOUT_SCOPED_DB_ENABLED)) {
+      return scopedCheckoutReplay(reader, key, fingerprint);
+    }
     const [existing] = await reader.select({
       legalEvidenceVersion: orders.legalEvidenceVersion, orderIssuedAt: orders.orderIssuedAt, id: orders.id, orderNumber: orders.orderNumber, total: orders.total, status: orders.status, requestFingerprint: orders.requestFingerprint, createdAt: orders.createdAt,
       subtotal: orders.subtotal, vatTotal: orders.vatTotal, shippingTotal: orders.shippingTotal, installationTotal: orders.installationTotal,
