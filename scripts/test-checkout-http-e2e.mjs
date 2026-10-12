@@ -166,6 +166,24 @@ try {
   assert.equal(await count("order_items"), 1);
   assert.equal(await count("order_legal_acceptances"), 2);
   assert.deepEqual(await stock(), { on_hand: 2, reserved: 1 });
+  // A stolen storefront DB credential must NOT enumerate orders or evidence,
+  // even though the app can replay the exact request through the definer.
+  const negative = new pg.Pool({ connectionString: storefrontUrl, max: 1 });
+  try {
+    for (const table of ["orders", "order_items", "order_legal_acceptances", "customers", "addresses"]) {
+      await assert.rejects(negative.query(`SELECT count(*) FROM ${table}`),
+        (error) => error?.code === "42501", `${table}: direct SELECT must be denied`);
+    }
+    const absent = await negative.query(
+      "SELECT public.checkout_replay_by_key($1,$2) AS payload",
+      ["http-missing-key-999", "0".repeat(64)]);
+    assert.equal(absent.rows[0].payload, null, "unknown key cannot enumerate orders");
+    const wrongFingerprint = await negative.query(
+      "SELECT public.checkout_replay_by_key($1,$2) AS payload",
+      ["http-idempotent-1", "0".repeat(64)]);
+    assert.deepEqual(wrongFingerprint.rows[0].payload, { conflict: true },
+      "incorrect fingerprint cannot disclose order PII or legal evidence");
+  } finally { await negative.end(); }
   const replay = await request("/api/orders", accepted, "http-idempotent-1");
   assertStatus(replay, 200, "idempotent replay");
   assert.equal(replay.data.orderNumber, created.data.orderNumber);
