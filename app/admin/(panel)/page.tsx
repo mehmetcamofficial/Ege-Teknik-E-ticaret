@@ -6,5 +6,5 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const admin = await requireAdminPage();
-  return <DashboardView canModerateReviews={roleHasPermission(admin.role, "content:write")} />;
+  return <DashboardView canModerateReviews={roleHasPermission(admin.role, "content:write")} canViewProfitability={admin.role === "super_admin"} />;
 }
