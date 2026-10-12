@@ -70,3 +70,15 @@ END
 $replay$;
 --> statement-breakpoint
 REVOKE ALL ON FUNCTION public.checkout_replay_by_key(text,text) FROM PUBLIC;
+
+--> statement-breakpoint
+-- The existing 0015 deferred evidence completeness trigger SELECTs orders and
+-- order_legal_acceptances. Once runtime direct SELECT is removed, the trigger
+-- must perform those reads under its reviewed migration owner. Existing triggers
+-- remain attached and enforce the exact same immutable-evidence rules.
+ALTER FUNCTION public.p3_order_evidence_complete() SECURITY DEFINER;
+--> statement-breakpoint
+ALTER FUNCTION public.p3_order_evidence_complete()
+  SET search_path = pg_catalog, public, pg_temp;
+--> statement-breakpoint
+REVOKE ALL ON FUNCTION public.p3_order_evidence_complete() FROM PUBLIC;
