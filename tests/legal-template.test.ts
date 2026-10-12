@@ -179,7 +179,7 @@ test("A: POST /api/orders delegates to the authority and keeps every write in it
   assert.ok(route.includes("await resolveCheckoutAuthority("), "the route must consume the shared authority");
   assert.ok(route.indexOf("await resolveCheckoutAuthority(") < route.indexOf("tx.insert(customers)"), "the authority runs inside the locked transaction before writes");
   // All writes remain inside the transaction after locked authority verification.
-  for (const marker of ["db.transaction(async (tx) => {", "tx.insert(customers)", "tx.insert(addresses)", "tx.insert(orders)", "tx.insert(orderItems)", "tx.insert(orderLegalAcceptances)", "onConflictDoNothing", "throw new IdempotentReplay()", "OUT_OF_STOCK:", "const acceptedAt = new Date();"]) {
+  for (const marker of ["db.transaction(async (tx) => {", "tx.insert(customers)", "tx.insert(addresses)", "tx.insert(orders)", "tx.insert(orderItems)", "tx.insert(orderLegalAcceptances)", "pg_advisory_xact_lock(", "throw new IdempotentReplay()", "OUT_OF_STOCK:", "const acceptedAt = new Date();"]) {
     assert.ok(route.includes(marker), `the route must still contain ${marker}`);
   }
   // The authority writes nothing.
