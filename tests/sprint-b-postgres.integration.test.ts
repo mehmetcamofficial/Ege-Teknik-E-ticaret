@@ -128,7 +128,7 @@ test("setup: migration 0017 is recorded exactly once in Drizzle with the source 
 
   // Re-running the migrator must not append a second 0017 record.
   await migrate(db, { migrationsFolder: "drizzle-pg" });
-  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 19);
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), journal.entries.length);
 });
 
 test("1. second-hand: stock=1 and two genuinely concurrent independent transactions => exactly one reservation", opts, async () => {
