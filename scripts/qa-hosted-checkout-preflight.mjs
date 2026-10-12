@@ -76,7 +76,7 @@ try {
   const fn = await owner.query(`SELECT p.prosecdef AS definer, pg_get_userbyid(p.proowner) AS owner,
     p.proconfig AS config,
     has_function_privilege($1,'public.checkout_replay_by_key(text,text)','EXECUTE') AS storefront_execute,
-    has_function_privilege('public','public.checkout_replay_by_key(text,text)','EXECUTE') AS public_execute
+    EXISTS (SELECT 1 FROM aclexplode(p.proacl) a WHERE a.grantee = 0 AND a.privilege_type = 'EXECUTE') AS public_execute
     FROM pg_proc p WHERE p.oid='public.checkout_replay_by_key(text,text)'::regprocedure`, [expectedStorefront]);
   const f = fn.rows[0];
   report("Owner-only definer and restricted EXECUTE", Boolean(f?.definer && f.owner === expectedOwner
