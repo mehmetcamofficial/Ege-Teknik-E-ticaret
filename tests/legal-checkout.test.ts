@@ -139,15 +139,19 @@ test("whitespace-only differences normalize to the same fingerprint", () => {
 });
 
 // ---- duplicate-race protection (DB-level) ----
-test("a unique index on orders.idempotency_key exists and the insert claims it with ON CONFLICT DO NOTHING", () => {
+test("a unique index on orders.idempotency_key exists; scoped insert uses it without arbiter SELECT", () => {
   assert.match(readFileSync("db/schema.ts", "utf8"), /uniqueIndex\("orders_idempotency_uq"\)\.on\(t\.idempotencyKey\)/);
   assert.match(readFileSync("drizzle-pg/0000_black_tarot.sql", "utf8"), /CREATE UNIQUE INDEX "orders_idempotency_uq"/);
-  assert.match(txBody, /insert\(orders\)[\s\S]*\.onConflictDoNothing\(\{ target: orders\.idempotencyKey \}\)\.returning/);
+  assert.match(txBody, /insert\(orders\)[\s\S]*\.returning\(\{ inserted: sql<number>`1` \}\)/);
+  assert.doesNotMatch(txBody, /\.onConflictDoNothing\(/);
 });
 
-test("the idempotency key is claimed before inventory is touched, so a duplicate never reserves stock", () => {
-  assert.ok(txBody.indexOf("onConflictDoNothing") < txBody.indexOf("update(inventory)"));
-  assert.ok(txBody.indexOf("throw new IdempotentReplay()") < txBody.indexOf("update(inventory)"));
+test("advisory lock, replay check and unique claim precede inventory reservation", () => {
+  const lock = txBody.indexOf("pg_advisory_xact_lock(");
+  const replay = txBody.indexOf("if (await replay(tx)) throw new IdempotentReplay()");
+  const claim = txBody.indexOf("tx.insert(orders)");
+  const stock = txBody.indexOf("update(inventory)");
+  assert.ok(lock >= 0 && replay > lock && claim > replay && stock > claim);
 });
 
 test("a same-key request is compared by fingerprint: replay returns the original, a different request conflicts", () => {
