@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useMemo, useState } from "react";
 import { Search, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
