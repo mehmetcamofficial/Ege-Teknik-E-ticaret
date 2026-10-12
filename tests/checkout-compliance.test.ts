@@ -184,10 +184,13 @@ test("neither order response ever inlines an internal id: only the allow-list he
   for (const forbidden of [/Response\.json\(\{[^}]*\bid:\s*(id|existing\.id)\b/, /Response\.json\(\{[^}]*\bcustomerId\b/, /Response\.json\(\{[^}]*\baddressId\b/, /Response\.json\(\{[^}]*idempotencyKey:\s*key\b/]) assert.doesNotMatch(route, forbidden);
 });
 test("the idempotency key is claimed before inventory is ever touched - a concurrent duplicate can never reserve stock twice", () => {
-  const claim = route.indexOf("onConflictDoNothing({ target: orders.idempotencyKey })");
-  const throwReplay = route.indexOf("if (!claimed.length) throw new IdempotentReplay()");
+  const lock = route.indexOf("pg_advisory_xact_lock(");
+  const replayCheck = route.indexOf("if (await replay(tx)) throw new IdempotentReplay()");
+  const claim = route.indexOf("tx.insert(orders)");
   const inventoryUpdate = route.indexOf("tx.update(inventory)");
-  assert.ok(claim > 0 && throwReplay > claim && throwReplay < inventoryUpdate, "claim -> replay-check -> inventory, in that order");
+  assert.ok(lock > 0 && replayCheck > lock && claim > replayCheck && inventoryUpdate > claim,
+    "advisory lock -> committed replay-check -> unique-index-backed insert -> inventory, in that order");
+  assert.doesNotMatch(route, /\.onConflictDoNothing\(/, "scoped checkout must not require SELECT on the unique arbiter");
 });
 test("the inventory guard is an atomic conditional UPDATE (on_hand >= quantity), not a separate read-then-write", () => {
   assert.match(route, /tx\.update\(inventory\)\.set\(\{[^}]*onHand:\s*sql`\$\{inventory\.onHand\}\s*-\s*\$\{line\.quantity\}`/);
