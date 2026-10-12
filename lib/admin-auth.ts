@@ -110,7 +110,7 @@ type Tx = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
 
 /** Active super_admin count inside a transaction (FOR UPDATE lock on the counted rows). */
 export async function countActiveSuperAdminsTx(tx: Tx): Promise<number> {
-  const rows = await tx.select({ id: adminUsers.id }).from(adminUsers).where(and(eq(adminUsers.role, "super_admin"), eq(adminUsers.active, true))).for("update");
+  const rows = await tx.select({ id: adminUsers.id }).from(adminUsers).where(and(eq(adminUsers.role, "super_admin"), eq(adminUsers.active, true))).orderBy(adminUsers.id).for("update");
   return rows.length;
 }
 
@@ -121,10 +121,11 @@ export async function countActiveSuperAdminsTx(tx: Tx): Promise<number> {
 export async function deactivateAdminUser(targetId: string, actor: { userId: string; email: string }): Promise<{ ok: true } | { ok: false; code: "NOT_FOUND" | "LAST_SUPER_ADMIN" }> {
   const db = getDb(), now = new Date();
   return db.transaction(async (tx) => {
+    const activeSuperAdminCount = await countActiveSuperAdminsTx(tx);
     const [target] = await tx.select().from(adminUsers).where(eq(adminUsers.id, targetId)).for("update").limit(1);
     if (!target) return { ok: false as const, code: "NOT_FOUND" as const };
     const targetIsActiveSuperAdmin = target.role === "super_admin" && target.active === true;
-    if (targetIsActiveSuperAdmin && !canRemovePrivileged({ activeSuperAdminCount: await countActiveSuperAdminsTx(tx), targetIsActiveSuperAdmin: true })) {
+    if (targetIsActiveSuperAdmin && !canRemovePrivileged({ activeSuperAdminCount, targetIsActiveSuperAdmin: true })) {
       return { ok: false as const, code: "LAST_SUPER_ADMIN" as const };
     }
     await tx.update(adminUsers).set({ active: false, updatedAt: now }).where(eq(adminUsers.id, targetId));
@@ -142,6 +143,7 @@ export async function deactivateAdminUser(targetId: string, actor: { userId: str
 export async function reactivateAdminUser(targetId: string, actor: { userId: string; email: string }): Promise<{ ok: true } | { ok: false; code: "NOT_FOUND" | "RETIRED_ROLE" }> {
   const db = getDb(), now = new Date();
   return db.transaction(async (tx) => {
+    await countActiveSuperAdminsTx(tx);
     const [target] = await tx.select().from(adminUsers).where(eq(adminUsers.id, targetId)).for("update").limit(1);
     if (!target) return { ok: false as const, code: "NOT_FOUND" as const };
     if (target.role === "owner") return { ok: false as const, code: "RETIRED_ROLE" as const };
@@ -161,11 +163,12 @@ export async function changeAdminRole(targetId: string, nextRole: AdminRole, act
   if (nextRole === "owner") return { ok: false as const, code: "RETIRED_ROLE" as const };
   const db = getDb(), now = new Date();
   return db.transaction(async (tx) => {
+    const activeSuperAdminCount = await countActiveSuperAdminsTx(tx);
     const [target] = await tx.select().from(adminUsers).where(eq(adminUsers.id, targetId)).for("update").limit(1);
     if (!target) return { ok: false as const, code: "NOT_FOUND" as const };
     const targetIsActiveSuperAdmin = target.role === "super_admin" && target.active === true;
     const demotingPrivileged = isPrivilegedRole(target.role) && !isPrivilegedRole(nextRole);
-    if (targetIsActiveSuperAdmin && demotingPrivileged && !canRemovePrivileged({ activeSuperAdminCount: await countActiveSuperAdminsTx(tx), targetIsActiveSuperAdmin: true })) {
+    if (targetIsActiveSuperAdmin && demotingPrivileged && !canRemovePrivileged({ activeSuperAdminCount, targetIsActiveSuperAdmin: true })) {
       return { ok: false as const, code: "LAST_SUPER_ADMIN" as const };
     }
     await tx.update(adminUsers).set({ role: nextRole, updatedAt: now }).where(eq(adminUsers.id, targetId));
@@ -239,6 +242,7 @@ export async function acceptAdminInvite(rawToken: string, password: string): Pro
     const claimed = await tx.update(adminInvites).set({ acceptedAt: now })
       .where(and(eq(adminInvites.id, invite.id), isNull(adminInvites.acceptedAt), isNull(adminInvites.revokedAt))).returning({ id: adminInvites.id });
     if (!claimed.length) return { ok: false as const, code: "INVALID" as const };
+    if (invite.role === "super_admin") await countActiveSuperAdminsTx(tx);
     const adminId = crypto.randomUUID();
     await tx.insert(adminUsers).values({ id: adminId, externalUserId: `invite:${invite.id}`, email: invite.email, passwordHash, role: invite.role });
     await auditPrivileged(tx, { userId: adminId, email: invite.email }, "invite_accepted", "admin_user", adminId, { inviteId: invite.id, role: invite.role });
