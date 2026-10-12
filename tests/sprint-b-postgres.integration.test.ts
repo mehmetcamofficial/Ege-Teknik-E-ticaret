@@ -101,7 +101,7 @@ test("setup: migration 0017 is recorded exactly once in Drizzle with the source 
   const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
   const entry = journal.entries.find((item: { tag: string }) => item.tag === "0017_checkout_product_lock");
   assert.ok(entry, "migration 0017 must exist in the journal");
-  assert.equal(journal.entries.length, 19, "the migration ledger should contain 0000 through 0018");
+  assert.ok(journal.entries.length >= 19, "the migration ledger must retain 0000 through 0018");
 
   const source = readFileSync(`drizzle-pg/${entry.tag}.sql`, "utf8");
   const expectedHash = createHash("sha256").update(source).digest("hex");
@@ -112,7 +112,7 @@ test("setup: migration 0017 is recorded exactly once in Drizzle with the source 
   assert.equal(migrations.length, 1, "the Drizzle migrator must record 0017 exactly once");
   assert.equal(migrations[0].hash, expectedHash, "recorded hash must match the migration file");
   assert.equal(migrations[0].created_at, String(entry.when));
-  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), 19);
+  assert.equal(await one("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations"), journal.entries.length);
 
   const functions = (await pool.query(`SELECT p.prosecdef AS security_definer,
     pg_get_userbyid(p.proowner) AS owner,
