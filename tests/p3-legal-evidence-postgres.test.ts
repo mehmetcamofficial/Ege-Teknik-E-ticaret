@@ -21,6 +21,7 @@ const skip = !url;
 let pool: pg.Pool;
 let POST: (r: Request) => Promise<Response>;
 let previewPOST: (r: Request) => Promise<Response>;
+let legacySnapshot: Record<string, unknown>;
 const slugs = ["distance-sales", "pre-information"];
 const title = (slug: string) => `DISPOSABLE TEST ONLY ${slug}`;
 const body = DEFAULT_LEGAL_TEMPLATE_BODY;
@@ -49,6 +50,7 @@ before(async () => {
   }
   await pool.query("insert into orders(id,order_number,idempotency_key,customer_name,phone,city,address) values('legacy-order','LEGACY-P3B','legacy-key','Test','05550000000','İzmir','Legacy address')");
   await pool.query("insert into order_legal_acceptances(id,order_id,document_version_id,accepted_at) values('legacy-acceptance','legacy-order','p3b-distance-sales',now())");
+  legacySnapshot = (await pool.query("SELECT * FROM order_legal_acceptances WHERE id='legacy-acceptance'")).rows[0];
   await migrate(drizzle(pool), { migrationsFolder: "drizzle-pg" });
   await pool.query("insert into products(id,slug,name,price,vat_rate_bps,sale_mode,status,delivery_class) values('p3b-product','p3b-product','Sentetik <b>Klima</b>',12000,2000,'online','published','installed_delivery')");
   await pool.query("insert into inventory(id,product_id,on_hand) values('p3b-stock','p3b-product',1000)");
@@ -72,7 +74,92 @@ async function transaction(work: (client: pg.PoolClient, id: string) => Promise<
 test("P3 migration preserves pre-existing legacy order/acceptance without backfill", { skip }, async () => {
   const order = (await pool.query("select * from orders where id='legacy-order'")).rows[0]; assert.equal(order.order_issued_at, null); assert.equal(order.legal_evidence_version, null);
   const row = (await pool.query("select * from order_legal_acceptances where id='legacy-acceptance'")).rows[0];
+  assert.deepEqual(Object.fromEntries(Object.keys(legacySnapshot).map((key) => [key, row[key]])), legacySnapshot);
   for (const field of ["slug","title","version","template_content_hash","rendered_body","rendered_sha256","render_context_version","acceptance_type"]) assert.equal(row[field], null);
+});
+
+const immutable = (error: unknown) => (error as { code?: string }).code === "23001";
+
+test("0020 preserves the existing guard owner, ACL, definer and INSERT boundary", { skip }, async () => {
+  const guards = (await pool.query(`SELECT p.proname, p.prosecdef, p.proconfig,
+    pg_get_userbyid(p.proowner) AS owner,
+    EXISTS (SELECT FROM aclexplode(coalesce(p.proacl, acldefault('f',p.proowner))) a
+      WHERE a.grantee=0 AND a.privilege_type='EXECUTE') AS public_execute
+    FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE n.nspname='public' AND p.proname IN
+      ('order_legal_evidence_guard','legal_acceptance_no_mutation','p3_order_evidence_complete')`)).rows;
+  for (const name of ["order_legal_evidence_guard", "p3_order_evidence_complete"]) {
+    const guard = guards.find((g) => g.proname === name)!;
+    assert.equal(guard.prosecdef, true);
+    assert.equal(guard.public_execute, false);
+    assert.ok(guard.proconfig.includes("search_path=pg_catalog, public, pg_temp"));
+  }
+  const added = guards.find((g) => g.proname === "legal_acceptance_no_mutation")!;
+  assert.equal(added.prosecdef, false);
+  assert.equal(added.public_execute, false);
+  const before = (await pool.query("SELECT id, hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id")).rows;
+  const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
+  assert.equal(before.length, journal.entries.length);
+  await migrate(drizzle(pool), { migrationsFolder: "drizzle-pg" });
+  assert.deepEqual((await pool.query("SELECT id, hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id")).rows, before);
+});
+
+test("0020 rejects every legacy NULL acceptance UPDATE and DELETE without changing the row", { skip }, async () => {
+  const before = (await pool.query("SELECT * FROM order_legal_acceptances WHERE id='legacy-acceptance'")).rows;
+  assert.equal(before.length, 1);
+  for (const assignment of ["accepted_at=accepted_at", "accepted_at=now()", "id='changed'", "slug=NULL", "order_id=order_id", "document_version_id=document_version_id"]) {
+    await assert.rejects(pool.query(`UPDATE order_legal_acceptances SET ${assignment} WHERE id='legacy-acceptance'`), immutable);
+  }
+  await assert.rejects(pool.query("DELETE FROM order_legal_acceptances WHERE id='legacy-acceptance'"), immutable);
+  await assert.rejects(pool.query("UPDATE order_legal_acceptances SET slug=NULL WHERE slug IS NULL"), immutable);
+  await assert.rejects(pool.query("TRUNCATE order_legal_acceptances"), immutable);
+  assert.deepEqual((await pool.query("SELECT * FROM order_legal_acceptances WHERE id='legacy-acceptance'")).rows, before);
+});
+
+test("0020 permits new legacy INSERTs and normal order lifecycle, but rolls back mixed-cohort mutation", { skip }, async () => {
+  const id = randomUUID();
+  await pool.query("INSERT INTO orders(id,order_number,idempotency_key,customer_name,phone,city,address) VALUES($1,$1,$1,'Test','05550000000','İzmir','Legacy')", [id]);
+  await pool.query("INSERT INTO order_legal_acceptances(id,order_id,document_version_id,accepted_at) VALUES($1,$2,'p3b-distance-sales',now())", [id, id]);
+  await pool.query("UPDATE orders SET notes='Lifecycle unchanged' WHERE id=$1", [id]);
+  const p3 = await transaction(async (c, orderId) => { for (const slug of slugs) await insertEvidence(c, orderId, slug); });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("UPDATE orders SET notes='must roll back' WHERE id=$1", [id]);
+    await assert.rejects(client.query("DELETE FROM order_legal_acceptances WHERE order_id=ANY($1::text[])", [[id,p3]]), immutable);
+    await client.query("ROLLBACK");
+  } finally { await client.query("ROLLBACK"); client.release(); }
+  assert.equal((await pool.query("SELECT notes FROM orders WHERE id=$1", [id])).rows[0].notes, "Lifecycle unchanged");
+  assert.equal((await pool.query("SELECT count(*)::int n FROM order_legal_acceptances WHERE order_id=ANY($1::text[])", [[id,p3]])).rows[0].n, 3);
+});
+
+test("0020 real non-owner LOGIN cannot mutate legacy or P3 evidence even with explicit DML grants", { skip }, async () => {
+  const role = `p3b_acceptance_${randomUUID().replaceAll("-", "")}`;
+  const password = randomUUID(); // Disposable fixture only; never printed or persisted.
+  await pool.query(`CREATE ROLE ${role} LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${password}'`);
+  await pool.query(`GRANT USAGE ON SCHEMA public TO ${role}`);
+  await pool.query(`GRANT SELECT, UPDATE, DELETE, TRUNCATE ON order_legal_acceptances TO ${role}`);
+  const target = new URL(url!); target.username = role; target.password = password;
+  const client = new pg.Client({ connectionString: target.href });
+  await client.connect();
+  try {
+    const identity = (await client.query("SELECT current_user, session_user, current_database() AS database")).rows[0];
+    assert.equal(identity.current_user, role); assert.equal(identity.session_user, role);
+    assert.equal(identity.database, decodeURIComponent(target.pathname.slice(1)));
+    const privileges = (await client.query(`SELECT rolsuper, rolcreaterole, rolcreatedb, rolbypassrls,
+      has_table_privilege(current_user,'order_legal_acceptances','UPDATE') AS can_update,
+      has_table_privilege(current_user,'order_legal_acceptances','DELETE') AS can_delete
+      FROM pg_roles WHERE rolname=current_user`)).rows[0];
+    assert.deepEqual(privileges, { rolsuper: false, rolcreaterole: false, rolcreatedb: false,
+      rolbypassrls: false, can_update: true, can_delete: true });
+    const p3 = await transaction(async (c, id) => { for (const slug of slugs) await insertEvidence(c, id, slug); });
+    for (const id of ["legacy-order", p3]) {
+      await assert.rejects(client.query("UPDATE order_legal_acceptances SET accepted_at=accepted_at WHERE order_id=$1", [id]), immutable);
+      await assert.rejects(client.query("DELETE FROM order_legal_acceptances WHERE order_id=$1", [id]), immutable);
+    }
+    await assert.rejects(client.query("TRUNCATE order_legal_acceptances"), immutable);
+    await assert.rejects(client.query("ALTER TABLE order_legal_acceptances DISABLE TRIGGER ALL"), (e: unknown) => (e as { code?: string }).code === "42501");
+  } finally { await client.end(); }
 });
 test("P3 schema/migration additions, nullability, checks and indexes match Drizzle", { skip }, async () => {
   for (const table of [orders, orderLegalAcceptances]) {

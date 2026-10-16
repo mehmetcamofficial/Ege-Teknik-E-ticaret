@@ -13,6 +13,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
+    "test:legal-postgres": "node scripts/test-legal-postgres.mjs",
+    "test:acl-postgres": "node tests/support/test-independent-acl.mjs",
     "test:postgres": "node scripts/test-postgres-integration.mjs",
     "test:http-checkout": "node --experimental-strip-types scripts/test-checkout-http-e2e.mjs",
     "test:commerce-postgres": "node scripts/test-commerce-postgres.mjs",

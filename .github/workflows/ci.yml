@@ -74,6 +74,10 @@ jobs:
           # Loopback service container only; the suite and its runner both refuse anything else.
           SPRINTB_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:postgres
+      - name: Legal acceptance immutability on real PostgreSQL (fails on skips)
+        env:
+          P3B_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: pnpm test:legal-postgres
       - name: Commerce persistence suites on real PostgreSQL (fails if any DB test is skipped)
         env:
           # Loopback service container only, same database; the runner re-migrates a clean schema per
