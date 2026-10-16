@@ -31,6 +31,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
   { title: "Raporlama", items: [
     { href: "/admin/analytics", label: "Analitik", icon: "analytics", permission: "admin:read" },
     { href: "/admin/finance", label: "Finans", icon: "finance", permission: "admin:read" },
+    { href: "/admin/finance/profitability", label: "Kârlılık", icon: "finance", permission: "payments:configure" },
   ] },
   // Phase 6D.1: only super_admin holds users:read, so this section is invisible to every other role.
   { title: "Sistem", items: [

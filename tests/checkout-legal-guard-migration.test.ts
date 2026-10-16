@@ -7,7 +7,7 @@ const migration = readFileSync("drizzle-pg/0018_checkout_legal_guard_definer.sql
 
 test("0018 follows 0017 without altering the frozen migration chain", () => {
   const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
-  assert.equal(journal.entries.length, 19);
+  assert.ok(journal.entries.length >= 19, "migration history must retain 0000–0018");
   assert.equal(journal.entries[17].tag, "0017_checkout_product_lock");
   assert.equal(journal.entries[18].tag, "0018_checkout_legal_guard_definer");
   assert.deepEqual(verifyMigrationIntegrity(process.cwd()), []);

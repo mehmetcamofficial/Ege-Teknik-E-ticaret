@@ -7,6 +7,9 @@ if (!["127.0.0.1", "localhost"].includes(target.hostname) || !target.pathname.st
 export const pool = new pg.Pool({ connectionString: target.href, max: 24 });
 const db = drizzle(pool, { schema });
 export const getDb = () => db;
+// This native suite exercises the real route against its owned disposable pool.
+// Scoped LOGIN selection is covered separately by the actual HTTP runner.
+export const getCheckoutDb = getDb;
 
 export function publicRoute(handler: (request: Request) => Promise<Response>) {
   return async (request: Request) => {

@@ -96,11 +96,21 @@ try {
       VALUES ($1, $2, 1, $3, $4, $5, '2020-01-01', '2020-01-01', 'owner-1')`,
       [`http-version-${slug}`, `http-doc-${slug}`, title, body, hashLegalDocument({ title, body })]);
   }
-  await owner.query(`CREATE ROLE sprintb_http_storefront LOGIN PASSWORD '${storePassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);
-  await owner.query(`CREATE ROLE sprintb_http_admin LOGIN PASSWORD '${adminPassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);
+  await owner.query(`DO $$ BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'sprintb_http_storefront') THEN
+      CREATE ROLE sprintb_http_storefront LOGIN PASSWORD '${storePassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+    ELSE
+      ALTER ROLE sprintb_http_storefront WITH PASSWORD '${storePassword}';
+    END IF;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'sprintb_http_admin') THEN
+      CREATE ROLE sprintb_http_admin LOGIN PASSWORD '${adminPassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
+    ELSE
+      ALTER ROLE sprintb_http_admin WITH PASSWORD '${adminPassword}';
+    END IF;
+  END $$`);
   await owner.query("GRANT USAGE ON SCHEMA public TO sprintb_http_storefront, sprintb_http_admin");
   await owner.query(`GRANT SELECT ON products, inventory, legal_documents, legal_document_versions,
-    orders, order_items, order_legal_acceptances, rate_limit_buckets TO sprintb_http_storefront`);
+    rate_limit_buckets TO sprintb_http_storefront`);
   await owner.query(`GRANT INSERT ON customers, addresses, orders, order_items,
     order_legal_acceptances, rate_limit_buckets TO sprintb_http_storefront`);
   await owner.query("GRANT UPDATE (on_hand, reserved, version, updated_at) ON inventory TO sprintb_http_storefront");
@@ -108,15 +118,21 @@ try {
   await owner.query("GRANT DELETE ON rate_limit_buckets TO sprintb_http_storefront");
   await owner.query("GRANT UPDATE (created_at) ON legal_documents TO sprintb_http_storefront");
   await owner.query("GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO sprintb_http_storefront");
+  await owner.query("GRANT EXECUTE ON FUNCTION public.checkout_replay_by_key(text,text) TO sprintb_http_storefront");
   const probe = new pg.Pool({ connectionString: storefrontUrl, max: 1 });
   try {
     const p = (await probe.query(`SELECT current_user AS role,
       has_table_privilege(current_user, 'orders', 'UPDATE') AS orders_update,
       has_column_privilege(current_user, 'orders', 'updated_at', 'UPDATE') AS order_column_update,
       has_table_privilege(current_user, 'products', 'UPDATE') AS products_update,
-      has_function_privilege(current_user, 'public.lock_checkout_products(text[])', 'EXECUTE') AS can_lock`)).rows[0];
+      has_function_privilege(current_user, 'public.lock_checkout_products(text[])', 'EXECUTE') AS can_lock,
+      has_function_privilege(current_user, 'public.checkout_replay_by_key(text,text)', 'EXECUTE') AS can_replay,
+      has_table_privilege(current_user, 'orders', 'SELECT') AS orders_read,
+      has_table_privilege(current_user, 'order_items', 'SELECT') AS items_read,
+      has_table_privilege(current_user, 'order_legal_acceptances', 'SELECT') AS evidence_read`)).rows[0];
     assert.deepEqual(p, { role: "sprintb_http_storefront", orders_update: false,
-      order_column_update: false, products_update: false, can_lock: true });
+      order_column_update: false, products_update: false, can_lock: true, can_replay: true,
+      orders_read: false, items_read: false, evidence_read: false });
   } finally { await probe.end(); }
 
   await startServer({});
@@ -160,6 +176,24 @@ try {
   assert.equal(await count("order_items"), 1);
   assert.equal(await count("order_legal_acceptances"), 2);
   assert.deepEqual(await stock(), { on_hand: 2, reserved: 1 });
+  // A stolen storefront DB credential must NOT enumerate orders or evidence,
+  // even though the app can replay the exact request through the definer.
+  const negative = new pg.Pool({ connectionString: storefrontUrl, max: 1 });
+  try {
+    for (const table of ["orders", "order_items", "order_legal_acceptances", "customers", "addresses"]) {
+      await assert.rejects(negative.query(`SELECT count(*) FROM ${table}`),
+        (error) => error?.code === "42501", `${table}: direct SELECT must be denied`);
+    }
+    const absent = await negative.query(
+      "SELECT public.checkout_replay_by_key($1,$2) AS payload",
+      ["http-missing-key-999", "0".repeat(64)]);
+    assert.equal(absent.rows[0].payload, null, "unknown key cannot enumerate orders");
+    const wrongFingerprint = await negative.query(
+      "SELECT public.checkout_replay_by_key($1,$2) AS payload",
+      ["http-idempotent-1", "0".repeat(64)]);
+    assert.deepEqual(wrongFingerprint.rows[0].payload, { conflict: true },
+      "incorrect fingerprint cannot disclose order PII or legal evidence");
+  } finally { await negative.end(); }
   const replay = await request("/api/orders", accepted, "http-idempotent-1");
   assertStatus(replay, 200, "idempotent replay");
   assert.equal(replay.data.orderNumber, created.data.orderNumber);

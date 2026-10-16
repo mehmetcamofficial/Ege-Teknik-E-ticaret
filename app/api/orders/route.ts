@@ -1,4 +1,6 @@
 import { getCheckoutDb } from "@/db";
+import { scopedCheckoutEnabled } from "@/lib/db-access-scope";
+import { scopedCheckoutReplay } from "@/lib/scoped-checkout-replay";
 import { addresses, customers, inventory, orderItems, orderLegalAcceptances, orders, legalDocuments, products } from "@/db/schema";
 import { resolveCheckoutAuthority } from "@/lib/checkout-authority";
 import { deliveryTraits, type DeliveryClass } from "@/lib/delivery";
@@ -27,7 +29,10 @@ async function createOrder(request: Request) {
   const requested = new Map(parsed.data.items.map((item) => [item.productId, item.quantity]));
   const fingerprint = orderRequestFingerprint(parsed.data, requested);
   // Same key + same request => the original result; same key + different request => conflict.
-  const replay = async (reader: Pick<typeof db, "select"> = db) => {
+  const replay = async (reader: Pick<typeof db, "select" | "execute"> = db) => {
+    if (scopedCheckoutEnabled(process.env.CHECKOUT_SCOPED_DB_ENABLED)) {
+      return scopedCheckoutReplay(reader, key, fingerprint);
+    }
     const [existing] = await reader.select({
       legalEvidenceVersion: orders.legalEvidenceVersion, orderIssuedAt: orders.orderIssuedAt, id: orders.id, orderNumber: orders.orderNumber, total: orders.total, status: orders.status, requestFingerprint: orders.requestFingerprint, createdAt: orders.createdAt,
       subtotal: orders.subtotal, vatTotal: orders.vatTotal, shippingTotal: orders.shippingTotal, installationTotal: orders.installationTotal,
@@ -78,8 +83,8 @@ async function createOrder(request: Request) {
       await tx.insert(customers).values({ id: customerId, firstName: authority.customer.firstName, lastName: authority.customer.lastName, phone: parsed.data.phone, email: parsed.data.email });
       await tx.insert(addresses).values({ id: addressId, customerId, recipientName: parsed.data.customerName, phone: parsed.data.phone, city: plan.province, district: plan.district, line1: parsed.data.address });
       const snapshot = { recipientName: parsed.data.customerName, phone: parsed.data.phone, city: plan.province, district: plan.district, line1: parsed.data.address, delivery: { method: plan.method, region: plan.region, shippingFee: shippingTotal, installationIncluded: plan.installationIncluded } };
-      const claimed = await tx.insert(orders).values({ id, orderNumber, orderIssuedAt: binding.evidence.orderIssuedAt, legalEvidenceVersion: LEGAL_EVIDENCE_VERSION, customerId, idempotencyKey: key, requestFingerprint: fingerprint, installationPreference: installationPreferenceFor(plan.installationIncluded), notes: parsed.data.note, customerName: parsed.data.customerName, phone: parsed.data.phone, email: parsed.data.email, city: plan.province, address: parsed.data.address, shippingAddressSnapshot: snapshot, billingAddressSnapshot: snapshot, subtotal, vatTotal, shippingTotal, installationTotal, total, createdAt: acceptedAt }).onConflictDoNothing({ target: orders.idempotencyKey }).returning({ id: orders.id });
-      // The unique idempotency key is claimed before inventory is touched, so a concurrent duplicate never reserves stock.
+      const claimed = await tx.insert(orders).values({ id, orderNumber, orderIssuedAt: binding.evidence.orderIssuedAt, legalEvidenceVersion: LEGAL_EVIDENCE_VERSION, customerId, idempotencyKey: key, requestFingerprint: fingerprint, installationPreference: installationPreferenceFor(plan.installationIncluded), notes: parsed.data.note, customerName: parsed.data.customerName, phone: parsed.data.phone, email: parsed.data.email, city: plan.province, address: parsed.data.address, shippingAddressSnapshot: snapshot, billingAddressSnapshot: snapshot, subtotal, vatTotal, shippingTotal, installationTotal, total, createdAt: acceptedAt }).returning({ inserted: sql<number>`1` });
+      // The unique idempotency key is claimed before inventory is touched. The transaction advisory lock\n      // serializes this key; a competing writer violating the unique index rolls back and the\n      // outer catch resolves the committed replay, without granting SELECT on orders.
       if (!claimed.length) throw new IdempotentReplay();
 
       // Inventory invariant (lib/inventory.ts): on_hand is the sellable stock, so the guard is on_hand >= qty; `reserved` is bookkeeping only and is NOT subtracted again.

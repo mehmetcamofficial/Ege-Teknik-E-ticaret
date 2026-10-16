@@ -50,6 +50,16 @@ test("the PostgreSQL job talks only to its own loopback service container and us
   assert.match(pkg.scripts["test:postgres"], /test-postgres-integration\.mjs/);
 });
 
+test("legal evidence negatives cannot silently skip in CI", () => {
+  assert.match(workflow, /P3B_PG_URL: postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/sprintb\w*/);
+  assert.match(workflow, /run: pnpm test:legal-postgres\b/);
+  assert.match(pkg.scripts["test:legal-postgres"], /test-legal-postgres\.mjs/);
+  const runner = readFileSync("scripts/test-legal-postgres.mjs", "utf8");
+  assert.match(runner, /tests\/p3-legal-evidence-postgres\.test\.ts/);
+  assert.match(runner, /counters\.skipped \?\? 1/);
+  assert.match(runner, /counters\.pass !== counters\.tests/);
+});
+
 test("the build job fails on any tracked or untracked change", () => {
   assert.match(workflow, /run: pnpm build/);
   assert.match(workflow, /LOCAL_BUILD_NO_UPLOAD: "1"/, "CI builds never upload source maps or send build telemetry");
