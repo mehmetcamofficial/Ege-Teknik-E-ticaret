@@ -1,0 +1,19 @@
+{
+  "nodeTest": {
+    "passed": 21,
+    "failed": 0,
+    "skipped": 0
+  },
+  "actionlint": "PASS",
+  "shellcheck": "PASS",
+  "bashSyntax": "PASS",
+  "nodeSyntax": "PASS \u20144 modules",
+  "diffWhitespace": "PASS",
+  "ownedPostgresClustersStopped": 4,
+  "hostedWorkflowTriggered": false,
+  "productionPreviewNeonMutated": false,
+  "pushCommitMergeDeploy": false,
+  "PRBackupGuard": "PASS \u2014pull_request skips backup; tests run without secrets",
+  "precommitReviewedFiles": 23,
+  "secretMarkerFindings": 0
+}

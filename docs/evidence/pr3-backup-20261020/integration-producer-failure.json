@@ -1,0 +1,21 @@
+{
+  "steps": [
+    {
+      "label": "legacy CBC decrypt",
+      "exit": 0
+    },
+    {
+      "label": "legacy full restore",
+      "exit": 0
+    },
+    {
+      "label": "actual PG18 producer/GCM selfcheck",
+      "exit": 1
+    }
+  ],
+  "liveDrive": "UNKNOWN",
+  "tables": 44,
+  "legacyRestore": "PASS —44 tables and exact inventory/data",
+  "status": "FAIL",
+  "error": "actual PG18 producer/GCM selfcheck failed"
+}

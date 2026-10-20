@@ -1,0 +1,18 @@
+{
+  "http": 200,
+  "files": [
+    {
+      "permissions": [
+        {
+          "type": "user"
+        }
+      ],
+      "id": "1dVSxt7a2yyovyGZnEmAUzY89gyRSJBPq",
+      "name": "Ege-Teknik-Backups-Automated",
+      "capabilities": {
+        "canAddChildren": true
+      }
+    }
+  ],
+  "nextPage": false
+}
