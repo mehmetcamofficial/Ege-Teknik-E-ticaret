@@ -1,0 +1,29 @@
+{
+  "steps": [
+    {
+      "label": "legacy CBC decrypt",
+      "exit": 0
+    },
+    {
+      "label": "actual PG18 producer/GCM selfcheck",
+      "exit": 0
+    },
+    {
+      "label": "new GCM decode",
+      "exit": 0
+    },
+    {
+      "label": "new GCM restore",
+      "exit": 0
+    }
+  ],
+  "liveDrive": "BLOCKED",
+  "tables": 44,
+  "legacyRestore": "PASS —44 tables and exact inventory/data",
+  "encryptedSHA256": "f863a8036f645ae90f57f01b9bcb8a1b86d6e4bf1368d850d2b2c2c60bbdd9e9",
+  "GCMRestore": "PASS —owner/ACL/data0diff",
+  "negativeACL": "PASS 3/3 SQLSTATE42501",
+  "liveDriveReason": "Drive identity or folder validation failed",
+  "liveDriveRestore": "NOT RUN or incomplete; see step exits",
+  "status": "BLOCKED_LIVE_DRIVE"
+}

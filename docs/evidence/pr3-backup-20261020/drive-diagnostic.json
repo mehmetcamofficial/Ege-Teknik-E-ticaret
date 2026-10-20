@@ -1,0 +1,19 @@
+[
+  {
+    "operation": "rclone about",
+    "exit": 0
+  },
+  {
+    "operation": "Google about.user",
+    "http": 200,
+    "accountMatches": true
+  },
+  {
+    "operation": "Google folder metadata",
+    "http": 404,
+    "errorReason": "notFound"
+  },
+  {
+    "result": "Drive identity or folder validation failed"
+  }
+]

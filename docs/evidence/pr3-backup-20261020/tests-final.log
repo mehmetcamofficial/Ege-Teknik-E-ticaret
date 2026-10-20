@@ -1,0 +1,29 @@
+✔ ETGCM002 multi-megabyte streaming roundtrip and restrictive output permissions (107.790042ms)
+✔ empty input is authenticated and recovers as empty (76.98275ms)
+✔ wrong key leaves no plaintext or partial file (76.348709ms)
+✔ header, nonce, ciphertext and tag corruption are rejected without plaintext (183.887583ms)
+✔ truncation is rejected and leaves no published plaintext (183.958875ms)
+✔ missing, malformed, noncanonical keys and extra CLI args fail closed (164.708167ms)
+✔ existing output and same input/output are never overwritten (107.339125ms)
+✔ new decrypt wrapper verifies trusted checksum and does not downgrade damaged GCM to CBC (216.924875ms)
+✔ legacy CBC recovery requires explicit opt-in, trusted hash and original password (528.6485ms)
+✔ Drive refuses wrong account and cleans temporary OAuth config (42.157042ms)
+✔ Drive refuses public folder and cleans temporary OAuth config (39.022458ms)
+✔ Drive refuses read-only folder and cleans temporary OAuth config (38.915084ms)
+✔ Drive refuses HTTP authorization error and cleans temporary OAuth config (40.289875ms)
+✔ Drive refuses transport error and cleans temporary OAuth config (38.452833ms)
+✔ Drive mocked upload/download checks all three objects and leaves no temp OAuth config (41.598875ms)
+✔ Drive corrupted downloaded object fails and temp files are removed (39.005708ms)
+✔ Drive missing config, folder, altered checksum or secret-bearing metadata refuses before provider calls (39.421042ms)
+✔ workflow producer executes GCM self-check, retains ACL flags and cleans plaintext (714.031125ms)
+✔ producer rejects missing key before running a database tool (47.38525ms)
+✔ dump adapter preserves URI TLS fields, excludes credentials from argv and refuses unknown options (351.929666ms)
+✔ workflow gates backup on tests and scopes GCM and OAuth secrets to separate steps (1.316791ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3151.291834

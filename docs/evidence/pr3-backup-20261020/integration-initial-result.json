@@ -1,0 +1,15 @@
+{
+  "steps": [
+    {
+      "label": "legacy CBC decrypt",
+      "exit": 0
+    },
+    {
+      "label": "legacy full restore",
+      "exit": 1
+    }
+  ],
+  "liveDrive": "UNKNOWN",
+  "status": "FAIL",
+  "error": "legacy full restore failed"
+}
