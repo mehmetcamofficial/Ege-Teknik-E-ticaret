@@ -1,0 +1,128 @@
+$ next build
+▲ Next.js 16.3.6 (Turbopack)
+✓ Running next.config.ts took 397ms
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.2s
+  Running next.config.js provided runAfterProductionCompile ...
+✓ Completed runAfterProductionCompile in 156ms
+  Running TypeScript ...
+  Finished TypeScript in 2.6s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/50) ...
+  Generating static pages using 7 workers (12/50) 
+  Generating static pages using 7 workers (24/50) 
+  Generating static pages using 7 workers (37/50) 
+✓ Generating static pages using 7 workers (50/50) in 270ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /_not-found
+├ ƒ /account
+├ ƒ /account/addresses
+├ ƒ /account/orders
+├ ƒ /account/orders/[id]
+├ ƒ /account/profile
+├ ƒ /admin
+├ ƒ /admin/accept-invite
+├ ƒ /admin/analytics
+├ ƒ /admin/blog
+├ ƒ /admin/blog/[id]
+├ ƒ /admin/blog/new
+├ ƒ /admin/catalog-taxonomy
+├ ƒ /admin/finance
+├ ƒ /admin/finance/profitability
+├ ƒ /admin/forgot-password
+├ ƒ /admin/integrations/payments
+├ ƒ /admin/inventory
+├ ƒ /admin/legal
+├ ƒ /admin/login
+├ ƒ /admin/orders
+├ ƒ /admin/orders/[id]
+├ ƒ /admin/products
+├ ƒ /admin/products/[id]
+├ ƒ /admin/products/new
+├ ƒ /admin/reset-password
+├ ƒ /admin/reviews
+├ ƒ /admin/second-hand
+├ ƒ /admin/second-hand/[id]
+├ ƒ /admin/second-hand/new
+├ ƒ /admin/service-requests
+├ ƒ /admin/settings
+├ ƒ /admin/users
+├ ƒ /api/admin/analytics
+├ ƒ /api/admin/analytics/sales
+├ ƒ /api/admin/audit
+├ ƒ /api/admin/blog
+├ ƒ /api/admin/blog/[id]
+├ ƒ /api/admin/catalog/import
+├ ƒ /api/admin/finance
+├ ƒ /api/admin/finance/profitability/ai
+├ ƒ /api/admin/integrations
+├ ƒ /api/admin/integrations/paytr
+├ ƒ /api/admin/legal/documents
+├ ƒ /api/admin/legal/documents/[slug]/versions
+├ ƒ /api/admin/legal/versions/[id]
+├ ƒ /api/admin/legal/versions/[id]/preview
+├ ƒ /api/admin/legal/versions/[id]/publish
+├ ƒ /api/admin/media
+├ ƒ /api/admin/orders
+├ ƒ /api/admin/orders/[id]
+├ ƒ /api/admin/orders/[id]/payments
+├ ƒ /api/admin/orders/[id]/refunds
+├ ƒ /api/admin/overview
+├ ƒ /api/admin/products
+├ ƒ /api/admin/products/[id]
+├ ƒ /api/admin/products/[id]/image
+├ ƒ /api/admin/reviews
+├ ƒ /api/admin/reviews/[id]
+├ ƒ /api/admin/second-hand
+├ ƒ /api/admin/second-hand/[id]
+├ ƒ /api/admin/service-requests
+├ ƒ /api/admin/service-requests/[id]
+├ ƒ /api/admin/taxonomy
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[id]/grants
+├ ƒ /api/admin/users/[id]/role
+├ ƒ /api/admin/users/[id]/status
+├ ƒ /api/admin/users/grants/[grantId]/revoke
+├ ƒ /api/admin/users/invites
+├ ƒ /api/analytics/event
+├ ƒ /api/auth/accept-invite
+├ ƒ /api/auth/forgot-password
+├ ƒ /api/auth/login
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/reset-password
+├ ƒ /api/blog
+├ ƒ /api/checkout/charges
+├ ƒ /api/checkout/legal-preview
+├ ƒ /api/climate-advisor
+├ ƒ /api/health
+├ ƒ /api/legal/documents
+├ ƒ /api/legal/required
+├ ƒ /api/media/[...key]
+├ ƒ /api/orders
+├ ƒ /api/orders/lookup
+├ ƒ /api/payments/paytr/callback
+├ ƒ /api/payments/paytr/token
+├ ƒ /api/products
+├ ƒ /api/products/[id]
+├ ƒ /api/products/[id]/reviews
+├ ƒ /api/second-hand
+├ ƒ /api/second-hand/reservations
+├ ƒ /api/service-requests
+├ ƒ /legal/[slug]
+├ ƒ /payment
+├ ƒ /payment/fail
+├ ƒ /payment/success
+├ ƒ /seo/product
+└ ƒ /seo/sitemap
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

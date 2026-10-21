@@ -857,7 +857,7 @@ function renderFeaturedProducts(){
   document.querySelectorAll('.premium-series [data-series-field]').forEach(el=>{
     if(catalogState==='unavailable')el.textContent=el.dataset.seriesField==='from'?'Fiyat bilgisi alınamadı':'';
   });
-document.querySelectorAll('[data-featured-product]').forEach(card=>{const set=(field,text)=>card.querySelectorAll(`[data-product-field="${field}"]`).forEach(el=>{el.textContent=text});
+document.querySelectorAll('[data-featured-product]').forEach(card=>{card.querySelectorAll('[data-hero-cart]').forEach(b=>{b.disabled=true});const set=(field,text)=>card.querySelectorAll(`[data-product-field="${field}"]`).forEach(el=>{el.textContent=text});
   if(catalogState==='loading'){set('price','Fiyat yükleniyor…');set('stock','');return}
   const p=catalogAuthoritative()?getProducts().find(x=>x.id===card.dataset.featuredProduct):null;
   // After the authoritative catalog loads, the homepage uses the same card renderer and actions as the catalog.

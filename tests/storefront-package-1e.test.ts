@@ -23,24 +23,34 @@ const ADDRESS = "İkiçeşmelik Mahallesi Süleyman Demirel Bulvarı, Ege Uluç�
 // Hero carousel: markup
 // ---------------------------------------------------------------------------
 
-test("premium hero: one stable presentation, one H1, working catalog and selector links", () => {
-  const hero = home.slice(home.indexOf('<section class="premium-hero"'), home.indexOf('<section class="premium-assurance"'));
+test("hybrid hero restores the live shopping controls, one H1 and series discovery", () => {
+  const hero = home.slice(home.indexOf('<section class="hero hero-carousel'), home.indexOf('<section class="hero-quick"'));
   assert.equal((home.match(/<h1\b/g) ?? []).length, 1);
   assert.match(hero, /aria-labelledby="hero-title"/);
   assert.match(hero, /href="catalog\.html"/);
-  assert.match(hero, /href="selector\.html"/);
-  assert.doesNotMatch(hero, /data-hero-carousel|role="tab"|data-hc-/);
+  assert.match(home, /href="selector\.html"/);
+  assert.equal((hero.match(/data-hc-slide(?:\s|>)/g) ?? []).length, 4);
+  assert.equal((hero.match(/data-hc-tab="/g) ?? []).length, 4);
+  assert.match(hero, /data-hero-cart disabled data-action="add-cart"/);
+  assert.match(hero, /data-product-field="price"/);
+  assert.match(hero, /data-product-field="stock"/);
+  assert.match(hero, /data-hero-link/);
+  assert.equal((hero.match(/data-action="hero-tone"/g) ?? []).length, 2);
 });
 
-test("premium hero imagery: one real local product photo with reserved box and responsive source", () => {
-  const hero = home.slice(home.indexOf('<section class="premium-hero"'), home.indexOf('<section class="premium-assurance"'));
+test("hybrid hero imagery uses the real local GREE assets, reserved boxes and responsive lead", () => {
+  const hero = home.slice(home.indexOf('<section class="hero hero-carousel'), home.indexOf('<section class="hero-quick"'));
   const imgs = hero.match(/<img\b[^>]*>/g) ?? [];
-  assert.equal(imgs.length, 1);
+  assert.equal(imgs.length, 4);
+  for (const img of imgs) {
+    assert.match(img, /src="\/assets\/home\/[a-z-]+-\d+\.webp"/);
+    assert.match(img, /width="\d+" height="\d+"/);
+    assert.match(img, /alt="GREE /);
+  }
   assert.match(imgs[0], /src="\/assets\/home\/airy-siyah-1200\.webp"/);
-  assert.match(imgs[0], /width="1200" height="704"/);
   assert.match(imgs[0], /srcset=/);
-  assert.match(imgs[0], /alt="GREE Airy siyah duvar tipi klima"/);
   assert.match(imgs[0], /fetchpriority="high"/);
+  assert.equal(imgs.filter(img => /fetchpriority="high"/.test(img)).length, 1);
 });
 
 test("hero carousel CSS: stacked slides (no CLS), 44px controls, hover-only motion, reduced motion honoured", () => {

@@ -137,7 +137,7 @@ test("the shared stylesheets are syntactically balanced (an unclosed block silen
   }
 });
 
-test("the smart selector reuses one estimator: range near a class boundary and an on-site survey for large or commercial spaces", () => {
+test("the live quick selector preserves boundary ranges, professional survey guidance and the full selector route", () => {
   const field = (value: string) => ({ ...fakeElement(), value });
   const run = (values: Record<string, string>) => {
     const out = { ...fakeElement(), classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => true } };
@@ -158,7 +158,8 @@ test("the smart selector reuses one estimator: range near a class boundary and a
   assert.match(big, /24\.000 BTU\/h üzeri/);
   assert.doesNotMatch(big, /catalog\.html\?btu=/, "no single-unit capacity is recommended beyond the wall-unit range");
   assert.match(home, /href="selector\.html"/);
-  assert.doesNotMatch(home, /data-btu-selector/);
+  assert.match(home, /data-btu-selector/);
+  assert.match(home, /id="klima-secici"/);
   assert.match(readFileSync("public/selector.html", "utf8"), /data-btu-selector/);
 });
 

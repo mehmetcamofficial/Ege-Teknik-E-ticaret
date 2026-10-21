@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-21",
+  "typecheck": "PASS",
+  "lint": {
+    "errors": 0,
+    "existingWarnings": 5
+  },
+  "normalBuild": "PASS",
+  "buildCommand": "LOCAL_BUILD_NO_UPLOAD=1 NEXT_TELEMETRY_DISABLED=1 pnpm build",
+  "buildNotes": "Direct next build, no bundler/font replacement. Only Sentry upload/telemetry disabled.",
+  "regression": {
+    "pass": 1554,
+    "fail": 0,
+    "skip": 77,
+    "skips": "Database-dependent suites not executed for this frontend-only H1; not claimed PASS."
+  },
+  "newHeroBehaviorTests": 6,
+  "browserScenarios": 15,
+  "axeScans": 84,
+  "finalLayoutScenarios": 15,
+  "additionalJourneys": 6,
+  "browserCaveat": "Original Chrome/Firefox matrix on HTTP; WebKit and final 15-layout gate plus six journeys on local HTTPS with test-only self-signed certificate exception. Application CSP unchanged.",
+  "ssrProductAndCheckoutPersistence": "NOT TESTED: frontend uses public GET snapshots; no real order POST."
+}

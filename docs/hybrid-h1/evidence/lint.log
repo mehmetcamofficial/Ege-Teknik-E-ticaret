@@ -1,0 +1,15 @@
+$ eslint . --ignore-pattern dist --ignore-pattern .next
+
+/Users/mehmetcam/Developer/ege-teknik-hybrid-h1/tests/legacy-legal-fixtures.test.ts
+  37:115  warning  'i' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/mehmetcam/Developer/ege-teknik-hybrid-h1/tests/legal-fixture-containment.test.ts
+  61:20  warning  '_dropped' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  71:27  warning  '_dropped' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  76:44  warning  '_dropped' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/mehmetcam/Developer/ege-teknik-hybrid-h1/tests/reserved-preview-fixture.test.ts
+  69:27  warning  '_d' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 5 problems (0 errors, 5 warnings)
+
