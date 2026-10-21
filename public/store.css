@@ -1461,3 +1461,13 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 .help-launcher.is-clearing,html.nav-open .help-launcher,html.cart-drawer-open .help-launcher,body:has([data-cookie-banner]) .help-launcher{opacity:0;visibility:hidden;pointer-events:none}
 @media(max-width:1000px){body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:calc(84px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){.help-launcher{transition:none}}
+/* H3-A: cart drawer — counts, VAT breakdown, specific line problems and one-tap fixes. */
+.cart-drawer-count{display:block;margin-top:2px;font-size:13px;font-weight:650;color:var(--muted)}
+.cart-drawer-variant{font-size:13px;color:var(--body)}
+.cart-drawer-breakdown{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:6px 0 2px;font-size:13px;color:var(--body)}
+.cart-drawer-breakdown span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.cart-drawer-warning{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border:1px solid #e8b9ae;border-radius:10px;background:#fbe9e5;color:#7a2a1d;font-size:13px;font-weight:650;line-height:1.45}
+.cart-drawer-fix{min-height:44px;padding:0 12px;border:1px solid #7a2a1d;border-radius:8px;background:#fff;color:#7a2a1d;font:inherit;font-weight:750;cursor:pointer}
+.cart-drawer-fix:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.cart-drawer-blocked{margin:4px 0 0;padding:10px 12px;border-radius:10px;background:#fdf2e2;color:#6b3500;font-size:13px;font-weight:650}
+.cart-drawer-status.has-problem{color:#7a2a1d;font-weight:700}
