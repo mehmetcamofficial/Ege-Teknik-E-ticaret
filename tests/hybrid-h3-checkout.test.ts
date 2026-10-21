@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
-import { apiProduct, loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
 
 const ux = readFileSync("public/store-ux.js", "utf8");
 const core = readFileSync("public/store-core.js", "utf8");
@@ -220,7 +220,7 @@ test("H3.1-B server 503 for missing legal documents or notice is explained and k
 });
 
 test("H3.1-B an unpublished KVKK notice blocks the order with an explanation; a failed lookup does not", async () => {
-  const slot = { innerHTML: "" };
+  const slot = fakeElement();
   const missing = loadStorefront({ storage: cart, elements: { "[data-kvkk-notice]": slot }, api: { products: [apiProduct()], order: ok, legalDocuments: jsonRes(200, { documents: [{ slug: "distance-sales", title: "x", versionId: "v" }] }) } as never });
   await missing.fn<() => Promise<void>>("loadCatalog")();
   await missing.fn<() => Promise<void>>("renderKvkkNotices")();
@@ -230,7 +230,7 @@ test("H3.1-B an unpublished KVKK notice blocks the order with an explanation; a 
   await missing.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: form.f });
   assert.equal(missing.orderBodies.length, 0);
   assert.match(form.result.textContent, /Aydınlatma metni henüz yayınlanmadığı için sipariş şu anda alınamıyor/);
-  const slot2 = { innerHTML: "" };
+  const slot2 = fakeElement();
   const unknown = loadStorefront({ storage: cart, elements: { "[data-kvkk-notice]": slot2 }, api: { products: [apiProduct()], order: ok, legalDocuments: () => Promise.reject(new Error("network")) } as never });
   await unknown.fn<() => Promise<void>>("loadCatalog")();
   await unknown.fn<() => Promise<void>>("renderKvkkNotices")();
