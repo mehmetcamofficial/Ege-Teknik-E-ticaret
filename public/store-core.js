@@ -145,8 +145,12 @@ function knownProductIds(){return catalogAuthoritative()?new Set(getProducts().m
    checkbox resets in individual handlers, and no automatic preview refresh. */
 function cartDrawer(){return typeof window!=='undefined'?window.EgeCartDrawer:null}
 function writeCart(entries){
- try{localStorage.setItem('ege-cart',JSON.stringify(normalizeCartEntries(entries,null)))}
+ const next=JSON.stringify(normalizeCartEntries(entries,null));let changed=true;
+ try{changed=JSON.stringify(normalizeCartEntries(readCartRaw(),null))!==next;localStorage.setItem('ege-cart',next)}
  catch{cartFeedback('Sepet kaydedilemedi. Tarayıcı depolama iznini kontrol edin.');return false}
+ /* H3-C: a different cart is a different order. A retry of the SAME cart keeps the attempt key (server dedupe);
+    a changed cart gets a fresh key instead of a confusing 'key used for another order' refusal. */
+ if(changed&&typeof sessionStorage!=='undefined')clearOrderAttemptKey(sessionStorage);
  updateCartCount();invalidateLegalPreview();cartDrawer()?.refresh();return true
 }
 /* Drops cart lines whose ids are not in the served catalog, so legacy ids such as
@@ -537,7 +541,11 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=
     if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);
       /* P3-LEGAL-3C.4: the server rejected our preview. Keep the customer's data and cart, drop the stale preview,
          uncheck + disable acceptance, and never retry automatically - the customer must read and re-accept. */
-      if(data.code==='LEGAL_PREVIEW_INVALID'){invalidateLegalPreview();say('Hukuki metinler güncellendi. Devam etmek için metinleri yeniden oluşturup onaylayın.');return}if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();throw new Error(data.error||'Sipariş kaydedilemedi')}
+      if(data.code==='LEGAL_PREVIEW_INVALID'){invalidateLegalPreview();say('Hukuki metinler güncellendi. Devam etmek için metinleri yeniden oluşturup onaylayın.');return}if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();
+      // H3-C: stock/sellability conflicts re-read the catalog so the affected line is flagged right away.
+      if(response.status===409&&!data.code||data.code==='PRODUCT_NOT_SELLABLE'){void loadCatalog()}
+      if(data.code==='IDEMPOTENCY_KEY_REUSED')throw new Error('Sipariş bilgileriniz değişti. Lütfen siparişi yeniden onaylayın.');
+      throw new Error(data.error||(response.status>=500?'Sunucuda geçici bir sorun oluştu; sipariş kaydedilmedi.':'Sipariş kaydedilemedi.'))}
     // Cart and attempt key are cleared only once the server has confirmed the order.
     clearOrderAttemptKey(sessionStorage);writeCart([]);
     renderOrderConfirmation(data);

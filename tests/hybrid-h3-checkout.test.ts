@@ -13,7 +13,7 @@ const core = readFileSync("public/store-core.js", "utf8");
 test("H3-A drawer is still a view over ege-cart/writeCart, with no second cart store", () => {
   assert.doesNotMatch(ux, /localStorage\.setItem/);
   assert.match(ux, /cartLines\(getCart\(\),getProducts\(\)\)/);
-  assert.match(core, /function writeCart\(entries\)\{\n try\{localStorage\.setItem\('ege-cart',JSON\.stringify\(normalizeCartEntries\(entries,null\)\)\)\}/);
+  assert.match(core, /function writeCart\(entries\)\{\n const next=JSON\.stringify\(normalizeCartEntries\(entries,null\)\);[\s\S]{0,160}?localStorage\.setItem\('ege-cart',next\)\}/);
   assert.match(core, /updateCartCount\(\);invalidateLegalPreview\(\);cartDrawer\(\)\?\.refresh\(\);return true/, "every cart write still invalidates the legal preview");
 });
 
@@ -107,4 +107,30 @@ test("H3-B checkout markup: numbered steps, error summary, honest billing note, 
   assert.match(html, /ayrı bir fatura adresi alınmaz/);
   assert.match(html, /data-checkout-bar hidden>/);
   assert.doesNotMatch(html, /PayTR|iyzico|kart numarası/i);
+});
+
+/* ---------- H3-C order safety (client side; the server suites are listed in the H3 report) ---------- */
+test("H3-C a changed cart gets a fresh order attempt key; an unchanged rewrite keeps it for server dedupe", () => {
+  assert.match(core, /if\(changed&&typeof sessionStorage!=='undefined'\)clearOrderAttemptKey\(sessionStorage\);/);
+  assert.match(core, /changed=JSON\.stringify\(normalizeCartEntries\(readCartRaw\(\),null\)\)!==next/);
+});
+
+test("H3-C refusals are explained and stock conflicts re-read the catalog", () => {
+  assert.match(core, /if\(response\.status===409&&!data\.code\|\|data\.code==='PRODUCT_NOT_SELLABLE'\)\{void loadCatalog\(\)\}/);
+  assert.match(core, /if\(data\.code==='IDEMPOTENCY_KEY_REUSED'\)throw new Error\('Sipariş bilgileriniz değişti\. Lütfen siparişi yeniden onaylayın\.'\)/);
+  assert.match(core, /Sunucuda geçici bir sorun oluştu; sipariş kaydedilmedi\./);
+  assert.match(core, /\/\/ Cart and attempt key are cleared only once the server has confirmed the order\.\n    clearOrderAttemptKey\(sessionStorage\);writeCart\(\[\]\);/);
+});
+
+test("H3-C a server 5xx keeps the cart and the attempt key for a deduplicated retry", async () => {
+  const store = await prepared(() => Promise.resolve({ ok: false, status: 503, json: async () => ({}) }));
+  const { f, result } = checkoutForm();
+  assert.ok(await store.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(f));
+  await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
+  assert.equal(result.textContent, "Sunucuda geçici bir sorun oluştu; sipariş kaydedilmedi. Bilgileriniz ve sepetiniz korunuyor; tekrar deneyebilirsiniz.");
+  await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
+  const keys = store.orderHeaders?.map((h: Record<string, string>) => h["idempotency-key"]);
+  if (keys) assert.equal(new Set(keys).size, 1, "the retry reuses the same idempotency key");
+  assert.equal(store.orderBodies.length, 2);
+  assert.deepEqual(JSON.parse(JSON.stringify(store.fn<() => unknown>("readCartRaw")())), cart["ege-cart"]);
 });
