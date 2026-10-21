@@ -281,6 +281,8 @@ document.addEventListener('keydown',event=>{
   const controls=[...panel.querySelectorAll('a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled)')].filter(el=>el.getClientRects().length);
   if(event.shiftKey&&document.activeElement===controls[0]){event.preventDefault();controls.at(-1)?.focus()}
   else if(!event.shiftKey&&document.activeElement===controls.at(-1)){event.preventDefault();controls[0]?.focus()}
+  // H2: Safari's default Tab skips buttons, so the edge check above never sees the last control; pull escaped focus back.
+  else setTimeout(()=>{if(panel.classList.contains('open')&&!panel.contains(document.activeElement))(event.shiftKey?controls.at(-1):controls[0])?.focus()},0);
 });
 if(typeof window!=='undefined')window.addEventListener('resize',()=>{if(window.innerWidth>1000&&document.querySelector('.catalog-filters.open')){setFiltersOpen(false);document.querySelector('.catalog-filters select')?.focus()}});
 const CATALOG_PAGE=24;let catalogLimit=CATALOG_PAGE,catalogSignature='';

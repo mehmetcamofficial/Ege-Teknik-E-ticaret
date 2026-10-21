@@ -139,3 +139,7 @@ test("H2 sticky buy bar also opens after a jump past the buy box (observer-only 
   assert.match(core, /function checkStickyBuy\(\)\{stickyScrollQueued=false;const box=document\.querySelector\('\.pd-buy'\);const past=!!box&&box\.getBoundingClientRect\(\)\.bottom<0;/);
   assert.match(core, /window\.addEventListener\('scroll',\(\)=>\{if\(!stickyScrollQueued\)\{stickyScrollQueued=true;requestAnimationFrame\(checkStickyBuy\)\}\},\{passive:true\}\)/);
 });
+
+test("H2 filter drawer pulls focus back when a browser's Tab order skips the last button (Safari default)", () => {
+  assert.match(readFileSync("public/store-core.js", "utf8"), /else setTimeout\(\(\)=>\{if\(panel\.classList\.contains\('open'\)&&!panel\.contains\(document\.activeElement\)\)\(event\.shiftKey\?controls\.at\(-1\):controls\[0\]\)\?\.focus\(\)\},0\);/);
+});
