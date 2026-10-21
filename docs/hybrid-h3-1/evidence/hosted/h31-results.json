@@ -1,0 +1,1199 @@
+{
+  "origin": "https://ege-teknik-phase3a-piqfzan3p-dragonfire-09s-projects.vercel.app",
+  "hosted": true,
+  "applicationCommit": "e21ad8d178802766f361c485ad4675234fd615f9",
+  "matrix": [
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 1440,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 1024,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 768,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 390,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 320,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1440,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1024,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 768,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 390,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 320,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1440,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1024,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 900,
+            "bodyH": 437,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 768,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 844,
+            "bodyH": 381,
+            "footH": 288,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 390,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": false,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 844,
+            "bodyH": 523,
+            "footH": 198,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 320,
+      "checks": {
+        "cartGeometry": {
+          "one": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 1,
+            "pageLocked": true
+          },
+          "two": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 2,
+            "pageLocked": true
+          },
+          "five": {
+            "vh": 568,
+            "bodyH": 247,
+            "footH": 198,
+            "scrollable": true,
+            "items": 5,
+            "pageLocked": true
+          }
+        },
+        "cartKeyboard": "PASS",
+        "legalNegatives": "PASS",
+        "validation": "PASS",
+        "payment": "PASS",
+        "noSyntheticInApp": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    }
+  ],
+  "contrasts": [
+    {
+      "label": "chrome/1440/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "chrome/1440/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "chrome/1440/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "chrome/1024/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "chrome/1024/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "chrome/1024/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "chrome/768/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "chrome/768/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "chrome/768/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "chrome/390/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 56
+    },
+    {
+      "label": "chrome/390/errors",
+      "minimum": 10.764183571911426,
+      "count": 6
+    },
+    {
+      "label": "chrome/390/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "chrome/320/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 56
+    },
+    {
+      "label": "chrome/320/errors",
+      "minimum": 10.764183571911426,
+      "count": 6
+    },
+    {
+      "label": "chrome/320/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "firefox/1440/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "firefox/1440/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "firefox/1440/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "firefox/1024/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "firefox/1024/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "firefox/1024/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "firefox/768/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "firefox/768/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "firefox/768/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "firefox/390/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 56
+    },
+    {
+      "label": "firefox/390/errors",
+      "minimum": 10.764183571911426,
+      "count": 6
+    },
+    {
+      "label": "firefox/390/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "firefox/320/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 56
+    },
+    {
+      "label": "firefox/320/errors",
+      "minimum": 10.764183571911426,
+      "count": 6
+    },
+    {
+      "label": "firefox/320/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "webkit/1440/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "webkit/1440/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "webkit/1440/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "webkit/1024/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "webkit/1024/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "webkit/1024/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "webkit/768/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 59
+    },
+    {
+      "label": "webkit/768/errors",
+      "minimum": 10.764183571911426,
+      "count": 11
+    },
+    {
+      "label": "webkit/768/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "webkit/390/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 56
+    },
+    {
+      "label": "webkit/390/errors",
+      "minimum": 10.764183571911426,
+      "count": 6
+    },
+    {
+      "label": "webkit/390/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    },
+    {
+      "label": "webkit/320/cart-multi",
+      "minimum": 6.391306324585703,
+      "count": 56
+    },
+    {
+      "label": "webkit/320/errors",
+      "minimum": 10.764183571911426,
+      "count": 6
+    },
+    {
+      "label": "webkit/320/payment",
+      "minimum": 7.149858797802874,
+      "count": 11
+    }
+  ],
+  "axeScans": 60,
+  "interceptedWrites": [
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    }
+  ],
+  "realWritesSent": 0,
+  "orderCreated": false
+}

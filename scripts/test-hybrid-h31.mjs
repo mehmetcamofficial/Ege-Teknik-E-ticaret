@@ -122,7 +122,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
 
   /* ===== Synthetic data never leaks into the served application ===== */
   const markers=/TEST SENTETİK|ETS-H3|h3-synthetic|test-sentetik|syntheticPreviewDocuments|Sentetik satış koşulları|PREVIEW RENDER TEST|Sürüm undefined/;
-  for(const asset of ['/checkout.html','/store-core.js','/store-ux.js','/store.js','/store.css','/catalog.html','/product.html','/index.html']){const res=await c.request.get(origin+asset,hosted?{headers:{'x-vercel-trusted-oidc-idp-token':oidc}}:{});assert.equal(res.status(),200,asset);assert.doesNotMatch(await res.text(),markers,asset+' carries no test or fixture markers')}
+  for(const asset of ['/checkout.html','/store-core.js','/store-ux.js','/store.js','/store.css','/catalog.html','/product.html?id='+encodeURIComponent(products[0].id),'/']){const res=await c.request.get(origin+asset,hosted?{headers:{'x-vercel-trusted-oidc-idp-token':oidc}}:{});assert.equal(res.status(),200,asset);assert.doesNotMatch(await res.text(),markers,asset+' carries no test or fixture markers')}
   row.checks.noSyntheticInApp='PASS';
 
   /* ===== Reduced motion: no drawer animation, no help fade ===== */
