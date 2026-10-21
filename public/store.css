@@ -1411,9 +1411,10 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 
 /* H1.1 MPA entry: no navigation delay, route interception or artificial loading screen. */
 @media(prefers-reduced-motion:no-preference){.store main{animation:store-page-enter 280ms var(--motion-ease)}}
-@keyframes store-page-enter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* H2: start at .55 so the arriving page never flashes as an almost-blank light frame; motion stays perceptible. */
+@keyframes store-page-enter{from{opacity:.55;transform:translateY(12px)}to{opacity:1;transform:none}}
 /* H1.2: brief exit cue while the browser fetches the next document; it never delays the request. */
-@media(prefers-reduced-motion:no-preference){.store-navigating .store main{opacity:.62;transform:translateY(-6px);transition:opacity 180ms var(--motion-ease),transform 180ms var(--motion-ease)}}
+@media(prefers-reduced-motion:no-preference){.store-navigating .store main{opacity:.8;transform:translateY(-6px);transition:opacity 180ms var(--motion-ease),transform 180ms var(--motion-ease)}}
 
 /* The distraction-free checkout header is not the storefront's three-column mobile header. */
 .store .checkout-header .store-nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;min-height:76px}
@@ -1446,3 +1447,12 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 .cart-drawer-info .cart-drawer-stock{font-size:12px;color:#454d48}
 .cart-drawer-line-total b,.cart-drawer-subtotal b{font-variant-numeric:tabular-nums;color:var(--p)}
 @media(max-width:400px){.cart-drawer-item{grid-template-columns:80px minmax(0,1fr);gap:12px}}
+/* H2: compact phone cookie notice — same three equal choices, about half the former height. */
+@media(max-width:560px){
+ .cookie-banner{left:8px;right:8px;bottom:8px;flex-direction:column;align-items:stretch;gap:10px;padding:12px 14px;border-radius:14px}
+ .cookie-banner-copy b{font-size:14.5px;margin-bottom:2px}
+ .cookie-banner-copy p{display:inline;font-size:13px;line-height:1.45}
+ .cookie-banner-copy a{display:inline;margin-left:4px;font-size:13px}
+ .cookie-banner-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+ .cookie-btn{min-height:44px;padding:6px 8px;font-size:13px;line-height:1.2}
+}

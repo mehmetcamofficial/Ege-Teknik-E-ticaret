@@ -22,10 +22,10 @@ for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',webki
    await p.waitForTimeout(700);const frames=await p.evaluate(()=>window.__frames);
    const early=frames.filter(f=>f.t<400),minO=Math.min(...early.map(f=>f.o)),maxY=Math.max(...early.map(f=>Math.abs(f.y)));
       // Deterministic keyframes: pause the real entry animation at 0 / 50 / 100 % and capture.
-   const shots=[];if(!reduced.startsWith('reduce')){for(const[tag,ms]of[['start',0],['mid',140],['end',280]]){await p.evaluate(ms=>{const m=document.querySelector('main');if(!m.getAnimations().length)m.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'none'}],280);for(const a of document.querySelector('main').getAnimations()){a.pause();a.currentTime=ms}},ms);const f=`${dir}/${name}-${tag}.png`;await p.screenshot({path:f});shots.push(f)}
+   const shots=[];if(!reduced.startsWith('reduce')){for(const[tag,ms]of[['start',0],['mid',140],['end',280]]){await p.evaluate(ms=>{const m=document.querySelector('main');if(!m.getAnimations().length)m.animate([{opacity:.55,transform:'translateY(12px)'},{opacity:1,transform:'none'}],280);for(const a of document.querySelector('main').getAnimations()){a.pause();a.currentTime=ms}},ms);const f=`${dir}/${name}-${tag}.png`;await p.screenshot({path:f});shots.push(f)}
     await p.evaluate(()=>document.querySelector('main').getAnimations().forEach(a=>a.finish()))}
    run.steps.push({name,minOpacity:minO,maxTranslateY:maxY,frames:early.length,shots,url:new URL(p.url()).pathname});
-   if(!reduced.startsWith('reduce'))assert.ok(minO<0.5,`${engine} ${label} ${name}: entry must visibly start transparent (min ${minO})`);else assert.equal(minO,1,`${engine} ${label} ${name} reduced`);
+   if(!reduced.startsWith('reduce'))assert.ok(minO<0.8&&minO>=0.5,`${engine} ${label} ${name}: entry must be perceptible but never near-blank (min ${minO})`);else assert.equal(minO,1,`${engine} ${label} ${name} reduced`);
   }
   await step('home-to-catalog',()=>{if(width<1024)return p.locator('.store-nav>.menu-toggle').click().then(()=>p.locator('.nav-links a[href="catalog.html"]').first().click());return p.locator('.nav-links a[href="catalog.html"]').first().click()},'**/catalog.html');
   await p.waitForFunction(()=>document.querySelector('.product h3 a'));

@@ -133,3 +133,9 @@ test("H2 gallery step buttons wrap through the approved gallery", async () => {
   assert.ok(store);
   assert.match(readFileSync("public/store-core.js", "utf8"), /action==='gallery-step'\)\{const count=approvedGallery\(productDetail\)\.length;if\(count\)selectProductGallery\(\(selectedGalleryIndex\+Number\(el\.dataset\.step\|\|0\)\+count\)%count\)\}/);
 });
+
+test("H2 sticky buy bar also opens after a jump past the buy box (observer-only missed it)", () => {
+  const core = readFileSync("public/store-core.js", "utf8");
+  assert.match(core, /function checkStickyBuy\(\)\{stickyScrollQueued=false;const box=document\.querySelector\('\.pd-buy'\);const past=!!box&&box\.getBoundingClientRect\(\)\.bottom<0;/);
+  assert.match(core, /window\.addEventListener\('scroll',\(\)=>\{if\(!stickyScrollQueued\)\{stickyScrollQueued=true;requestAnimationFrame\(checkStickyBuy\)\}\},\{passive:true\}\)/);
+});

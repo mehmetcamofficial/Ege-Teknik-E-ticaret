@@ -743,7 +743,11 @@ function scrollToProductHash(){if(productHashHandled)return;productHashHandled=t
 let stickyPastBuy=false;
 function syncStickyBuy(){const bar=document.querySelector('.pd-sticky');if(!bar)return;const visible=stickyPastBuy&&window.innerWidth<=1000;bar.classList.toggle('is-visible',visible);bar.setAttribute('aria-hidden',String(!visible));bar.inert=!visible;bar.querySelectorAll('button,a').forEach(control=>control.setAttribute('tabindex',visible?'0':'-1'))}
 if(typeof window!=='undefined'&&typeof window.addEventListener==='function')window.addEventListener('resize',syncStickyBuy);
-function watchStickyBuy(){const bar=document.querySelector('.pd-sticky'),box=document.querySelector('.pd-buy');stickyObserver?.disconnect?.();if(!bar||!box||typeof IntersectionObserver!=='function')return;stickyObserver=new IntersectionObserver(([entry])=>{stickyPastBuy=!entry.isIntersecting&&entry.boundingClientRect.top<0;syncStickyBuy()});stickyObserver.observe(box)}
+/* H2: an observer only reports intersection changes, so a jump straight past the buy box (section link, fast fling)
+   never fired it. The scroll check reads the box position directly, at most once per frame. */
+let stickyScrollQueued=false,stickyScrollWired=false;
+function checkStickyBuy(){stickyScrollQueued=false;const box=document.querySelector('.pd-buy');const past=!!box&&box.getBoundingClientRect().bottom<0;if(past!==stickyPastBuy){stickyPastBuy=past;syncStickyBuy()}}
+function watchStickyBuy(){const bar=document.querySelector('.pd-sticky'),box=document.querySelector('.pd-buy');stickyObserver?.disconnect?.();if(!bar||!box)return;if(typeof IntersectionObserver==='function'){stickyObserver=new IntersectionObserver(([entry])=>{stickyPastBuy=!entry.isIntersecting&&entry.boundingClientRect.top<0;syncStickyBuy()});stickyObserver.observe(box)}if(!stickyScrollWired&&typeof window!=='undefined'&&typeof window.addEventListener==='function'&&typeof requestAnimationFrame==='function'){stickyScrollWired=true;window.addEventListener('scroll',()=>{if(!stickyScrollQueued){stickyScrollQueued=true;requestAnimationFrame(checkStickyBuy)}},{passive:true})}}
 /* H2: series siblings in the same category are separate catalog products, each with its own API price and stock.
    Choosing one navigates to that product's page; nothing on this page re-prices from the sibling list. */
 function productVariantsFor(p,products){
