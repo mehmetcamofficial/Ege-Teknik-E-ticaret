@@ -284,3 +284,22 @@ test("H3.1-C phone error CSS: names only, 44px targets, an icon besides colour, 
   assert.match(css, /html\.checkout-bar-open\{scroll-padding-bottom:104px\}/);
   assert.match(css, /\.checkout-errors\{overflow-wrap:anywhere\}/);
 });
+
+/* ---------- H3.1-D order saved vs payment collected ---------- */
+test("H3.1-D checkout separates saving the order from collecting payment, with only claims the workflow supports", () => {
+  const html = readFileSync("public/checkout.html", "utf8");
+  assert.match(html, /Siparişiniz kaydedilir; ödeme bu adımda alınmaz\. Ödeme yöntemi sipariş sonrasında sizinle netleştirilir\./);
+  assert.match(html, /<b>Ödeme alınmaz\.<\/b> Kart bilgisi istenmez, hesabınızdan tahsilat yapılmaz\./);
+  assert.match(html, /Otomatik e-posta veya SMS gönderilmez/, "no customer mailer exists (lib/mail.ts only sends admin invitations)");
+  assert.match(html, /Bu butona basmak siparişinizi kaydeder\. Ödeme bu adımda alınmaz ve kart bilgisi istenmez\./);
+  assert.match(html, /<dt>Sipariş<\/dt><dd>Kaydedildi<\/dd>[\s\S]*<dt>Ödeme<\/dt><dd>Tahsil edilmedi<\/dd>/);
+  assert.match(html, /Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi\./);
+  assert.match(html, /Siparişi Onayla — ödeme yükümlülüğü doğurur/, "the legally required button label is unchanged");
+});
+
+test("H3.1-D no online provider and no card data fields; the only payment value is the unpaid-order choice", () => {
+  const html = readFileSync("public/checkout.html", "utf8");
+  assert.doesNotMatch(html, /PayTR|iyzico|bank_transfer|havale|kredi kartı|kart numarası|cc-number|cc-exp|cvv|cvc/i);
+  assert.deepEqual([...html.matchAll(/name="provider" value="([^"]+)"/g)].map((m) => m[1]), ["discovery"]);
+  assert.doesNotMatch(readFileSync("public/store-core.js", "utf8"), /name=\\\\?"(card|cc-)|cardNumber|cvv/i);
+});

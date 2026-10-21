@@ -1539,3 +1539,14 @@ html.checkout-bar-open{scroll-padding-bottom:104px}
  .checkout-errors li a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border:1px solid #8b2e20;border-radius:999px;background:#fff;text-decoration:none}
  .checkout-errors .err-msg{display:none}
 }
+/* H3.1-D: order saved vs payment collected are shown as two separate facts. */
+.payment-steps{margin:12px 0 0;padding:14px 16px 14px 34px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:14px;line-height:1.55;color:var(--body)}
+.payment-steps li+li{margin-top:8px}
+.payment-steps b{color:var(--ink)}
+.checkout-submit-note{margin:14px 0 0}
+.order-status{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 14px;padding:0}
+.order-status div{flex:1 1 140px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.order-status dt{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.order-status dd{margin:2px 0 0;font-size:17px;font-weight:750;color:var(--p)}
+.order-status div:last-child{border-color:#e9cfa9;background:#fffaf2}
+.order-status div:last-child dd{color:#7a3d00}
