@@ -11,7 +11,6 @@ const out=process.env.EGE_H31_OUTPUT||'.scratch/h31/accept';await mkdir(out,{rec
 const fixture=JSON.parse(await readFile('.scratch/h12/inputs/catalog.json')),charges=JSON.parse(await readFile('.scratch/h3/charges.json'));
 const result={origin,hosted,applicationCommit:process.env.EGE_H31_SHA,matrix:[],contrasts:[],axeScans:0,interceptedWrites:[],realWritesSent:0,orderCreated:false};
 const save=()=>writeFile(`${out}/results.json`,JSON.stringify(result,null,2));
-const money=n=>new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n);
 const LOCAL_REQUIRED={documents:syntheticIdentities.map(d=>({versionId:d.versionId,slug:d.slug,title:`${TEST_LABEL} — ${d.slug}`}))};
 let realRequired=LOCAL_REQUIRED.documents;
 if(hosted){const res=await fetch(origin+'/api/legal/required',{headers:{'x-vercel-trusted-oidc-idp-token':oidc}});assert.equal(res.status,200);realRequired=(await res.json()).documents;assert.ok(realRequired.length>=1)}
