@@ -85,3 +85,51 @@ test("H2 catalog markup carries colour and availability controls", () => {
   assert.match(html, /<span>Renk<\/span><select data-catalog-filter="colour">/);
   assert.match(html, /<option value="quote">Teklif \/ keşif ürünleri<\/option>/);
 });
+
+/* ---------- H2-C product detail ---------- */
+async function productPage(detail: Record<string, unknown>, catalog: Record<string, unknown>[]) {
+  const root = fakeElement();
+  const store = loadStorefront({ path: "product.html", search: `?id=${encodeURIComponent(String(detail.id))}`, elements: { "[data-product-page]": root }, api: { products: catalog, detail } });
+  await store.fn<() => Promise<void>>("loadCatalog")();
+  return { root, store };
+}
+
+test("H2 series options link each sibling to its own page with its own API price; current page uses the detail price", async () => {
+  const catalog = [
+    apiProduct({ id: "a9", name: "Airy 9000 BTU/h", series: "Airy", capacity: "9000 BTU/h", price: 55_100, stock: 4 }),
+    apiProduct({ id: "a12s", name: "Airy 12000 BTU/h - Siyah", series: "Airy", capacity: "12000 BTU/h", price: 60_000, stock: 4 }),
+    apiProduct({ id: "a18", name: "Airy 18000 BTU/h", series: "Airy", capacity: "18000 BTU/h", price: 83_250, stock: 0 }),
+    apiProduct({ id: "f9", name: "Fairy 9000 BTU/h", series: "Fairy", capacity: "9000 BTU/h", price: 40_000 }),
+  ];
+  const { root } = await productPage(apiProduct({ id: "a12s", name: "Airy 12000 BTU/h - Siyah", series: "Airy", capacity: "12000 BTU/h", price: 61_400, stock: 10 }), catalog);
+  const html = root.innerHTML, money = (n: number) => new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY", maximumFractionDigits: 0 }).format(n);
+  assert.match(html, /<p class="pd-variants-title" id="pd-variants-title">Airy seçenekleri<\/p>/);
+  assert.match(html, new RegExp(`href="product\\.html\\?id=a9"><span>9\\.000 BTU/h</span><small>${money(55_100)}</small>`));
+  assert.match(html, new RegExp(`class="pd-variant is-current" href="product\\.html\\?id=a12s" aria-current="page"><span>12\\.000 BTU/h · Siyah</span><small>${money(61_400)}</small>`), "the current option shows the detail endpoint price, not the list copy");
+  assert.match(html, /class="pd-variant is-out" href="product\.html\?id=a18"><span>18\.000 BTU\/h<\/span><small>Stokta yok<\/small>/);
+  const variants = html.slice(html.indexOf("pd-variants"), html.indexOf("</ul>", html.indexOf("pd-variants")));
+  assert.doesNotMatch(variants, /id=f9/, "another series is never offered as a variant");
+});
+
+test("H2 generic 'GREE' series and singletons get no variant picker", async () => {
+  const lone = await productPage(apiProduct({ id: "x", series: "Airy" }), [apiProduct({ id: "x", series: "Airy" })]);
+  assert.doesNotMatch(lone.root.innerHTML, /pd-variants/);
+  const generic = await productPage(apiProduct({ id: "g1", series: "GREE" }), [apiProduct({ id: "g1", series: "GREE" }), apiProduct({ id: "g2", series: "GREE" })]);
+  assert.doesNotMatch(generic.root.innerHTML, /pd-variants/);
+});
+
+test("H2 product information table uses only stored fields when verified specs are missing", async () => {
+  const { root } = await productPage(apiProduct({ id: "i", name: "Airy 12000 BTU/h - Siyah", series: "Airy", sku: "", specifications: [] }), [apiProduct({ id: "i" })]);
+  assert.match(root.innerHTML, /id="bilgiler"[\s\S]*<dt>Kategori<\/dt><dd>Duvar Tipi<\/dd>[\s\S]*<dt>Renk<\/dt><dd>Siyah<\/dd>[\s\S]*<dt>Satış şekli<\/dt><dd>Online satış<\/dd>/);
+  assert.doesNotMatch(root.innerHTML.slice(root.innerHTML.indexOf('id="bilgiler"')), /<dt>Model kodu<\/dt>/, "an empty SKU is not listed as a row");
+  assert.match(root.innerHTML, /<a href="#bilgiler">Ürün bilgileri<\/a>/);
+});
+
+test("H2 gallery step buttons wrap through the approved gallery", async () => {
+  const gallery = [1, 2, 3].map((n) => ({ url: `https://www.gree.com.tr/g${n}.png`, alt: `G${n}`, width: 1600, height: 900 }));
+  const { root, store } = await productPage(apiProduct({ id: "g", gallery, imageUrl: gallery[0].url }), [apiProduct({ id: "g" })]);
+  assert.match(root.innerHTML, /data-action="gallery-step" data-step="-1" aria-label="Önceki görsel"/);
+  assert.match(root.innerHTML, /data-action="gallery-step" data-step="1" aria-label="Sonraki görsel"/);
+  assert.ok(store);
+  assert.match(readFileSync("public/store-core.js", "utf8"), /action==='gallery-step'\)\{const count=approvedGallery\(productDetail\)\.length;if\(count\)selectProductGallery\(\(selectedGalleryIndex\+Number\(el\.dataset\.step\|\|0\)\+count\)%count\)\}/);
+});
