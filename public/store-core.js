@@ -57,7 +57,7 @@ function buildOrderPayload(fields,entries,products){return {customerName:fields.
    ever submits the ids of boxes the customer actively ticked; the server re-validates them. */
 let legalRequirements=null;
 /* H3.1-B: a legal document is only usable when it is identifiable and readable. Anything else blocks the order with a
-   plain explanation instead of rendering placeholders such as "Sürüm undefined". The server still decides; this only
+   plain explanation instead of rendering placeholder text for a missing version. The server still decides; this only
    stops the customer from being walked into a confirmation that cannot be recorded. */
 const LEGAL_BLOCKED_MESSAGE='Zorunlu hukuki belgeler şu anda eksik veya doğrulanamıyor; bu nedenle sipariş alamıyoruz. Bilgileriniz ve sepetiniz korunuyor. Lütfen daha sonra tekrar deneyin ya da 0542 795 75 60 numarasından bize ulaşın.';
 const KVKK_MISSING_MESSAGE='Aydınlatma metni henüz yayınlanmadığı için sipariş şu anda alınamıyor. Lütfen daha sonra tekrar deneyin ya da 0542 795 75 60 numarasından bize ulaşın.';
