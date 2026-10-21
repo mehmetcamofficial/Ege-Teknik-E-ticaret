@@ -1340,3 +1340,18 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 /* Recovered acceptance repair: order-confirmation legal links remain comfortable
    targets at every breakpoint, including WebKit's inline-text metrics. */
 [data-order-confirmation] .legal-accepted a{display:inline-flex;align-items:center;min-height:24px;min-width:24px;padding-block:2px}
+
+/* H1.1: the progressive selector uses light surfaces, including its action buttons. */
+.selector-card{color:var(--ink)}
+.selector-card :is(legend,h2,h3){color:var(--p)}
+.selector-card :is(p,.climate-method,li){color:var(--body)}
+.selector-card .selector-actions .ghost,[data-climate-result] .ghost{background:#fff;color:var(--p)!important;border-color:var(--line-strong)}
+.selector-card .selector-actions .ghost:hover,[data-climate-result] .ghost:hover{background:var(--mint)}
+.selector-card .selector-actions .primary{background:var(--p);color:#fff!important;border-color:var(--p)}
+.selector-card .selector-actions .primary:hover{background:var(--p-600)}
+[data-climate-result]>span{color:var(--body)}
+[data-climate-result]{padding:clamp(16px,3vw,24px)}
+[data-climate-result] .product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+[data-climate-result] .product{min-width:0;height:100%}
+[data-climate-result] .selector-actions>*{min-height:44px}
+@media(max-width:600px){[data-climate-result] .product-grid{grid-template-columns:minmax(0,1fr)}.selector-card .selector-actions>*{flex:1 1 140px}}
