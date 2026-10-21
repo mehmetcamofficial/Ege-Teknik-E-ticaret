@@ -39,3 +39,16 @@
 @media(prefers-reduced-motion:reduce){
  .hybrid-home :is(.hero-carousel,.hc-slide,.stage img,.hero-card,.series-card,.product,.hc-btn){transition:none!important;animation:none!important}
 }
+/* H1.2: selector slide keeps the light shopping hero and the dark capacity card.
+   H1's --hc-bg refinement also won on theme 3, while old dark-theme text remained white. */
+.hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active .hc-title{color:#0f382e}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active :is(.hc-title em,.eyebrow){color:#006c49}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active :is(.hc-lead,.hc-points){color:#454d48}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active .hc-points svg{color:#006c49}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active .primary{background:#0f382e;border-color:#0f382e;color:#fff}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active .ghost{background:#fff;border-color:#6e8477;color:#0f382e}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-tabs [role=tab]{color:#454d48}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-tabs [role=tab][aria-selected=true]{color:#0f382e}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-bar{background:#cbd9d0}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-bar i{background:#006c49}
+.hybrid-home .hero-carousel[data-theme="3"] .hc-btn{background:#fff;border-color:#6e8477;color:#0f382e}
