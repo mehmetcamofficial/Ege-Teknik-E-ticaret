@@ -59,7 +59,7 @@ let legalRequirements=null;
 async function loadLegalRequirements(){legalRequirements=null;try{const response=await fetch('/api/legal/required');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents)&&data.documents.length)legalRequirements=data.documents}catch{}renderLegalConsents();return legalRequirements}
 /* Exact-version link: opens the very version whose id the box submits; opening it never ticks the box. */
 function legalVersionHref(d){return '/legal/'+encodeURIComponent(d.slug)+'?version='+encodeURIComponent(d.versionId)}
-function renderLegalConsents(){const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" required data-legal-version="${esc(d.versionId)}"${legalPreview?'':' disabled'}><span><a href="${esc(legalVersionHref(d))}" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
+function renderLegalConsents(){queueCheckoutBar();const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" required data-legal-version="${esc(d.versionId)}"${legalPreview?'':' disabled'}><span><a href="${esc(legalVersionHref(d))}" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
 function acceptedLegalVersionIds(boxes){return Array.from(boxes||[]).filter(box=>box.checked).map(box=>box.dataset.legalVersion)}
 function legalConsentsComplete(requirements,acceptedIds){return Boolean(requirements&&requirements.length)&&requirements.every(d=>acceptedIds.includes(d.versionId))}
 /* ---- P3-LEGAL-3C.4 / P2.2: pre-acceptance legal preview ---------------------------------------------
@@ -109,6 +109,7 @@ function renderLegalPreview(){
 
 async function requestLegalPreview(form){
   if(legalPreviewLoading)return legalPreview
+  if(!validateCheckoutForm(form)){const s=document.querySelector('[data-legal-preview-status]');if(s)s.textContent='Hukuki metinleri hazırlamadan önce işaretli alanları düzeltin.';return null}
   const host=document.querySelector('[data-legal-preview]'),status=document.querySelector('[data-legal-preview-status]'),button=document.querySelector('[data-legal-preview-prepare]');
   legalPreviewLoading=true;if(button)button.disabled=true;
   if(status){status.textContent='Hukuki metinler hazırlanıyor…';status.setAttribute('aria-busy','true')}
@@ -400,7 +401,7 @@ function syncAddressRequirements(choice){
   const needed=choice.method==='dealer'||choice.method==='shipping';
   ['[name=city]','[name=district]','[name=address]'].forEach(sel=>{const el=document.querySelector(sel);if(el)el.required=needed});
   const hint=document.querySelector('[data-address-hint]');if(hint)hint.textContent=choice.method==='pickup'?'Mağazadan teslimde adres gerekmez.':''}
-function renderChargeSummary(){
+function renderChargeSummary(){queueCheckoutBar();
   const box=document.querySelector('[data-charge-summary]');if(!box)return;
   const totalEl=document.querySelector('[data-total]'),notice=document.querySelector('[data-charge-notice]'),submit=document.querySelector('[data-submit-order]');
   if(!catalogAuthoritative()){box.innerHTML='';if(totalEl)totalEl.textContent='—';return}
@@ -425,8 +426,8 @@ function renderCheckout(){const root=document.querySelector('[data-cart-items]')
   /* type="button" is required, not cosmetic: these rows render inside checkout.html's
      <form data-checkout-form>, and a <button> with no type defaults to submit - so a
      remove click would also fire submitOrder and place an order for the rest of the cart. */
-  const rows=[...sellable.map(l=>`<div class="summary-row"><span>${esc(l.product.name)}<br><small>${esc(l.product.capacity)} · ${money(l.product.price)} × ${l.quantity} adet</small></span><span>${money(l.product.price*l.quantity)} <button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}">×</button></span></div>`),
-    ...blocked.map(l=>`<div class="summary-row"><span>Bu ürün artık satışta değil<br><small>Ürün kodu: ${esc(l.productId)}</small></span><span><button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}">×</button></span></div>`)];
+  const rows=[...sellable.map(l=>`<div class="summary-row"><span>${esc(l.product.name)}<br><small>${esc([formatCapacity(l.product.capacity),productColour(l.product)].filter(Boolean).join(' · '))} · ${money(l.product.price)} × ${l.quantity} adet</small></span><span>${money(l.product.price*l.quantity)} <button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}" aria-label="${esc(l.product.name)} ürününü sepetten kaldır">×</button></span></div>`),
+    ...blocked.map(l=>`<div class="summary-row"><span>Bu ürün artık satışta değil<br><small>Ürün kodu: ${esc(l.productId)}</small></span><span><button type="button" class="ghost" data-action="remove-cart" data-id="${esc(l.productId)}" aria-label="Satışta olmayan ürünü sepetten kaldır">×</button></span></div>`)];
   root.innerHTML=rows.length?rows.join(''):'<p class="cart-empty">Sepetiniz boş. <a class="primary inline" href="catalog.html">Ürünleri inceleyin</a></p>';
   /* an empty cart shows dashes, never a ₺0 total */
   if(!sellable.length){setTotals('—');renderDeliveryOptions();renderChargeSummary();return}
@@ -464,8 +465,55 @@ function renderOrderConfirmation(data){
   const heading=box.querySelector('[data-confirmation-heading]');heading?.focus();
   box.scrollIntoView({block:'start'})
 }
-async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=f.querySelector('button.primary'),result=f.querySelector('[data-order-result]'),say=t=>{if(result)result.textContent=t};
+/* H3-B: client checks mirror lib/order-domain.ts and the server's address rule (lib/checkout-authority.ts). They only
+   speed up feedback - the server still validates every field. Only fields that exist in the form are checked. */
+const CHECKOUT_FIELD_RULES=[
+  ['customerName',el=>{const v=el.value.trim();return v.length<2?'Adınızı ve soyadınızı girin.':v.length>100?'Ad soyad en fazla 100 karakter olabilir.':''}],
+  ['phone',el=>{const v=el.value.trim(),digits=v.replace(/\D/g,'');return digits.length<10?'Telefon numaranızı alan koduyla girin (ör. 0532 123 45 67).':v.length>30?'Telefon numarası en fazla 30 karakter olabilir.':''}],
+  ['email',el=>{const v=el.value.trim();return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)?'Geçerli bir e-posta adresi girin (ör. ad@ornek.com).':v.length>150?'E-posta en fazla 150 karakter olabilir.':''}],
+  ['city',el=>el.required&&!el.value?'Teslimat için il seçin.':''],
+  ['district',el=>el.required&&!el.disabled&&!el.value?'Teslimat için ilçe seçin.':''],
+  ['address',el=>el.required&&el.value.trim().length<8?'Teslimat adresinizi mahalle, sokak ve numara ile girin.':''],
+];
+let checkoutValidated=false;
+function checkoutFieldError(el,message){
+  const id=(el.id||el.name)+'-error';let node=document.getElementById?.(id);
+  // Inside the label but aria-hidden, so it never joins the field's name; aria-describedby still reads it.
+  if(!node&&message&&typeof document.createElement==='function'){node=document.createElement('small');node.id=id;node.className='field-error';node.setAttribute('aria-hidden','true');(el.closest('label')||el.parentElement)?.appendChild(node)}
+  if(node){node.textContent=message;node.hidden=!message}
+  const described=(el.getAttribute('aria-describedby')||'').split(/\s+/).filter(t=>t&&t!==id);if(message)described.push(id);
+  if(described.length)el.setAttribute('aria-describedby',described.join(' '));else el.removeAttribute('aria-describedby');
+  if(message)el.setAttribute('aria-invalid','true');else el.removeAttribute('aria-invalid');
+}
+function validateCheckoutForm(form,announce=true){
+  if(typeof form?.querySelector!=='function')return true;
+  const errors=[];
+  for(const [name,rule] of CHECKOUT_FIELD_RULES){const el=form.querySelector(`[name="${name}"]`);if(!el||typeof el.value!=='string'||typeof el.setAttribute!=='function')continue;if(!el.id)el.id='co-'+name;const message=rule(el);checkoutFieldError(el,message);if(message)errors.push([el,message])}
+  const box=form.querySelector('[data-checkout-errors]');checkoutValidated=true;
+  if(box){box.hidden=!errors.length;box.innerHTML=errors.length?`<h2>Devam etmeden önce ${errors.length} alanı düzeltin</h2><ul>${errors.map(([el,m])=>`<li><a href="#${esc(el.id)}" data-focus-field="${esc(el.id)}">${esc(m)}</a></li>`).join('')}</ul>`:'';if(errors.length&&announce)box.focus()}
+  return !errors.length
+}
+/* H3-B: phones get a total + next-step bar while the real submit button is off screen; it never submits a form that is not ready. */
+let checkoutBarQueued=false;
+function syncCheckoutBar(){checkoutBarQueued=false;const bar=document.querySelector('[data-checkout-bar]'),form=document.querySelector('[data-checkout-form]');if(!bar||!form)return;
+  const submit=form.querySelector('[data-submit-order]'),r=submit?.getBoundingClientRect(),onScreen=r&&r.top<innerHeight&&r.bottom>0,ready=submit&&!submit.disabled;
+  const show=innerWidth<=1000&&!form.hidden&&getCart().length>0&&catalogAuthoritative()&&!onScreen;
+  bar.hidden=!show;document.documentElement.classList.toggle('checkout-bar-open',show);
+  const total=document.querySelector('[data-total]')?.textContent||'—';bar.querySelector('[data-checkout-bar-total]').textContent=total;
+  const button=bar.querySelector('[data-checkout-continue]');button.textContent=orderSubmitting?'Sipariş kaydediliyor…':ready?'Siparişi onayla':'Devam et';button.disabled=orderSubmitting}
+function queueCheckoutBar(){if(checkoutBarQueued||typeof requestAnimationFrame!=='function')return;checkoutBarQueued=true;requestAnimationFrame(syncCheckoutBar)}
+function checkoutContinue(){const form=document.querySelector('[data-checkout-form]');if(!form||orderSubmitting)return;if(!validateCheckoutForm(form))return;
+  const submit=form.querySelector('[data-submit-order]'),prepare=document.querySelector('[data-legal-preview-prepare]');
+  if(!legalPreview){prepare?.scrollIntoView({block:'center'});prepare?.focus();return}
+  if(submit&&!submit.disabled){form.requestSubmit(submit);return}
+  const consents=document.querySelector('[data-legal-consents]');consents?.scrollIntoView({block:'center'});consents?.querySelector('input:not(:disabled)')?.focus()}
+let orderSubmitting=false;
+async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=f.querySelector('[data-order-result]'),say=t=>{if(result){result.textContent=t;result.classList?.toggle?.('is-error',!!t)}};
+  /* H3-B: the real submit button (the legal "prepare" button is also .primary and comes first); one request at a time. */
+  const button=f.querySelector('[data-submit-order]')||f.querySelector('button.primary');
+  if(orderSubmitting)return;
   if(!catalogAuthoritative()){say('Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
+  if(!validateCheckoutForm(f)){say('Siparişi tamamlamak için işaretli alanları düzeltin.');return}
   const entries=getCart(),products=getProducts(),payload=buildOrderPayload({customerName:'',phone:'',email:'',city:'',address:'',paymentProvider:''},entries,products);
   if(!payload.items.length){toast('Sepetiniz boş');say('Sepetinizde satın alınabilir ürün yok.');return}
   const accepted=acceptedLegalVersionIds(f.querySelectorAll('[data-legal-version]'));
@@ -480,7 +528,8 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=
   if(previewAccepted.length!==legalPreview.documents.length){invalidateLegalPreview();say('Hukuki metinlerin tümünü onaylamanız gerekiyor.');return}
   Object.assign(payload,{expectedTotal:summary.total,delivery:choice.method,district:d.get('district')||'',marketing:marketingChoices(f.querySelectorAll('[data-marketing-channel]')),customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city')||'',address:d.get('address')||'',paymentProvider:d.get('provider'),note:d.get('note')||'',legalAcceptances:previewAccepted,legalPreviewToken:legalPreview.token});
   const attemptKey=orderAttemptKey(sessionStorage);
-  if(button){button.disabled=true;button.textContent='Sipariş kaydediliyor…'}
+  orderSubmitting=true;f.setAttribute?.('aria-busy','true');say('');
+  if(button){button.disabled=true;button.textContent='Sipariş kaydediliyor…'}queueCheckoutBar();
   try{
     const response=await fetch('/api/orders',{method:'POST',headers:{'content-type':'application/json','idempotency-key':attemptKey},body:JSON.stringify(payload)});
     const data=await response.json().catch(()=>({}));
@@ -494,8 +543,9 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,button=
     renderOrderConfirmation(data);
   }catch(error){
     if(button){button.disabled=false;button.textContent='Tekrar Dene'}renderChargeSummary();
-    say(error.message||'Sipariş kaydedilemedi. Bağlantınızı kontrol edip tekrar deneyin.')
-  }}
+    // Network failures surface as TypeError with a browser (often English) message; never show that text.
+    say((error?.name==='TypeError'||!error?.message?'Bağlantı kurulamadı.':error.message)+' Bilgileriniz ve sepetiniz korunuyor; tekrar deneyebilirsiniz.')
+  }finally{orderSubmitting=false;f.removeAttribute?.('aria-busy');queueCheckoutBar()}}
 
 /**
  * Single delegated click handler for every dynamically-rendered and static
@@ -560,6 +610,11 @@ function wireLegalPreview(){
   if(prepare)prepare.addEventListener('click',()=>{void requestLegalPreview(form)});
   form.addEventListener('change',e=>{const t=e.target;if(t&&t.name&&legalPreviewRelevantField(t.name))invalidateLegalPreview()});
   form.addEventListener('input',e=>{const t=e.target;if(t&&t.name&&legalPreviewRelevantField(t.name))invalidateLegalPreview()});
+  // H3-B: after the first check, errors clear as the customer fixes them (no focus jumps while typing).
+  for(const type of ['input','change'])form.addEventListener(type,()=>{if(checkoutValidated)validateCheckoutForm(form,false);queueCheckoutBar()});
+  form.querySelector('[data-checkout-errors]')?.addEventListener('click',e=>{const link=e.target.closest('[data-focus-field]');if(!link)return;e.preventDefault();const el=document.getElementById(link.dataset.focusField);el?.scrollIntoView({block:'center'});el?.focus()});
+  document.querySelector('[data-checkout-continue]')?.addEventListener('click',checkoutContinue);
+  window.addEventListener('scroll',queueCheckoutBar,{passive:true});window.addEventListener('resize',queueCheckoutBar);queueCheckoutBar();
 }
 
 document.addEventListener("DOMContentLoaded",()=>{if(document.querySelector("[data-checkout-form]"))wireLegalPreview();updateCartCount();updateFavoritesCount();renderCatalog();renderCheckout();document.querySelector('[data-checkout-form]')?.addEventListener('submit',submitOrder);if(document.querySelector('[data-legal-consents]'))void loadLegalRequirements();if(document.querySelector('[data-charge-summary]'))void loadCheckoutCharges();document.querySelector('[data-checkout-form]')?.addEventListener('change',e=>{const t=e.target;if(!t||!t.matches)return;if(t.matches('[name=city]'))onProvinceChange();else if(t.matches('[name=district],[name=delivery]'))renderChargeSummary()});void renderKvkkNotices();void loadCatalog()});
@@ -640,7 +695,7 @@ function toggleMenu(button){const panel=document.getElementById(button?.getAttri
 function renderHelpLauncher(){if(!document.querySelector('[data-site-footer]')||document.querySelector('[data-help]'))return;const wrap=document.createElement('div');wrap.className='help-launcher';wrap.dataset.help='';wrap.innerHTML=`<div class="help-panel" id="help-panel" role="dialog" aria-modal="false" aria-labelledby="help-title" hidden><div class="help-head"><h2 id="help-title">Size nasıl yardımcı olalım?</h2><button type="button" class="help-close" data-action="toggle-help" aria-label="Yardım menüsünü kapat">${ico('close',18)}</button></div><div id="ege-assistant-root" data-assistant-slot></div><ul class="help-list"><li><a href="mailto:${business.email}">${ico('mail',18)}<span><b>E-posta</b>${business.email}</span></a></li><li><a href="${business.phoneHref}">${ico('phone',18)}<span><b>Telefon</b>${business.phone}</span></a></li><li><a href="contact.html">${ico('clipboard',18)}<span><b>İletişim formu</b>Satış, keşif veya servis talebi</span></a></li><li><a href="${business.wa}" rel="noopener">${ico('chat',18)}<span><b>WhatsApp</b>Hızlı soru için</span></a></li><li><a href="${business.map}" target="_blank" rel="noopener">${ico('pin',18)}<span><b>Yol tarifi</b>Kuşadası mağaza konumu<span class="sr-only"> (yeni sekmede açılır)</span></span></a></li></ul></div><button type="button" class="help-toggle" data-action="toggle-help" aria-expanded="false" aria-controls="help-panel">${ico('headset',20)}<span class="help-label">Yardım</span></button>`;document.body.appendChild(wrap);window.EgeAssistant=window.EgeAssistant||{mount(render){const slot=document.getElementById('ege-assistant-root');if(slot&&typeof render==='function')render(slot)}}}
 /* H2.1: the floating help button steps aside while it would cover a price, stock state or buying control.
    It never hides while its panel is open or it has focus, and reappears only after a short clear period (no flicker). */
-const HELP_PROTECTED='.pd-offer,.pd-buy .purchase-row,.pd-buy>.primary,.pd-sticky.is-visible,.pd-variants,[data-products] .product-foot,[data-products] .product .actions,.related-section .product-foot,.related-section .product .actions,.catalog-empty-actions';
+const HELP_PROTECTED='[data-submit-order],.checkout-mobile-bar:not([hidden]),[data-legal-preview-prepare],.pd-offer,.pd-buy .purchase-row,.pd-buy>.primary,.pd-sticky.is-visible,.pd-variants,[data-products] .product-foot,[data-products] .product .actions,.related-section .product-foot,.related-section .product .actions,.catalog-empty-actions';
 let helpClearQueued=false,helpShowTimer=null;
 function helpCovers(){const btn=document.querySelector('[data-help] .help-toggle');if(!btn)return false;const r=btn.getBoundingClientRect(),m=8;return [...document.querySelectorAll(HELP_PROTECTED)].some(el=>{const b=el.getBoundingClientRect();return b.width&&b.height&&b.left<r.right+m&&b.right>r.left-m&&b.top<r.bottom+m&&b.bottom>r.top-m})}
 function syncHelpClearance(){helpClearQueued=false;const wrap=document.querySelector('[data-help]');if(!wrap)return;if(wrap.querySelector('.help-toggle')?.getAttribute('aria-expanded')==='true'||wrap.contains(document.activeElement)){clearTimeout(helpShowTimer);helpShowTimer=null;wrap.classList.remove('is-clearing');return}

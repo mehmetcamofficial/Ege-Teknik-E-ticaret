@@ -27,20 +27,25 @@
       <div class="notice" data-confirmation-account>İleride siparişlerinizi kolayca takip etmek isterseniz <a href="/account">hesap oluşturabilirsiniz</a>. Bu tamamen isteğe bağlıdır ve siparişinizi etkilemez; bu misafir siparişi hesabınıza otomatik eklenmez.</div>
       <p><a class="ghost" href="catalog.html">Alışverişe devam et</a></p>
     </section>
-    <form class="checkout-grid" data-checkout-form>
-      <section class="panel">
-        <h2>Teslimat bilgileri</h2>
+    <form class="checkout-grid" data-checkout-form novalidate>
+      <section class="panel checkout-steps">
+        <div class="checkout-errors" data-checkout-errors role="alert" tabindex="-1" hidden></div>
+        <h2 class="checkout-step"><span aria-hidden="true">1</span>İletişim bilgileri</h2>
         <div class="field-grid">
-          <label class="field">Ad Soyad<input name="customerName" required autocomplete="name"></label>
-          <label class="field">Telefon<input name="phone" required type="tel" autocomplete="tel"></label>
-          <label class="field">E-posta<input name="email" required type="email" autocomplete="email"></label>
+          <label class="field">Ad Soyad<input id="co-name" name="customerName" required autocomplete="name" maxlength="100"></label>
+          <label class="field">Telefon<input id="co-phone" name="phone" required type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="05xx xxx xx xx"></label>
+          <label class="field" style="grid-column:1/-1">E-posta<input id="co-email" name="email" required type="email" autocomplete="email" maxlength="150" placeholder="ad@ornek.com"></label>
+        </div>
+        <h2 class="checkout-step"><span aria-hidden="true">2</span>Teslimat adresi</h2>
+        <div class="field-grid">
           <label class="field">İl<select name="city" data-province autocomplete="address-level1"><option value="">İl seçin</option></select></label>
           <label class="field">İlçe<select name="district" data-district autocomplete="address-level2" disabled><option value="">Önce il seçin</option></select></label>
-          <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea name="address" rows="3" maxlength="500" autocomplete="street-address" aria-describedby="address-hint"></textarea><small class="field-help" id="address-hint" data-address-hint></small></label>
-          <label class="field">Teslimat notu<input name="note" maxlength="500" placeholder="Varsa ekleyin"></label>
+          <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea id="co-address" name="address" rows="3" maxlength="500" autocomplete="street-address" aria-describedby="address-hint"></textarea><small class="field-help" id="address-hint" data-address-hint></small></label>
+          <label class="field" style="grid-column:1/-1">Teslimat notu<input id="co-note" name="note" maxlength="500" placeholder="Varsa ekleyin"></label>
         </div>
+        <p class="field-help checkout-billing">Bu siparişte ayrı bir fatura adresi alınmaz; hukuki metinlerde fatura bilgisi olarak ad soyad ve il kullanılır.</p>
         <div data-delivery-options aria-live="polite"></div>
-        <h2>Ödeme yöntemi</h2>
+        <h2 class="checkout-step"><span aria-hidden="true">3</span>Ödeme yöntemi</h2>
         <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Aktif ödeme yöntemi sipariş sonrasında teyit edilir. Bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
         <div class="notice" id="payment-status">Online ödeme şu anda kullanılamıyor. Ödeme seçenekleri için Ege Teknik ile iletişime geçebilirsiniz.</div>
       </section>
@@ -56,6 +61,7 @@
 
         <button class="primary" data-submit-order disabled style="width:100%;margin-top:18px">Siparişi Onayla — ödeme yükümlülüğü doğurur</button><p data-order-result aria-live="polite"></p></aside>
     </form>
+    <div class="checkout-mobile-bar" data-checkout-bar hidden><div><small>Ödenecek toplam</small><b data-checkout-bar-total>—</b></div><button type="button" class="primary" data-checkout-continue>Devam et</button></div>
   </main>
   <div class="toast"></div><script src="store.js"></script>
 </body></html>
