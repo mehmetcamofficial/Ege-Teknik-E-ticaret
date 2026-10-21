@@ -1,1 +1,1 @@
-[h4-checkout] PASS {"invalidInputs":"12 refused, zero rows written, stock unchanged","concurrentOrders":{"attempts":8,"created":3,"refused":5,"finalStock":{"on_hand":0,"reserved":3}},"concurrentIdempotency":{"duplicates":6,"orders":1}}
+[h4-checkout] PASS {"invalidInputs":"12 refused, zero rows written, stock unchanged","concurrentOrders":{"attempts":8,"created":3,"refused":5,"finalStock":{"on_hand":0,"reserved":3}},"concurrentIdempotency":{"duplicates":6,"orders":1},"moneyConsistency":"totals, VAT, payment status and ledger agree for all orders; no payment rows"}

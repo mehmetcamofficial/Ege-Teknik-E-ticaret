@@ -218,6 +218,16 @@ try {
   assert.deepEqual(await rows(), { orders: 4, items: 4, acceptances: 8, stock: { on_hand: 4, reserved: 4 } }, "six identical requests added exactly one order and one reservation");
   results.concurrentIdempotency = { duplicates: 6, orders: 1 };
 
+  // ---- 4. Money and stock records agree (prices are VAT-inclusive: net = lines - VAT; total = net + VAT + charges) ----
+  const money = (await owner.query(`SELECT count(*)::int AS orders,
+      bool_and(o.total = o.subtotal + o.vat_total + o.shipping_total + o.installation_total) AS total_formula,
+      bool_and(o.subtotal = s.gross - s.vat) AS net_formula, bool_and(o.vat_total = s.vat) AS vat_formula,
+      bool_and(o.payment_status = 'pending' AND o.status = 'pending_payment') AS unpaid_orders_stay_unpaid
+    FROM orders o JOIN (SELECT order_id, sum(line_total) gross, sum(vat_amount) vat FROM order_items GROUP BY order_id) s ON s.order_id = o.id`)).rows[0];
+  assert.deepEqual(money, { orders: 4, total_formula: true, net_formula: true, vat_formula: true, unpaid_orders_stay_unpaid: true }, "order totals, VAT and payment status are consistent");
+  assert.equal((await owner.query("SELECT count(*)::int AS n FROM payments")).rows[0].n, 0, "creating orders records no payment");
+  assert.equal((await owner.query("SELECT count(*)::int AS n FROM order_items i WHERE i.unit_price * i.quantity <> i.line_total")).rows[0].n, 0, "line math");
+  results.moneyConsistency = "totals, VAT, payment status and ledger agree for all orders; no payment rows";
   console.log("[h4-checkout] PASS " + JSON.stringify(results));
 
 } catch (error) {
