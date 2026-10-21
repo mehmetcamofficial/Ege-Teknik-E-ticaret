@@ -1,0 +1,311 @@
+$ node scripts/test-commerce-postgres.mjs
+[commerce-postgres] reset-schema [tests/paytr-db.test.ts]
+[commerce-postgres] migrate-to-pre-0011 (11 migrations) [tests/paytr-db.test.ts]
+[commerce-postgres] seed-legacy-owner-for-0011 [tests/paytr-db.test.ts]
+[commerce-postgres] migrate-to-head [tests/paytr-db.test.ts]
+[commerce-postgres] bootstrap-complete [tests/paytr-db.test.ts]
+TAP version 13
+# Subtest: flag off or misconfigured: refused before any database or provider work
+ok 1 - flag off or misconfigured: refused before any database or provider work
+  ---
+  duration_ms: 13.567875
+  type: 'test'
+  ...
+# Subtest: wrong e-mail or unknown order: same refusal, nothing created
+ok 2 - wrong e-mail or unknown order: same refusal, nothing created
+  ---
+  duration_ms: 3.97575
+  type: 'test'
+  ...
+# Subtest: token: amount is the DB outstanding balance in kuruş, a pending attempt + audit is created once, only the iframe token comes back
+ok 3 - token: amount is the DB outstanding balance in kuruş, a pending attempt + audit is created once, only the iframe token comes back
+  ---
+  duration_ms: 20.735167
+  type: 'test'
+  ...
+# Subtest: duplicate start while the token is live reuses the attempt: no second attempt, no second provider call
+ok 4 - duplicate start while the token is live reuses the attempt: no second attempt, no second provider call
+  ---
+  duration_ms: 10.927125
+  type: 'test'
+  ...
+# Subtest: provider token failure: attempt marked failed, customer gets a friendly error, a retry creates a fresh attempt
+ok 5 - provider token failure: attempt marked failed, customer gets a friendly error, a retry creates a fresh attempt
+  ---
+  duration_ms: 9.374333
+  type: 'test'
+  ...
+# Subtest: valid success callback: paid once, order advanced, audited once; duplicate callbacks change nothing
+ok 6 - valid success callback: paid once, order advanced, audited once; duplicate callbacks change nothing
+  ---
+  duration_ms: 17.783708
+  type: 'test'
+  ...
+# Subtest: invalid hash: 400, no state change, audited as invalid
+ok 7 - invalid hash: 400, no state change, audited as invalid
+  ---
+  duration_ms: 6.191208
+  type: 'test'
+  ...
+# Subtest: unknown merchant_oid with a valid hash: acknowledged, audited, nothing created
+ok 8 - unknown merchant_oid with a valid hash: acknowledged, audited, nothing created
+  ---
+  duration_ms: 1.904208
+  type: 'test'
+  ...
+# Subtest: failed callback: attempt failed with server-side reason, order kept, retry allowed; a later failure never undoes a success
+ok 9 - failed callback: attempt failed with server-side reason, order kept, retry allowed; a later failure never undoes a success
+  ---
+  duration_ms: 17.010625
+  type: 'test'
+  ...
+# Subtest: amount mismatch: never counted as collected, flagged and audited once
+ok 10 - amount mismatch: never counted as collected, flagged and audited once
+  ---
+  duration_ms: 9.865875
+  type: 'test'
+  ...
+# Subtest: online attempts never leak into collected until paid; manual EFT still bounds by the real balance
+ok 11 - online attempts never leak into collected until paid; manual EFT still bounds by the real balance
+  ---
+  duration_ms: 20.454625
+  type: 'test'
+  ...
+# Subtest: parallel duplicate callbacks and a parallel double start are serialized by the order row lock
+ok 12 - parallel duplicate callbacks and a parallel double start are serialized by the order row lock
+  ---
+  duration_ms: 11.997209
+  type: 'test'
+  ...
+# Subtest: admin metrics equal the ledger: money only from paid PayTR rows, counts per status, callback health from audit names
+ok 13 - admin metrics equal the ledger: money only from paid PayTR rows, counts per status, callback health from audit names
+  ---
+  duration_ms: 2.262833
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 536.567792
+[commerce-postgres] tests/paytr-db.test.ts: tests=13 pass=13 skipped=0
+[commerce-postgres] reset-schema [tests/finance-db.test.ts]
+[commerce-postgres] migrate-to-pre-0011 (11 migrations) [tests/finance-db.test.ts]
+[commerce-postgres] seed-legacy-owner-for-0011 [tests/finance-db.test.ts]
+[commerce-postgres] migrate-to-head [tests/finance-db.test.ts]
+[commerce-postgres] bootstrap-complete [tests/finance-db.test.ts]
+TAP version 13
+# Subtest: a manual payment is recorded, derives partially_paid then paid, and is audited
+ok 1 - a manual payment is recorded, derives partially_paid then paid, and is audited
+  ---
+  duration_ms: 24.186416
+  type: 'test'
+  ...
+# Subtest: overpayment is refused: collected can never exceed the order total
+ok 2 - overpayment is refused: collected can never exceed the order total
+  ---
+  duration_ms: 2.571625
+  type: 'test'
+  ...
+# Subtest: the same Idempotency-Key replays the payment once; reused for a different body it is refused
+ok 3 - the same Idempotency-Key replays the payment once; reused for a different body it is refused
+  ---
+  duration_ms: 6.424625
+  type: 'test'
+  ...
+# Subtest: concurrent payments on one order are serialized by the row lock: the total is never exceeded
+ok 4 - concurrent payments on one order are serialized by the row lock: the total is never exceeded
+  ---
+  duration_ms: 8.68475
+  type: 'test'
+  ...
+# Subtest: partial refund, then full refund; refund above the payment and duplicate refund are refused
+ok 5 - partial refund, then full refund; refund above the payment and duplicate refund are refused
+  ---
+  duration_ms: 15.044917
+  type: 'test'
+  ...
+# Subtest: 'paid' order status needs a recorded payment; cancellation needs the money refunded and releases stock
+ok 6 - 'paid' order status needs a recorded payment; cancellation needs the money refunded and releases stock
+  ---
+  duration_ms: 13.452791
+  type: 'test'
+  ...
+# Subtest: an unpaid cancelled order derives 'cancelled' and nothing is collected
+ok 7 - an unpaid cancelled order derives 'cancelled' and nothing is collected
+  ---
+  duration_ms: 2.9135
+  type: 'test'
+  ...
+# Subtest: the report separates order value, collected, outstanding, cancelled, refunded and net - and flags unbacked 'paid'
+ok 8 - the report separates order value, collected, outstanding, cancelled, refunded and net - and flags unbacked 'paid'
+  ---
+  duration_ms: 8.144375
+  type: 'test'
+  ...
+# Subtest: filters: payment status, order status, method and date window
+ok 9 - filters: payment status, order status, method and date window
+  ---
+  duration_ms: 8.892625
+  type: 'test'
+  ...
+# Subtest: DB CHECKs refuse a non-positive payment and a 'paid' payment without paid_at
+ok 10 - DB CHECKs refuse a non-positive payment and a 'paid' payment without paid_at
+  ---
+  duration_ms: 4.356833
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 486.952542
+[commerce-postgres] tests/finance-db.test.ts: tests=10 pass=10 skipped=0
+[commerce-postgres] reset-schema [tests/orders-db.test.ts]
+[commerce-postgres] migrate-to-pre-0011 (11 migrations) [tests/orders-db.test.ts]
+[commerce-postgres] seed-legacy-owner-for-0011 [tests/orders-db.test.ts]
+[commerce-postgres] migrate-to-head [tests/orders-db.test.ts]
+[commerce-postgres] bootstrap-complete [tests/orders-db.test.ts]
+TAP version 13
+# Subtest: ordersQuerySchema: page defaults to 1, coerces, and rejects an unknown status
+ok 1 - ordersQuerySchema: page defaults to 1, coerces, and rejects an unknown status
+  ---
+  duration_ms: 21.96175
+  type: 'test'
+  ...
+# Subtest: guest lookup: the right order number and e-mail returns exactly that order
+ok 2 - guest lookup: the right order number and e-mail returns exactly that order
+  ---
+  duration_ms: 2.727916
+  type: 'test'
+  ...
+# Subtest: guest lookup: the e-mail matches case-insensitively, as it did for PayTR
+ok 3 - guest lookup: the e-mail matches case-insensitively, as it did for PayTR
+  ---
+  duration_ms: 2.377125
+  type: 'test'
+  ...
+# Subtest: guest lookup: a wrong e-mail, an unknown number and an order with no e-mail all refuse identically
+ok 4 - guest lookup: a wrong e-mail, an unknown number and an order with no e-mail all refuse identically
+  ---
+  duration_ms: 1.562166
+  type: 'test'
+  ...
+# Subtest: guest lookup: one order's items never leak into another order's result
+ok 5 - guest lookup: one order's items never leak into another order's result
+  ---
+  duration_ms: 1.735666
+  type: 'test'
+  ...
+# Subtest: loadOrdersPage paginates newest-first with a small page size and a correct pageCount
+ok 6 - loadOrdersPage paginates newest-first with a small page size and a correct pageCount
+  ---
+  duration_ms: 1.849541
+  type: 'test'
+  ...
+# Subtest: loadOrdersPage filters by status and clamps an out-of-range page to the last page
+ok 7 - loadOrdersPage filters by status and clamps an out-of-range page to the last page
+  ---
+  duration_ms: 1.289209
+  type: 'test'
+  ...
+# Subtest: loadOrdersPage searches order number, customer name, city and phone
+ok 8 - loadOrdersPage searches order number, customer name, city and phone
+  ---
+  duration_ms: 2.02325
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 435.920417
+[commerce-postgres] tests/orders-db.test.ts: tests=8 pass=8 skipped=0
+[commerce-postgres] reset-schema [tests/blog-db.test.ts]
+[commerce-postgres] migrate-to-pre-0011 (11 migrations) [tests/blog-db.test.ts]
+[commerce-postgres] seed-legacy-owner-for-0011 [tests/blog-db.test.ts]
+[commerce-postgres] migrate-to-head [tests/blog-db.test.ts]
+[commerce-postgres] bootstrap-complete [tests/blog-db.test.ts]
+TAP version 13
+# Subtest: blogListQuerySchema: page defaults to 1 and coerces
+ok 1 - blogListQuerySchema: page defaults to 1 and coerces
+  ---
+  duration_ms: 31.066292
+  type: 'test'
+  ...
+# Subtest: loadBlogPostsPage paginates newest-updated-first with a correct pageCount
+ok 2 - loadBlogPostsPage paginates newest-updated-first with a correct pageCount
+  ---
+  duration_ms: 3.119
+  type: 'test'
+  ...
+# Subtest: loadBlogPost returns a full single post by id, or null when it does not exist
+ok 3 - loadBlogPost returns a full single post by id, or null when it does not exist
+  ---
+  duration_ms: 1.066917
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 403.998959
+[commerce-postgres] tests/blog-db.test.ts: tests=3 pass=3 skipped=0
+[commerce-postgres] reset-schema [tests/service-requests-db.test.ts]
+[commerce-postgres] migrate-to-pre-0011 (11 migrations) [tests/service-requests-db.test.ts]
+[commerce-postgres] seed-legacy-owner-for-0011 [tests/service-requests-db.test.ts]
+[commerce-postgres] migrate-to-head [tests/service-requests-db.test.ts]
+[commerce-postgres] bootstrap-complete [tests/service-requests-db.test.ts]
+TAP version 13
+# Subtest: serviceRequestsQuerySchema: filter defaults to open, coerces page, and rejects an unknown status
+ok 1 - serviceRequestsQuerySchema: filter defaults to open, coerces page, and rejects an unknown status
+  ---
+  duration_ms: 24.127375
+  type: 'test'
+  ...
+# Subtest: loadServiceRequestsPage's default 'open' filter excludes completed and cancelled requests
+ok 2 - loadServiceRequestsPage's default 'open' filter excludes completed and cancelled requests
+  ---
+  duration_ms: 2.900875
+  type: 'test'
+  ...
+# Subtest: loadServiceRequestsPage 'all' includes every status, and a specific status filters to just that one
+ok 3 - loadServiceRequestsPage 'all' includes every status, and a specific status filters to just that one
+  ---
+  duration_ms: 1.611
+  type: 'test'
+  ...
+# Subtest: loadServiceRequestsPage paginates newest-first and searches by name
+ok 4 - loadServiceRequestsPage paginates newest-first and searches by name
+  ---
+  duration_ms: 1.417042
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 431.033208
+[commerce-postgres] tests/service-requests-db.test.ts: tests=4 pass=4 skipped=0
+[commerce-postgres] total tests=38 pass=38 fail=0 skipped=0 cancelled=0
+[commerce-postgres] OK: 38 tests executed against real PostgreSQL, 0 skipped.

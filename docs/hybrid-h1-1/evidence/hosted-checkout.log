@@ -1,0 +1,16 @@
+PASS hosted checkout axe chrome 1440
+PASS hosted checkout axe chrome 1024
+PASS hosted checkout axe chrome 768
+PASS hosted checkout axe chrome 390
+PASS hosted checkout axe chrome 320
+PASS hosted checkout axe firefox 1440
+PASS hosted checkout axe firefox 1024
+PASS hosted checkout axe firefox 768
+PASS hosted checkout axe firefox 390
+PASS hosted checkout axe firefox 320
+PASS hosted checkout axe webkit 1440
+PASS hosted checkout axe webkit 1024
+PASS hosted checkout axe webkit 768
+PASS hosted checkout axe webkit 390
+PASS hosted checkout axe webkit 320
+Hosted Preview acceptance PASS (GET-only; no customer order)

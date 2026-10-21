@@ -1,0 +1,239 @@
+{
+  "engines": [
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2"
+    }
+  ],
+  "matrix": [
+    {
+      "engine": "chrome",
+      "width": 1440,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "width": 1024,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "width": 768,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "width": 390,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "width": 320,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "width": 1440,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "width": 1024,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "width": 768,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "width": 390,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "width": 320,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    }
+  ],
+  "negative": [
+    {
+      "engine": "chrome",
+      "status": "PASS",
+      "unknownVariant": "PASS",
+      "apiFailure": "PASS",
+      "freshPrice": "PASS",
+      "missingVariantLabel": "PASS",
+      "stockReduction": "PASS",
+      "overstock": "PASS",
+      "storageFailureNoSuccess": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "status": "PASS",
+      "unknownVariant": "PASS",
+      "apiFailure": "PASS",
+      "freshPrice": "PASS",
+      "missingVariantLabel": "PASS",
+      "stockReduction": "PASS",
+      "overstock": "PASS",
+      "storageFailureNoSuccess": "PASS"
+    }
+  ],
+  "selector": [],
+  "writes": [
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    }
+  ],
+  "axeScans": 31,
+  "failure": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n"
+}

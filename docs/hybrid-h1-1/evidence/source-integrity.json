@@ -1,0 +1,28 @@
+{
+  "h1Source": "ed93910bf282c67890514ed9c180031a24eefc1d",
+  "protectedRelease": "4f70b08264f1c4cef96df47496e00f05c4637593",
+  "testedApplicationCommit": "a6b9cbc524ffadccc8a2a33e9630d5995a1aae92",
+  "climateEstimatorUnchanged": true,
+  "estimatorSha256": "d2faee5001a73bfd7ea6823493c7574863a2536b684045315162612a950b549b",
+  "backendMigrationPaymentDependencyWorkflowChanged": false,
+  "databaseVersion": "PostgreSQL 18.6",
+  "hermetic": {
+    "pass": 1568,
+    "fail": 0,
+    "skip": 77
+  },
+  "dbExecution": {
+    "integration": 22,
+    "legal": 19,
+    "commerce": 38,
+    "aiBudget": 1,
+    "pass": 80,
+    "fail": 0,
+    "skip": 0,
+    "uniqueHermeticSkipsCovered": 77,
+    "note": "Three hermetic cases repeat inside DB suites; do not sum as unique tests."
+  },
+  "independentAclChecks": 63,
+  "realHttpCheckout": "PASS (new disposable local DB only)",
+  "secretHistoryFindings": 0
+}
