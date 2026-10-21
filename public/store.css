@@ -1342,6 +1342,7 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 [data-order-confirmation] .legal-accepted a{display:inline-flex;align-items:center;min-height:24px;min-width:24px;padding-block:2px}
 
 /* H1.2: explicit light introduction and dark selector surfaces. */
+.selector-block{background:#f1f7f3}
 .selector-intro{color:var(--body)}
 .selector-intro h3,.store .page-head h1{color:var(--p)}
 .selector-intro :is(.eyebrow,.link-arrow),.page-head .eyebrow{color:#006c49}
@@ -1409,8 +1410,8 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 @media(prefers-reduced-motion:reduce){.cart-drawer[open]{animation:none}}
 
 /* H1.1 MPA entry: no navigation delay, route interception or artificial loading screen. */
-@media(prefers-reduced-motion:no-preference){.store main{animation:store-page-enter var(--motion-control) var(--motion-ease)}}
-@keyframes store-page-enter{from{opacity:.96}to{opacity:1}}
+@media(prefers-reduced-motion:no-preference){.store main{animation:store-page-enter 200ms var(--motion-ease)}}
+@keyframes store-page-enter{from{transform:translateY(8px)}to{transform:none}}
 
 /* The distraction-free checkout header is not the storefront's three-column mobile header. */
 .store .checkout-header .store-nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;min-height:76px}
@@ -1418,6 +1419,17 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 .store .checkout-header .nav-links{position:static;display:flex;flex:0 0 auto;min-width:0}
 @media(max-width:600px){.store .checkout-header .store-nav>span{flex:1 1 100%;margin-left:0}.store .checkout-header .store-nav .brand{font-size:20px}}
 
+/* H1.2: native navigation feedback; the current page remains interactive and visible. */
+.store-navigation-status{position:fixed;inset:12px auto auto 50%;transform:translateX(-50%);z-index:10000;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:10px 16px;border:1px solid #6e8477;border-radius:999px;background:#0f382e;color:#fff;box-shadow:0 4px 18px rgb(15 56 46/.18);font-size:14px;font-weight:650;pointer-events:none}
+.store-navigation-status[hidden]{display:none}
+.store-navigation-status::before{content:"";width:10px;height:10px;border-radius:50%;background:#b8f2d1}
+@media(prefers-reduced-motion:no-preference){
+ .store-navigation-status::before{animation:navigation-wait 800ms ease-in-out infinite alternate}
+}
+/* Native cross-document opt-in stays off: acceptance exposed browser lifecycle errors. */
+@view-transition{navigation:none}
+@keyframes navigation-wait{to{opacity:.35}}
+@media(prefers-reduced-motion:reduce){@view-transition{navigation:none}.store-navigation-status::before{animation:none}}
 /* Native discrete dialog transitions keep close semantics and immediate focus restoration. */
 @supports(transition-behavior:allow-discrete){
  @media(prefers-reduced-motion:no-preference){

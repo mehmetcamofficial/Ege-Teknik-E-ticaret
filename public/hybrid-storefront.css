@@ -41,6 +41,7 @@
 }
 /* H1.2: selector slide keeps the light shopping hero and the dark capacity card.
    H1's --hc-bg refinement also won on theme 3, while old dark-theme text remained white. */
+.hybrid-home .hero-carousel[data-theme="3"]::after{background:none}
 .hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active .hc-title{color:#0f382e}
 .hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active :is(.hc-title em,.eyebrow){color:#006c49}
 .hybrid-home .hero-carousel[data-theme="3"] .hc-slide.is-active :is(.hc-lead,.hc-points){color:#454d48}
