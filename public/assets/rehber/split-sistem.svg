@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750" role="img" aria-label="Split klima montaj şeması: iç ünite, dış ünite, boru ve drenaj hattı" font-family="Plus Jakarta Sans, Segoe UI, Arial, sans-serif">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7fbf9"/><stop offset="1" stop-color="#e3eee9"/></linearGradient>
+<linearGradient id="unit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9efed"/></linearGradient>
+<linearGradient id="odu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f5"/><stop offset="1" stop-color="#dbe3e0"/></linearGradient>
+<filter id="sh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0f382e" flood-opacity=".14"/></filter></defs>
+<rect width="1200" height="750" fill="url(#bg)"/>
+<rect x="0" y="0" width="560" height="750" fill="#fbfdfc"/><rect x="560" y="0" width="60" height="750" fill="#d6dfdb"/><rect x="560" y="0" width="60" height="750" fill="url(#bg)" opacity=".35"/>
+<text x="60" y="80" font-size="26" font-weight="800" fill="#0f382e">İç mekân</text><text x="680" y="80" font-size="26" font-weight="800" fill="#0f382e">Dış mekân</text>
+<g filter="url(#sh)"><rect x="150" y="150" width="340" height="96" rx="22" fill="url(#unit)" stroke="#c9d6d1" stroke-width="2"/></g>
+<rect x="168" y="222" width="304" height="10" rx="5" fill="#d7e1dd"/><circle cx="460" cy="174" r="5" fill="#6ee7b7"/>
+<path d="M470 205 C 520 205 540 205 560 205 L 620 205 C 700 205 720 230 720 300 L 720 420" fill="none" stroke="#c8773a" stroke-width="12" stroke-linecap="round"/>
+<path d="M470 222 C 520 222 540 222 560 222 L 620 222 C 686 222 700 244 700 300 L 700 420" fill="none" stroke="#e0a066" stroke-width="10" stroke-linecap="round"/>
+<path d="M470 190 L 620 190 C 750 190 760 220 760 300 L 760 420" fill="none" stroke="#3a4743" stroke-width="5" stroke-linecap="round"/>
+<path d="M455 246 L 470 262 L 620 290 L 640 560" fill="none" stroke="#2b8fc6" stroke-width="6" stroke-dasharray="14 10" stroke-linecap="round"/>
+<g fill="#2b8fc6"><path d="M640 590 q-10 16 0 22 q10 -6 0 -22z"/><path d="M640 632 q-9 14 0 20 q9 -6 0 -20z"/></g>
+<g filter="url(#sh)"><rect x="800" y="420" width="280" height="190" rx="16" fill="url(#odu)" stroke="#b9c7c2" stroke-width="2"/></g>
+<circle cx="917.6" cy="515.0" r="64.60000000000001" fill="#eef2f1" stroke="#b9c7c2" stroke-width="2"/>
+<g stroke="#c3cfcb" stroke-width="3"><line x1="861.0" y1="471.93333333333334" x2="974.2" y2="471.93333333333334"/><line x1="861.0" y1="493.46666666666664" x2="974.2" y2="493.46666666666664"/><line x1="861.0" y1="515.0" x2="974.2" y2="515.0"/><line x1="861.0" y1="536.5333333333333" x2="974.2" y2="536.5333333333333"/><line x1="861.0" y1="558.0666666666666" x2="974.2" y2="558.0666666666666"/></g>
+<circle cx="917.6" cy="515.0" r="12" fill="#b9c7c2"/><rect x="1026" y="442" width="30" height="146" rx="6" fill="#e6ecea" stroke="#c3cfcb"/>
+<path d="M800 620 h280 M820 620 v40 M1060 620 v40" stroke="#8a9a95" stroke-width="6" stroke-linecap="round"/>
+<rect x="150" y="300" width="134.56" height="41.8" rx="20.9" fill="#0f382e"/><text x="217.28" y="328.6" text-anchor="middle" font-size="22" font-weight="700" fill="#fff">İç ünite</text>
+<rect x="830" y="340" width="146.88" height="41.8" rx="20.9" fill="#0f382e"/><text x="903.44" y="368.6" text-anchor="middle" font-size="22" font-weight="700" fill="#fff">Dış ünite</text>
+<g font-size="22" fill="#0f382e" font-weight="700"><text x="820" y="150">Bakır boru hattı</text><text x="820" y="185" font-weight="500" fill="#56625e" font-size="20">gaz ve sıvı hatları</text>
+<text x="820" y="250">Enerji kablosu</text><text x="660" y="700">Drenaj hattı (sürekli eğim)</text></g>
+<path d="M812 144 l-40 50" stroke="#0f382e" stroke-width="2"/><path d="M812 244 l-40 -40" stroke="#0f382e" stroke-width="2"/>
+<text x="60" y="440" font-size="22" fill="#56625e">Önü açık duvar, uzun kenar</text><text x="60" y="472" font-size="22" fill="#56625e">Bakım için üstte boşluk</text>
+<circle cx="40" cy="433" r="12" fill="#006c49"/><path d="M32 433 l6 6 l11 -12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="40" cy="465" r="12" fill="#006c49"/><path d="M32 465 l6 6 l11 -12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Güvenli Sipariş | Ege Teknik</title>
+  <link rel="stylesheet" href="store.css">
+</head>
+<body class="store">
+  <header class="store-header"><nav class="store-nav"><a class="brand" href="/">EGE TEKNİK<small>GÜVENLİ SİPARİŞ</small></a><div class="nav-links"><a href="catalog.html">Mağazaya dön</a></div><span>Güvenli bağlantı (HTTPS)</span></nav></header>
+  <main id="main" class="store-shell">
+    <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Teslimat bilgilerinizi girin. Siparişi onaylamadan önce ödenecek kesin tutar ve varsa ek masraflar aşağıda gösterilir; gösterilmeyen bir bedel sizden talep edilmez. <b>Hesap oluşturmadan, misafir olarak sipariş verebilirsiniz.</b></p></div></div>
+    <section class="panel" data-order-confirmation hidden>
+      <h2 tabindex="-1" data-confirmation-heading>Siparişiniz alındı</h2>
+      <p data-confirmation-number></p>
+      <p class="field-help">Siparişinizi sonradan görüntülemek için <a href="order-lookup.html">Siparişimi görüntüle</a> sayfasını takip numaranız ve sipariş verirken kullandığınız e-posta adresiyle kullanabilirsiniz.</p>
+      <div data-confirmation-items></div>
+      <div class="summary-row"><span>Ara toplam</span><b data-confirmation-subtotal></b></div>
+      <div class="summary-row"><span>KDV</span><b data-confirmation-vat></b></div>
+      <div class="summary-row"><span>Teslimat</span><b data-confirmation-shipping></b></div>
+      <div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-confirmation-total></b></div>
+      <p class="notice" data-confirmation-payment-notice>Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi. Ekibimiz kullanılabilir ödeme yöntemini teyit etmek için sizinle iletişime geçecek.</p>
+      <h3>Teslimat bilgileri</h3>
+      <p data-confirmation-delivery></p>
+      <h3>Kabul ettiğiniz hukuki metinler</h3>
+      <p class="field-help">Sipariş sırasında kabul ettiğiniz metinlerin tam olarak kabul ettiğiniz sürümünü görebilirsiniz.</p>
+      <ul class="legal-accepted" data-confirmation-legal></ul>
+      <div class="notice" data-confirmation-account>İleride siparişlerinizi kolayca takip etmek isterseniz <a href="/account">hesap oluşturabilirsiniz</a>. Bu tamamen isteğe bağlıdır ve siparişinizi etkilemez; bu misafir siparişi hesabınıza otomatik eklenmez.</div>
+      <p><a class="ghost" href="catalog.html">Alışverişe devam et</a></p>
+    </section>
+    <form class="checkout-grid" data-checkout-form>
+      <section class="panel">
+        <h2>Teslimat bilgileri</h2>
+        <div class="field-grid">
+          <label class="field">Ad Soyad<input name="customerName" required autocomplete="name"></label>
+          <label class="field">Telefon<input name="phone" required type="tel" autocomplete="tel"></label>
+          <label class="field">E-posta<input name="email" required type="email" autocomplete="email"></label>
+          <label class="field">İl<select name="city" data-province autocomplete="address-level1"><option value="">İl seçin</option></select></label>
+          <label class="field">İlçe<select name="district" data-district autocomplete="address-level2" disabled><option value="">Önce il seçin</option></select></label>
+          <label class="field" style="grid-column:1/-1">Teslimat adresi<textarea name="address" rows="3" maxlength="500" autocomplete="street-address" aria-describedby="address-hint"></textarea><small class="field-help" id="address-hint" data-address-hint></small></label>
+          <label class="field">Teslimat notu<input name="note" maxlength="500" placeholder="Varsa ekleyin"></label>
+        </div>
+        <div data-delivery-options aria-live="polite"></div>
+        <h2>Ödeme yöntemi</h2>
+        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Aktif ödeme yöntemi sipariş sonrasında teyit edilir. Bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
+        <div class="notice" id="payment-status">Online ödeme şu anda kullanılamıyor. Ödeme seçenekleri için Ege Teknik ile iletişime geçebilirsiniz.</div>
+      </section>
+      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>KDV (ara toplama dahil)</span><b data-vat>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
+      <section class="legal-preview" aria-labelledby="legal-preview-heading">
+        <h3 id="legal-preview-heading">Hukuki metinler</h3>
+        <p class="field-help">Siparişi onaylamadan önce bu siparişe özel hukuki metinleri oluşturup okuduğunuzu onaylamanız gerekir.</p>
+        <button type="button" data-legal-preview-prepare class="primary">Hukuki metinleri hazırla</button>
+        <p class="field-help" data-legal-preview-status role="status" aria-live="polite"></p>
+        <div data-legal-preview></div>
+      </section>
+        <p class="notice" data-kvkk-notice></p>
+
+        <button class="primary" data-submit-order disabled style="width:100%;margin-top:18px">Siparişi Onayla — ödeme yükümlülüğü doğurur</button><p data-order-result aria-live="polite"></p></aside>
+    </form>
+  </main>
+  <div class="toast"></div><script src="store.js"></script>
+</body></html>
