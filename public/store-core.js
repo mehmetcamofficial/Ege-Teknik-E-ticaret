@@ -496,6 +496,7 @@ const CHECKOUT_FIELD_RULES=[
   ['district',el=>el.required&&!el.disabled&&!el.value?'Teslimat için ilçe seçin.':''],
   ['address',el=>el.required&&el.value.trim().length<8?'Teslimat adresinizi mahalle, sokak ve numara ile girin.':''],
 ];
+const CHECKOUT_FIELD_LABELS={customerName:'Ad Soyad',phone:'Telefon',email:'E-posta',city:'İl',district:'İlçe',address:'Teslimat adresi'};
 let checkoutValidated=false;
 function checkoutFieldError(el,message){
   const id=(el.id||el.name)+'-error';let node=document.getElementById?.(id);
@@ -511,7 +512,9 @@ function validateCheckoutForm(form,announce=true){
   const errors=[];
   for(const [name,rule] of CHECKOUT_FIELD_RULES){const el=form.querySelector(`[name="${name}"]`);if(!el||typeof el.value!=='string'||typeof el.setAttribute!=='function')continue;if(!el.id)el.id='co-'+name;const message=rule(el);checkoutFieldError(el,message);if(message)errors.push([el,message])}
   const box=form.querySelector('[data-checkout-errors]');checkoutValidated=true;
-  if(box){box.hidden=!errors.length;box.innerHTML=errors.length?`<h2>Devam etmeden önce ${errors.length} alanı düzeltin</h2><ul>${errors.map(([el,m])=>`<li><a href="#${esc(el.id)}" data-focus-field="${esc(el.id)}">${esc(m)}</a></li>`).join('')}</ul>`:'';if(errors.length&&announce)box.focus()}
+  if(box){box.hidden=!errors.length;// H3.1-C: the link text is the field name; on phones only that is shown (the full message sits under the field and is
+    // read through aria-describedby), on larger screens the message follows the name.
+    box.innerHTML=errors.length?`<h2>Devam etmeden önce ${errors.length} alanı düzeltin</h2><ul>${errors.map(([el,m])=>`<li><a href="#${esc(el.id)}" data-focus-field="${esc(el.id)}"><b>${esc(CHECKOUT_FIELD_LABELS[el.name]||el.name)}</b><span class="err-msg"> — ${esc(m)}</span></a></li>`).join('')}</ul>`:'';if(errors.length&&announce)box.focus()}
   queueHelpClearance();return !errors.length
 }
 /* H3-B: phones get a total + next-step bar while the real submit button is off screen; it never submits a form that is not ready. */

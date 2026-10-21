@@ -40,7 +40,7 @@ test("H3-A focus restoration never drops to the page behind the modal", () => {
 /* ---------- H3-B checkout ---------- */
 const cart = { "ege-cart": [{ productId: "synthetic-product-1", quantity: 1 }] };
 function checkoutForm(fields: Record<string, string> = {}, elements = false) {
-  const button = { disabled: false, textContent: "" }, result = { textContent: "", innerHTML: "" };
+  const button = { disabled: false, textContent: "" }, result = { textContent: "", innerHTML: "" }, box = { hidden: true, innerHTML: "", focused: 0, focus() { this.focused++; } };
   const values = { customerName: "Ada Yılmaz", phone: "0500 111 22 33", email: "ada@example.test", city: "İzmir", district: "Bornova", address: "Test Mahallesi 1 Sokak No 1", delivery: "", provider: "discovery", ...fields };
   const attrs: Record<string, Record<string, string>> = {};
   const field = (name: string) => ({ name, id: "", value: values[name as keyof typeof values] ?? "", required: true, disabled: false, closest: () => null, parentElement: null,
@@ -49,9 +49,9 @@ function checkoutForm(fields: Record<string, string> = {}, elements = false) {
   const f = {
     fields: values,
     querySelectorAll: (s: string) => (s === "[data-legal-version]" ? [{ checked: true, dataset: { legalVersion: "ver-ds-1" } }] : []),
-    querySelector: (s: string) => (s === "[data-submit-order]" || s === "button.primary" ? button : s === "[data-order-result]" ? result : elements ? (fieldEls[/\[name="(\w+)"\]/.exec(s)?.[1] ?? ""] ?? null) : null),
+    querySelector: (s: string) => (s === "[data-submit-order]" || s === "button.primary" ? button : s === "[data-order-result]" ? result : s === "[data-checkout-errors]" ? box : elements ? (fieldEls[/\[name="(\w+)"\]/.exec(s)?.[1] ?? ""] ?? null) : null),
   };
-  return { f, button, result, attrs };
+  return { f, button, result, attrs, box };
 }
 async function prepared(order: () => Promise<unknown>) {
   const store = loadStorefront({ storage: cart, api: { products: [apiProduct()], order } });
@@ -259,4 +259,28 @@ test("H3.1-A phone/short-screen drawer summary is compact: one VAT line, deliver
   assert.match(css, /\.cart-drawer-foot \.ghost\{margin-top:6px;min-height:44px\}/);
   assert.match(css, /\.cart-drawer-body\{padding-bottom:16px\}/);
   assert.match(ux, /<p class=\\"cart-drawer-short\\">KDV dahil · ödeme bu adımda alınmaz<\/p>/, "the 'no payment here' statement survives the compact layout");
+});
+
+/* ---------- H3.1-C compact, accessible mobile errors ---------- */
+test("H3.1-C the error summary names the fields as links, keeps messages for larger screens and takes focus", async () => {
+  const store = await prepared(ok);
+  const { f, box, attrs } = checkoutForm({ customerName: "A", phone: "1", email: "x" }, true);
+  assert.equal(await store.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(f), null);
+  assert.equal(box.hidden, false);
+  assert.equal(box.focused, 1, "the summary receives keyboard focus once");
+  assert.match(box.innerHTML, /<h2>Devam etmeden önce 3 alanı düzeltin<\/h2>/);
+  for (const [id, label] of [["co-customerName", "Ad Soyad"], ["co-phone", "Telefon"], ["co-email", "E-posta"]]) assert.match(box.innerHTML, new RegExp(`<a href="#${id}" data-focus-field="${id}"><b>${label}</b><span class="err-msg"> — `));
+  assert.equal(attrs.phone["aria-invalid"], "true");
+  assert.equal(attrs.phone["aria-describedby"], "co-phone-error", "the full message stays reachable from the field");
+});
+
+test("H3.1-C phone error CSS: names only, 44px targets, an icon besides colour, room above the fixed action bar", () => {
+  const css = readFileSync("public/store.css", "utf8");
+  assert.match(css, /\.checkout-errors \.err-msg\{display:none\}/);
+  assert.match(css, /\.checkout-errors li a\{display:inline-flex;align-items:center;min-height:44px;/);
+  assert.match(css, /\.checkout-errors h2::before,\.field-error::before\{content:"!"/, "an icon, not colour alone, marks an error");
+  assert.match(css, /\.field :is\(input,select,textarea\)\[aria-invalid=true\]\{border-width:2px/);
+  assert.match(css, /scroll-margin-block:16px 104px\}/);
+  assert.match(css, /html\.checkout-bar-open\{scroll-padding-bottom:104px\}/);
+  assert.match(css, /\.checkout-errors\{overflow-wrap:anywhere\}/);
 });
