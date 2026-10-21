@@ -1496,3 +1496,10 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 html.checkout-bar-open body{padding-bottom:80px}
 html.checkout-bar-open .help-launcher{bottom:calc(84px + env(safe-area-inset-bottom))}
 @media(min-width:1001px){.checkout-mobile-bar{display:none!important}}
+/* H3: legal preview documents are real controls — comfortable 44px targets (WCAG 2.5.8). */
+.legal-preview details{border-top:1px solid var(--line)}
+.legal-preview details>summary{min-height:44px;padding:11px 4px;cursor:pointer;font-weight:650;line-height:1.4}
+.legal-preview details>summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.cookie-settings-trigger{transition:opacity 160ms var(--motion-ease),visibility 160ms}
+.cookie-settings-trigger.is-clearing{opacity:0;visibility:hidden;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.cookie-settings-trigger{transition:none}}

@@ -134,3 +134,18 @@ test("H3-C a server 5xx keeps the cart and the attempt key for a deduplicated re
   assert.equal(store.orderBodies.length, 2);
   assert.deepEqual(JSON.parse(JSON.stringify(store.fn<() => unknown>("readCartRaw")())), cart["ege-cart"]);
 });
+
+/* ---------- H3-D fixes found by the browser acceptance ---------- */
+test("H3-D the phone bar only offers 'Siparişi onayla' with a live preview and every document accepted", () => {
+  assert.match(core, /function checkoutLegalReady\(form\)\{return !!legalPreview&&legalPreviewAcceptanceIds\(legalPreview,acceptedLegalVersionIds\(form\.querySelectorAll\('\[data-legal-version\]'\)\)\)\.length===legalPreview\.documents\.length\}/);
+  assert.match(core, /ready=submit&&!submit\.disabled&&checkoutLegalReady\(form\);/);
+  assert.match(core, /if\(submit&&!submit\.disabled&&checkoutLegalReady\(form\)\)\{form\.requestSubmit\(submit\);return\}/);
+});
+
+test("H3-D floating help and cookie buttons step aside from checkout errors; legal summaries are 44px targets", () => {
+  const css = readFileSync("public/store.css", "utf8");
+  assert.match(core, /const HELP_PROTECTED='\[data-order-result\]\.is-error,\[data-checkout-errors\]:not\(\[hidden\]\),\.field-error:not\(\[hidden\]\),/);
+  assert.match(core, /cookie\.classList\.toggle\('is-clearing',document\.activeElement!==cookie&&helpCovers\(cookie\)\)/);
+  assert.match(css, /\.cookie-settings-trigger\.is-clearing\{opacity:0;visibility:hidden;pointer-events:none\}/);
+  assert.match(css, /\.legal-preview details>summary\{min-height:44px;/);
+});

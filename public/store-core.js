@@ -495,12 +495,14 @@ function validateCheckoutForm(form,announce=true){
   for(const [name,rule] of CHECKOUT_FIELD_RULES){const el=form.querySelector(`[name="${name}"]`);if(!el||typeof el.value!=='string'||typeof el.setAttribute!=='function')continue;if(!el.id)el.id='co-'+name;const message=rule(el);checkoutFieldError(el,message);if(message)errors.push([el,message])}
   const box=form.querySelector('[data-checkout-errors]');checkoutValidated=true;
   if(box){box.hidden=!errors.length;box.innerHTML=errors.length?`<h2>Devam etmeden önce ${errors.length} alanı düzeltin</h2><ul>${errors.map(([el,m])=>`<li><a href="#${esc(el.id)}" data-focus-field="${esc(el.id)}">${esc(m)}</a></li>`).join('')}</ul>`:'';if(errors.length&&announce)box.focus()}
-  return !errors.length
+  queueHelpClearance();return !errors.length
 }
 /* H3-B: phones get a total + next-step bar while the real submit button is off screen; it never submits a form that is not ready. */
 let checkoutBarQueued=false;
+/* Ready means: priced, a live legal preview, and every previewed document accepted (the server re-checks all of it). */
+function checkoutLegalReady(form){return !!legalPreview&&legalPreviewAcceptanceIds(legalPreview,acceptedLegalVersionIds(form.querySelectorAll('[data-legal-version]'))).length===legalPreview.documents.length}
 function syncCheckoutBar(){checkoutBarQueued=false;const bar=document.querySelector('[data-checkout-bar]'),form=document.querySelector('[data-checkout-form]');if(!bar||!form)return;
-  const submit=form.querySelector('[data-submit-order]'),r=submit?.getBoundingClientRect(),onScreen=r&&r.top<innerHeight&&r.bottom>0,ready=submit&&!submit.disabled;
+  const submit=form.querySelector('[data-submit-order]'),r=submit?.getBoundingClientRect(),onScreen=r&&r.top<innerHeight&&r.bottom>0,ready=submit&&!submit.disabled&&checkoutLegalReady(form);
   const show=innerWidth<=1000&&!form.hidden&&getCart().length>0&&catalogAuthoritative()&&!onScreen;
   bar.hidden=!show;document.documentElement.classList.toggle('checkout-bar-open',show);
   const total=document.querySelector('[data-total]')?.textContent||'—';bar.querySelector('[data-checkout-bar-total]').textContent=total;
@@ -509,10 +511,10 @@ function queueCheckoutBar(){if(checkoutBarQueued||typeof requestAnimationFrame!=
 function checkoutContinue(){const form=document.querySelector('[data-checkout-form]');if(!form||orderSubmitting)return;if(!validateCheckoutForm(form))return;
   const submit=form.querySelector('[data-submit-order]'),prepare=document.querySelector('[data-legal-preview-prepare]');
   if(!legalPreview){prepare?.scrollIntoView({block:'center'});prepare?.focus();return}
-  if(submit&&!submit.disabled){form.requestSubmit(submit);return}
+  if(submit&&!submit.disabled&&checkoutLegalReady(form)){form.requestSubmit(submit);return}
   const consents=document.querySelector('[data-legal-consents]');consents?.scrollIntoView({block:'center'});consents?.querySelector('input:not(:disabled)')?.focus()}
 let orderSubmitting=false;
-async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=f.querySelector('[data-order-result]'),say=t=>{if(result){result.textContent=t;result.classList?.toggle?.('is-error',!!t)}};
+async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=f.querySelector('[data-order-result]'),say=t=>{if(result){result.textContent=t;result.classList?.toggle?.('is-error',!!t)}queueHelpClearance()};
   /* H3-B: the real submit button (the legal "prepare" button is also .primary and comes first); one request at a time. */
   const button=f.querySelector('[data-submit-order]')||f.querySelector('button.primary');
   if(orderSubmitting)return;
@@ -703,10 +705,13 @@ function toggleMenu(button){const panel=document.getElementById(button?.getAttri
 function renderHelpLauncher(){if(!document.querySelector('[data-site-footer]')||document.querySelector('[data-help]'))return;const wrap=document.createElement('div');wrap.className='help-launcher';wrap.dataset.help='';wrap.innerHTML=`<div class="help-panel" id="help-panel" role="dialog" aria-modal="false" aria-labelledby="help-title" hidden><div class="help-head"><h2 id="help-title">Size nasıl yardımcı olalım?</h2><button type="button" class="help-close" data-action="toggle-help" aria-label="Yardım menüsünü kapat">${ico('close',18)}</button></div><div id="ege-assistant-root" data-assistant-slot></div><ul class="help-list"><li><a href="mailto:${business.email}">${ico('mail',18)}<span><b>E-posta</b>${business.email}</span></a></li><li><a href="${business.phoneHref}">${ico('phone',18)}<span><b>Telefon</b>${business.phone}</span></a></li><li><a href="contact.html">${ico('clipboard',18)}<span><b>İletişim formu</b>Satış, keşif veya servis talebi</span></a></li><li><a href="${business.wa}" rel="noopener">${ico('chat',18)}<span><b>WhatsApp</b>Hızlı soru için</span></a></li><li><a href="${business.map}" target="_blank" rel="noopener">${ico('pin',18)}<span><b>Yol tarifi</b>Kuşadası mağaza konumu<span class="sr-only"> (yeni sekmede açılır)</span></span></a></li></ul></div><button type="button" class="help-toggle" data-action="toggle-help" aria-expanded="false" aria-controls="help-panel">${ico('headset',20)}<span class="help-label">Yardım</span></button>`;document.body.appendChild(wrap);window.EgeAssistant=window.EgeAssistant||{mount(render){const slot=document.getElementById('ege-assistant-root');if(slot&&typeof render==='function')render(slot)}}}
 /* H2.1: the floating help button steps aside while it would cover a price, stock state or buying control.
    It never hides while its panel is open or it has focus, and reappears only after a short clear period (no flicker). */
-const HELP_PROTECTED='[data-submit-order],.checkout-mobile-bar:not([hidden]),[data-legal-preview-prepare],.pd-offer,.pd-buy .purchase-row,.pd-buy>.primary,.pd-sticky.is-visible,.pd-variants,[data-products] .product-foot,[data-products] .product .actions,.related-section .product-foot,.related-section .product .actions,.catalog-empty-actions';
+const HELP_PROTECTED='[data-order-result].is-error,[data-checkout-errors]:not([hidden]),.field-error:not([hidden]),[data-submit-order],.checkout-mobile-bar:not([hidden]),[data-legal-preview-prepare],.pd-offer,.pd-buy .purchase-row,.pd-buy>.primary,.pd-sticky.is-visible,.pd-variants,[data-products] .product-foot,[data-products] .product .actions,.related-section .product-foot,.related-section .product .actions,.catalog-empty-actions';
 let helpClearQueued=false,helpShowTimer=null;
-function helpCovers(){const btn=document.querySelector('[data-help] .help-toggle');if(!btn)return false;const r=btn.getBoundingClientRect(),m=8;return [...document.querySelectorAll(HELP_PROTECTED)].some(el=>{const b=el.getBoundingClientRect();return b.width&&b.height&&b.left<r.right+m&&b.right>r.left-m&&b.top<r.bottom+m&&b.bottom>r.top-m})}
-function syncHelpClearance(){helpClearQueued=false;const wrap=document.querySelector('[data-help]');if(!wrap)return;if(wrap.querySelector('.help-toggle')?.getAttribute('aria-expanded')==='true'||wrap.contains(document.activeElement)){clearTimeout(helpShowTimer);helpShowTimer=null;wrap.classList.remove('is-clearing');return}
+function helpCovers(target){const btn=target||document.querySelector('[data-help] .help-toggle');if(!btn)return false;const r=btn.getBoundingClientRect(),m=8;return [...document.querySelectorAll(HELP_PROTECTED)].some(el=>{const b=el.getBoundingClientRect();return b.width&&b.height&&b.left<r.right+m&&b.right>r.left-m&&b.top<r.bottom+m&&b.bottom>r.top-m})}
+function syncHelpClearance(){helpClearQueued=false;
+  // H3: the cookie-settings pill follows the same rule (it sat on checkout errors on phones); never while focused.
+  const cookie=document.querySelector('.cookie-settings-trigger');if(cookie)cookie.classList.toggle('is-clearing',document.activeElement!==cookie&&helpCovers(cookie));
+  const wrap=document.querySelector('[data-help]');if(!wrap)return;if(wrap.querySelector('.help-toggle')?.getAttribute('aria-expanded')==='true'||wrap.contains(document.activeElement)){clearTimeout(helpShowTimer);helpShowTimer=null;wrap.classList.remove('is-clearing');return}
   if(helpCovers()){clearTimeout(helpShowTimer);helpShowTimer=null;wrap.classList.add('is-clearing')}else if(wrap.classList.contains('is-clearing')&&!helpShowTimer)helpShowTimer=setTimeout(()=>{helpShowTimer=null;if(!helpCovers())wrap.classList.remove('is-clearing');else queueHelpClearance()},350)}
 function queueHelpClearance(){if(helpClearQueued||typeof requestAnimationFrame!=='function')return;helpClearQueued=true;requestAnimationFrame(syncHelpClearance)}
 if(typeof window!=='undefined'&&typeof window.addEventListener==='function'){window.addEventListener('scroll',queueHelpClearance,{passive:true});window.addEventListener('resize',queueHelpClearance);document.addEventListener('focusout',queueHelpClearance);/* late image/font loads move cards without any scroll */document.addEventListener('load',queueHelpClearance,true);window.addEventListener('load',queueHelpClearance)}
