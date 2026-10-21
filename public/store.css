@@ -1503,3 +1503,23 @@ html.checkout-bar-open .help-launcher{bottom:calc(84px + env(safe-area-inset-bot
 .cookie-settings-trigger{transition:opacity 160ms var(--motion-ease),visibility 160ms}
 .cookie-settings-trigger.is-clearing{opacity:0;visibility:hidden;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.cookie-settings-trigger{transition:none}}
+/* H3.1-A: on phones and short screens the summary must not take the list's room. Same content, tighter layout:
+   one subtotal row, one VAT line, delivery/explanations move to the order step, buttons stay 44px+. */
+.cart-drawer-body{padding-bottom:16px}
+@media(max-width:560px),(max-height:700px){
+ .cart-drawer-head{padding-block:12px}
+ .cart-drawer-head span{display:none}
+ .cart-drawer-head h2{font-size:22px}
+ .cart-drawer-status{padding-block:6px;font-size:13px}
+ .cart-drawer-foot{padding-block:10px max(10px,env(safe-area-inset-bottom))}
+ .cart-drawer-subtotal{font-size:16px}
+ .cart-drawer-breakdown{margin:2px 0 8px;font-size:12px}
+ .cart-drawer-breakdown span:nth-child(n+3){display:none}
+ .cart-drawer-foot>p:not(.cart-drawer-blocked):not(.cart-drawer-short){display:none}
+ .cart-drawer-foot>.cart-drawer-short{display:block;margin:0 0 8px;font-size:12px;color:var(--body)}
+ .cart-drawer-foot .primary,.cart-drawer-foot .ghost{min-height:46px;margin:0}
+ .cart-drawer-foot .ghost{margin-top:6px;min-height:44px}
+ .cart-drawer-blocked{margin:0 0 8px;padding:8px 10px;font-size:12.5px}
+}
+.cart-drawer-foot>.cart-drawer-short{display:none}
+@media(max-width:560px),(max-height:700px){.cart-drawer-foot>.cart-drawer-short{display:block}}

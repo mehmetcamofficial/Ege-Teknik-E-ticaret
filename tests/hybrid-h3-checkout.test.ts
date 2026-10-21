@@ -249,3 +249,14 @@ test("H3.1-B synthetic test data never lives in application code", () => {
   }
   assert.ok(readFileSync("scripts/fixtures/h31-synthetic-legal.mjs", "utf8").includes("TEST SENTETİK"), "fixtures are declared in one clearly named test-only module");
 });
+
+/* ---------- H3.1-A mobile cart list keeps its room ---------- */
+test("H3.1-A phone/short-screen drawer summary is compact: one VAT line, delivery copy moved to checkout, buttons stay 44px+", () => {
+  const css = readFileSync("public/store.css", "utf8");
+  assert.match(css, /@media\(max-width:560px\),\(max-height:700px\)\{\n \.cart-drawer-head\{padding-block:12px\}/);
+  assert.match(css, /\.cart-drawer-breakdown span:nth-child\(n\+3\)\{display:none\}/);
+  assert.match(css, /\.cart-drawer-foot \.primary,\.cart-drawer-foot \.ghost\{min-height:46px;margin:0\}/);
+  assert.match(css, /\.cart-drawer-foot \.ghost\{margin-top:6px;min-height:44px\}/);
+  assert.match(css, /\.cart-drawer-body\{padding-bottom:16px\}/);
+  assert.match(ux, /<p class=\\"cart-drawer-short\\">KDV dahil · ödeme bu adımda alınmaz<\/p>/, "the 'no payment here' statement survives the compact layout");
+});
