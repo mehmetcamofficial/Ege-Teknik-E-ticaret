@@ -133,9 +133,10 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   row.checks.reducedMotion='PASS';
 
   /* ---- H2.1 help launcher keyboard: reachable, opens, stays while open/focused ---- */
-  await p.evaluate(()=>scrollTo(0,0));await p.waitForTimeout(500);
+  // The page end (footer) has no price or buying control, so the help button must be visible there.
+  await p.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight));await p.waitForTimeout(700);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'visible','help visible where nothing is covered');
   if(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility)==='visible'){await p.locator('.help-toggle').focus();await p.keyboard.press('Enter');await p.locator('#help-panel:not([hidden])').waitFor();
-   await p.evaluate(()=>scrollTo(0,900));await p.waitForTimeout(500);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'visible','an open help panel is never hidden');
+   await p.evaluate(()=>scrollTo(0,900));await p.waitForTimeout(500);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'visible','an open help panel is never hidden');assert.ok(await p.evaluate(()=>!!document.activeElement.closest('[data-help]')),'focus moved into the help panel');
    await p.locator('.help-close').click();await p.evaluate(()=>scrollTo(0,0));row.checks.helpKeyboard='PASS'}
   /* ---- Keyboard: card actions reachable, focus ring visible ---- */
   // macOS WebKit tabs only to form controls by default; Option+Tab is Safari's full keyboard navigation.
