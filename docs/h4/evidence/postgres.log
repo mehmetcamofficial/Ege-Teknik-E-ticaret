@@ -1,0 +1,145 @@
+$ node scripts/test-postgres-integration.mjs
+TAP version 13
+# Subtest: setup: the disposable database is migrated to head through the real migrator (0011 promotes the legacy owner)
+ok 1 - setup: the disposable database is migrated to head through the real migrator (0011 promotes the legacy owner)
+  ---
+  duration_ms: 155.224792
+  type: 'test'
+  ...
+# Subtest: setup: migration 0017 is recorded exactly once in Drizzle with the source hash and locked-down function ACL
+ok 2 - setup: migration 0017 is recorded exactly once in Drizzle with the source hash and locked-down function ACL
+  ---
+  duration_ms: 2.582958
+  type: 'test'
+  ...
+# Subtest: 1. second-hand: stock=1 and two genuinely concurrent independent transactions => exactly one reservation
+ok 3 - 1. second-hand: stock=1 and two genuinely concurrent independent transactions => exactly one reservation
+  ---
+  duration_ms: 9.090125
+  type: 'test'
+  ...
+# Subtest: 1b. second-hand: stock=3 with 25 concurrent claims => exactly 3 reservations, never more
+ok 4 - 1b. second-hand: stock=3 with 25 concurrent claims => exactly 3 reservations, never more
+  ---
+  duration_ms: 77.638417
+  type: 'test'
+  ...
+# Subtest: 1c. second-hand: same idempotency key concurrently => one reservation, both callers get the same reservation; stock=0 and expired cases
+ok 5 - 1c. second-hand: same idempotency key concurrently => one reservation, both callers get the same reservation; stock=0 and expired cases
+  ---
+  duration_ms: 5.50975
+  type: 'test'
+  ...
+# Subtest: 1d. second-hand: a failure inside the transaction leaves no partial reservation
+ok 6 - 1d. second-hand: a failure inside the transaction leaves no partial reservation
+  ---
+  duration_ms: 5.37425
+  type: 'test'
+  ...
+# Subtest: 2. cancellation: two concurrent cancels from the same state => one effective transition, stock restored exactly once
+ok 7 - 2. cancellation: two concurrent cancels from the same state => one effective transition, stock restored exactly once
+  ---
+  duration_ms: 9.080667
+  type: 'test'
+  ...
+# Subtest: 2b. cancellation stress: 20 orders x 2 concurrent cancels => 20 effective releases, no negative stock
+ok 8 - 2b. cancellation stress: 20 orders x 2 concurrent cancels => 20 effective releases, no negative stock
+  ---
+  duration_ms: 58.88325
+  type: 'test'
+  ...
+# Subtest: 2c. a non-cancellable state and a failing stock release leave inventory and status untouched
+ok 9 - 2c. a non-cancellable state and a failing stock release leave inventory and status untouched
+  ---
+  duration_ms: 7.019834
+  type: 'test'
+  ...
+# Subtest: 3. status CAS: two conflicting transitions from the same expected status => one commits, one is stale
+ok 10 - 3. status CAS: two conflicting transitions from the same expected status => one commits, one is stale
+  ---
+  duration_ms: 3.10575
+  type: 'test'
+  ...
+# Subtest: 3b. finance guards inside the transition on real PostgreSQL: paid needs the ledger, cancel needs the refund, payment_status is derived
+ok 11 - 3b. finance guards inside the transition on real PostgreSQL: paid needs the ledger, cancel needs the refund, payment_status is derived
+  ---
+  duration_ms: 8.242875
+  type: 'test'
+  ...
+# Subtest: 4. rate limit: 40 genuinely parallel claims with limit 7 => exactly 7 allowed
+ok 12 - 4. rate limit: 40 genuinely parallel claims with limit 7 => exactly 7 allowed
+  ---
+  duration_ms: 9.716042
+  type: 'test'
+  ...
+# Subtest: 5. rate limit window reset: an expired bucket resets to 1 with real ON CONFLICT semantics
+ok 13 - 5. rate limit window reset: an expired bucket resets to 1 with real ON CONFLICT semantics
+  ---
+  duration_ms: 1.26475
+  type: 'test'
+  ...
+# Subtest: 6. rate limit cleanup: long-expired rows are removed (bounded), active and just-ended rows are preserved
+ok 14 - 6. rate limit cleanup: long-expired rows are removed (bounded), active and just-ended rows are preserved
+  ---
+  duration_ms: 2.752125
+  type: 'test'
+  ...
+# Subtest: 7. audit transaction: a forced audit-insert failure rolls the admin mutation back (real DB refusal)
+ok 15 - 7. audit transaction: a forced audit-insert failure rolls the admin mutation back (real DB refusal)
+  ---
+  duration_ms: 2.179083
+  type: 'test'
+  ...
+# Subtest: 8. checkout lock: SECURITY DEFINER works under a restricted role without products UPDATE
+ok 16 - 8. checkout lock: SECURITY DEFINER works under a restricted role without products UPDATE
+  ---
+  duration_ms: 3.34675
+  type: 'test'
+  ...
+# Subtest: 8b. checkout lock: malformed, duplicate and missing product IDs fail closed under restricted role
+ok 17 - 8b. checkout lock: malformed, duplicate and missing product IDs fail closed under restricted role
+  ---
+  duration_ms: 2.185
+  type: 'test'
+  ...
+# Subtest: 8c. checkout lock: product UPDATE waits for the shared lock and rollback releases it
+ok 18 - 8c. checkout lock: product UPDATE waits for the shared lock and rollback releases it
+  ---
+  duration_ms: 257.742916
+  type: 'test'
+  ...
+# Subtest: 8d. checkout lock: concurrent shared locks with opposite product order do not deadlock
+ok 19 - 8d. checkout lock: concurrent shared locks with opposite product order do not deadlock
+  ---
+  duration_ms: 6.905583
+  type: 'test'
+  ...
+# Subtest: 8e. migration 0018 keeps legal guard owner-only and puts pg_temp last
+ok 20 - 8e. migration 0018 keeps legal guard owner-only and puts pg_temp last
+  ---
+  duration_ms: 1.220459
+  type: 'test'
+  ...
+# Subtest: 8e. scoped checkout: restricted LOGIN role commits stock, order and immutable legal evidence on disposable PostgreSQL
+ok 21 - 8e. scoped checkout: restricted LOGIN role commits stock, order and immutable legal evidence on disposable PostgreSQL
+  ---
+  duration_ms: 48.358292
+  type: 'test'
+  ...
+# Subtest: invariants: no negative inventory, no over-reservation, no duplicate release, no deadlock, no lingering transactions
+ok 22 - invariants: no negative inventory, no over-reservation, no duplicate release, no deadlock, no lingering transactions
+  ---
+  duration_ms: 4.301417
+  type: 'test'
+  ...
+1..22
+# tests 22
+# suites 0
+# pass 22
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1076.699916
+[postgres-integration] tests=22 pass=22 fail=0 skipped=0 cancelled=0
+[postgres-integration] OK: 22 tests executed against real PostgreSQL, 0 skipped.

@@ -1,0 +1,85 @@
+$ node tests/support/test-independent-acl.mjs
+=== ET-LEGAL-NATIVE-GATE-03: INDEPENDENT ACL VERIFICATION ===
+Target Database: sprintb_h4_acl
+
+[1/7] Bootstrapping schema 0000-0020 on disposable database...
+  ✓ [PASS] Migration 0000-0020 applied completely
+
+[2/7] Creating real test LOGIN roles and configuring grant matrix...
+  ✓ [PASS] Storefront role has NO superuser privileges
+  ✓ [PASS] Storefront role has NO createrole privileges
+  ✓ [PASS] Storefront role has NO createdb privileges
+  ✓ [PASS] Storefront role has NO bypassrls privileges
+  ✓ [PASS] Storefront role is NOINHERIT
+
+[3/7] Verifying DML matrix under authenticated storefront LOGIN role...
+  ✓ [PASS] Storefront connected directly as LOGIN role
+  ✓ [PASS] SELECT on products permitted
+  ✓ [PASS] SELECT on legal_documents permitted
+  ✓ [PASS] Direct SELECT on sensitive table 'orders' is DENIED (42501)
+  ✓ [PASS] Direct SELECT on sensitive table 'order_items' is DENIED (42501)
+  ✓ [PASS] Direct SELECT on sensitive table 'order_legal_acceptances' is DENIED (42501)
+  ✓ [PASS] Direct SELECT on sensitive table 'customers' is DENIED (42501)
+  ✓ [PASS] Direct SELECT on sensitive table 'addresses' is DENIED (42501)
+  ✓ [PASS] Direct UPDATE on 'orders' is DENIED (42501)
+  ✓ [PASS] Direct UPDATE on 'order_legal_acceptances' is DENIED (42501)
+  ✓ [PASS] DELETE on 'orders' is DENIED (42501)
+  ✓ [PASS] DELETE on 'order_items' is DENIED (42501)
+  ✓ [PASS] DELETE on 'order_legal_acceptances' is DENIED (42501)
+  ✓ [PASS] DELETE on 'products' is DENIED (42501)
+  ✓ [PASS] DELETE on 'customers' is DENIED (42501)
+  ✓ [PASS] DELETE on 'addresses' is DENIED (42501)
+  ✓ [PASS] TRUNCATE on 'orders' is DENIED (42501)
+  ✓ [PASS] TRUNCATE on 'order_items' is DENIED (42501)
+  ✓ [PASS] TRUNCATE on 'order_legal_acceptances' is DENIED (42501)
+  ✓ [PASS] TRUNCATE on 'products' is DENIED (42501)
+  ✓ [PASS] TRUNCATE on 'inventory' is DENIED (42501)
+  ✓ [PASS] Legitimate checkout INSERT flow (customer, address, order, items, evidence) succeeds
+
+[4/7] Testing trigger disable & bypass prevention...
+  ✓ [PASS] DISABLE TRIGGER ALL on 'order_legal_acceptances' is REJECTED (42501)
+  ✓ [PASS] DISABLE TRIGGER 'legal_acceptance_no_mutation_trg' is REJECTED (42501)
+  ✓ [PASS] DISABLE TRIGGER ALL on 'orders' is REJECTED (42501)
+  ✓ [PASS] SET session_replication_role = replica is REJECTED (42501)
+
+[5/7] Testing privilege escalation rejection...
+  ✓ [PASS] CREATE ROLE is REJECTED (42501)
+  ✓ [PASS] ALTER ROLE ... SUPERUSER is REJECTED (42501)
+  ✓ [PASS] GRANT ALL is REJECTED (42501)
+  ✓ [PASS] CREATE FUNCTION in schema public is REJECTED (42501)
+
+[6/7] Verifying immutability boundary for both legacy & modern acceptances...
+  ✓ [PASS] UPDATE on legacy acceptance (slug IS NULL) is BLOCKED by trigger (23001)
+  ✓ [PASS] DELETE on legacy acceptance (slug IS NULL) is BLOCKED by trigger (23001)
+  ✓ [PASS] Bulk UPDATE on legacy acceptances is BLOCKED by trigger (23001)
+  ✓ [PASS] P3 evidence rows exist for testing
+  ✓ [PASS] UPDATE on P3 acceptance 'd9827d01' is BLOCKED by trigger (23001)
+  ✓ [PASS] DELETE on P3 acceptance 'd9827d01' is BLOCKED by trigger (23001)
+  ✓ [PASS] UPDATE on P3 acceptance 'e554a41a' is BLOCKED by trigger (23001)
+  ✓ [PASS] DELETE on P3 acceptance 'e554a41a' is BLOCKED by trigger (23001)
+  ✓ [PASS] TRUNCATE on 'order_legal_acceptances' is BLOCKED (23001)
+
+[7/7] Inspecting function attributes and PUBLIC execute revocation...
+  ✓ [PASS] Function 'lock_checkout_products' is SECURITY DEFINER
+  ✓ [PASS] Function 'lock_checkout_products' has safe search_path configured
+  ✓ [PASS] Function 'lock_checkout_products' has PUBLIC EXECUTE REVOKED
+  ✓ [PASS] Function 'checkout_replay_by_key' is SECURITY DEFINER
+  ✓ [PASS] Function 'checkout_replay_by_key' has safe search_path configured
+  ✓ [PASS] Function 'checkout_replay_by_key' has PUBLIC EXECUTE REVOKED
+  ✓ [PASS] Function 'order_legal_evidence_guard' is SECURITY DEFINER
+  ✓ [PASS] Function 'order_legal_evidence_guard' has safe search_path configured
+  ✓ [PASS] Function 'order_legal_evidence_guard' has PUBLIC EXECUTE REVOKED
+  ✓ [PASS] Function 'p3_order_evidence_complete' is SECURITY DEFINER
+  ✓ [PASS] Function 'p3_order_evidence_complete' has safe search_path configured
+  ✓ [PASS] Function 'p3_order_evidence_complete' has PUBLIC EXECUTE REVOKED
+  ✓ [PASS] Function 'legal_acceptance_no_mutation' is SECURITY INVOKER
+  ✓ [PASS] Function 'legal_acceptance_no_mutation' has safe search_path configured
+  ✓ [PASS] Function 'legal_acceptance_no_mutation' has PUBLIC EXECUTE REVOKED
+  ✓ [PASS] Function 'p3_legal_evidence_no_truncate' is SECURITY INVOKER
+  ✓ [PASS] Function 'p3_order_identity_guard' is SECURITY INVOKER
+  ✓ [PASS] Function 'legal_evidence_source_lock' is SECURITY INVOKER
+
+=============================================================
+[acl-gate] ALL 63 INDEPENDENT ACL & IMMUTABILITY CHECKS PASSED!
+=============================================================
+

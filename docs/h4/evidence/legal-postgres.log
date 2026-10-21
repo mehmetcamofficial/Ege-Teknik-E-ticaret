@@ -1,0 +1,127 @@
+$ node scripts/test-legal-postgres.mjs
+TAP version 13
+# Subtest: P3 migration preserves pre-existing legacy order/acceptance without backfill
+ok 1 - P3 migration preserves pre-existing legacy order/acceptance without backfill
+  ---
+  duration_ms: 240.703083
+  type: 'test'
+  ...
+# Subtest: 0020 preserves the existing guard owner, ACL, definer and INSERT boundary
+ok 2 - 0020 preserves the existing guard owner, ACL, definer and INSERT boundary
+  ---
+  duration_ms: 3.421
+  type: 'test'
+  ...
+# Subtest: 0020 rejects every legacy NULL acceptance UPDATE and DELETE without changing the row
+ok 3 - 0020 rejects every legacy NULL acceptance UPDATE and DELETE without changing the row
+  ---
+  duration_ms: 44.507917
+  type: 'test'
+  ...
+# Subtest: 0020 permits new legacy INSERTs and normal order lifecycle, but rolls back mixed-cohort mutation
+ok 4 - 0020 permits new legacy INSERTs and normal order lifecycle, but rolls back mixed-cohort mutation
+  ---
+  duration_ms: 7.707292
+  type: 'test'
+  ...
+# Subtest: 0020 real non-owner LOGIN cannot mutate legacy or P3 evidence even with explicit DML grants
+ok 5 - 0020 real non-owner LOGIN cannot mutate legacy or P3 evidence even with explicit DML grants
+  ---
+  duration_ms: 11.611042
+  type: 'test'
+  ...
+# Subtest: P3 schema/migration additions, nullability, checks and indexes match Drizzle
+ok 6 - P3 schema/migration additions, nullability, checks and indexes match Drizzle
+  ---
+  duration_ms: 8.683875
+  type: 'test'
+  ...
+# Subtest: P3 valid two-document evidence commits and lifecycle fields remain mutable
+ok 7 - P3 valid two-document evidence commits and lifecycle fields remain mutable
+  ---
+  duration_ms: 2.691792
+  type: 'test'
+  ...
+# Subtest: P3 incomplete/one-document transactions cannot commit and leave no order
+ok 8 - P3 incomplete/one-document transactions cannot commit and leave no order
+  ---
+  duration_ms: 1.979375
+  type: 'test'
+  ...
+# Subtest: P3 duplicate slug, extra slug, half cohort, malformed hash and wrong context fail closed
+ok 9 - P3 duplicate slug, extra slug, half cohort, malformed hash and wrong context fail closed
+  ---
+  duration_ms: 5.449583
+  type: 'test'
+  ...
+# Subtest: P3 source provenance and body/hash correspondence are enforced by DB
+ok 10 - P3 source provenance and body/hash correspondence are enforced by DB
+  ---
+  duration_ms: 2.444084
+  type: 'test'
+  ...
+# Subtest: P3 evidence UPDATE/DELETE/TRUNCATE and parent identity mutations are rejected
+ok 11 - P3 evidence UPDATE/DELETE/TRUNCATE and parent identity mutations are rejected
+  ---
+  duration_ms: 46.192083
+  type: 'test'
+  ...
+# Subtest: P3 real preview/order route persists exact text and replays expired token without new evidence
+ok 12 - P3 real preview/order route persists exact text and replays expired token without new evidence
+  ---
+  duration_ms: 55.382667
+  type: 'test'
+  ...
+# Subtest: P3 real concurrent same-key attempts commit one order and exactly two evidence rows (20x stress)
+ok 13 - P3 real concurrent same-key attempts commit one order and exactly two evidence rows (20x stress)
+  ---
+  duration_ms: 282.806875
+  type: 'test'
+  ...
+# Subtest: P3 evidence failure and inventory failure roll back all commerce writes
+ok 14 - P3 evidence failure and inventory failure roll back all commerce writes
+  ---
+  duration_ms: 15.426417
+  type: 'test'
+  ...
+# Subtest: P3 reserved code-owned Preview versions cannot become committed evidence
+ok 15 - P3 reserved code-owned Preview versions cannot become committed evidence
+  ---
+  duration_ms: 0.800417
+  type: 'test'
+  ...
+# Subtest: P3 legacy committed replay remains compatible
+ok 16 - P3 legacy committed replay remains compatible
+  ---
+  duration_ms: 1.926291
+  type: 'test'
+  ...
+# Subtest: P3 legal source writer waits for checkout document shared lock
+ok 17 - P3 legal source writer waits for checkout document shared lock
+  ---
+  duration_ms: 102.466
+  type: 'test'
+  ...
+# Subtest: P3 restricted runtime role cannot mutate evidence or disable its guards
+ok 18 - P3 restricted runtime role cannot mutate evidence or disable its guards
+  ---
+  duration_ms: 8.174
+  type: 'test'
+  ...
+# Subtest: P3 effective-time and product-price changes require fresh authority without altering prior evidence
+ok 19 - P3 effective-time and product-price changes require fresh authority without altering prior evidence
+  ---
+  duration_ms: 33.483583
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1262.089166
+[legal-postgres] tests=19 pass=19 fail=0 skipped=0 cancelled=0
+[legal-postgres] OK: 19 tests executed against real PostgreSQL, 0 skipped.

@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "synthetic": true,
+  "postgres": "pg_dump (PostgreSQL) 18.6 (Homebrew)",
+  "tables": 44,
+  "dataDifferences": 0,
+  "schemaRelationOwnershipAclDefaultDifferences": 0,
+  "roleScope": "same isolated cluster; globals are not included by pg_dump",
+  "aes": "AES-256-GCM ETGCM002; new ephemeral key only",
+  "sha256": "6212aa46df7d9259253ef1d15cdf800407340751229c6d4458c3e69c09d7a3ad",
+  "wrongKey": "PASS refused; no plaintext",
+  "damagedFile": "PASS refused; no plaintext",
+  "productionArchiveDecryption": "NOT RUN"
+}
