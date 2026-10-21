@@ -4,6 +4,7 @@
  function refresh(){
   if(!dialog?.open)return;
   const active=document.activeElement,restore=active?.dataset.drawerAction?{action:active.dataset.drawerAction,id:active.dataset.cartId,step:active.dataset.step}:null;
+  body.setAttribute('aria-busy',String(!catalogAuthoritative()));
   if(!catalogAuthoritative()){
    status.textContent=catalogNotice();body.innerHTML='<div class="cart-drawer-loading" aria-hidden="true">'+[1,2].map(()=>'<div class="cart-drawer-skeleton"><div></div><p></p><p></p></div>').join('')+'</div>';
    subtotal.textContent='—';checkout.hidden=true;return;
