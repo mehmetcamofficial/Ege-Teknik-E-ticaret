@@ -53,3 +53,8 @@
 .hybrid-home .hero-carousel[data-theme="3"] .hc-bar{background:#cbd9d0}
 .hybrid-home .hero-carousel[data-theme="3"] .hc-bar i{background:#006c49}
 .hybrid-home .hero-carousel[data-theme="3"] .hc-btn{background:#fff;border-color:#6e8477;color:#0f382e}
+/* Keep the dark capacity card; strengthen its small labels against the lightest gradient stop. */
+.hybrid-home .hc-ladder li{background:rgb(255 255 255/.08)}
+.hybrid-home .hc-ladder li span{color:#fff}
+.hybrid-home .hc-ladder :is(.ladder-unit,.ladder-head small){color:#e2eee7}
+.hybrid-home .hc-ladder .ladder-head span{color:#b8f2d1}
