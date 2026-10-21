@@ -1,0 +1,26 @@
+PASS H2 chrome 1440
+PASS H2 chrome 1024
+PASS H2 chrome 768
+PASS H2 chrome 390
+PASS H2 chrome 320
+PASS H2 firefox 1440
+PASS H2 firefox 1024
+PASS H2 firefox 768
+PASS H2 firefox 390
+PASS H2 firefox 320
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: next Tab stays on the card controls
+    at file:///Users/mehmetcam/Developer/ege-teknik-hybrid-h2/scripts/test-hybrid-h2.mjs:125:10 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.15.0
+H2_EXIT=1

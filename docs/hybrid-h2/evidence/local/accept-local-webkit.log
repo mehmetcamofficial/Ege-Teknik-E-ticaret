@@ -1,0 +1,6 @@
+PASS H2 webkit 1440
+PASS H2 webkit 1024
+PASS H2 webkit 768
+PASS H2 webkit 390
+PASS H2 webkit 320
+H2 acceptance PASS
