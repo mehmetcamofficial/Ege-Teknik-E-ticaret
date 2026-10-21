@@ -1,0 +1,12 @@
+{
+  "baseline": "2401083a7e08e6896d8c886608cacc5e75d2ba89",
+  "testedFinalApplicationCommit": "3894fddfce6e3fc984a29a80c44052202b2fee61",
+  "estimatorSha256": "d2faee5001a73bfd7ea6823493c7574863a2536b684045315162612a950b549b",
+  "unchanged": {
+    "public/store-core.js": "7506711900a0e8994e8c76a4632089988c67c64068597ad2f09910bcaf7a5cc9",
+    "public/checkout.html": "441636ded5257050443dc27a0d909ac5645a75f8b83876cf6f5afde2c7e1a8b3",
+    "public/index.html": "fb419c762d79810d6109f9c44bf7bcfac2c81d36af5bc81efaa63263d8968548",
+    "package.json": "46bc06fcb96df62dfe8e675216342d598186e2ca0f1ecf61014f485ee834b725",
+    "pnpm-lock.yaml": "3eb355a3297061a1e960db83cdcde9276b9dab8abeb1c00bba37d83f04c2c6ec"
+  }
+}

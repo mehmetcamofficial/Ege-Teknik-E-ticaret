@@ -1,0 +1,15 @@
+PASS capacity card chrome 1440
+PASS capacity card chrome 1024
+PASS capacity card chrome 768
+PASS capacity card chrome 390
+PASS capacity card chrome 320
+PASS capacity card firefox 1440
+PASS capacity card firefox 1024
+PASS capacity card firefox 768
+PASS capacity card firefox 390
+PASS capacity card firefox 320
+PASS capacity card webkit 1440
+PASS capacity card webkit 1024
+PASS capacity card webkit 768
+PASS capacity card webkit 390
+PASS capacity card webkit 320
