@@ -10,5 +10,6 @@ test('drawer uses existing domain, escaped catalog fields and native modal seman
 test('static page entry never blocks navigation or persists sensitive form drafts',()=>{
  assert.doesNotMatch(ux,/beforeunload|startViewTransition|pushState|replaceState|sessionStorage|localStorage/);
  assert.match(ux,/pageshow/);assert.match(css,/@media\(prefers-reduced-motion:no-preference\)\{\.store main\{animation:store-page-enter/);
- assert.match(css,/\.cart-drawer\[open\]\{animation:none\}/);assert.match(ux,/aria-busy/);
+ assert.match(css,/\.cart-drawer\[open\]\{animation:none\}/);assert.match(ux,/aria-busy/);assert.match(ux,/data-drawer-retry/);
+ assert.match(readFileSync('public/checkout.html','utf8'),/<button type="button"[^>]*data-open-cart-drawer/);
 });

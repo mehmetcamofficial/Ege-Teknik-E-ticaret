@@ -1,12 +1,15 @@
 /* H1.1: a view over the existing ege-cart/writeCart domain, never a second cart store. */
 (()=>{
- let dialog,body,status,checkout,subtotal,returnFocus,message='';
+ let dialog,body,status,checkout,subtotal,returnFocus,lastAddTrigger,message='';
  function refresh(){
   if(!dialog?.open)return;
   const active=document.activeElement,restore=active?.dataset.drawerAction?{action:active.dataset.drawerAction,id:active.dataset.cartId,step:active.dataset.step}:null;
-  body.setAttribute('aria-busy',String(!catalogAuthoritative()));
+  const loading=catalogState==='loading';
+  body.setAttribute('aria-busy',String(loading));
   if(!catalogAuthoritative()){
-   status.textContent=catalogNotice();body.innerHTML='<div class="cart-drawer-loading" aria-hidden="true">'+[1,2].map(()=>'<div class="cart-drawer-skeleton"><div></div><p></p><p></p></div>').join('')+'</div>';
+   if(body.contains(active))dialog.querySelector('[data-drawer-close]').focus();
+   status.textContent=catalogNotice();
+   body.innerHTML=loading?'<div class="cart-drawer-loading" aria-hidden="true">'+[1,2].map(()=>'<div class="cart-drawer-skeleton"><div></div><p></p><p></p></div>').join('')+'</div>':'<div class="cart-drawer-empty"><h3>Sepet bilgileri alınamadı.</h3><p>Fiyat ve stok doğrulanmadan sipariş adımına geçilemez.</p><button type="button" class="ghost" data-drawer-retry>Yeniden dene</button></div>';
    subtotal.textContent='—';checkout.hidden=true;return;
   }
   const lines=cartLines(getCart(),getProducts());
@@ -22,11 +25,11 @@
   if(restore){const target=[...body.querySelectorAll('[data-drawer-action]')].find(el=>el.dataset.drawerAction===restore.action&&el.dataset.cartId===restore.id&&el.dataset.step===restore.step&&!el.disabled);(target||body.querySelector('button:not(:disabled),a[href]')||dialog.querySelector('[data-drawer-close]')).focus()}
  }
  function feedback(text){if(dialog?.open){message=text;status.textContent=text}}
- function open(text=''){
+ function open(text='',trigger=lastAddTrigger||document.activeElement){
   if(!dialog||typeof dialog.showModal!=='function')return false;
   message=text;
   if(!dialog.open){
-   returnFocus=document.activeElement;
+   returnFocus=trigger;
    if(document.querySelector('.nav-bar.open'))setMenu(document.querySelector('.store-nav>.menu-toggle'),false);
    if(document.querySelector('.catalog-filters.open'))setFiltersOpen(false);
    dialog.showModal();document.documentElement.classList.add('cart-drawer-open');
@@ -35,11 +38,21 @@
   refresh();void loadCatalog();return true;
  }
  function init(){
-  dialog=document.createElement('dialog');dialog.className='cart-drawer';dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','cart-drawer-title');
+  dialog=document.createElement('dialog');dialog.className='cart-drawer';dialog.id='cart-drawer';dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','cart-drawer-title');
   dialog.innerHTML='<header class="cart-drawer-head"><div><span>ALIŞVERİŞİNİZ</span><h2 id="cart-drawer-title">Sepetiniz</h2></div><button type="button" class="ghost" data-drawer-close aria-label="Sepeti kapat" autofocus>×</button></header><p class="cart-drawer-status" role="status" aria-live="polite"></p><div class="cart-drawer-body"></div><footer class="cart-drawer-foot"><div class="cart-drawer-subtotal"><span>Ara toplam</span><b data-drawer-subtotal>—</b></div><p>KDV dahil. Teslimat ve montaj koşulları sipariş adımında doğrulanır. Bu aşamada ödeme alınmaz.</p><a class="primary" href="checkout.html" data-drawer-checkout>Sipariş adımına geç</a><button type="button" class="ghost" data-drawer-close>Alışverişe devam et</button></footer>';
   document.body.appendChild(dialog);body=dialog.querySelector('.cart-drawer-body');status=dialog.querySelector('.cart-drawer-status');checkout=dialog.querySelector('[data-drawer-checkout]');subtotal=dialog.querySelector('[data-drawer-subtotal]');
-  dialog.addEventListener('close',()=>{document.documentElement.classList.remove('cart-drawer-open');message='';(returnFocus?.isConnected?returnFocus:document.querySelector('.header-cart'))?.focus()});
+  dialog.addEventListener('keydown',event=>{
+   if(event.key!=='Tab')return;
+   const controls=[...dialog.querySelectorAll('a[href],button:not(:disabled),input:not(:disabled)')].filter(el=>el.getClientRects().length);
+   const first=controls[0],last=controls.at(-1);
+   if(!dialog.contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first)?.focus();return}
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+  });
+  dialog.addEventListener('close',()=>{document.documentElement.classList.remove('cart-drawer-open');message='';(returnFocus?.isConnected&&!returnFocus.disabled&&returnFocus.getClientRects().length?returnFocus:document.querySelector('.header-cart,[data-open-cart-drawer]'))?.focus()});
   dialog.addEventListener('click',event=>{
+   if(event.target.closest('[data-drawer-retry]')){message='';void loadCatalog();return}
+   if(event.target.closest('[data-drawer-checkout]')&&location.pathname.endsWith('/checkout.html')){event.preventDefault();dialog.close();return}
    if(event.target.closest('[data-drawer-close]')){dialog.close();return}
    if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right)dialog.close();return}
    const control=event.target.closest('[data-drawer-action]');if(!control||control.disabled||control.dataset.drawerAction==='quantity')return;
@@ -49,8 +62,9 @@
    refresh();
   });
   dialog.addEventListener('change',event=>{const input=event.target.closest('[data-drawer-action="quantity"]');if(!input)return;message='';if(changeCartQuantity(input.dataset.cartId,input.value))message='Ürün adedi güncellendi.';refresh()});
-  document.querySelectorAll('.header-cart').forEach(link=>{link.setAttribute('aria-haspopup','dialog');link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;if(open())event.preventDefault()})});
+  document.querySelectorAll('.header-cart,[data-open-cart-drawer]').forEach(link=>{link.hidden=false;link.setAttribute('aria-haspopup','dialog');link.setAttribute('aria-controls','cart-drawer');link.addEventListener('click',event=>{if(event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;if(open('',link))event.preventDefault()})});
  }
+ document.addEventListener('click',event=>{lastAddTrigger=event.target.closest('[data-action="add-cart"],[data-action="add-product-cart"]')},true);
  window.EgeCartDrawer={open,refresh,feedback};
  document.addEventListener('DOMContentLoaded',init);
  // No click interception, synthetic router or unload handler: browser form/history/scroll restoration stays native.

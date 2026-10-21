@@ -1397,3 +1397,9 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
 /* H1.1 MPA entry: no navigation delay, route interception or artificial loading screen. */
 @media(prefers-reduced-motion:no-preference){.store main{animation:store-page-enter var(--motion-control) var(--motion-ease)}}
 @keyframes store-page-enter{from{opacity:.96}to{opacity:1}}
+
+/* The distraction-free checkout header is not the storefront's three-column mobile header. */
+.store .checkout-header .store-nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;min-height:76px}
+.store .checkout-header .store-nav .brand{order:0;flex:0 0 auto}
+.store .checkout-header .nav-links{position:static;display:flex;flex:0 0 auto;min-width:0}
+@media(max-width:600px){.store .checkout-header .store-nav>span{flex:1 1 100%;margin-left:0}.store .checkout-header .store-nav .brand{font-size:20px}}

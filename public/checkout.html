@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="store.css">
 <meta name="robots" content="noindex, nofollow"></head>
 <body class="store">
-  <header class="store-header"><nav class="store-nav"><a class="brand" href="/">EGE TEKNİK<small>GÜVENLİ SİPARİŞ</small></a><div class="nav-links"><a href="catalog.html">Mağazaya dön</a></div><span>Güvenli bağlantı (HTTPS)</span></nav></header>
+  <header class="store-header checkout-header"><nav class="store-nav"><a class="brand" href="/">EGE TEKNİK<small>GÜVENLİ SİPARİŞ</small></a><div class="nav-links"><a href="catalog.html">Mağazaya dön</a></div><span>Güvenli bağlantı (HTTPS)</span></nav></header>
   <main id="main" class="store-shell">
     <div class="page-head"><div><h1>Siparişi tamamla</h1><p>Teslimat bilgilerinizi girin. Siparişi onaylamadan önce ödenecek kesin tutar ve varsa ek masraflar aşağıda gösterilir; gösterilmeyen bir bedel sizden talep edilmez. <b>Hesap oluşturmadan, misafir olarak sipariş verebilirsiniz.</b></p></div></div>
     <section class="panel" data-order-confirmation hidden>
@@ -44,7 +44,7 @@
         <label class="pay-option"><input type="radio" name="provider" value="discovery" checked><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Aktif ödeme yöntemi sipariş sonrasında teyit edilir. Bu sayfada kart bilgisi istenmez ve ödeme alınmaz. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
         <div class="notice" id="payment-status">Online ödeme şu anda kullanılamıyor. Ödeme seçenekleri için Ege Teknik ile iletişime geçebilirsiniz.</div>
       </section>
-      <aside class="panel"><h2>Sipariş özeti</h2><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>KDV (ara toplama dahil)</span><b data-vat>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
+      <aside class="panel"><h2>Sipariş özeti</h2><button type="button" class="ghost" data-open-cart-drawer hidden>Sepeti düzenle</button><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>KDV (ara toplama dahil)</span><b data-vat>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
       <section class="legal-preview" aria-labelledby="legal-preview-heading">
         <h3 id="legal-preview-heading">Hukuki metinler</h3>
         <p class="field-help">Siparişi onaylamadan önce bu siparişe özel hukuki metinleri oluşturup okuduğunuzu onaylamanız gerekir.</p>
