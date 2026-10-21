@@ -3,7 +3,7 @@
  * never prints missing-data placeholders and keeps focus inside the modal.
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
 import { apiProduct, loadStorefront } from "./support/storefront-sandbox.ts";
 
@@ -151,4 +151,101 @@ test("H3-D floating help and cookie buttons step aside from checkout errors; leg
 
 test("H3-D retrying while the catalog re-reads says it is updating, not 'refresh the page'", () => {
   assert.match(core, /say\(catalogState==='loading'\?'Ürün bilgileri güncelleniyor; birkaç saniye sonra tekrar deneyin\. Bilgileriniz korunuyor\.':'Ürün bilgileri sunucudan doğrulanamadı\. Lütfen sayfayı yenileyip tekrar deneyin\.'\)/);
+});
+
+/* ---------- H3.1-B legal documents: never show placeholders, block on missing/invalid documents ---------- */
+const jsonRes = (status: number, body: unknown) => () => Promise.resolve({ ok: status < 400, status, json: async () => body });
+const goodDoc = { slug: "distance-sales", title: "TEST SENTETIK — Mesafeli Satış", version: 3, documentVersionId: "ver-ds-1", renderedBody: "TEST gövdesi" };
+const preview = (docs: unknown[]) => jsonRes(200, { ok: true, orderNumber: "TEST-ORDER", orderIssuedAt: 1757000000000, expiresAt: 4102444800000, legalPreviewToken: "preview.payload.signature", documents: docs });
+async function legalStore(api: Record<string, unknown>) {
+  const store = loadStorefront({ storage: cart, api: { products: [apiProduct()], order: ok, ...api } as never });
+  await store.fn<() => Promise<void>>("loadCatalog")();
+  await store.fn<() => Promise<unknown>>("loadLegalRequirements")();
+  await store.fn<() => Promise<void>>("loadCheckoutCharges")();
+  return store;
+}
+const run = (store: Awaited<ReturnType<typeof legalStore>>, name: string) => store.fn<(...a: unknown[]) => unknown>(name);
+
+test("H3.1-B the version label is omitted, never 'undefined', when a version is missing or malformed", async () => {
+  const store = await legalStore({});
+  const label = run(store, "legalVersionLabel") as (d: unknown) => string;
+  assert.equal(label({ version: 3 }), " — Sürüm 3");
+  assert.equal(label({ version: "4" }), " — Sürüm 4");
+  for (const bad of [{}, { version: undefined }, { version: null }, { version: "undefined" }, { version: 0 }, { version: -1 }, { version: 1.5 }, { version: "" }, { version: "abc" }]) assert.equal(label(bad), "", JSON.stringify(bad));
+});
+
+test("H3.1-B required documents must be identifiable; empty, malformed or duplicate lists leave the order blocked", async () => {
+  const bads = [[], [{ slug: "a", title: "T" }], [{ slug: "a", title: "  ", versionId: "v1" }], [{ slug: "a", title: "T", versionId: "undefined" }], [{ slug: "a", title: "T", versionId: "v1", version: 0 }], [{ slug: "a", title: "T", versionId: "v1" }, { slug: "b", title: "U", versionId: "v1" }]];
+  for (const docs of bads) {
+    const store = await legalStore({ legalRequired: jsonRes(200, { documents: docs }) });
+    assert.equal(await run(store, "loadLegalRequirements")(), null, JSON.stringify(docs));
+    const { f, result } = checkoutForm();
+    await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
+    assert.equal(store.orderBodies.length, 0, "no order request while required documents are unusable");
+    assert.ok(result.textContent.length > 0);
+  }
+  const good = await legalStore({ legalRequired: jsonRes(200, { documents: [{ slug: "distance-sales", title: "T", versionId: "v1" }] }) });
+  assert.equal(Array.isArray(await run(good, "loadLegalRequirements")()), true);
+});
+
+test("H3.1-B an unusable or incomplete legal preview blocks the order; a complete one passes", async () => {
+  const cases: [string, unknown[]][] = [
+    ["missing version", [{ ...goodDoc, version: undefined }]], ["zero version", [{ ...goodDoc, version: 0 }]], ["textual undefined", [{ ...goodDoc, version: "undefined" }]],
+    ["empty body", [{ ...goodDoc, renderedBody: "" }]], ["missing id", [{ ...goodDoc, documentVersionId: undefined }]], ["missing title", [{ ...goodDoc, title: " " }]], ["duplicate ids", [goodDoc, goodDoc]],
+  ];
+  for (const [name, docs] of cases) {
+    const store = await legalStore({ legalPreview: preview(docs) });
+    const { f } = checkoutForm();
+    assert.equal(await store.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(f), null, name);
+    await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
+    assert.equal(store.orderBodies.length, 0, name + ": no order request");
+  }
+  const store = await legalStore({ legalPreview: preview([goodDoc]) });
+  assert.ok(await store.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(checkoutForm().f), "a complete preview is accepted");
+});
+
+test("H3.1-B server 503 for missing legal documents or notice is explained and keeps the cart", async () => {
+  for (const [code, text] of [["LEGAL_DOCUMENTS_UNAVAILABLE", /Zorunlu hukuki belgeler şu anda eksik veya doğrulanamıyor/], ["LEGAL_NOTICE_UNAVAILABLE", /Aydınlatma metni henüz yayınlanmadığı için sipariş şu anda alınamıyor/]] as const) {
+    const previewStore = await legalStore({ legalPreview: jsonRes(503, { error: "x", code }) });
+    const { f } = checkoutForm();
+    assert.equal(await previewStore.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(f), null);
+    const orderStore = await legalStore({ order: jsonRes(503, { error: "x", code }) });
+    const form = checkoutForm();
+    assert.ok(await orderStore.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(form.f));
+    await orderStore.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: form.f });
+    assert.match(form.result.textContent, text);
+    assert.equal(form.button.textContent, "", "the submit label is restored, not stuck on 'Sipariş kaydediliyor…'");
+    assert.deepEqual(JSON.parse(JSON.stringify(orderStore.fn<() => unknown>("readCartRaw")())), cart["ege-cart"]);
+  }
+});
+
+test("H3.1-B an unpublished KVKK notice blocks the order with an explanation; a failed lookup does not", async () => {
+  const slot = { innerHTML: "" };
+  const missing = loadStorefront({ storage: cart, elements: { "[data-kvkk-notice]": slot }, api: { products: [apiProduct()], order: ok, legalDocuments: jsonRes(200, { documents: [{ slug: "distance-sales", title: "x", versionId: "v" }] }) } as never });
+  await missing.fn<() => Promise<void>>("loadCatalog")();
+  await missing.fn<() => Promise<void>>("renderKvkkNotices")();
+  assert.match(slot.innerHTML, /henüz yayınlanmamıştır; bu nedenle sipariş şu anda alınamıyor/);
+  const form = checkoutForm();
+  assert.equal(await missing.fn<(f: unknown) => Promise<unknown>>("requestLegalPreview")(form.f), null);
+  await missing.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: form.f });
+  assert.equal(missing.orderBodies.length, 0);
+  assert.match(form.result.textContent, /Aydınlatma metni henüz yayınlanmadığı için sipariş şu anda alınamıyor/);
+  const slot2 = { innerHTML: "" };
+  const unknown = loadStorefront({ storage: cart, elements: { "[data-kvkk-notice]": slot2 }, api: { products: [apiProduct()], order: ok, legalDocuments: () => Promise.reject(new Error("network")) } as never });
+  await unknown.fn<() => Promise<void>>("loadCatalog")();
+  await unknown.fn<() => Promise<void>>("renderKvkkNotices")();
+  assert.match(slot2.innerHTML, /şu anda yüklenemedi/);
+  assert.doesNotMatch(slot2.innerHTML, /yayınlanmamıştır/, "a failed lookup is not reported as 'unpublished'");
+});
+
+test("H3.1-B synthetic test data never lives in application code", () => {
+  // Server-owned Preview fixtures are a separate, earlier boundary (lib/legal-fixture-registry.ts, tests/reserved-preview-fixture.test.ts).
+  const forbidden = /ETS-H3-SYNTH|h3-synthetic|TEST SENTETİK|TEST SENTETIK|Sentetik satış koşulları|h3-terms|h3-distance/;
+  for (const dir of ["public", "app", "components", "hooks"]) {
+    for (const file of readdirSync(dir, { recursive: true, encoding: "utf8" })) {
+      if (!/\.(js|mjs|ts|tsx|html|css|json)$/.test(file)) continue;
+      assert.doesNotMatch(readFileSync(`${dir}/${file}`, "utf8"), forbidden, `${dir}/${file}`);
+    }
+  }
+  assert.ok(readFileSync("scripts/fixtures/h31-synthetic-legal.mjs", "utf8").includes("TEST SENTETİK"), "fixtures are declared in one clearly named test-only module");
 });

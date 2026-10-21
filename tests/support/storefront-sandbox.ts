@@ -142,7 +142,7 @@ export function loadStorefront(options: {
   /** P2.3: a selector may map to ONE element or a LIST (querySelectorAll now serves this registry too). */
   elements?: Record<string, FakeElement | FakeElement[]>;
   featured?: ReturnType<typeof featuredCard>[];
-  api?: { products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown>; reviews?: ((url: string) => unknown) | Record<string, unknown> | "fail"; reviewPost?: (body: unknown, headers: Record<string, string>) => { status: number; body: unknown }; analyticsFail?: boolean };
+  api?: { legalRequired?: () => Promise<unknown>; legalPreview?: () => Promise<unknown>; legalDocuments?: () => Promise<unknown>; products?: ApiValue; detail?: Record<string, unknown> | "fail"; secondHand?: ApiValue; blog?: ApiValue; order?: () => Promise<unknown>; charges?: Record<string, unknown>; reviews?: ((url: string) => unknown) | Record<string, unknown> | "fail"; reviewPost?: (body: unknown, headers: Record<string, string>) => { status: number; body: unknown }; analyticsFail?: boolean };
 } = {}) {
   const storage = new Map(Object.entries(options.storage ?? {}).map(([k, v]) => [k, JSON.stringify(v)]));
   const search = options.search ?? "";
@@ -203,6 +203,9 @@ export function loadStorefront(options: {
       }
       if (url === "/api/second-hand") return respond(api.secondHand, "products");
       if (url === "/api/blog") return respond(api.blog, "posts");
+      if (url === "/api/legal/required" && api.legalRequired) return api.legalRequired();
+      if (url === "/api/legal/documents" && api.legalDocuments) return api.legalDocuments();
+      if (url === "/api/checkout/legal-preview" && api.legalPreview) return api.legalPreview();
       if (url === "/api/legal/required") return Promise.resolve({ ok: true, status: 200, json: async () => ({ documents: [{ slug: "distance-sales", title: "PREVIEW TEST — Mesafeli Satış", versionId: "ver-ds-1" }] }) });
       if (url === "/api/checkout/legal-preview") return Promise.resolve({ ok: true, status: 200, json: async () => ({
         ok: true, orderNumber: "ETS-20261003-PREVIEW", orderIssuedAt: 1757000000000, expiresAt: 4102444800000,

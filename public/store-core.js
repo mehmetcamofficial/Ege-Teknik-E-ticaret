@@ -56,7 +56,19 @@ function buildOrderPayload(fields,entries,products){return {customerName:fields.
 /* Required legal documents come from GET /api/legal/required (server-decided version ids). Checkout only
    ever submits the ids of boxes the customer actively ticked; the server re-validates them. */
 let legalRequirements=null;
-async function loadLegalRequirements(){legalRequirements=null;try{const response=await fetch('/api/legal/required');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents)&&data.documents.length)legalRequirements=data.documents}catch{}renderLegalConsents();return legalRequirements}
+/* H3.1-B: a legal document is only usable when it is identifiable and readable. Anything else blocks the order with a
+   plain explanation instead of rendering placeholders such as "Sürüm undefined". The server still decides; this only
+   stops the customer from being walked into a confirmation that cannot be recorded. */
+const LEGAL_BLOCKED_MESSAGE='Zorunlu hukuki belgeler şu anda eksik veya doğrulanamıyor; bu nedenle sipariş alamıyoruz. Bilgileriniz ve sepetiniz korunuyor. Lütfen daha sonra tekrar deneyin ya da 0542 795 75 60 numarasından bize ulaşın.';
+const KVKK_MISSING_MESSAGE='Aydınlatma metni henüz yayınlanmadığı için sipariş şu anda alınamıyor. Lütfen daha sonra tekrar deneyin ya da 0542 795 75 60 numarasından bize ulaşın.';
+function legalText(v){return typeof v==='string'&&v.trim()!==''&&v.trim().toLowerCase()!=='undefined'&&v.trim().toLowerCase()!=='null'}
+/* A version is a positive whole number (lib/legal-db.ts). Absent is allowed only where the endpoint never carried it. */
+function legalVersionValid(v){return v===undefined||v===null||(Number.isInteger(Number(v))&&Number(v)>0&&String(v).trim()!=='')}
+function legalVersionLabel(d){return d&&d.version!==undefined&&d.version!==null&&legalVersionValid(d.version)?' — Sürüm '+Number(d.version):''}
+function legalRequirementsValid(docs){return Array.isArray(docs)&&docs.length>0&&docs.every(d=>d&&legalText(d.versionId)&&legalText(d.slug)&&legalText(d.title)&&legalVersionValid(d.version))&&new Set(docs.map(d=>d.versionId)).size===docs.length}
+function legalPreviewDocumentsValid(docs){return Array.isArray(docs)&&docs.length>0&&docs.every(d=>d&&legalText(d.documentVersionId)&&legalText(d.slug)&&legalText(d.title)&&legalText(d.renderedBody)&&d.version!==undefined&&d.version!==null&&legalVersionValid(d.version))&&new Set(docs.map(d=>d.documentVersionId)).size===docs.length}
+let legalNoticeState='unknown';
+async function loadLegalRequirements(){legalRequirements=null;try{const response=await fetch('/api/legal/required');const data=await response.json().catch(()=>({}));if(response.ok&&legalRequirementsValid(data.documents))legalRequirements=data.documents}catch{}renderLegalConsents();return legalRequirements}
 /* Exact-version link: opens the very version whose id the box submits; opening it never ticks the box. */
 function legalVersionHref(d){return '/legal/'+encodeURIComponent(d.slug)+'?version='+encodeURIComponent(d.versionId)}
 function renderLegalConsents(){queueCheckoutBar();const root=document.querySelector('[data-legal-consents]');if(!root)return;root.innerHTML=legalRequirements?legalRequirements.map(d=>`<label class="consent"><input type="checkbox" required data-legal-version="${esc(d.versionId)}"${legalPreview?'':' disabled'}><span><a href="${esc(legalVersionHref(d))}" target="_blank" rel="noopener">${esc(d.title)}</a> metnini okudum ve kabul ediyorum.</span></label>`).join(''):'<p class="notice">Yasal metinler şu anda yüklenemedi; sipariş verilemiyor. Lütfen sayfayı yenileyin.</p>'}
@@ -101,7 +113,7 @@ function renderLegalPreview(){
   head.textContent='Sipariş numarası: '+legalPreview.orderNumber;host.appendChild(head);
   for(const doc of legalPreview.documents){
     const details=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('div');
-    summary.textContent=doc.title+' — Sürüm '+doc.version;details.appendChild(summary);
+    summary.textContent=doc.title+legalVersionLabel(doc);details.appendChild(summary);
     body.className='legal-preview-body';body.style.whiteSpace='pre-wrap';body.textContent=doc.renderedBody;details.appendChild(body);host.appendChild(details)
   }
   for(const box of document.querySelectorAll('[data-legal-version]')){box.disabled=false}
@@ -110,6 +122,7 @@ function renderLegalPreview(){
 async function requestLegalPreview(form){
   if(legalPreviewLoading)return legalPreview
   if(!validateCheckoutForm(form)){const s=document.querySelector('[data-legal-preview-status]');if(s)s.textContent='Hukuki metinleri hazırlamadan önce işaretli alanları düzeltin.';return null}
+  if(legalNoticeState==='missing'){const s=document.querySelector('[data-legal-preview-status]');if(s)s.textContent=KVKK_MISSING_MESSAGE;return null}
   const host=document.querySelector('[data-legal-preview]'),status=document.querySelector('[data-legal-preview-status]'),button=document.querySelector('[data-legal-preview-prepare]');
   legalPreviewLoading=true;if(button)button.disabled=true;
   if(status){status.textContent='Hukuki metinler hazırlanıyor…';status.setAttribute('aria-busy','true')}
@@ -118,7 +131,9 @@ async function requestLegalPreview(form){
     const response=await fetch('/api/checkout/legal-preview',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
     const data=await response.json().catch(()=>({}));
     if(response.status===429){invalidateLegalPreview();if(status)status.textContent='Hukuki metin istekleri sınırına ulaşıldı. Lütfen biraz sonra tekrar deneyin.';return null}
+    if(response.status===503||data.code==='LEGAL_DOCUMENTS_UNAVAILABLE'||data.code==='LEGAL_NOTICE_UNAVAILABLE'){invalidateLegalPreview();if(status)status.textContent=data.code==='LEGAL_NOTICE_UNAVAILABLE'?KVKK_MISSING_MESSAGE:LEGAL_BLOCKED_MESSAGE;return null}
     if(!response.ok||!data.legalPreviewToken||!Array.isArray(data.documents)||!data.documents.length){invalidateLegalPreview();if(status)status.textContent=(data.error||'Hukuki metinler oluşturulamadı.');return null}
+    if(!legalPreviewDocumentsValid(data.documents)){invalidateLegalPreview();if(status)status.textContent=LEGAL_BLOCKED_MESSAGE;return null}
     legalPreview={token:data.legalPreviewToken,orderNumber:data.orderNumber,orderIssuedAt:data.orderIssuedAt,expiresAt:data.expiresAt,documents:data.documents};
     if(status){status.textContent='Metinleri okudum, onaylayabilirim.';status.setAttribute('aria-busy','false')}
     /* Acceptance ids come from the PREVIEW only - never from a separately fetched current-version list. */
@@ -417,8 +432,10 @@ function renderChargeSummary(){queueCheckoutBar();
   if(submit)submit.disabled=summary.total===null||!hasItems}
 function marketingChoices(boxes){const choices={sms:false,email:false,whatsapp:false};Array.from(boxes||[]).forEach(box=>{if(box.checked&&Object.hasOwn(choices,box.dataset.marketingChannel))choices[box.dataset.marketingChannel]=true});return choices}
 /* KVKK Aydınlatma is informational, never a checkbox. The link points at the currently published document; if none is published the page says so. */
-async function renderKvkkNotices(){const slots=document.querySelectorAll('[data-kvkk-notice]');if(!slots.length)return;let doc=null;try{const response=await fetch('/api/legal/documents');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents))doc=data.documents.find(d=>d.slug==='kvkk')||null}catch{}
-  slots.forEach(slot=>{slot.innerHTML=doc?`Kişisel verilerinizin işlenmesine ilişkin <a href="${esc(legalVersionHref(doc))}" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni inceleyebilirsiniz.`:'KVKK Aydınlatma Metni henüz yayınlanmamıştır.'})}
+async function renderKvkkNotices(){const slots=document.querySelectorAll('[data-kvkk-notice]');if(!slots.length)return;let doc=null,state='unknown';try{const response=await fetch('/api/legal/documents');const data=await response.json().catch(()=>({}));if(response.ok&&Array.isArray(data.documents)){doc=data.documents.find(d=>d.slug==='kvkk')||null;state=doc?'published':'missing'}}catch{}
+  legalNoticeState=state;checkoutNoticeChanged();
+  slots.forEach(slot=>{slot.innerHTML=doc?`Kişisel verilerinizin işlenmesine ilişkin <a href="${esc(legalVersionHref(doc))}" target="_blank" rel="noopener">KVKK Aydınlatma Metni</a>'ni inceleyebilirsiniz.`:state==='unknown'?'KVKK Aydınlatma Metni şu anda yüklenemedi.':'KVKK Aydınlatma Metni henüz yayınlanmamıştır; bu nedenle sipariş şu anda alınamıyor.'})}
+function checkoutNoticeChanged(){const status=document.querySelector('[data-legal-preview-status]');if(status&&legalNoticeState==='missing'&&!legalPreview)status.textContent=KVKK_MISSING_MESSAGE;queueCheckoutBar()}
 /* Display-only mirror of lib/order-domain.ts's calculateLine: VAT carved out of a VAT-inclusive line total.
    The server is always the authority - this only lets the customer see the breakdown before submitting. */
 function lineVat(unitPrice,quantity,vatRateBps){return Math.round(unitPrice*quantity*vatRateBps/(10000+vatRateBps))}
@@ -450,7 +467,7 @@ function deliveryMethodText(d,data){
 function renderConfirmationLegal(data){
   const root=document.querySelector('[data-confirmation-legal]');if(!root)return;
   const docs=Array.isArray(data.legalAcceptances)?data.legalAcceptances:[];
-  root.innerHTML=docs.map(d=>`<li><a href="${esc('/legal/'+encodeURIComponent(d.slug)+'?version='+encodeURIComponent(d.documentVersionId))}" target="_blank" rel="noopener">${esc(d.title)} — Sürüm ${esc(d.version)}</a></li>`).join('');
+  root.innerHTML=docs.map(d=>`<li><a href="${esc('/legal/'+encodeURIComponent(d.slug)+'?version='+encodeURIComponent(d.documentVersionId))}" target="_blank" rel="noopener">${esc(d.title)}${esc(legalVersionLabel(d))}</a></li>`).join('');
   root.hidden=!docs.length
 }
 function renderOrderConfirmation(data){
@@ -520,6 +537,8 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=
   if(orderSubmitting)return;
   if(!catalogAuthoritative()){say(catalogState==='loading'?'Ürün bilgileri güncelleniyor; birkaç saniye sonra tekrar deneyin. Bilgileriniz korunuyor.':'Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
   if(!validateCheckoutForm(f)){say('Siparişi tamamlamak için işaretli alanları düzeltin.');return}
+  if(legalNoticeState==='missing'){say(KVKK_MISSING_MESSAGE);return}
+  if(legalPreview&&!legalPreviewDocumentsValid(legalPreview.documents)){invalidateLegalPreview();say(LEGAL_BLOCKED_MESSAGE);return}
   const entries=getCart(),products=getProducts(),payload=buildOrderPayload({customerName:'',phone:'',email:'',city:'',address:'',paymentProvider:''},entries,products);
   if(!payload.items.length){toast('Sepetiniz boş');say('Sepetinizde satın alınabilir ürün yok.');return}
   const accepted=acceptedLegalVersionIds(f.querySelectorAll('[data-legal-version]'));
@@ -535,6 +554,9 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=
   Object.assign(payload,{expectedTotal:summary.total,delivery:choice.method,district:d.get('district')||'',marketing:marketingChoices(f.querySelectorAll('[data-marketing-channel]')),customerName:d.get('customerName'),phone:d.get('phone'),email:d.get('email'),city:d.get('city')||'',address:d.get('address')||'',paymentProvider:d.get('provider'),note:d.get('note')||'',legalAcceptances:previewAccepted,legalPreviewToken:legalPreview.token});
   const attemptKey=orderAttemptKey(sessionStorage);
   orderSubmitting=true;f.setAttribute?.('aria-busy','true');say('');
+  const submitLabel=button?.textContent||'';
+  /* Early legal refusals are not errors of the order itself: the button returns to its normal label (and the totals decide if it is enabled). */
+  const restore=()=>{if(button){button.disabled=false;button.textContent=submitLabel}renderChargeSummary()};
   if(button){button.disabled=true;button.textContent='Sipariş kaydediliyor…'}queueCheckoutBar();
   try{
     const response=await fetch('/api/orders',{method:'POST',headers:{'content-type':'application/json','idempotency-key':attemptKey},body:JSON.stringify(payload)});
@@ -543,7 +565,8 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=
     if(!response.ok){if(response.status===400||response.status===422||data.code==='LEGAL_VERSION_MISMATCH'||data.code==='IDEMPOTENCY_KEY_REUSED')clearOrderAttemptKey(sessionStorage);
       /* P3-LEGAL-3C.4: the server rejected our preview. Keep the customer's data and cart, drop the stale preview,
          uncheck + disable acceptance, and never retry automatically - the customer must read and re-accept. */
-      if(data.code==='LEGAL_PREVIEW_INVALID'){invalidateLegalPreview();say('Hukuki metinler güncellendi. Devam etmek için metinleri yeniden oluşturup onaylayın.');return}if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();
+      if(data.code==='LEGAL_PREVIEW_INVALID'){invalidateLegalPreview();restore();say('Hukuki metinler güncellendi. Devam etmek için metinleri yeniden oluşturup onaylayın.');return}
+      if(data.code==='LEGAL_DOCUMENTS_UNAVAILABLE'||data.code==='LEGAL_NOTICE_UNAVAILABLE'){invalidateLegalPreview();restore();say(data.code==='LEGAL_NOTICE_UNAVAILABLE'?KVKK_MISSING_MESSAGE:LEGAL_BLOCKED_MESSAGE);return}if(data.code==='LEGAL_VERSION_MISMATCH')void loadLegalRequirements();if(data.code==='PRICE_CHANGED'||data.code==='CHARGES_UNDETERMINED')void loadCheckoutCharges();
       // H3-C: stock/sellability conflicts re-read the catalog so the affected line is flagged right away.
       if(response.status===409&&!data.code||data.code==='PRODUCT_NOT_SELLABLE'){void loadCatalog()}
       if(data.code==='IDEMPOTENCY_KEY_REUSED')throw new Error('Sipariş bilgileriniz değişti. Lütfen siparişi yeniden onaylayın.');

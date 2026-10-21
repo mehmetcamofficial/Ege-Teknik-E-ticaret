@@ -1,6 +1,6 @@
 /** H3 premium cart & checkout acceptance. Every POST (legal preview, order) is answered by the test, never sent:
  *  no order, token or row is ever created, locally or on a hosted Preview. */
-import assert from 'node:assert/strict';import{createRequire}from'node:module';import{readFile,writeFile,mkdir}from'node:fs/promises';import path from'node:path';
+import assert from 'node:assert/strict';import{syntheticPreviewDocuments,syntheticIdentities,TEST_ORDER_NUMBER}from'./fixtures/h31-synthetic-legal.mjs';import{createRequire}from'node:module';import{readFile,writeFile,mkdir}from'node:fs/promises';import path from'node:path';
 const require=createRequire(path.join(process.env.EGE_BROWSER_TOOLS,'package.json'));const{chromium,firefox,webkit}=require('playwright'),AxeBuilder=require('@axe-core/playwright').default;
 const origin=new URL(process.env.EGE_H3_ORIGIN||'https://127.0.0.1:44394').origin,hosted=new URL(origin).hostname.endsWith('.vercel.app');
 assert.ok(hosted?new URL(origin).hostname.startsWith('ege-teknik-phase3a-'):new URL(origin).hostname==='127.0.0.1');
@@ -8,10 +8,11 @@ const oidc=process.env.VERCEL_OIDC_TOKEN;if(hosted)assert.ok(oidc,'hosted runs n
 const out=process.env.EGE_H3_OUTPUT||'.scratch/h3/accept';await mkdir(out,{recursive:true});
 const fixture=JSON.parse(await readFile('.scratch/h12/inputs/catalog.json')),charges=JSON.parse(await readFile('.scratch/h3/charges.json'));
 const LOW_ID='airy-9000-btu-h',localCatalog={products:fixture.products.map(p=>p.id===LOW_ID?{...p,stock:2}:p)};
-const LEGAL_REQUIRED={documents:[{versionId:'h3-terms',title:'Sentetik satış koşulları',slug:'terms',version:'test-1'},{versionId:'h3-distance',title:'Sentetik mesafeli satış sözleşmesi',slug:'distance',version:'test-1'}]};
+// TEST-ONLY: local required-documents mock (identity only, like the real endpoint). Real documents are never faked on hosted runs.
+const LEGAL_REQUIRED={documents:syntheticIdentities.map(d=>({versionId:d.versionId,slug:d.slug,title:'TEST SENTETİK — '+d.slug}))};
 // Hosted: the page renders its consent boxes from the real required documents, so the synthetic preview must carry the same version ids (read with GET only).
-let previewDocs=LEGAL_REQUIRED.documents;
-if(hosted){const res=await fetch(origin+'/api/legal/required',{headers:{'x-vercel-trusted-oidc-idp-token':oidc}});assert.equal(res.status,200,'required legal documents readable');previewDocs=(await res.json()).documents;assert.ok(previewDocs.length>=1)}
+let previewIdentities=LEGAL_REQUIRED.documents;
+if(hosted){const res=await fetch(origin+'/api/legal/required',{headers:{'x-vercel-trusted-oidc-idp-token':oidc}});assert.equal(res.status,200,'required legal documents readable');previewIdentities=(await res.json()).documents;assert.ok(previewIdentities.length>=1)}
 const result={origin,hosted,applicationCommit:process.env.EGE_H3_SHA,matrix:[],contrasts:[],axeScans:0,interceptedWrites:[],realWritesSent:0,orderCreated:false};
 const save=()=>writeFile(`${out}/results.json`,JSON.stringify(result,null,2));
 const money=n=>new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n);
@@ -34,7 +35,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   const orderPlan=[];let orderPosts=0,previewPosts=0;
   await c.route('**/*',async r=>{const q=r.request(),u=new URL(q.url());
    if(!['GET','HEAD'].includes(q.method())){result.interceptedWrites.push({method:q.method(),path:u.pathname});
-    if(u.pathname==='/api/checkout/legal-preview'){previewPosts++;const body=JSON.parse(q.postData()||'{}');return r.fulfill({json:{legalPreviewToken:'h3-synthetic-preview-token-'+previewPosts,orderNumber:'ETS-H3-SYNTH',orderIssuedAt:new Date().toISOString(),expiresAt:Date.now()+30*60e3,documents:previewDocs.map(d=>({documentVersionId:d.versionId,title:d.title,slug:d.slug,version:d.version,renderedBody:`${d.title}\nAlıcı: ${body.customerName}\nSentetik önizleme.`}))}})}
+    if(u.pathname==='/api/checkout/legal-preview'){previewPosts++;const body=JSON.parse(q.postData()||'{}');return r.fulfill({json:{legalPreviewToken:'test-sentetik-onizleme-'+previewPosts,orderNumber:TEST_ORDER_NUMBER,orderIssuedAt:new Date().toISOString(),expiresAt:Date.now()+30*60e3,documents:syntheticPreviewDocuments(previewIdentities,body.customerName)}})}
     if(u.pathname==='/api/orders'){orderPosts++;const step=orderPlan.shift()||{status:201};if(step.delay)await new Promise(res=>setTimeout(res,step.delay));if(step.abort)return r.abort('failed');return r.fulfill({status:step.status,json:step.json??{}})}
     return r.fulfill({status:204})}
    if(!hosted&&u.pathname.startsWith('/api/')){if(u.pathname==='/api/products')return r.fulfill({json:localCatalog});if(u.pathname.includes('/reviews'))return r.fulfill({json:{reviews:[],summary:{count:0,average:null}}});if(u.pathname.startsWith('/api/products/')){const prod=localCatalog.products.find(x=>x.id===decodeURIComponent(u.pathname.split('/')[3]));return prod?r.fulfill({json:{product:{...prod,gallery:[],specifications:[],documents:[],warranty:null}}}):r.fulfill({status:404,json:{}})}if(u.pathname==='/api/legal/required')return r.fulfill({json:LEGAL_REQUIRED});if(u.pathname==='/api/checkout/charges')return r.fulfill({json:charges});return r.fulfill({json:{events:[]}})}
@@ -115,7 +116,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   await p.waitForFunction(()=>catalogState==='ready');
 
   /* 8-9. Duplicate submit then success: one POST, confirmation only after 2xx, cart cleared, honest payment copy */
-  const before=orderPosts;orderPlan.push({status:201,delay:3000,json:{ok:true,orderNumber:'ETS-H3-SYNTH',items:[{productName:A.name,unitPrice:A.price,quantity:1,lineTotal:A.price}],vatTotal:Math.round(A.price/6),total:A.price,shippingTotal:0,delivery:{method:'dealer',installation:'included_standard',name:'Sentetik Müşteri',phone:'0532 000 00 00',email:'h3@example.test',address:'Sentetik Mahallesi Test Sokak No 1',city:'Aydın',district:'Kuşadası'},legalAcceptances:previewDocs.map(d=>({slug:d.slug,documentVersionId:d.versionId,title:d.title,version:d.version}))}});
+  const before=orderPosts;orderPlan.push({status:201,delay:3000,json:{ok:true,orderNumber:TEST_ORDER_NUMBER,items:[{productName:A.name,unitPrice:A.price,quantity:1,lineTotal:A.price}],vatTotal:Math.round(A.price/6),total:A.price,shippingTotal:0,delivery:{method:'dealer',installation:'included_standard',name:'Sentetik Müşteri',phone:'0532 000 00 00',email:'h3@example.test',address:'Sentetik Mahallesi Test Sokak No 1',city:'Aydın',district:'Kuşadası'},legalAcceptances:syntheticPreviewDocuments(previewIdentities).map(d=>({slug:d.slug,documentVersionId:d.documentVersionId,title:d.title,version:d.version}))}});
   await p.locator('[data-submit-order]').evaluate(btn=>{btn.click();btn.click();btn.form.requestSubmit(btn)});
   assert.equal(await p.locator('[data-submit-order]').isDisabled(),true,'submit disabled while in flight: '+JSON.stringify(await p.evaluate(()=>({result:document.querySelector('[data-order-result]').textContent,checked:document.querySelectorAll('[data-legal-version]:checked').length,boxes:document.querySelectorAll('[data-legal-version]').length,preview:!!legalPreview}))));assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('ege-cart')).length),1,'cart untouched before the server answers');
   await p.locator('[data-order-confirmation]:not([hidden])').waitFor();assert.equal(orderPosts-before,1,'exactly one order request for a triple submit');
