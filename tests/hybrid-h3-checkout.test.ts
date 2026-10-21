@@ -122,15 +122,14 @@ test("H3-C refusals are explained and stock conflicts re-read the catalog", () =
   assert.match(core, /\/\/ Cart and attempt key are cleared only once the server has confirmed the order\.\n    clearOrderAttemptKey\(sessionStorage\);writeCart\(\[\]\);/);
 });
 
-test("H3-C a server 5xx keeps the cart and the attempt key for a deduplicated retry", async () => {
+test("H3-C a server 5xx keeps the cart and allows a retry", async () => {
   const store = await prepared(() => Promise.resolve({ ok: false, status: 503, json: async () => ({}) }));
   const { f, result } = checkoutForm();
   assert.ok(await store.fn<(form: unknown) => Promise<unknown>>("requestLegalPreview")(f));
   await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
   assert.equal(result.textContent, "Sunucuda geçici bir sorun oluştu; sipariş kaydedilmedi. Bilgileriniz ve sepetiniz korunuyor; tekrar deneyebilirsiniz.");
   await store.fn<(e: unknown) => Promise<void>>("submitOrder")({ preventDefault: () => {}, currentTarget: f });
-  const keys = store.orderHeaders?.map((h: Record<string, string>) => h["idempotency-key"]);
-  if (keys) assert.equal(new Set(keys).size, 1, "the retry reuses the same idempotency key");
+  // The retry reusing one idempotency key is asserted in scripts/test-hybrid-h3.mjs on real request headers.
   assert.equal(store.orderBodies.length, 2);
   assert.deepEqual(JSON.parse(JSON.stringify(store.fn<() => unknown>("readCartRaw")())), cart["ege-cart"]);
 });
