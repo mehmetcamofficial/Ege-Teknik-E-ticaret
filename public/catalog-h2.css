@@ -133,3 +133,18 @@
 @media(max-width:560px){.pd-gallery-nav{width:44px;height:44px}.pd-offer{padding:14px 16px}.pd-variant{min-width:calc(50% - 4px)}}
 @media(prefers-reduced-motion:reduce){.pd-gallery-nav,.pd-variant{transition:none}}
 
+/* ---------- H2.1 mobile product: price, stock and the buy box reach the first screen ---------- */
+@media(max-width:560px){
+ [data-product-page] .breadcrumbs{margin-block:4px 12px}
+ [data-product-page] .pd-hero{gap:14px}
+ [data-product-page] .detail-visual{aspect-ratio:16/10;max-height:58vw;padding:12px}
+ [data-product-page] .gallery-thumbs{gap:8px;padding:8px 2px 2px}
+ [data-product-page] .gallery-thumb{flex:0 0 56px;width:56px;height:56px;padding:4px}
+ /* Still the thumbnails' accessible description; touch users swipe the row instead. */
+ .pd-gallery-help{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+ .pd-title h1{font-size:26px;line-height:1.2}
+ .pd-offer{flex-wrap:nowrap;padding:12px 14px}
+ .pd-amount{font-size:30px}
+ .pd-status{font-size:13px;padding:6px 10px;white-space:nowrap}
+}
+
