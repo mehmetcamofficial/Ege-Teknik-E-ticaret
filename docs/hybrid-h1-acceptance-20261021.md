@@ -7,6 +7,7 @@ Tarih: 21.10.2026. **Teknik H1: PASS. Görsel kullanıcı kabulü: BEKLİYOR.** 
 - Korunan dal: `complete-release-backup-final`; doğrulanmış kaynak: `4f70b08264f1c4cef96df47496e00f05c4637593`.
 - Bağımsız kalıcı çalışma alanı: `~/Developer/ege-teknik-hybrid-h1`.
 - Feature dalı: `feature/hybrid-storefront-h1`.
+- H1 uygulama commit’i: `910d46e08ad08cd3210f24dc057ff182294ff289`; sonraki belge commit’i yalnız terminal kayıtlarının boşluklarını normalize eder ve bu SHA’yı kaydeder.
 - GitHub dalı: https://github.com/mehmetcamofficial/Ege-Teknik-E-ticaret/tree/feature/hybrid-storefront-h1 . Kesin gönderim SHA’sı ve remote eşleşmesi son teslimde ayrıca doğrulanır; bu rapor uygulamayla birlikte versiyonlanır.
 - Canlı referans: https://egeteknik.tr/ . Anonim gerçek masaüstü/mobil tam ekran kayıtları [screenshots](hybrid-h1/screenshots/) altındaki `actual-live-*-full.png` dosyalarıdır.
 - Premium Preview: `https://ege-teknik-phase3a-82icrwex7-dragonfire-09s-projects.vercel.app`; Vercel metadata SHA’sı kaynak commit’iyle eşleşir. Yetkili `vercel curl` GET HTML yanıtı kaynak `public/index.html` ile byte düzeyinde eşit bulundu.
@@ -26,6 +27,8 @@ Canlı alışveriş ana sayfasının tamamı referans alındı; korunan release�
 | Görsel düzen | Daha sakin başlık ağırlığı, orantılı görsel, sınırlı boşluklar, aynı yerel font ve hareket token’ları; mobilde okunur seri etiketleri |
 
 Model/indirim/yorum/garanti uydurulmadı. Yerel gerçek GREE görsel dosyaları değiştirilmedi. Yeni paket veya animasyon kütüphanesi eklenmedi. API, schema, hukuk, checkout, RBAC ve admin dosyaları değiştirilmedi.
+
+Build/lint kanıtlarında terminal ilerleme satırlarının CR ve son boşlukları normalize edilmiştir; ham kayıtlar yerel `.scratch/h1` altında korunur. Test sonuçları değiştirilmemiştir.
 
 ## Test kanıtları
 
