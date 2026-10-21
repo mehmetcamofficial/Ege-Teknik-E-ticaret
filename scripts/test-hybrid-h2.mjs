@@ -36,7 +36,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   await c.route('**/*',async r=>{const q=r.request(),u=new URL(q.url());
    if(!['GET','HEAD'].includes(q.method())){result.writesBlocked.push({method:q.method(),path:u.pathname});return r.fulfill({status:204})}
    if(!hosted&&u.pathname.startsWith('/api/')){if(u.pathname==='/api/products')return r.fulfill({json:localCatalog});if(u.pathname.startsWith('/api/products/')&&!u.pathname.includes('/reviews')){const d=localDetail(decodeURIComponent(u.pathname.split('/')[3]));return d?r.fulfill({json:d}):r.fulfill({status:404,json:{error:'not found'}})}
-    if(u.pathname==='/api/legal/required')return r.fulfill({json:{documents:[{versionId:'h2-terms',title:'Sentetik koşullar',slug:'terms',version:'test'},{versionId:'h2-distance',title:'Sentetik sözleşme',slug:'distance',version:'test'}]}});
+    if(u.pathname==='/api/legal/required')return r.fulfill({json:{documents:[{versionId:'h2-terms',title:'Sentetik koşullar',slug:'terms'},{versionId:'h2-distance',title:'Sentetik sözleşme',slug:'distance'}]}});
     if(u.pathname.includes('/reviews'))return r.fulfill({json:{reviews:[],summary:{count:0,average:null}}});return r.fulfill({json:{events:[],business:{serviceProvinces:['Aydın'],locations:{Aydın:['Kuşadası']}}}})}
    return r.continue(hosted&&u.origin===origin?{headers:{...q.headers(),'x-vercel-trusted-oidc-idp-token':oidc}}:undefined)});
   const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));const row={engine,version:b.version(),width,checks:{}};
