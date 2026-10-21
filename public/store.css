@@ -1341,16 +1341,30 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
    targets at every breakpoint, including WebKit's inline-text metrics. */
 [data-order-confirmation] .legal-accepted a{display:inline-flex;align-items:center;min-height:24px;min-width:24px;padding-block:2px}
 
-/* H1.1: the progressive selector uses light surfaces, including its action buttons. */
-.selector-card{color:var(--ink)}
-.selector-card :is(legend,h2,h3){color:var(--p)}
-.selector-card :is(p,.climate-method,li){color:var(--body)}
-.selector-card .selector-actions .ghost,[data-climate-result] .ghost{background:#fff;color:var(--p)!important;border-color:var(--line-strong)}
-.selector-card .selector-actions .ghost:hover,[data-climate-result] .ghost:hover{background:var(--mint)}
-.selector-card .selector-actions .primary{background:var(--p);color:#fff!important;border-color:var(--p)}
-.selector-card .selector-actions .primary:hover{background:var(--p-600)}
-[data-climate-result]>span{color:var(--body)}
-[data-climate-result]{padding:clamp(16px,3vw,24px)}
+/* H1.2: explicit light introduction and dark selector surfaces. */
+.selector-intro{color:var(--body)}
+.selector-intro h3,.store .page-head h1{color:var(--p)}
+.selector-intro :is(.eyebrow,.link-arrow),.page-head .eyebrow{color:#006c49}
+.selector-intro p{color:var(--body)}
+.store .selector-card{background:#0f382e;color:#e2eee7;border-color:#315b4c}
+.store .selector-card :is(legend,h2,h3){color:#fff}
+.store .selector-card :is([data-step-status],.field,.climate-method,.climate-method p){color:#d5e7dc}
+.store .selector-card .climate-method a{color:#b8f2d1;text-decoration:underline;text-underline-offset:3px}
+.store .selector-card .field :is(input,select){background:#fff;color:#252b28;border-color:#9db9aa}
+.store .selector-card .field input::placeholder{color:#59615b;opacity:1}
+.store .selector-card .selector-form p{color:#d5e7dc}
+.store .selector-card .selector-actions .primary{background:#fff;color:#0f382e!important;border-color:#fff}
+.store .selector-card .selector-actions .primary:hover{background:#e3f3ea}
+.store .selector-card .selector-actions .ghost{background:transparent;color:#fff!important;border-color:#9db9aa}
+.store .selector-card .selector-actions .ghost:hover{background:#244b3e}
+.store .selector-card :focus-visible{outline-color:#b8f2d1;outline-offset:4px}
+.store .selector-card .selector-result{background:#fff;color:#252b28;border:1px solid #dde7e3;padding:clamp(16px,3vw,24px)}
+.store .selector-card .selector-result :is(h2,h3){color:#0f382e}
+.store .selector-card .selector-result :is(p,li,span){color:#454d48}
+.store .selector-card .selector-result .selector-warning{color:#454d48!important;background:#edf1eb;border-color:#c1d1ca}
+.store .selector-card .selector-result .selector-actions .primary{background:#0f382e;color:#fff!important;border-color:#0f382e}
+.store .selector-card .selector-result .selector-actions .ghost{background:#fff;color:#0f382e!important;border-color:#6e8477}
+.store .selector-card .selector-result :focus-visible{outline-color:#0b7a55}
 [data-climate-result] .product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
 [data-climate-result] .product{min-width:0;height:100%}
 [data-climate-result] .selector-actions>*{min-height:44px}
