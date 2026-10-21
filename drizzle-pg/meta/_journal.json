@@ -1,0 +1,160 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790007312710,
+      "tag": "0000_black_tarot",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790008844965,
+      "tag": "0001_graceful_rocket_racer",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790104114747,
+      "tag": "0002_customer_clerk_identity",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790199716478,
+      "tag": "0003_legal_document_versioning",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790200697993,
+      "tag": "0004_order_fingerprint_installation",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790202870956,
+      "tag": "0005_legal_drafts_and_immutability",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790207595710,
+      "tag": "0006_checkout_charges_and_marketing_consents",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790257441756,
+      "tag": "0007_product_enrichment",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790286929119,
+      "tag": "0008_product_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790301055885,
+      "tag": "0009_analytics_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790357736800,
+      "tag": "0010_admin_password_resets",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790379147585,
+      "tag": "0011_admin_governance",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790449602511,
+      "tag": "0012_delivery_class",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790551435508,
+      "tag": "0013_finance_ledger",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790637835912,
+      "tag": "0014_content_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791244212436,
+      "tag": "0015_immutable_legal_evidence",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791496077696,
+      "tag": "0016_legal_documents_immutability_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791586800000,
+      "tag": "0017_checkout_product_lock",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791673200000,
+      "tag": "0018_checkout_legal_guard_definer",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791763200000,
+      "tag": "0019_scoped_checkout_replay",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792173600000,
+      "tag": "0020_legacy_legal_acceptance_immutability",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1792454400000,
+      "tag": "0021_second_hand_inspection",
+      "breakpoints": true
+    }
+  ]
+}

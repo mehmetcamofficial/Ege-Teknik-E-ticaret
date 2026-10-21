@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+# Sensitive HTML remains crawlable so crawlers can read noindex. Access controls are separate.
+Disallow: /api/
+Disallow: /seo/
+Sitemap: https://egeteknik.tr/sitemap.xml

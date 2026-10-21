@@ -1,0 +1,186 @@
+# EGE TEKNİK — RESMÎ LEGAL KAYNAKLAR
+
+> **INTERNAL · Eylül 2026 · LEGAL REVIEW REQUIRED**
+>
+> Bu dosya müşteri-facing legal metin değildir. Amaç, release candidate metinlerde kullanılan başlıca resmî kaynakları ve hangi noktalarda ayrıca hukukçu/işletme doğrulaması gerektiğini kaydetmektir. Random sözleşme şablonları kaynak olarak kullanılmaz.
+
+## 0. P3-LEGAL-1 (1 Ekim 2026) doğrulama kaydı
+
+Bu turda yalnızca birincil resmî kaynaklar kullanıldı; hukukçu blogu veya SEO içeriği kaynak olarak alınmadı.
+
+**Bu turda doğrudan alıntılanarak doğrulanan kaynaklar:**
+
+| Kaynak | URL | Alınan doğrulama |
+|---|---|---|
+| **6698 sayılı KVKK — resmî metin (mevzuat.gov.tr PDF)** | https://www.mevzuat.gov.tr/MevzuatMetin/1.5.6698.pdf | **MADDE 5-(1):** "Kişisel veriler ilgili kişinin **açık rızası** olmaksızın işlenemez." **MADDE 5-(2):** açık rıza aranmaksızın işlenebilme şartları **a)** kanunlarda açıkça öngörülmesi · **b)** fiili imkânsızlık nedeniyle rıza açıklayamama / hayat veya beden bütünlüğünün korunması · **c)** bir sözleşmenin kurulması veya ifasıyla doğrudan doğruya ilgili olması kaydıyla sözleşmenin taraflarına ait verilerin işlenmesinin gerekli olması · **ç)** veri sorumlusunun hukuki yükümlülüğünü yerine getirebilmesi için zorunlu olması · **d)** ilgili kişinin kendisi tarafından alenileştirilmiş olması · **e)** bir hakkın tesisi, kullanılması veya korunması için zorunlu olması · **f)** temel hak ve özgürlüklere zarar vermemek kaydıyla meşru menfaat için zorunlu olması. **MADDE 6-(1)** özel nitelikli kişisel veri listesi; **MADDE 6-(2) Mülga** (2/3/2024-7499/33 md.). |
+| **Resmî Gazete 24 Mayıs 2025, No. 32909** — resmî HTML metni | https://www.resmigazete.gov.tr/eskiler/2025/05/20250524-2.htm | "Mesafeli Sözleşmeler Yönetmeliğinde Değişiklik Yapılmasına Dair Yönetmelik" metni birebir alınmıştır: **MADDE 1** → Yönetmelik 5/1-(g) ve (k) bentleri değişik (ön bilgilendirme içeriği; uyuşmazlık çözümü). **MADDE 2** → 12/4'teki ifade kaldırıldı; 5/1-(g) kapsamında iade taşıyıcısı bilgisi verilmemişse tüketiciden iade masrafı için hiçbir bedel talep edilemez. **MADDE 4** → "Aynı Yönetmeliğin **15 inci maddesinin birinci fıkrasının (i) bendi yürürlükten kaldırılmıştır.**" **MADDE 5** → "Bu Yönetmelik **1/1/2026 tarihinde yürürlüğe girer.**" MADDE 6 → Ticaret Bakanı yürütür. |
+| T.C. Ticaret Bakanlığı, Tüketicinin Korunması ve Piyasa Gözetimi GD — "Mesafeli Sözleşmeler Hakkında Bilgilendirme" (17.08.2026) | https://tuketici.ticaret.gov.tr/yayinlar/tuketici-bilgi-rehberi/mesafeli-sozlesmeler-hakkinda-bilgilendirme | Cayma süresi **14 gün**; tüketici cayma bildiriminden itibaren **14 gün** içinde malı geri göndermek zorundadır; satıcı teslimat masrafları dâhil ödemelerin **tamamını 14 gün içinde** iade etmelidir; iade için kargo şirketi belirtilmemişse tüketici iade masraflarından sorumlu tutulamaz; geri ödeme tek seferde ve tüketicinin kullandığı ödeme aracına uygun yapılır. **Güncel istisna listesinde kurulumu/montajı yapılmış mallar için bağımsız bir istisna YER ALMAMAKTADIR**; listede yalnızca "**cayma hakkı süresi sona ermeden önce, tüketicinin onayı ile ifasına başlanan hizmetler**" bulunmaktadır. Bu, 01.01.2026 itibarıyla yürürlüğe giren değişikliği doğrulamaktadır. |
+| KVKK Kurumu — "Aydınlatma Yükümlülüğü" | https://www.kvkk.gov.tr/Icerik/2033/Aydinlatma-Yukumlulugu- | KVKK m.10 uyarınca aydınlatmada veri sorumlusunun kimliği, verilerin **hangi amaçla** işleneceği, **kimlere ve hangi amaçla** aktarılabileceği, **veri toplama yöntemi ve hukuki sebebi** ile m.11'deki diğer hakların ilgili kişiye sağlanması gerekir. Aydınlatma ile açık rıza ayrıdır; rıza aranmaksızın da aydınlatma yükümlülüğü devam eder. |
+
+**P3-LEGAL-1.1 ile kapanan nokta:** KVKK m.5'in bent yapısı resmî metinden doğrulandığı için `kvkk.md` §3'teki atıflar gerçek yapıya göre düzeltilmiş (bkz. aşağıdaki harita) ve **G9 kapatılmıştır**. Eşleme, faaliyetin gerçek amacı üzerinden birebir incelenerek yapılmıştır; örnek atıflar mekanik olarak dağıtılmamıştır. **m.5/2(d)** (alenileştirme) hiçbir faaliyette kullanılmamıştır.
+
+**P3-LEGAL-1.2 ile eklenen doğrulama kaydı — şirket kimliği:**
+
+Aşağıdaki şirket bilgileri işletme tarafından resmî şirket kayıtlarından doğrulanmış olarak iletildi ve Release Candidate belgelerine işlendi:
+
+| Bilgi | Değer |
+|---|---|
+| Ticaret unvanı | Ege Teknik İklimlendirme Isıtma Soğutma Turizm Ticaret Limited Şirketi |
+| VKN | 3250963985 |
+| MERSİS | 0325096398500001 |
+| Vergi dairesi | Kuşadası Vergi Dairesi |
+| Ticaret sicil no | 10388 |
+| Müşteri-facing adres | Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın |
+| e-Fatura | Mükellef: EVET · geçiş 01.07.2023 |
+| e-İrsaliye | Mükellef: EVET |
+
+**Kasıtlı olarak yayımlanmayanlar:** Luca PK/GB posta kutusu (mailbox) tanımlayıcıları; şirket temsilcisinin kişisel bilgileri; **Elektronik Bildirim Adresi — KEP adresi değildir ve KEP olarak kullanılmamıştır.** KEP adresi doğrulanana kadar hiçbir belgeye eklenmeyecektir.
+
+**P3-LEGAL-1.2 ile kapanan nokta (Resmî Gazete):** 24.05.2025 No.32909 sayılı gazetenin **resmî HTML metni** bu oturumda birebir okundu. **MADDE 4** kurulmuş/montajı yapılmış mallara ilişkin istisnayı kaldırmakta, **MADDE 5** yürürlüğü 1/1/2026 olarak belirlemektedir. Bu nedenle P3-LEGAL-1.1'de "taranmış PDF nedeniyle madde numaraları doğrulanamadı" olarak bırakılan nokta **artık açık değildir.** PDF nüshası hâlâ taranmıştır; ancak aynı kararnın HTML metni erişilebilir ve doğrulama ondan yapılmıştır.
+
+**Hâlâ hukukçu doğrulaması gereken noktalar:**
+
+- `kvkk.md` §3 faaliyet→şart eşlemesinin genel onayı (atıf yapısı resmî metinden doğrulandı; faaliyet→şart seçimi hukuki değerlendirmedir).
+- Mesafeli Sözleşmeler Yönetmeliği'nin bugünkü **birleşik madde numaraları**; yukarıdaki içerik değişiklik metninden ve Bakanlık rehberinden alınmıştır.
+
+**P3-LEGAL-1.3 — uyuşmazlık/başvuru bilgisi güncellendi (5/1-(k)):**
+
+Aynı değişiklik kararının **MADDE 1**'i, Mesafeli Sözleşmeler Yönetmeliği **5/1-(k)** bendini şu şekilde değiştirmiştir (resmî HTML metninden birebir):
+
+> "k) Tüketicilerin uyuşmazlık konusundaki başvuruları **tüketici hakem heyetine veya Kanunun 73/A maddesi uyarınca dava açmadan önce arabulucuya başvurulması şartı ile tüketici mahkemesine** yapabileceklerine ilişkin bilgi."
+
+Bu madde 1/1/2026 itibarıyla yürürlüktedir (MADDE 5). `pre-information.md` §9, `distance-sales.md` §11 ve `terms.md` §12 bu üçlü başvuru yolunu ve **dava açmadan önce arabulucuya başvurulması şartını** açıkça belirtecek şekilde güncellenmiştir.
+
+Kasıtlı olarak yazılmayanlar: sabit yıllık parasal sınır (Tüketici Hakem Heyeti eşiği yıllara göre değiştiği için metin "uyuşmazlığın doğduğu tarihte yürürlükte olan mevzuat uygulanır" ifadesiyle bağlı tutulmuştur), yetkili mahkeme/il, arabuluculuk ofisi adresi ve bireysel uyuşmazlığa ilişkin hukuki görüş.
+
+**Kapsam konusunda açık bırakılan nokta (hukukçu incelemesine):** Mesafeli Sözleşmeler Yönetmeliği'nin **kapsam (Madde 2)** hükmü, bir malın **kurulum, bakım ve onarımı** ile ilgili sözleşmeler bakımından kapsam dışı olabilmektedir. Bu hükmün güncel metni bu oturumda makine-çekimiyle doğrulanamamıştır. Bu nedenle belgelerde **"her montaj hizmeti Mesafeli Sözleşmeler Yönetmeliği'ne tabidir"** şeklinde genel bir ifade kullanılmamıştır; satış (mal) ile isteğe bağlı montaj hizmetinin hangi düzenlemeye tabi olduğuna ilişkin sözleşme yapısına bağlı sonuç nihai hukuk incelemesine bırakılmıştır. P3-LEGAL-1.1'deki mal/montaj ayrımı ve kaldırılan kurulmuş mal istisnası bu işlemde değiştirilmemiştir.
+
+## 1. Mesafeli satış / tüketici
+
+### S1 — Ticaret Bakanlığı, “Mesafeli Sözleşmeler Hakkında Bilgilendirme”
+
+- Kurum: T.C. Ticaret Bakanlığı, Tüketicinin Korunması ve Piyasa Gözetimi Genel Müdürlüğü
+- Güncelleme: **17 Ağustos 2026**
+- URL: https://tuketici.ticaret.gov.tr/yayinlar/tuketici-bilgi-rehberi/mesafeli-sozlesmeler-hakkinda-bilgilendirme
+
+RC'lerde kullanılan güncel noktalar:
+
+- Genel cayma hakkı 14 gün.
+- Mal teslim edilmeden önce de cayma bildirimi yapılabilir.
+- Cayma bildirimi yazılı veya kalıcı veri saklayıcısıyla yapılabilir.
+- Tüketici cayma bildirimini yönelttikten sonra malı **14 gün içinde** geri göndermek zorundadır.
+- Satıcı/sağlayıcı cayma halinde mevzuattaki koşullara göre ödemeleri 14 gün içinde iade eder.
+- Ön bilgilendirmede iade taşıyıcısı belirtilmemişse tüketici herhangi bir taşıyıcıyla iade ettiğinde iade masrafından sorumlu tutulamaz.
+- Sipariş için taahhüt edilen süre yoksa mal satışında genel azami süre 30 gündür; Ege Teknik bundan daha kısa **1–7 gün** taahhüdü vermektedir.
+- Siparişten önce gösterilmeyen ek masraflar tüketiciden talep edilemez.
+- Kurulum gibi ana bedel dışındaki ilave ödemeler için tüketicinin açık onayı gerekir.
+
+**Önemli düzeltme:** Eski taslak notlarında geçen “cayma bildirimi sonrası malı 10 gün içinde geri gönderme” bilgisi güncel 17.08.2026 Bakanlık rehberiyle uyumlu değildir ve kullanılmamalıdır. RC setinde **14 gün** esas alınmıştır.
+
+### S2 — Mesafeli Sözleşmeler Yönetmeliği / 6502 çerçevesi
+
+- Yönetmelik ve Kanun için Ticaret Bakanlığı/Resmî Gazete/mevzuat.gov.tr güncel metinleri esas alınır.
+- 6502 sayılı Kanun ve Mesafeli Sözleşmeler Yönetmeliği; ön bilgilendirme, cayma, teslim, ek ödeme, risk, uyuşmazlık ve diğer emredici tüketici haklarının temel kaynağıdır.
+
+RC'lerde yıllık değişebilen Tüketici Hakem Heyeti parasal sınırı gibi değerler hard-code edilmemiştir; yürürlükteki yetki/sınır uygulanır.
+
+## 2. KVKK / aydınlatma / açık rıza
+
+### S3 — KVKK Aydınlatma Yükümlülüğü
+
+- Kurum: Kişisel Verileri Koruma Kurumu
+- URL: https://www.kvkk.gov.tr/Icerik/2033/Aydinlatma-Yukumlulugu-
+
+Aydınlatmada veri sorumlusu kimliği, amaçlar, aktarım/alıcı grupları, toplama yöntemi-hukuki sebep ve ilgili kişi haklarının açıklanması temel alınır.
+
+### S4 — KVKK Kurulu 18.02.2026 tarihli 2026/347 İlke Kararı
+
+- URL: https://www.kvkk.gov.tr/Icerik/8710/veri-sorumlulari-tarafindan-acik-riza-ve-aydinlatma-metinlerinin-ayri-ayri-duzenlenmesi-gerektigi-hakkinda-kisisel-verileri-koruma-kurulunun-18-02-2026-tarihli-ve-2026-347-sayili-ilke-kararina-iliskin-kamuoyu-duyurusu
+
+RC tasarımına etkisi:
+
+- Aydınlatma ile açık rıza birbirinden ayrıdır.
+- Aydınlatma metni için “onay/rıza” talep edilmez.
+- Metinler veri sorumlusunun gerçek faaliyetine uyarlanmalıdır.
+- Açık, anlaşılır ve sade dil kullanılmalıdır.
+- Gerçekte olmayan veri işleme/aktarımı varmış gibi gösterilmemelidir.
+- Gereksiz uzun ve karmaşık metinlerden kaçınılmalıdır.
+
+Bu nedenle KVKK checkout'ta bilgi notice olarak sunulur; marketing/analytics gibi rıza gerektiren ayrı faaliyetler ayrı mekanizmaya sahiptir.
+
+## 3. Çerezler / analytics
+
+### S5 — KVKK “Çerez Uygulamaları Hakkında Rehber”
+
+- URL: https://www.kvkk.gov.tr/Icerik/7353/Cerez-Uygulamalari-Hakkinda-Rehber
+
+RC yaklaşımı:
+
+- Zorunlu/işlevsel teknolojiler ile zorunlu olmayan analytics/marketing teknolojileri ayrılır.
+- Zorunlu olmayan analytics için kullanıcı tercihi aktif bir hareketle alınır; varsayılan açık model kullanılmaz.
+- Ege Teknik visitor analytics'i için `ANALYTICS_ENABLED` global kill-switch ve ayrıca ziyaretçi consent gate uygulanmaktadır.
+
+## 4. KVKK yurt dışı aktarım
+
+### S6 — KVKK “Yurt Dışına Aktarım”
+
+- URL: https://www.kvkk.gov.tr/Icerik/2053/Yurtdisina-Aktarim
+
+### S7 — KVKK Standart Sözleşme Bildirim Modülü duyurusu
+
+- URL: https://www.kvkk.gov.tr/Icerik/8043/Standart-Sozlesme-Bildirim-Modulu-Hakkinda-Kamuoyu-Duyurusu
+
+Aktif vendor için yalnız privacy/KVKK metninde “yurt dışı aktarım olabilir” demek yeterli kabul edilmez. Gerçek rol, bölge, DPA, alt işleyenler ve KVKK m.9 mekanizması ayrıca değerlendirilir. Standart sözleşme ilgili mekanizma ise imzalı sözleşmenin Kuruma bildirim süresi **5 iş günü** olarak takip edilir.
+
+## 5. Ticari elektronik ileti / İYS
+
+### S8 — Ticaret Bakanlığı, Ticari Elektronik İletiler / İYS
+
+- https://ticaret.gov.tr/ic-ticaret/ticari-elektronik-iletiler
+- https://ticaret.gov.tr/ic-ticaret/ticari-elektronik-iletiler/ileti-yonetim-sistemi-iys
+
+RC/operasyon yaklaşımı:
+
+- Marketing onayı siparişin koşulu değildir.
+- Kanal/purpose consent ve ret mekanizması ayrı yürütülür.
+- İYS hazır olmadan promosyon otomasyonu Production'da açılmaz.
+
+## 6. ETBİS
+
+### S9 — ETBİS / e-Ticaret Bilgi Platformu
+
+- https://etbis.ticaret.gov.tr/
+- https://ticaret.gov.tr/ic-ticaret/bilgi-sistemleri/elektronik-ticaret-bilgi-sistemi-etbis-ve-e-ticaret-bilgi-platformu
+
+Kendi e-ticaret ortamı üzerinden faaliyet gösteren hizmet sağlayıcılar açısından gerçek şirket/domain kayıt durumu operasyonel olarak doğrulanmalıdır. `egeteknik.tr` için kayıt **henüz tamamlandı kabul edilmemiştir**.
+
+Eski ETBİS QR kod uygulaması 2025'te sonlandırıldığından go-live checklistinde QR kod şartı tutulmaz.
+
+## 7. VERBİS
+
+### S10 — Veri Sorumluları Sicili / güncel istisna kriterleri
+
+VERBİS kayıt yükümlülüğü şirket tipi üzerinden tahmin edilmez. 2025 mali bilanço toplamı, yıllık çalışan sayısı ve veri işleme faaliyeti gibi güncel Kurul kriterleri mali müşavir/hukukçu ile doğrulanır.
+
+Ege Teknik için bu değerlendirme Pazartesi alınacak gerçek şirket verileri sonrasında kapatılacaktır.
+
+## 8. GREE/TLC montaj ve garanti
+
+### S11 — GREE Montaj Standartları
+
+- https://www.gree.com.tr/sayfa/montaj-standartlari
+
+RC'lerde duvar tipi split klima için güncel resmî montaj standardına bağlı temel kapsam ve standart dışı işler referans alınmıştır. Sabit TL/km veya dönemsel kampanya/ulaşım bedeli legal çekirdek metne hard-code edilmemiştir.
+
+### S12 — GREE Garanti Şartları / ürün-kampanya sayfaları
+
+- https://www.gree.com.tr/sayfa/garanti-sartlari
+
+Garanti süresi/kampanya tek bir evrensel değer olarak genellenmez. Ürün/model/satın alma tarihi ve geçerli kampanya/garanti belgesi esas alınır.
+
+## 9. Kaynak kullanma kuralı
+
+- Mevzuat veya resmî rehber değişirse yeni legal version değerlendirilir.
+- Public legal metinlere araştırma notu, `[DOĞRULAMA BEKLİYOR]`, `TBD` veya hukukçu iç notu taşınmaz.
+- Resmî kaynak ile işletmenin fiili operasyonu çelişirse operasyon düzeltilmeden metin “uyumlu” ilan edilmez.
+- Hukukçu review, bu source register'ın yerini almaz; özellikle KVKK aktarım, VERBİS, ETBİS, ürün bazlı cayma istisnası ve garanti uygulaması için gerçek operasyon/kontrat/belgeler ayrıca incelenir.

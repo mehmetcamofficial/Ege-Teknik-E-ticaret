@@ -1,0 +1,29 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+.DS_Store
+.vercel/
+
+# generated build artifacts
+next-env.d.ts
+tsconfig.tsbuildinfo
+/.sites-runtime/
+.vercel
+.env*
+!.env.example
+
+# Sentry Config File
+.env.sentry-build-plugin
+
+# local scratch space (audit/build scratchpads); never source
+.scratch/
+
+# Private local acceptance tools, credentials and database archives
+/.recovery-private/
+/.local*/
+*.dump
+*.dump.enc
+*.sql.enc
+*.bundle
