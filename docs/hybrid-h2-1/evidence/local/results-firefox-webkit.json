@@ -1,0 +1,603 @@
+{
+  "origin": "https://127.0.0.1:44394",
+  "hosted": false,
+  "applicationCommit": "c425c64ef45078d759fcbef033be9bf89e78ffd5",
+  "matrix": [
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1440,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1024,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 768,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 390,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 320,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1440,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1024,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 768,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 390,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 320,
+      "checks": {
+        "cards": {
+          "count": 24,
+          "out": 1,
+          "low": 1,
+          "quote": 2
+        },
+        "colour": 3,
+        "singleBrandHidden": true,
+        "emptyRelax": [
+          "Seri: Airy kaldır43 ürün",
+          "Uygunluk: Teklif / keşif kaldır6 ürün"
+        ],
+        "variants": 6,
+        "gallery": 4,
+        "negative": {
+          "payload": [
+            {
+              "productId": "airy-12000-btu-h-siyah-81",
+              "quantity": 10
+            },
+            {
+              "productId": "airy-18000-btu-h",
+              "quantity": 1
+            }
+          ],
+          "unknownPruned": true,
+          "outOfStockInCart": true
+        },
+        "reducedMotion": "PASS",
+        "helpKeyboard": "PASS"
+      },
+      "status": "PASS"
+    }
+  ],
+  "contrasts": [
+    {
+      "label": "firefox/1440/catalog",
+      "minimum": 6.070473581850699,
+      "count": 224
+    },
+    {
+      "label": "firefox/1440/empty",
+      "minimum": 5.5827266551631585,
+      "count": 18
+    },
+    {
+      "label": "firefox/1440/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "firefox/1024/catalog",
+      "minimum": 6.070473581850699,
+      "count": 224
+    },
+    {
+      "label": "firefox/1024/empty",
+      "minimum": 5.5827266551631585,
+      "count": 18
+    },
+    {
+      "label": "firefox/1024/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "firefox/768/catalog",
+      "minimum": 6.070473581850699,
+      "count": 225
+    },
+    {
+      "label": "firefox/768/drawer",
+      "minimum": 6.070473581850699,
+      "count": 23
+    },
+    {
+      "label": "firefox/768/empty",
+      "minimum": 5.5827266551631585,
+      "count": 20
+    },
+    {
+      "label": "firefox/768/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "firefox/768/sticky",
+      "minimum": 6.345460792077021,
+      "count": 3
+    },
+    {
+      "label": "firefox/390/catalog",
+      "minimum": 6.070473581850699,
+      "count": 200
+    },
+    {
+      "label": "firefox/390/drawer",
+      "minimum": 6.070473581850699,
+      "count": 23
+    },
+    {
+      "label": "firefox/390/empty",
+      "minimum": 5.5827266551631585,
+      "count": 19
+    },
+    {
+      "label": "firefox/390/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "firefox/390/sticky",
+      "minimum": 6.345460792077021,
+      "count": 3
+    },
+    {
+      "label": "firefox/320/catalog",
+      "minimum": 6.070473581850699,
+      "count": 200
+    },
+    {
+      "label": "firefox/320/drawer",
+      "minimum": 6.070473581850699,
+      "count": 23
+    },
+    {
+      "label": "firefox/320/empty",
+      "minimum": 5.5827266551631585,
+      "count": 19
+    },
+    {
+      "label": "firefox/320/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "firefox/320/sticky",
+      "minimum": 6.345460792077021,
+      "count": 3
+    },
+    {
+      "label": "webkit/1440/catalog",
+      "minimum": 6.070473581850699,
+      "count": 224
+    },
+    {
+      "label": "webkit/1440/empty",
+      "minimum": 5.5827266551631585,
+      "count": 18
+    },
+    {
+      "label": "webkit/1440/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "webkit/1024/catalog",
+      "minimum": 6.070473581850699,
+      "count": 224
+    },
+    {
+      "label": "webkit/1024/empty",
+      "minimum": 5.5827266551631585,
+      "count": 18
+    },
+    {
+      "label": "webkit/1024/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "webkit/768/catalog",
+      "minimum": 6.070473581850699,
+      "count": 225
+    },
+    {
+      "label": "webkit/768/drawer",
+      "minimum": 6.070473581850699,
+      "count": 23
+    },
+    {
+      "label": "webkit/768/empty",
+      "minimum": 5.5827266551631585,
+      "count": 20
+    },
+    {
+      "label": "webkit/768/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "webkit/768/sticky",
+      "minimum": 6.345460792077021,
+      "count": 3
+    },
+    {
+      "label": "webkit/390/catalog",
+      "minimum": 6.070473581850699,
+      "count": 200
+    },
+    {
+      "label": "webkit/390/drawer",
+      "minimum": 6.070473581850699,
+      "count": 23
+    },
+    {
+      "label": "webkit/390/empty",
+      "minimum": 5.5827266551631585,
+      "count": 19
+    },
+    {
+      "label": "webkit/390/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "webkit/390/sticky",
+      "minimum": 6.345460792077021,
+      "count": 3
+    },
+    {
+      "label": "webkit/320/catalog",
+      "minimum": 6.070473581850699,
+      "count": 200
+    },
+    {
+      "label": "webkit/320/drawer",
+      "minimum": 6.070473581850699,
+      "count": 23
+    },
+    {
+      "label": "webkit/320/empty",
+      "minimum": 5.5827266551631585,
+      "count": 19
+    },
+    {
+      "label": "webkit/320/product",
+      "minimum": 6.03616243612794,
+      "count": 53
+    },
+    {
+      "label": "webkit/320/sticky",
+      "minimum": 6.345460792077021,
+      "count": 3
+    }
+  ],
+  "axeScans": 56,
+  "writesBlocked": [],
+  "orderCreated": false,
+  "helpChecks": 106
+}

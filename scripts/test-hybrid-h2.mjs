@@ -134,7 +134,8 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
 
   /* ---- H2.1 help launcher keyboard: reachable, opens, stays while open/focused ---- */
   // The page end (footer) has no price or buying control, so the help button must be visible there.
-  await p.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight));await p.waitForTimeout(700);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'visible','help visible where nothing is covered');
+  // Late image loads still lengthen the page, so each poll re-scrolls to the real end.
+  await p.waitForFunction(()=>{scrollTo(0,document.documentElement.scrollHeight);return getComputedStyle(document.querySelector('[data-help]')).visibility==='visible'},null,{timeout:4000,polling:250});
   if(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility)==='visible'){await p.locator('.help-toggle').focus();await p.keyboard.press('Enter');await p.locator('#help-panel:not([hidden])').waitFor();
    await p.evaluate(()=>scrollTo(0,900));await p.waitForTimeout(500);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'visible','an open help panel is never hidden');assert.ok(await p.evaluate(()=>!!document.activeElement.closest('[data-help]')),'focus moved into the help panel');
    await p.locator('.help-close').click();await p.evaluate(()=>scrollTo(0,0));row.checks.helpKeyboard='PASS'}
