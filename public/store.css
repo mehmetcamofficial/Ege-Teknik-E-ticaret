@@ -1528,7 +1528,7 @@ html.checkout-bar-open .help-launcher{bottom:calc(84px + env(safe-area-inset-bot
 .checkout-errors h2{font-size:15px;line-height:1.35}
 .checkout-errors h2::before,.field-error::before{content:"!";display:inline-grid;place-items:center;width:18px;height:18px;margin-right:8px;border:2px solid currentColor;border-radius:50%;font-size:12px;font-weight:900;line-height:1;vertical-align:-3px}
 .field-error{overflow-wrap:anywhere;hyphens:auto}
-.field-error::before{width:16px;height:16px;margin-right:6px;font-size:11px;vertical-align:-3px}
+.field-error::before{width:17px;height:17px;margin-right:6px;font-size:12px;vertical-align:-3px}
 .field :is(input,select,textarea)[aria-invalid=true]{border-width:2px;background-image:none}
 /* Focused/scrolled-to fields and the summary stay clear of the fixed phone action bar and the page top. */
 .checkout-errors,.field :is(input,select,textarea),.field-error,[data-order-result]{scroll-margin-block:16px 104px}
