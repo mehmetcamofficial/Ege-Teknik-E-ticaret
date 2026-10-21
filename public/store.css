@@ -1456,3 +1456,8 @@ body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:88px}
  .cookie-banner-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
  .cookie-btn{min-height:44px;padding:6px 8px;font-size:13px;line-height:1.2}
 }
+/* ---------- H2.1 help launcher never covers price, stock or buying controls ---------- */
+.help-launcher{transition:opacity 160ms var(--motion-ease),visibility 160ms}
+.help-launcher.is-clearing,html.nav-open .help-launcher,html.cart-drawer-open .help-launcher,body:has([data-cookie-banner]) .help-launcher{opacity:0;visibility:hidden;pointer-events:none}
+@media(max-width:1000px){body.store:has(.pd-sticky.is-visible) .help-launcher{bottom:calc(84px + env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.help-launcher{transition:none}}

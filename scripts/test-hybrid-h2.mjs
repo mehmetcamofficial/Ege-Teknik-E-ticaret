@@ -14,13 +14,17 @@ const result={origin,hosted,applicationCommit:process.env.EGE_H2_SHA,matrix:[],c
 const save=()=>writeFile(`${out}/results.json`,JSON.stringify(result,null,2));
 const money=n=>new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n);
 
-async function audit(p,label){const a=await new AxeBuilder({page:p}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).analyze();assert.deepEqual(a.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[],label);result.axeScans++;assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,label+' horizontal overflow')}
+async function audit(p,label){await p.waitForTimeout(550);await p.waitForFunction(()=>{const w=document.querySelector('[data-help]');if(!w)return true;const o=getComputedStyle(w).opacity;return o==='0'||o==='1'});const a=await new AxeBuilder({page:p}).withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']).analyze();assert.deepEqual(a.violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)})),[],label);result.axeScans++;assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,label+' horizontal overflow')}
 async function contrast(p,scope,label){const rows=await p.locator(scope).evaluateAll(roots=>{
  const rgb=s=>(s.match(/[\d.]+/g)||[]).map(Number),lum=c=>c.slice(0,3).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4}).reduce((a,x,i)=>a+x*[.2126,.7152,.0722][i],0),ratio=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
  const bg=e=>{let color=[255,255,255];const chain=[];for(let n=e;n;n=n.parentElement)chain.unshift(n);for(const n of chain){const c=rgb(getComputedStyle(n).backgroundColor),alpha=c[3]??1;color=color.map((x,i)=>c[i]*alpha+x*(1-alpha))}return color};
  const rows=[];for(const root of roots){const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while((n=walk.nextNode())){const e=n.parentElement,text=n.textContent.trim();if(!text||!e.getClientRects().length||e.closest('[hidden],script,style,option,.sr-only,select,[disabled]')||getComputedStyle(e).visibility==='hidden')continue;
   let opacity=1;for(let a=e;a;a=a.parentElement)opacity*=Number(getComputedStyle(a).opacity);if(opacity===0)continue;const back=bg(e),fg=rgb(getComputedStyle(e).color),alpha=(fg[3]??1)*opacity,rendered=back.map((v,i)=>fg[i]*alpha+v*(1-alpha));rows.push({text:text.slice(0,60),ratio:ratio(rendered,back)})}}return rows});
  assert.ok(rows.length,label+' rendered text missing');for(const r of rows)assert.ok(r.ratio>=4.5,`${label}: ${r.text} ratio ${r.ratio}`);result.contrasts.push({label,minimum:Math.min(...rows.map(r=>r.ratio)),count:rows.length})}
+/* H2.1: the help button is either hidden or clear of every price/stock/buying control currently on screen. */
+const PROTECTED='.pd-offer,.pd-buy .purchase-row,.pd-sticky.is-visible,.pd-variants,[data-products] .product-foot,[data-products] .product .actions,.catalog-empty-actions';
+async function helpClear(p,label){await p.waitForTimeout(450);const r=await p.evaluate(sel=>{const w=document.querySelector('[data-help]'),b=w?.querySelector('.help-toggle');if(!b)return{missing:true};const cs=getComputedStyle(w),hidden=cs.visibility==='hidden'||cs.opacity==='0';const a=b.getBoundingClientRect();const hits=[...document.querySelectorAll(sel)].filter(e=>{const x=e.getBoundingClientRect();return x.width&&x.height&&x.left<a.right&&x.right>a.left&&x.top<a.bottom&&x.bottom>a.top}).map(e=>e.className);return{hidden,hits}},PROTECTED);
+ assert.ok(r.missing||r.hidden||!r.hits.length,`${label}: help button covers ${r.hits?.join(',')}`);result.helpChecks=(result.helpChecks||0)+1;return r}
 const settle=p=>p.evaluate(()=>Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))).then(()=>p.waitForTimeout(60));
 
 try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',webkit]]){
@@ -50,9 +54,11 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   row.checks.cards={count:cardFacts.length,out:cardFacts.filter(f=>f.availability==='out').length,low:cardFacts.filter(f=>f.availability==='low').length,quote:cardFacts.filter(f=>f.availability==='quote').length};
   if(!hosted)assert.ok(row.checks.cards.out>=1&&row.checks.cards.low>=1,'synthetic stock edits rendered');
   const ratios=await p.locator('[data-products] .product-visual').evaluateAll(es=>es.slice(0,6).map(e=>{const r=e.getBoundingClientRect();return Math.round(r.width/r.height*100)/100}));
-  if(width>560)assert.ok(ratios.every(x=>Math.abs(x-4/3)<.03),'consistent 4:3 media '+ratios);
+  if(width>560)assert.ok(ratios.every(x=>Math.abs(x-16/10)<.03),'consistent 16:10 media '+ratios);
   await contrast(p,'.catalog-results',`${engine}/${width}/catalog`);await audit(p,`${engine}/${width}/catalog`);
   await p.locator('[data-products]').scrollIntoViewIfNeeded();await shot('catalog');
+  for(const y of [300,700,1100,1500,2100])await p.evaluate(v=>scrollTo(0,v),y).then(()=>helpClear(p,`${engine}/${width}/catalog@${y}`));
+  if(mobile){await p.locator('.catalog-toolbar [data-action=toggle-filters]').click();await p.locator('.catalog-filters.open').waitFor();assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'hidden','help hidden behind the filter drawer');await p.locator('.filters-close').click()}
 
   /* ---- Filters: URL sync without reload, colour, relaxations, history ---- */
   await p.evaluate(()=>{window.__h2Marker='kept'});
@@ -92,12 +98,18 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
    assert.equal(shown.id,otherId);assert.equal(shown.amount,money(shown.price),'shown price is the detail endpoint price');if(listed?.sale)assert.equal(shown.price,listed.price,'list and detail agree for '+otherId);assert.equal(shown.h1,shown.name);
    await p.goBack();await p.waitForFunction(id=>productDetail?.id===id,detailId);await p.locator('.pd-amount').waitFor()}
   if(await p.locator('.pd-gallery-nav.is-next').count()){const total=await p.locator('.gallery-thumb').count();await p.locator('.pd-gallery-nav.is-next').click();assert.equal((await p.locator('[data-gallery-count]').textContent()).trim(),`2 / ${total}`);await p.locator('.pd-gallery-nav.is-prev').click();await p.locator('.pd-gallery-nav.is-prev').click();assert.equal((await p.locator('[data-gallery-count]').textContent()).trim(),`${total} / ${total}`);row.checks.gallery=total}
+  for(const y of [0,250,500,800,1200])await p.evaluate(v=>scrollTo(0,v),y).then(()=>helpClear(p,`${engine}/${width}/product@${y}`));
+  await p.evaluate(()=>scrollTo(0,0));
   await contrast(p,'.pd-info',`${engine}/${width}/product`);await audit(p,`${engine}/${width}/product`);await p.evaluate(()=>scrollTo(0,0));await shot('product');
   if(mobile){await p.evaluate(()=>{const box=document.querySelector('.pd-buy');scrollTo(0,box.getBoundingClientRect().bottom+scrollY+200)});await p.waitForFunction(()=>document.querySelector('.pd-sticky')?.classList.contains('is-visible'));await settle(p);
-   assert.equal(await p.locator('.pd-sticky b').textContent(),money(detailPrice));await contrast(p,'.pd-sticky',`${engine}/${width}/sticky`);await shot('sticky-buy');
+   assert.equal(await p.locator('.pd-sticky b').textContent(),money(detailPrice));
+   assert.ok(await p.evaluate(()=>document.querySelector('.pd-buy').getBoundingClientRect().bottom<=document.querySelector('.pd-sticky').getBoundingClientRect().top),'sticky bar never overlaps the in-page buy box');
+   await helpClear(p,`${engine}/${width}/sticky`);
+   await p.evaluate(()=>scrollTo(0,0));await p.waitForFunction(()=>!document.querySelector('.pd-sticky').classList.contains('is-visible'));assert.equal(await p.locator('.pd-sticky').getAttribute('aria-hidden'),'true','sticky bar hides while the buy box is on screen');
+   await p.evaluate(()=>{const box=document.querySelector('.pd-buy');scrollTo(0,box.getBoundingClientRect().bottom+scrollY+200)});await p.waitForFunction(()=>document.querySelector('.pd-sticky')?.classList.contains('is-visible'));await settle(p);await contrast(p,'.pd-sticky',`${engine}/${width}/sticky`);await shot('sticky-buy');
    await p.locator('.pd-sticky [data-action=add-product-cart]').click()}
   else await p.locator('.pd-buy [data-action=add-product-cart]').click();
-  await p.locator('[data-drawer-checkout]:visible').waitFor();await settle(p);await audit(p,`${engine}/${width}/drawer-cart`);await shot('cart-drawer');
+  await p.locator('[data-drawer-checkout]:visible').waitFor();await settle(p);await audit(p,`${engine}/${width}/drawer-cart`);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'hidden','help hidden while the cart drawer is open');await shot('cart-drawer');
   await p.locator('[data-drawer-checkout]').click();await p.waitForURL('**/checkout.html');await p.waitForFunction(()=>document.querySelector('[data-cart-items]')?.innerText.includes('×'));await settle(p);
   const line=await p.evaluate(()=>({items:document.querySelector('[data-cart-items]').innerText,payload:orderItemsPayload(normalizeCartEntries(readCartRaw(),null),getProducts())}));
   assert.ok(line.items.includes(money(detailPrice)),'checkout shows the catalog price');assert.deepEqual(line.payload,[{productId:detailId,quantity:1}],'order payload carries id and quantity only');
@@ -120,6 +132,11 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   if(!mobile){await p.locator('[data-products]>.product').first().hover();assert.equal(await p.locator('[data-products]>.product').first().evaluate(e=>getComputedStyle(e).transform),'none')}
   row.checks.reducedMotion='PASS';
 
+  /* ---- H2.1 help launcher keyboard: reachable, opens, stays while open/focused ---- */
+  await p.evaluate(()=>scrollTo(0,0));await p.waitForTimeout(500);
+  if(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility)==='visible'){await p.locator('.help-toggle').focus();await p.keyboard.press('Enter');await p.locator('#help-panel:not([hidden])').waitFor();
+   await p.evaluate(()=>scrollTo(0,900));await p.waitForTimeout(500);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'visible','an open help panel is never hidden');
+   await p.locator('.help-close').click();await p.evaluate(()=>scrollTo(0,0));row.checks.helpKeyboard='PASS'}
   /* ---- Keyboard: card actions reachable, focus ring visible ---- */
   // macOS WebKit tabs only to form controls by default; Option+Tab is Safari's full keyboard navigation.
   await p.locator('[data-products] .product h3 a').first().focus();await p.keyboard.press(engine==='webkit'?'Alt+Tab':'Tab');

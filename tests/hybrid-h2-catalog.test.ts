@@ -36,9 +36,9 @@ test("H2 colour chip appears only when the name carries a colour word", () => {
 });
 
 test("H2 stylesheet keeps consistent media ratio, reduced-motion and phone layout", () => {
-  assert.match(h2Css, /\.product-visual\{aspect-ratio:4\/3/);
+  assert.match(h2Css, /\.product-visual\{aspect-ratio:16\/10/);
   assert.match(h2Css, /@media\(prefers-reduced-motion:reduce\)\{[^@]*transform:none/);
-  assert.match(h2Css, /@media\(max-width:560px\)\{[^@]*grid-template-columns:minmax\(112px,36%\) minmax\(0,1fr\)/);
+  assert.match(h2Css, /@media\(max-width:560px\)\{[^@]*grid-template-columns:minmax\(118px,40%\) minmax\(0,1fr\)/);
   for (const page of ["catalog", "product"]) assert.match(readFileSync(`public/${page}.html`, "utf8"), /href="catalog-h2\.css"/);
 });
 
@@ -142,4 +142,18 @@ test("H2 sticky buy bar also opens after a jump past the buy box (observer-only 
 
 test("H2 filter drawer pulls focus back when a browser's Tab order skips the last button (Safari default)", () => {
   assert.match(readFileSync("public/store-core.js", "utf8"), /else setTimeout\(\(\)=>\{if\(panel\.classList\.contains\('open'\)&&!panel\.contains\(document\.activeElement\)\)\(event\.shiftKey\?controls\.at\(-1\):controls\[0\]\)\?\.focus\(\)\},0\);/);
+});
+
+/* ---------- H2.1 final polish ---------- */
+test("H2.1 help launcher steps aside from price, stock and buying controls, never while open or focused", () => {
+  const core = readFileSync("public/store-core.js", "utf8"), css = readFileSync("public/store.css", "utf8");
+  for (const sel of [".pd-offer", ".pd-buy .purchase-row", ".pd-sticky.is-visible", "[data-products] .product-foot", "[data-products] .product .actions"]) assert.ok(core.includes(sel), sel);
+  assert.match(core, /getAttribute\('aria-expanded'\)==='true'\|\|wrap\.contains\(document\.activeElement\)\)\{clearTimeout\(helpShowTimer\);helpShowTimer=null;wrap\.classList\.remove\('is-clearing'\)/);
+  assert.match(css, /\.help-launcher\.is-clearing,html\.nav-open \.help-launcher,html\.cart-drawer-open \.help-launcher,body:has\(\[data-cookie-banner\]\) \.help-launcher\{opacity:0;visibility:hidden;pointer-events:none\}/);
+  assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.help-launcher\{transition:none\}\}/);
+});
+
+test("H2.1 phone product keeps the gallery help as an accessible description, only visually hidden", () => {
+  assert.match(h2Css, /\.pd-gallery-help\{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect\(0 0 0 0\)/);
+  assert.doesNotMatch(h2Css, /\.pd-gallery-help\{display:none/);
 });
