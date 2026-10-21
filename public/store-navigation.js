@@ -3,7 +3,7 @@
  'use strict';
  let status,resetTimer;
  const reset=()=>{clearTimeout(resetTimer);if(status){status.hidden=true;status.textContent=''}document.documentElement.classList.remove('store-navigating')};
- const storefront=url=>url.origin===location.origin&&(url.pathname==='/'||/^\/(?:index|catalog|product|selector|compare|checkout|favorites|services|contact|policies|about|blog|guide)\.html$/.test(url.pathname));
+ const storefront=url=>url.origin===location.origin&&!/^\/(?:admin|account|payment|api)(?:[/.]|$)/.test(url.pathname)&&(url.pathname==='/'||/^\/(?:[a-z0-9-]+|rehber\/[a-z0-9-]+)\.html$/.test(url.pathname));
  function pending(url){
   if(!storefront(url)||(url.pathname===location.pathname&&url.search===location.search))return;
   status.textContent='Sayfa açılıyor…';status.hidden=false;document.dispatchEvent(new CustomEvent('store:navigate'));document.documentElement.classList.add('store-navigating');
