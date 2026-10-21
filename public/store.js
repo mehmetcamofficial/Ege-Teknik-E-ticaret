@@ -87,4 +87,5 @@
   document.write('<script src="/store-insights.js"></'+'script>');
   if(location.pathname.endsWith('/selector.html'))document.write('<script src="/climate-advisor.js"></'+'script>');
   document.write('<script src="/store-core.js"></'+'script>');
+  document.write('<script src="/store-ux.js"></'+'script>');
 })();

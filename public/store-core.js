@@ -26,8 +26,8 @@ let catalogProducts=[],catalogState='loading',productDetail=null,productDetailSt
 const getProducts=()=>catalogProducts;
 function catalogAuthoritative(){return catalogState==='ready'}
 function catalogNotice(){return catalogState==='loading'?'Ürün bilgileri yükleniyor…':'Ürün bilgileri şu anda alınamıyor. Lütfen daha sonra tekrar deneyin.'}
-function renderProductViews(){renderCatalog();renderProductPage();renderFavorites();renderCompare();renderCheckout();renderFeaturedProducts();renderHomeDiscovery();updateCartCount()}
-async function loadCatalog(){catalogState='loading';renderCatalog();try{const response=await fetch('/api/products');if(!response.ok)throw new Error(`catalog ${response.status}`);const data=await response.json();catalogProducts=(Array.isArray(data.products)?data.products:[]).map(p=>({...p,energy:p.energyClass,sale:p.saleMode==='online'}));catalogState='ready';preloadCatalogLeadImage();syncCatalogOptions();pruneCart()}catch{catalogState='unavailable';console.info('Ürün kataloğu alınamadı.')}if(document.querySelector('[data-product-page]')&&productDetailState==='idle')await loadProductDetail();renderProductViews();sendAnalyticsEvent()}
+function renderProductViews(){renderCatalog();renderProductPage();renderFavorites();renderCompare();renderCheckout();renderFeaturedProducts();renderHomeDiscovery();updateCartCount();cartDrawer()?.refresh()}
+async function loadCatalog(){catalogState='loading';renderCatalog();cartDrawer()?.refresh();try{const response=await fetch('/api/products');if(!response.ok)throw new Error(`catalog ${response.status}`);const data=await response.json();catalogProducts=(Array.isArray(data.products)?data.products:[]).map(p=>({...p,energy:p.energyClass,sale:p.saleMode==='online'}));catalogState='ready';preloadCatalogLeadImage();syncCatalogOptions();pruneCart()}catch{catalogState='unavailable';console.info('Ürün kataloğu alınamadı.')}if(document.querySelector('[data-product-page]')&&productDetailState==='idle')await loadProductDetail();renderProductViews();sendAnalyticsEvent()}
 
 /* Cart state is only {productId, quantity}. Price, VAT, stock and totals always come from
    the catalog the server served, never from localStorage. */
@@ -142,7 +142,12 @@ function knownProductIds(){return catalogAuthoritative()?new Set(getProducts().m
    invalidated here. P2 originally only listened for form input/change events, which cart buttons never fire -
    that is why removing a cart item left a stale, still-acceptable preview on screen. One boundary, no bespoke
    checkbox resets in individual handlers, and no automatic preview refresh. */
-function writeCart(entries){localStorage.setItem('ege-cart',JSON.stringify(normalizeCartEntries(entries,null)));updateCartCount();invalidateLegalPreview()}
+function cartDrawer(){return typeof window!=='undefined'?window.EgeCartDrawer:null}
+function writeCart(entries){
+ try{localStorage.setItem('ege-cart',JSON.stringify(normalizeCartEntries(entries,null)))}
+ catch{cartFeedback('Sepet kaydedilemedi. Tarayıcı depolama iznini kontrol edin.');return false}
+ updateCartCount();invalidateLegalPreview();cartDrawer()?.refresh();return true
+}
 /* Drops cart lines whose ids are not in the served catalog, so legacy ids such as
    "aphro-09" disappear instead of failing at checkout. */
 function pruneCart(){if(!catalogAuthoritative())return 0;const before=normalizeCartEntries(readCartRaw(),null),after=normalizeCartEntries(before,knownProductIds());if(after.length!==before.length)writeCart(after);return before.length-after.length}
@@ -158,15 +163,25 @@ let toastTimer;
 function toast(t){const e=document.querySelector('.toast');if(!e)return;e.textContent=t;e.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),4000)}
 function productQuantityLimit(stock){const n=Math.floor(Number(stock));return Number.isFinite(n)&&n>0?Math.min(n,CART_MAX_QUANTITY):0}
 function normalizeProductQuantity(value,stock){const limit=productQuantityLimit(stock),n=Math.floor(Number(value));return limit?Math.min(Math.max(Number.isFinite(n)?n:1,1),limit):0}
-function cartFeedback(message){const root=document.querySelector('[data-cart-feedback]');if(root)root.innerHTML=esc(message)+' <a href="checkout.html">Sepeti görüntüle</a>';else toast(message)}
+function cartFeedback(message){cartDrawer()?.feedback(message);const root=document.querySelector('[data-cart-feedback]');if(root)root.innerHTML=esc(message)+' <a href="checkout.html">Sepeti görüntüle</a>';else toast(message)}
 function addCart(id,quantity=1){
- const p=getProducts().find(x=>x.id===id);if(!p||!p.sale||p.stock<=0)return;
+ const p=catalogAuthoritative()?getProducts().find(x=>x.id===id):null;
+ if(!p||!p.sale||!Number.isFinite(p.price)||p.price<=0||!productQuantityLimit(p.stock)){cartFeedback('Ürün, fiyat veya stok doğrulanamadı. Sepete eklenemedi.');return false}
  const before=getCart().find(x=>x.productId===id)?.quantity||0,remaining=Math.max(0,productQuantityLimit(p.stock)-before),amount=Math.min(normalizeProductQuantity(quantity,p.stock),remaining);
- if(!amount){cartFeedback('Bu ürün için sepet sınırına ulaştınız.');return}
- writeCart([...readCartRaw(),{productId:id,quantity:amount}]);
+ if(!amount){cartFeedback('Bu ürün için sepet sınırına ulaştınız.');return false}
+ if(!writeCart([...readCartRaw(),{productId:id,quantity:amount}]))return false;
  const added=(getCart().find(x=>x.productId===id)?.quantity||0)-before;
- if(added<=0){cartFeedback('Yeni ürün eklenemedi. Sepetinizi kontrol edin.');return}
- renderCheckout();cartFeedback(added+' adet ürün sepete eklendi');trackStoreEvent('add_to_cart',{itemId:id,quantity:added},'cart:'+JSON.stringify(readCartRaw()))
+ if(added<=0){cartFeedback('Yeni ürün eklenemedi. Sepetinizi kontrol edin.');return false}
+ renderCheckout();cartFeedback(added+' adet ürün sepete eklendi');
+ cartDrawer()?.open(added+' adet ürün sepete eklendi');
+ trackStoreEvent('add_to_cart',{itemId:id,quantity:added},'cart:'+JSON.stringify(readCartRaw()));return true
+}
+function changeCartQuantity(id,value){
+ const p=catalogAuthoritative()?getProducts().find(x=>x.id===id):null,q=Number(value),entries=getCart();
+ if(!p||!p.sale||!entries.some(x=>x.productId===id)||!Number.isInteger(q)||q<1||q>productQuantityLimit(p.stock)){cartFeedback('Adet güncellenemedi. Güncel stok sınırını kontrol edin.');return false}
+ if(entries.find(x=>x.productId===id).quantity===q)return true;
+ if(!writeCart(entries.map(x=>x.productId===id?{productId:id,quantity:q}:x)))return false;
+ renderCheckout();return true
 }
 function quote(id){const p=getProducts().find(x=>x.id===id)||(productDetail?.id===id?productDetail:null);location.href='https://wa.me/905427957560?text='+encodeURIComponent((p?.name||'GREE ürün')+' için fiyat ve keşif bilgisi almak istiyorum. Sayfa: '+location.href)}
 /* Only the specs the catalog actually carries are shown - an empty wifi/energy value renders nothing, not a blank label. */
@@ -399,7 +414,7 @@ function renderCheckout(){const root=document.querySelector('[data-cart-items]')
   /* an empty cart shows dashes, never a ₺0 total */
   if(!sellable.length){setTotals('—');renderDeliveryOptions();renderChargeSummary();return}
   if(subtotalEl)subtotalEl.textContent=money(cartTotal(lines));if(vatEl)vatEl.textContent=money(cartVat(lines));renderDeliveryOptions();renderChargeSummary()}
-function removeCart(productId){writeCart(readCartRaw().filter(entry=>(entry?.productId??entry?.id)!==productId));renderCheckout()}
+function removeCart(productId){if(!writeCart(readCartRaw().filter(entry=>(entry?.productId??entry?.id)!==productId)))return false;renderCheckout();return true}
 /* Guest order confirmation: built entirely from the server's response (lib/order-domain.ts's
    toOrderConfirmation allow-list) - no internal id ever reaches this markup. Replaces the form
    so the customer sees a clear result, not a still-fillable form with a one-line note. */
@@ -1081,3 +1096,6 @@ document.addEventListener('input',e=>{if(e.target.matches?.('#catalog-search'))q
 document.addEventListener('submit',e=>{if(e.target.matches?.('[data-catalog-search-form]')){e.preventDefault();commitCatalogFilters()}});
 if(typeof window!=='undefined')window.addEventListener('popstate',()=>applyCatalogQuery());
 
+
+/* Other-tab mutations cross the same legal invalidation boundary without re-writing storage. */
+if(typeof window!=='undefined')window.addEventListener('storage',event=>{if(event.key==='ege-cart'){invalidateLegalPreview();updateCartCount();renderCheckout();cartDrawer()?.refresh()}});
