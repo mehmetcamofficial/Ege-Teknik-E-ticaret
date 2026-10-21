@@ -9,8 +9,8 @@
  .store [data-products]>.product:hover,.store .related-section .product:hover{transform:translateY(-3px);border-color:#a9c2b4;box-shadow:0 18px 40px -22px rgb(15 56 46/.35)}
 }
 .store [data-products] .product-media,.store .related-section .product-media{background:radial-gradient(110% 85% at 50% 40%,#fff 0%,#fff 42%,#eef3ef 100%);border-bottom:1px solid #e6ece6}
-.store [data-products] .product-visual,.store .related-section .product-visual{aspect-ratio:4/3;height:auto;min-height:0}
-.store [data-products] .product-visual .product-image,.store .related-section .product-visual .product-image{padding:44px 22px 40px}
+.store [data-products] .product-visual,.store .related-section .product-visual{aspect-ratio:16/10;height:auto;min-height:0}
+.store [data-products] .product-visual .product-image,.store .related-section .product-visual .product-image{padding:30px 18px 34px}
 .store [data-products] .product-flags{top:auto;bottom:10px;left:12px}
 .store [data-products] .product-flags .badge{font-size:12px;font-weight:700;letter-spacing:.02em;background:#fff;color:var(--p);border:1px solid #cfdcd3;border-radius:999px;padding:4px 10px}
 .store [data-products] .product-flags .badge.quote{color:#7a3d00;border-color:#e9cfa9;background:#fffaf2}
@@ -47,10 +47,11 @@
 /* Phones: compact horizontal card, so a full screen shows two products instead of one. */
 @media(max-width:560px){
  .store [data-products].product-grid{grid-template-columns:minmax(0,1fr);gap:12px}
- .store [data-products]>.product{display:grid;grid-template-columns:minmax(112px,36%) minmax(0,1fr);grid-template-rows:auto;border-radius:12px}
- .store [data-products] .product-media{border-bottom:0;border-right:1px solid #e6ece6}
+ .store [data-products]>.product{display:grid;grid-template-columns:minmax(118px,40%) minmax(0,1fr);grid-template-rows:auto;border-radius:12px}
+ /* H2.1: white units need a visible stage on phones: soft green-grey plate, product scaled up to the column. */
+ .store [data-products] .product-media{border-bottom:0;border-right:1px solid #dfe7e1;background:linear-gradient(160deg,#f3f7f4 0%,#e6eee8 100%)}
  .store [data-products] .product-visual{aspect-ratio:auto;height:100%;min-height:168px}
- .store [data-products] .product-visual .product-image{padding:40px 8px 44px}
+ .store [data-products] .product-visual .product-image{padding:46px 4px 40px;transform:scale(1.08)}
  .store [data-products] .product-flags{left:6px;bottom:8px;right:6px}
  .store [data-products] .product-flags .badge{font-size:11px;padding:3px 7px;white-space:nowrap}
  .store [data-products] .product-tools{inset:6px auto auto 6px;gap:4px}
@@ -131,3 +132,4 @@
 }
 @media(max-width:560px){.pd-gallery-nav{width:44px;height:44px}.pd-offer{padding:14px 16px}.pd-variant{min-width:calc(50% - 4px)}}
 @media(prefers-reduced-motion:reduce){.pd-gallery-nav,.pd-variant{transition:none}}
+
