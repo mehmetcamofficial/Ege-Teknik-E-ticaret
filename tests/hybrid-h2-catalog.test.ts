@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { loadStorefront } from "./support/storefront-sandbox.ts";
+import { apiProduct, fakeElement, loadStorefront } from "./support/storefront-sandbox.ts";
 
 const h2Css = readFileSync("public/catalog-h2.css", "utf8");
 const card = () => loadStorefront().fn<(p: unknown, o?: unknown) => string>("productCard");
@@ -40,4 +40,48 @@ test("H2 stylesheet keeps consistent media ratio, reduced-motion and phone layou
   assert.match(h2Css, /@media\(prefers-reduced-motion:reduce\)\{[^@]*transform:none/);
   assert.match(h2Css, /@media\(max-width:560px\)\{[^@]*grid-template-columns:minmax\(112px,36%\) minmax\(0,1fr\)/);
   for (const page of ["catalog", "product"]) assert.match(readFileSync(`public/${page}.html`, "utf8"), /href="catalog-h2\.css"/);
+});
+
+/* ---------- H2-B smart filters ---------- */
+const filterItems = [
+  { id: "s", name: "Airy 12000 BTU/h - Siyah", brandId: "gree", series: "Airy", category: "Duvar Tipi", capacity: "12000 BTU/h", sale: true, stock: 4, price: 61_400 },
+  { id: "w", name: "Fairy 9000 BTU/h – Beyaz", brandId: "gree", series: "Fairy", category: "Duvar Tipi", capacity: "9000 BTU/h", sale: true, stock: 0, price: 40_000 },
+  { id: "q", name: "Multi İç Ünite", brandId: "gree", series: "Multi", category: "Multi Sistem", capacity: "12000 BTU/h", sale: false, stock: 0, price: 0 },
+];
+
+test("H2 colour and availability filters use only real fields", () => {
+  const select = loadStorefront().fn<(p: unknown[], f: Record<string, string>) => { id: string }[]>("selectCatalogProducts");
+  const ids = (f: Record<string, string>) => Array.from(select(filterItems, f), (p) => p.id);
+  assert.deepEqual(ids({ colour: "Siyah" }), ["s"]);
+  assert.deepEqual(ids({ colour: "Beyaz" }), ["w"]);
+  assert.deepEqual(ids({ stock: "quote" }), ["q"]);
+  assert.deepEqual(ids({ stock: "available" }), ["s"]);
+  assert.deepEqual(ids({ stock: "unavailable" }), ["w"], "an online item with no stock is out of stock, never a quote item");
+});
+
+test("H2 empty result offers only relaxations that actually return products, with real counts", async () => {
+  const grid = fakeElement(), series = { ...fakeElement(), value: "Airy", dataset: { catalogFilter: "series" } }, stock = { ...fakeElement(), value: "unavailable", dataset: { catalogFilter: "stock" } };
+  const products = [apiProduct({ id: "a", name: "Airy A", series: "Airy", stock: 5 }), apiProduct({ id: "b", name: "Airy B", series: "Airy", stock: 2 }), apiProduct({ id: "f", name: "Fairy", series: "Fairy", stock: 0 })];
+  const store = loadStorefront({ path: "catalog.html", elements: { "[data-products]": grid, '[data-catalog-filter="series"]': series, '[data-catalog-filter="stock"]': stock }, api: { products } });
+  await store.fn<() => Promise<void>>("loadCatalog")();
+  assert.match(grid.innerHTML, /Bu filtrelerle eşleşen ürün bulunamadı/);
+  assert.match(grid.innerHTML, /2 filtre birlikte uygulandı/);
+  assert.match(grid.innerHTML, /data-action="remove-filter" data-key="stock"><span>Uygunluk: Stokta yok kaldır<\/span><b>2 ürün<\/b>/);
+  assert.match(grid.innerHTML, /data-action="remove-filter" data-key="series"><span>Seri: Airy kaldır<\/span><b>1 ürün<\/b>/);
+  assert.match(grid.innerHTML, /class="primary" data-action="clear-catalog">Filtreleri temizle/);
+});
+
+test("H2 a filter whose single value covers every product is hidden; a narrowing one stays", async () => {
+  const group = (hidden = false) => ({ hidden }), brandGroup = group(), wifiGroup = group();
+  const brand = { ...fakeElement(), dataset: { catalogFilter: "brand" }, closest: () => brandGroup }, wifi = { ...fakeElement(), dataset: { catalogFilter: "wifi" }, closest: () => wifiGroup };
+  const products = [apiProduct({ id: "a", brandId: "gree", wifi: "Dahili" }), apiProduct({ id: "b", brandId: "gree", wifi: "" })];
+  await loadStorefront({ path: "catalog.html", elements: { '[data-catalog-filter="brand"]': brand, '[data-catalog-filter="wifi"]': wifi }, api: { products } }).fn<() => Promise<void>>("loadCatalog")();
+  assert.equal(brandGroup.hidden, true);
+  assert.equal(wifiGroup.hidden, false);
+});
+
+test("H2 catalog markup carries colour and availability controls", () => {
+  const html = readFileSync("public/catalog.html", "utf8");
+  assert.match(html, /<span>Renk<\/span><select data-catalog-filter="colour">/);
+  assert.match(html, /<option value="quote">Teklif \/ keşif ürünleri<\/option>/);
 });

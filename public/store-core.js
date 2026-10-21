@@ -197,7 +197,7 @@ function productCard(p,options={}){const fav=getFavorites().includes(p.id),cmp=g
 const productSkeleton=()=>'<div class="product product-skeleton" aria-hidden="true"><div class="product-media"><div class="product-visual"></div></div><div class="product-body"><div class="skeleton-line w40"></div><div class="skeleton-line w80 h24"></div><div class="skeleton-line w60"></div><div class="skeleton-line w40 h24"></div></div></div>';
 /* Real capacities are written "12000 BTU/h"; the chips say "12.000". Compare digits only, and only for BTU-rated products. */
 const capacityBtuDigits=p=>/btu/i.test(p.capacity||'')?p.capacity.replace(/\D/g,''):'';
-const catalogFilterKeys=['brand','series','energy','wifi','stock','min','max','sort'];
+const catalogFilterKeys=['brand','series','colour','energy','wifi','stock','min','max','sort'];
 // Turkish casing, accent folding and BTU punctuation; no invented model/spec aliases.
 function foldCatalogText(value){return String(value??'').toLocaleLowerCase('tr').normalize('NFKD').replace(/\p{M}/gu,'').replace(/ı/g,'i').replace(/(\d)[.,](?=\d{3}\b)/g,'$1').replace(/[^\p{L}\p{N}+]+/gu,' ').trim()}
 function catalogSearchText(p){return foldCatalogText([p.name,p.sku,p.series,p.category,p.brandId,p.capacity,p.energy||p.energyClass,p.wifi&&'Wi-Fi '+p.wifi].filter(Boolean).join(' '))}
@@ -210,7 +210,7 @@ function selectCatalogProducts(products,filters={}){
   if(catalogPriceError(filters))return [];
   const tokens=foldCatalogText(filters.q).split(/\s+/).filter(Boolean);
   const min=filters.min!==''&&filters.min!=null?Number(filters.min):null,max=filters.max!==''&&filters.max!=null?Number(filters.max):null;
-  const result=products.filter(p=>(!filters.category||filters.category==='Tümü'||p.category===filters.category)&&(!filters.btu||filters.btu==='Tümü'||capacityBtuDigits(p)===String(filters.btu).replace(/\D/g,''))&&tokens.every(token=>catalogSearchText(p).includes(token))&&(!filters.brand||p.brandId===filters.brand)&&(!filters.series||p.series===filters.series)&&(!filters.energy||(p.energy||p.energyClass)===filters.energy)&&(!filters.wifi||String(p.wifi)===filters.wifi)&&(!filters.stock||(p.sale&&(filters.stock==='available'?Number(p.stock)>0:filters.stock==='unavailable'?Number(p.stock)<=0:false)))&&((min===null&&max===null)||(p.sale&&Number.isFinite(p.price)&&(min===null||p.price>=min)&&(max===null||p.price<=max))));
+  const result=products.filter(p=>(!filters.category||filters.category==='Tümü'||p.category===filters.category)&&(!filters.btu||filters.btu==='Tümü'||capacityBtuDigits(p)===String(filters.btu).replace(/\D/g,''))&&tokens.every(token=>catalogSearchText(p).includes(token))&&(!filters.brand||p.brandId===filters.brand)&&(!filters.series||p.series===filters.series)&&(!filters.colour||productColour(p)===filters.colour)&&(!filters.energy||(p.energy||p.energyClass)===filters.energy)&&(!filters.wifi||String(p.wifi)===filters.wifi)&&(!filters.stock||(filters.stock==='quote'?!p.sale:p.sale&&(filters.stock==='available'?Number(p.stock)>0:filters.stock==='unavailable'?Number(p.stock)<=0:false)))&&((min===null&&max===null)||(p.sale&&Number.isFinite(p.price)&&(min===null||p.price>=min)&&(max===null||p.price<=max))));
   const byName=(a,b)=>String(a.name).localeCompare(String(b.name),'tr',{numeric:true,sensitivity:'base'});
   if(filters.sort==='name-asc'||filters.sort==='name-desc')result.sort((a,b)=>byName(a,b)*(filters.sort==='name-desc'?-1:1));
   if(filters.sort==='price-asc'||filters.sort==='price-desc')result.sort((a,b)=>{const ap=a.sale&&Number.isFinite(a.price),bp=b.sale&&Number.isFinite(b.price);if(ap!==bp)return ap?-1:1;return ap?(a.price-b.price)*(filters.sort==='price-desc'?-1:1)||byName(a,b):byName(a,b)});
@@ -234,15 +234,17 @@ function catalogSearchSuggestions(products,filters){
 }
 function catalogFilters(){const filters={category:document.querySelector('[name=category]:checked')?.value||'Tümü',q:document.querySelector('#catalog-search')?.value||'',btu:document.querySelector('.chip.active')?.dataset.btu||'Tümü'};for(const key of catalogFilterKeys)filters[key]=document.querySelector(`[data-catalog-filter="${key}"]`)?.value||'';return filters}
 function syncCatalogOptions(){
-  const products=getProducts(),params=new URLSearchParams(location.search),countBy=f=>products.reduce((m,p)=>{const v=p[f];if(v!=null&&String(v).trim())m.set(String(v),(m.get(String(v))||0)+1);return m},new Map());
+  const products=getProducts(),params=new URLSearchParams(location.search),countBy=(f,read)=>products.reduce((m,p)=>{const v=read?read(p):p[f];if(v!=null&&String(v).trim())m.set(String(v),(m.get(String(v))||0)+1);return m},new Map());
   const categoryRoot=document.querySelector('[data-category-options]');
   if(categoryRoot){const current=params.get('category')||document.querySelector('[name=category]:checked')?.value||'Tümü',cats=countBy('category');if(current!=='Tümü'&&!cats.has(current))cats.set(current,0);categoryRoot.innerHTML=[['Tümü',products.length],...cats].map(([value,n])=>`<label class="chip"><input class="sr-only" type="radio" name="category" value="${esc(value)}"${value===current?' checked':''}> ${esc(value==='Tümü'?'Tüm ürünler':value)} <span class="n">${esc(n)}</span></label>`).join('')}
   const btuRoot=document.querySelector('[data-btu-options]');
   if(btuRoot){const wanted=params.get('btu')||document.querySelector('.chip.active')?.dataset.btu||'Tümü',digits=wanted.replace(/\D/g,''),caps=[...new Set(products.map(capacityBtuDigits).filter(Boolean))].map(Number).sort((a,b)=>a-b);if(digits&&!caps.includes(Number(digits)))caps.push(Number(digits));btuRoot.innerHTML=['Tümü',...caps].map(c=>{const value=String(c),on=c==='Tümü'?!digits:value===digits;return `<button type="button" class="chip${on?' active':''}" data-btu="${esc(value)}" aria-pressed="${on}">${esc(c==='Tümü'?'Tümü':new Intl.NumberFormat('tr-TR').format(c))}</button>`}).join('')}
-  for(const [key,field] of [['brand','brandId'],['series','series'],['energy','energy'],['wifi','wifi']]){
+  for(const [key,field] of [['brand','brandId'],['series','series'],['colour',productColour],['energy','energy'],['wifi','wifi']]){
     const select=document.querySelector(`[data-catalog-filter="${key}"]`);if(!select)continue;
-    const value=params.get(key)||select.value||'',counts=countBy(field),options=[...counts.keys()].sort((a,b)=>a.localeCompare(b,'tr'));
+    const value=params.get(key)||select.value||'',counts=typeof field==="function"?countBy(null,field):countBy(field),options=[...counts.keys()].sort((a,b)=>a.localeCompare(b,'tr'));
     select.disabled=!options.length&&!value;
+    // H2: a filter with no data, or one value every product shares, cannot narrow the list; it stays in the DOM but is not shown.
+    const group=select.closest?.('.filter-group');if(group)group.hidden=!value&&(!options.length||(options.length===1&&counts.get(options[0])===products.length));
     select.innerHTML='<option value="">Tümü</option>'+options.map(v=>`<option value="${esc(v)}">${esc(key==='brand'?v.toLocaleUpperCase('tr'):v)} (${esc(counts.get(v))})</option>`).join('')+(value&&!counts.has(value)?`<option value="${esc(value)}">${esc(value)} · katalogda yok</option>`:'');select.value=value;
     if(key==='energy'){const note=document.querySelector('[data-energy-note]');if(note)note.textContent=options.length?'Paylaşılan soğutma / ısıtma sınıfları.':'Enerji sınıfı bu katalog yanıtında paylaşılmamış.'}
   }
@@ -292,8 +294,16 @@ function preloadCatalogLeadImage(){
   link.id='catalog-lead-image';link.rel='preload';link.as='image';link.href=url;link.fetchPriority='high';
   if(!link.isConnected)document.head.appendChild(link);
 }
-const FILTER_LABELS={category:'Kategori',q:'Arama',btu:'Kapasite',brand:'Marka',series:'Seri',energy:'Enerji',wifi:'Wi-Fi',stock:'Stok',min:'En az ₺',max:'En çok ₺'};
+const FILTER_LABELS={category:'Kategori',q:'Arama',btu:'Kapasite',brand:'Marka',series:'Seri',colour:'Renk',energy:'Enerji',wifi:'Wi-Fi',stock:'Uygunluk',min:'En az ₺',max:'En çok ₺'};
+const filterValueText=(key,value)=>key==='stock'?({available:'Stokta',unavailable:'Stokta yok',quote:'Teklif / keşif'}[value]||value):key==='btu'?new Intl.NumberFormat('tr-TR').format(Number(String(value).replace(/\D/g,'')))+' BTU':key==='brand'?String(value).toLocaleUpperCase('tr'):value;
+/* H2: for an empty result, which single active filter would bring products back, counted on the real catalog. */
+function catalogRelaxations(products,filters){const reset={category:'Tümü',btu:'Tümü'};return Object.entries(filters).filter(([key,value])=>key!=='sort'&&value&&value!=='Tümü').map(([key,value])=>({key,value,count:selectCatalogProducts(products,{...filters,[key]:reset[key]??''}).length})).filter(r=>r.count>0).sort((a,b)=>b.count-a.count).slice(0,3)}
 function syncCatalogRobots(){const robots=document.querySelector('meta[name=robots]');if(document.querySelector('[data-products]')&&robots)robots.content=location.search?'noindex, follow':'index, follow'}
+function catalogEmptyMarkup(filters,priceError,suggestions){
+  const active=Object.entries(filters).filter(([key,value])=>key!=='sort'&&value&&value!=='Tümü'),relax=priceError?[]:catalogRelaxations(getProducts(),filters);
+  const why=priceError||(filters.q&&active.length===1?`“${esc(filters.q)}” için katalogda ürün yok. Daha kısa bir ürün adı, seri veya BTU değeri deneyin.`:`${active.length} filtre birlikte uygulandı ve hepsine uyan ürün yok. Bir filtreyi kaldırarak sonuçları genişletebilirsiniz.`);
+  return `<div class="empty catalog-empty"><h2>${priceError?'Fiyat aralığını kontrol edin.':'Bu filtrelerle eşleşen ürün bulunamadı.'}</h2><p>${why}</p>${relax.length?`<p class="catalog-relax-title">Tek bir filtreyi kaldırırsanız:</p><ul class="catalog-relax" aria-label="Sonuç getiren filtre değişiklikleri">${relax.map(r=>`<li><button type="button" class="ghost" data-action="remove-filter" data-key="${esc(r.key)}"><span>${esc(FILTER_LABELS[r.key])}: ${esc(filterValueText(r.key,r.value))} kaldır</span><b>${esc(r.count)} ürün</b></button></li>`).join('')}</ul>`:''}${suggestions.length?`<p>Şu seriyi mi arıyorsunuz?</p><ul class="catalog-suggestions" aria-label="Gerçek katalogdan arama önerileri">${suggestions.map(term=>`<li><button type="button" class="ghost" data-action="suggest-search" data-query="${esc(term)}">${esc(term)}</button></li>`).join('')}</ul>`:''}<div class="catalog-empty-actions"><button type="button" class="primary" data-action="clear-catalog">Filtreleri temizle</button><a href="selector.html">Klima seçiciden yardım alın</a></div></div>`;
+}
 function renderCatalog(){syncCatalogRobots();
   const root=document.querySelector('[data-products]');if(!root)return;
   root.setAttribute?.('aria-busy',String(catalogState==='loading'));
@@ -305,7 +315,7 @@ function renderCatalog(){syncCatalogRobots();
   const filters=catalogFilters(),signature=JSON.stringify({...filters,sort:''}),priceError=catalogPriceError(filters);
   if(signature!==catalogSignature){catalogSignature=signature;catalogLimit=CATALOG_PAGE}
   const ps=selectCatalogProducts(getProducts(),filters),shown=ps.slice(0,catalogLimit),suggestions=ps.length?[]:catalogSearchSuggestions(getProducts(),filters);
-  root.innerHTML=ps.length?shown.map((p,index)=>productCard(p,{eager:index<3,priority:index===0?'high':undefined})).join(''):`<div class="empty"><h2>${priceError?'Fiyat aralığını kontrol edin.':'Bu filtrelerle eşleşen ürün bulunamadı.'}</h2><p>${priceError||'Daha kısa bir ürün adı veya model kodu deneyin; birlikte kullandığınız filtreleri azaltabilirsiniz.'}</p>${suggestions.length?`<p>Şu seriyi mi arıyorsunuz?</p><ul class="catalog-suggestions" aria-label="Gerçek katalogdan arama önerileri">${suggestions.map(term=>`<li><button type="button" class="ghost" data-action="suggest-search" data-query="${esc(term)}">${esc(term)}</button></li>`).join('')}</ul>`:''}<button type="button" class="ghost" data-action="clear-catalog">Filtreleri temizle</button> <a href="selector.html">Klima seçiciden yardım alın</a></div>`;
+  root.innerHTML=ps.length?shown.map((p,index)=>productCard(p,{eager:index<3,priority:index===0?'high':undefined})).join(''):catalogEmptyMarkup(filters,priceError,suggestions);
   count?.replaceChildren(document.createTextNode(ps.length+' ürün'));document.querySelectorAll('[data-apply-count]').forEach(el=>{el.textContent=ps.length+' ürünü göster'});
   const error=document.querySelector('[data-price-error]');if(error)error.textContent=priceError;
   document.querySelectorAll('[data-catalog-filter="min"],[data-catalog-filter="max"]').forEach(el=>el.setAttribute('aria-invalid',String(Boolean(priceError))));
@@ -313,7 +323,7 @@ function renderCatalog(){syncCatalogRobots();
   if(more)more.innerHTML=ps.length>shown.length?`<p>${shown.length} / ${ps.length} ürün gösteriliyor</p><progress max="${ps.length}" value="${shown.length}" aria-hidden="true"></progress><button type="button" class="ghost" data-action="load-more">Daha fazla ürün göster</button>`:'';
   // The catalog heading stays stable while results and active chips carry filter context.
   const active=document.querySelector('[data-active-filters]');
-  if(active){const entries=Object.entries(filters).filter(([key,value])=>key!=='sort'&&value&&value!=='Tümü');active.innerHTML=entries.map(([key,value])=>`<button type="button" class="active-chip spec" data-action="remove-filter" data-key="${esc(key)}"><span>${esc(FILTER_LABELS[key])}:</span> ${esc(key==='stock'?(value==='available'?'Stokta':'Stokta yok'):key==='btu'?new Intl.NumberFormat('tr-TR').format(Number(String(value).replace(/\D/g,'')))+' BTU':value)}<i aria-hidden="true">×</i><span class="sr-only"> filtresini kaldır</span></button>`).join('')+(entries.length>1?'<button type="button" class="clear-all" data-action="clear-catalog">Tümünü temizle</button>':'');document.querySelectorAll('[data-filter-count]').forEach(badge=>{badge.textContent=entries.length?`(${entries.length})`:''})}
+  if(active){const entries=Object.entries(filters).filter(([key,value])=>key!=='sort'&&value&&value!=='Tümü');active.innerHTML=entries.map(([key,value])=>`<button type="button" class="active-chip spec" data-action="remove-filter" data-key="${esc(key)}"><span>${esc(FILTER_LABELS[key])}:</span> ${esc(filterValueText(key,value))}<i aria-hidden="true">×</i><span class="sr-only"> filtresini kaldır</span></button>`).join('')+(entries.length?'<button type="button" class="clear-all" data-action="clear-catalog">Tümünü temizle</button>':'');document.querySelectorAll('[data-filter-count]').forEach(badge=>{badge.textContent=entries.length?`(${entries.length})`:''})}
 }
 
 /* Delivery model (Phase 3.4B). DISPLAY ONLY: the server derives installation, shipping and the service area from each

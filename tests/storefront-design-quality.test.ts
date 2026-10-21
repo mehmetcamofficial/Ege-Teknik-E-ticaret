@@ -63,7 +63,7 @@ test("active filters are removable buttons with a clear-all control, and removin
   assert.match(grid.innerHTML, /Airy Ürün/);
   assert.doesNotMatch(grid.innerHTML, /Fairy Ürün/);
   assert.match(active.innerHTML, /<button type="button" class="active-chip spec" data-action="remove-filter" data-key="series"><span>Seri:<\/span> Airy/);
-  assert.match(active.innerHTML, /data-key="stock"><span>Stok:<\/span> Stokta/);
+  assert.match(active.innerHTML, /data-key="stock"><span>Uygunluk:<\/span> Stokta/);
   assert.match(active.innerHTML, /data-action="clear-catalog">Tümünü temizle/);
   store.fn<(key: string) => void>("removeCatalogFilter")("series");
   assert.equal(series.value, "");
