@@ -58,7 +58,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   await contrast(p,'.catalog-results',`${engine}/${width}/catalog`);await audit(p,`${engine}/${width}/catalog`);
   await p.locator('[data-products]').scrollIntoViewIfNeeded();await shot('catalog');
   for(const y of [300,700,1100,1500,2100])await p.evaluate(v=>scrollTo(0,v),y).then(()=>helpClear(p,`${engine}/${width}/catalog@${y}`));
-  if(mobile){await p.locator('.catalog-toolbar [data-action=toggle-filters]').click();await p.locator('.catalog-filters.open').waitFor();assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'hidden','help hidden behind the filter drawer');await p.locator('.filters-close').click()}
+  if(mobile){await p.locator('.catalog-toolbar [data-action=toggle-filters]').click();await p.locator('.catalog-filters.open').waitFor();await p.waitForFunction(()=>getComputedStyle(document.querySelector('[data-help]')).visibility==='hidden',null,{timeout:2000});await p.locator('.filters-close').click()}
 
   /* ---- Filters: URL sync without reload, colour, relaxations, history ---- */
   await p.evaluate(()=>{window.__h2Marker='kept'});
@@ -109,7 +109,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
    await p.evaluate(()=>{const box=document.querySelector('.pd-buy');scrollTo(0,box.getBoundingClientRect().bottom+scrollY+200)});await p.waitForFunction(()=>document.querySelector('.pd-sticky')?.classList.contains('is-visible'));await settle(p);await contrast(p,'.pd-sticky',`${engine}/${width}/sticky`);await shot('sticky-buy');
    await p.locator('.pd-sticky [data-action=add-product-cart]').click()}
   else await p.locator('.pd-buy [data-action=add-product-cart]').click();
-  await p.locator('[data-drawer-checkout]:visible').waitFor();await settle(p);await audit(p,`${engine}/${width}/drawer-cart`);assert.equal(await p.locator('[data-help]').evaluate(e=>getComputedStyle(e).visibility),'hidden','help hidden while the cart drawer is open');await shot('cart-drawer');
+  await p.locator('[data-drawer-checkout]:visible').waitFor();await settle(p);await audit(p,`${engine}/${width}/drawer-cart`);await p.waitForFunction(()=>getComputedStyle(document.querySelector('[data-help]')).visibility==='hidden',null,{timeout:2000});await shot('cart-drawer');
   await p.locator('[data-drawer-checkout]').click();await p.waitForURL('**/checkout.html');await p.waitForFunction(()=>document.querySelector('[data-cart-items]')?.innerText.includes('×'));await settle(p);
   const line=await p.evaluate(()=>({items:document.querySelector('[data-cart-items]').innerText,payload:orderItemsPayload(normalizeCartEntries(readCartRaw(),null),getProducts())}));
   assert.ok(line.items.includes(money(detailPrice)),'checkout shows the catalog price');assert.deepEqual(line.payload,[{productId:detailId,quantity:1}],'order payload carries id and quantity only');
