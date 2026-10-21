@@ -9,6 +9,9 @@ const out=process.env.EGE_H3_OUTPUT||'.scratch/h3/accept';await mkdir(out,{recur
 const fixture=JSON.parse(await readFile('.scratch/h12/inputs/catalog.json')),charges=JSON.parse(await readFile('.scratch/h3/charges.json'));
 const LOW_ID='airy-9000-btu-h',localCatalog={products:fixture.products.map(p=>p.id===LOW_ID?{...p,stock:2}:p)};
 const LEGAL_REQUIRED={documents:[{versionId:'h3-terms',title:'Sentetik satış koşulları',slug:'terms',version:'test-1'},{versionId:'h3-distance',title:'Sentetik mesafeli satış sözleşmesi',slug:'distance',version:'test-1'}]};
+// Hosted: the page renders its consent boxes from the real required documents, so the synthetic preview must carry the same version ids (read with GET only).
+let previewDocs=LEGAL_REQUIRED.documents;
+if(hosted){const res=await fetch(origin+'/api/legal/required',{headers:{'x-vercel-trusted-oidc-idp-token':oidc}});assert.equal(res.status,200,'required legal documents readable');previewDocs=(await res.json()).documents;assert.ok(previewDocs.length>=1)}
 const result={origin,hosted,applicationCommit:process.env.EGE_H3_SHA,matrix:[],contrasts:[],axeScans:0,interceptedWrites:[],realWritesSent:0,orderCreated:false};
 const save=()=>writeFile(`${out}/results.json`,JSON.stringify(result,null,2));
 const money=n=>new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n);
@@ -31,17 +34,18 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   const orderPlan=[];let orderPosts=0,previewPosts=0;
   await c.route('**/*',async r=>{const q=r.request(),u=new URL(q.url());
    if(!['GET','HEAD'].includes(q.method())){result.interceptedWrites.push({method:q.method(),path:u.pathname});
-    if(u.pathname==='/api/checkout/legal-preview'){previewPosts++;const body=JSON.parse(q.postData()||'{}');return r.fulfill({json:{legalPreviewToken:'h3-synthetic-preview-token-'+previewPosts,orderNumber:'ETS-H3-SYNTH',orderIssuedAt:new Date().toISOString(),expiresAt:Date.now()+30*60e3,documents:LEGAL_REQUIRED.documents.map(d=>({documentVersionId:d.versionId,title:d.title,slug:d.slug,version:d.version,renderedBody:`${d.title}\nAlıcı: ${body.customerName}\nSentetik önizleme.`}))}})}
+    if(u.pathname==='/api/checkout/legal-preview'){previewPosts++;const body=JSON.parse(q.postData()||'{}');return r.fulfill({json:{legalPreviewToken:'h3-synthetic-preview-token-'+previewPosts,orderNumber:'ETS-H3-SYNTH',orderIssuedAt:new Date().toISOString(),expiresAt:Date.now()+30*60e3,documents:previewDocs.map(d=>({documentVersionId:d.versionId,title:d.title,slug:d.slug,version:d.version,renderedBody:`${d.title}\nAlıcı: ${body.customerName}\nSentetik önizleme.`}))}})}
     if(u.pathname==='/api/orders'){orderPosts++;const step=orderPlan.shift()||{status:201};if(step.delay)await new Promise(res=>setTimeout(res,step.delay));if(step.abort)return r.abort('failed');return r.fulfill({status:step.status,json:step.json??{}})}
     return r.fulfill({status:204})}
    if(!hosted&&u.pathname.startsWith('/api/')){if(u.pathname==='/api/products')return r.fulfill({json:localCatalog});if(u.pathname.includes('/reviews'))return r.fulfill({json:{reviews:[],summary:{count:0,average:null}}});if(u.pathname.startsWith('/api/products/')){const prod=localCatalog.products.find(x=>x.id===decodeURIComponent(u.pathname.split('/')[3]));return prod?r.fulfill({json:{product:{...prod,gallery:[],specifications:[],documents:[],warranty:null}}}):r.fulfill({status:404,json:{}})}if(u.pathname==='/api/legal/required')return r.fulfill({json:LEGAL_REQUIRED});if(u.pathname==='/api/checkout/charges')return r.fulfill({json:charges});return r.fulfill({json:{events:[]}})}
    return r.continue(hosted&&u.origin===origin?{headers:{...q.headers(),'x-vercel-trusted-oidc-idp-token':oidc}}:undefined)});
   const p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));const row={engine,version:b.version(),width,checks:{}};
   const shot=async name=>{if(engine==='chrome'&&[1440,390].includes(width))await p.screenshot({path:`${out}/${name}-${width}.png`})};
+  const addFromProduct=async id=>{await p.goto(origin+'/product.html?id='+encodeURIComponent(id));await p.waitForFunction(()=>catalogState==='ready'&&productDetailState==='ready');await p.locator('.pd-buy [data-action=add-product-cart]').click();await p.locator('dialog.cart-drawer[open]').waitFor()};
   const drawerOpen=async()=>{await p.locator('.header-cart').first().click();await p.locator('dialog.cart-drawer[open]').waitFor();await p.waitForTimeout(250)};
 
   /* 1. Empty cart */
-  await p.goto(origin+'/catalog.html');await p.waitForFunction(()=>document.querySelector('[data-products] .product'));
+  await p.goto(origin+'/catalog.html');await p.waitForFunction(()=>catalogState==='ready'&&document.querySelector('[data-products] .product:not(.product-skeleton)'));
   const products=await p.evaluate(()=>getProducts().filter(x=>x.sale&&x.stock>0&&x.price>0).map(x=>({id:x.id,name:x.name,price:x.price,stock:x.stock})));
   assert.ok(products.length>=2,'two purchasable products');const [A,B2]=products;
   await drawerOpen();assert.match(await p.locator('.cart-drawer-empty').innerText(),/Konfor seçiminiz burada görünecek/);assert.equal(await p.locator('[data-drawer-foot]').isHidden(),true,'no totals for an empty cart');
@@ -50,10 +54,10 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   await audit(p,`${engine}/${width}/cart-empty`);await shot('cart-empty');await p.keyboard.press('Escape');await p.waitForFunction(()=>!document.querySelector('dialog.cart-drawer[open]'));
 
   /* 2-3. One then two products; quantity and removal; legal invalidation trigger; focus trap */
-  await p.goto(origin+'/product.html?id='+encodeURIComponent(A.id));await p.locator('.pd-buy [data-action=add-product-cart]').waitFor();await p.locator('.pd-buy [data-action=add-product-cart]').click();await p.locator('dialog.cart-drawer[open]').waitFor();
+  await addFromProduct(A.id);
   // Opening re-validates the catalog first (H1.1); the add message follows once prices are authoritative.
   await p.waitForFunction(()=>/sepete eklendi/.test(document.querySelector('.cart-drawer-status').textContent));assert.equal(await p.locator('[data-drawer-count]').innerText(),'1 ürün · 1 adet');
-  await p.keyboard.press('Escape');await p.goto(origin+'/product.html?id='+encodeURIComponent(B2.id));await p.locator('.pd-buy [data-action=add-product-cart]').click();await p.locator('dialog.cart-drawer[open]').waitFor();
+  await p.keyboard.press('Escape');await addFromProduct(B2.id);
   await p.waitForFunction(()=>document.querySelector('[data-drawer-count]').textContent==='2 ürün · 2 adet');
   for(let i=0;i<30;i++)await p.keyboard.press(engine==='webkit'?'Alt+Tab':'Tab');assert.equal(await p.evaluate(()=>!!document.activeElement.closest('dialog.cart-drawer')),true,'focus trapped in the drawer');
   await p.locator(`[data-drawer-action=step][data-step="1"][data-cart-id="${A.id}"]`).click();await p.waitForFunction(id=>document.querySelector(`#drawer-quantity-${CSS.escape(id)}`)?.value==='2',A.id);
@@ -87,11 +91,11 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   await p.waitForFunction(()=>!document.querySelector('[data-checkout-errors]:not([hidden])'));
 
   /* 7. Legal preview, then a cart change invalidates it */
-  await p.locator('[data-legal-preview-prepare]').click();await p.waitForFunction(()=>document.querySelectorAll('[data-legal-version]:not(:disabled)').length>=2);
+  await p.locator('[data-legal-preview-prepare]').click();await p.waitForFunction(()=>document.querySelectorAll('[data-legal-version]:not(:disabled)').length>=1);
   await p.locator('[data-legal-version]').evaluateAll(es=>es.forEach(e=>e.click()));
   await p.locator('[data-open-cart-drawer]').click();await p.locator('dialog.cart-drawer[open]').waitFor();await p.locator(`[data-drawer-action=step][data-step="-1"][data-cart-id="${A.id}"]`).click();await p.keyboard.press('Escape');
   assert.equal(await p.locator('[data-legal-version]:checked').count(),0,'cart change unchecks legal consent');const posts=orderPosts;await p.locator('[data-submit-order]').click();await p.waitForFunction(()=>/yasal metinleri kabul etmelisiniz|hukuki metinleri oluşturup onaylamanız/.test(document.querySelector("[data-order-result]").textContent));assert.equal(orderPosts,posts,'no order request after the cart changed the legal context');row.checks.legalInvalidation='PASS';
-  const prepareAndAccept=async()=>{await p.locator('[data-legal-preview-prepare]').click();await p.waitForFunction(()=>document.querySelectorAll('[data-legal-version]:not(:disabled)').length>=2);await p.locator('[data-legal-version]').evaluateAll(es=>es.forEach(e=>{if(!e.checked)e.click()}));await p.waitForFunction(()=>!document.querySelector('[data-submit-order]').disabled)};
+  const prepareAndAccept=async()=>{await p.locator('[data-legal-preview-prepare]').click();await p.waitForFunction(()=>document.querySelectorAll('[data-legal-version]:not(:disabled)').length>=1);await p.locator('[data-legal-version]').evaluateAll(es=>es.forEach(e=>{if(!e.checked)e.click()}));await p.waitForFunction(()=>!document.querySelector('[data-submit-order]').disabled)};
 
   /* 10. Server error then retry; inputs and cart kept; same attempt key reused */
   await prepareAndAccept();const keys=[];p.on('request',q=>{if(q.url().endsWith('/api/orders'))keys.push(q.headers()['idempotency-key'])});
@@ -107,11 +111,13 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
 
   /* 4b. Server stock refusal is shown as sent */
   orderPlan.push({status:409,json:{error:`${A.name} için yeterli stok yok.`}});await p.locator('[data-submit-order]').click();await p.waitForFunction(n=>document.querySelector('[data-order-result]').textContent.includes(n+' için yeterli stok yok.'),A.name);row.checks.serverStock='PASS';
+  // A stock refusal re-reads the catalog; retrying while it loads gets an honest 'updating' message, not 'refresh the page'.
+  await p.waitForFunction(()=>catalogState==='ready');
 
   /* 8-9. Duplicate submit then success: one POST, confirmation only after 2xx, cart cleared, honest payment copy */
-  const before=orderPosts;orderPlan.push({status:201,delay:900,json:{ok:true,orderNumber:'ETS-H3-SYNTH',items:[{productName:A.name,unitPrice:A.price,quantity:1,lineTotal:A.price}],vatTotal:Math.round(A.price/6),total:A.price,shippingTotal:0,delivery:{method:'dealer',installation:'included_standard',name:'Sentetik Müşteri',phone:'0532 000 00 00',email:'h3@example.test',address:'Sentetik Mahallesi Test Sokak No 1',city:'Aydın',district:'Kuşadası'},legalAcceptances:LEGAL_REQUIRED.documents.map(d=>({slug:d.slug,documentVersionId:d.versionId,title:d.title,version:d.version}))}});
+  const before=orderPosts;orderPlan.push({status:201,delay:3000,json:{ok:true,orderNumber:'ETS-H3-SYNTH',items:[{productName:A.name,unitPrice:A.price,quantity:1,lineTotal:A.price}],vatTotal:Math.round(A.price/6),total:A.price,shippingTotal:0,delivery:{method:'dealer',installation:'included_standard',name:'Sentetik Müşteri',phone:'0532 000 00 00',email:'h3@example.test',address:'Sentetik Mahallesi Test Sokak No 1',city:'Aydın',district:'Kuşadası'},legalAcceptances:previewDocs.map(d=>({slug:d.slug,documentVersionId:d.versionId,title:d.title,version:d.version}))}});
   await p.locator('[data-submit-order]').evaluate(btn=>{btn.click();btn.click();btn.form.requestSubmit(btn)});
-  assert.equal(await p.locator('[data-submit-order]').isDisabled(),true,'submit disabled while in flight');assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('ege-cart')).length),1,'cart untouched before the server answers');
+  assert.equal(await p.locator('[data-submit-order]').isDisabled(),true,'submit disabled while in flight: '+JSON.stringify(await p.evaluate(()=>({result:document.querySelector('[data-order-result]').textContent,checked:document.querySelectorAll('[data-legal-version]:checked').length,boxes:document.querySelectorAll('[data-legal-version]').length,preview:!!legalPreview}))));assert.equal(await p.evaluate(()=>JSON.parse(localStorage.getItem('ege-cart')).length),1,'cart untouched before the server answers');
   await p.locator('[data-order-confirmation]:not([hidden])').waitFor();assert.equal(orderPosts-before,1,'exactly one order request for a triple submit');
   assert.equal(await p.evaluate(()=>localStorage.getItem('ege-cart')),'[]','cart cleared only after the confirmed order');
   assert.match(await p.locator('[data-confirmation-payment-notice]').innerText(),/ödeme tahsil edilmedi/);assert.equal(await p.evaluate(()=>document.activeElement.matches('[data-confirmation-heading]')),true,'focus on the confirmation heading');
@@ -119,7 +125,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
   await audit(p,`${engine}/${width}/confirmation`);row.checks.duplicateSubmit='PASS';row.checks.success='PASS';
 
   /* 12. Reduced motion: drawer opens without animation */
-  await p.emulateMedia({reducedMotion:'reduce'});await p.goto(origin+'/catalog.html');await p.waitForFunction(()=>document.querySelector('[data-products] .product'));await drawerOpen();
+  await p.emulateMedia({reducedMotion:'reduce'});await p.goto(origin+'/catalog.html');await p.waitForFunction(()=>catalogState==='ready');await drawerOpen();
   assert.equal(await p.locator('dialog.cart-drawer').evaluate(e=>getComputedStyle(e).animationName),'none');await p.keyboard.press('Escape');row.checks.reducedMotion='PASS';
 
   /* 11b. Phone action bar: visible with total while submit is off screen, absent on desktop */

@@ -518,7 +518,7 @@ async function submitOrder(e){e.preventDefault();const f=e.currentTarget,result=
   /* H3-B: the real submit button (the legal "prepare" button is also .primary and comes first); one request at a time. */
   const button=f.querySelector('[data-submit-order]')||f.querySelector('button.primary');
   if(orderSubmitting)return;
-  if(!catalogAuthoritative()){say('Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
+  if(!catalogAuthoritative()){say(catalogState==='loading'?'Ürün bilgileri güncelleniyor; birkaç saniye sonra tekrar deneyin. Bilgileriniz korunuyor.':'Ürün bilgileri sunucudan doğrulanamadı. Lütfen sayfayı yenileyip tekrar deneyin.');return}
   if(!validateCheckoutForm(f)){say('Siparişi tamamlamak için işaretli alanları düzeltin.');return}
   const entries=getCart(),products=getProducts(),payload=buildOrderPayload({customerName:'',phone:'',email:'',city:'',address:'',paymentProvider:''},entries,products);
   if(!payload.items.length){toast('Sepetiniz boş');say('Sepetinizde satın alınabilir ürün yok.');return}

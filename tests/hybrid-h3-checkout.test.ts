@@ -148,3 +148,7 @@ test("H3-D floating help and cookie buttons step aside from checkout errors; leg
   assert.match(css, /\.cookie-settings-trigger\.is-clearing\{opacity:0;visibility:hidden;pointer-events:none\}/);
   assert.match(css, /\.legal-preview details>summary\{min-height:44px;/);
 });
+
+test("H3-D retrying while the catalog re-reads says it is updating, not 'refresh the page'", () => {
+  assert.match(core, /say\(catalogState==='loading'\?'Ürün bilgileri güncelleniyor; birkaç saniye sonra tekrar deneyin\. Bilgileriniz korunuyor\.':'Ürün bilgileri sunucudan doğrulanamadı\. Lütfen sayfayı yenileyip tekrar deneyin\.'\)/);
+});
