@@ -1,0 +1,54 @@
+name: GDRIVE-03 OIDC self-test (synthetic, manual)
+
+# Manual only. Uses NO database secret and NO encryption key; uploads one synthetic text file named H5C-OIDC-TEST-<run>.txt.
+# The `production-backup` environment only allows `main`, so this runs only after the file is on main (needs owner approval).
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  selftest:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production-backup
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Authenticate to Google Cloud (OIDC / workload identity federation, no key)
+        id: gauth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        with:
+          workload_identity_provider: ${{ vars.GDRIVE_WIF_PROVIDER }}
+          service_account: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive
+          create_credentials_file: false
+      - name: Upload synthetic file and verify SHA-256 round trip
+        id: selftest
+        env:
+          GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
+          GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
+          GDRIVE_EXPECTED_ACCOUNT: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
+          RUN_ID: ${{ github.run_id }}
+        run: node scripts/gdrive-oidc-selftest.mjs
+      - name: Summary (non-secret step outcomes)
+        if: ${{ always() }}
+        env:
+          AUTH_OUTCOME: ${{ steps.gauth.outcome }}
+          SELFTEST_OUTCOME: ${{ steps.selftest.outcome }}
+        run: |
+          {
+            echo "### GDRIVE-03 self-test"
+            echo "- OIDC authentication + service account impersonation (auth action): $AUTH_OUTCOME"
+            echo "- Drive identity/folder/upload/SHA-256 round trip: $SELFTEST_OUTCOME"
+            echo "- If auth failed: check provider condition, audience, workloadIdentityUser binding. If selftest failed: see step= and code= in its log."
+          } >> "$GITHUB_STEP_SUMMARY"
