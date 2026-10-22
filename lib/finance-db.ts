@@ -22,7 +22,8 @@ import { findSecretLeak } from "./security-policy.ts";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type FinanceDb = NodePgDatabase<any>;
 export type Tx = Parameters<Parameters<FinanceDb["transaction"]>[0]>[0];
-export type FinanceActor = { userId: string; email: string };
+/** H5-B: `permissions` is the caller's effective set; every money function re-checks it, whatever the route did. */
+export type FinanceActor = { userId: string; email: string; permissions: readonly string[] };
 type Refused = { ok: false; refusal: FinanceRefusal };
 const refused = (status: number, code: string, error: string): Refused => ({ ok: false, refusal: { status, code, error } });
 
@@ -47,6 +48,7 @@ export async function ledgerSums(tx: Tx | FinanceDb, orderId: string) {
 // ---- manual payment ----------------------------------------------------------------------------------------------
 export async function recordManualPayment(db: FinanceDb, input: { orderId: string; body: ManualPaymentInput; actor: FinanceActor; idempotencyKey: string; now?: Date }):
   Promise<{ ok: true; replayed: boolean; paymentId: string; paymentStatus: OrderPaymentStatus | string } | Refused> {
+  if (!input.actor.permissions.includes("payments:record")) return refused(403, "FORBIDDEN", "Tahsilat kaydetmek için finans yetkisi gerekir.");
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
     const order = await lockOrder(tx, input.orderId);
@@ -80,6 +82,7 @@ export async function recordManualPayment(db: FinanceDb, input: { orderId: strin
 // ---- refund ------------------------------------------------------------------------------------------------------
 export async function recordRefund(db: FinanceDb, input: { orderId: string; body: RefundInput; actor: FinanceActor; idempotencyKey: string; now?: Date }):
   Promise<{ ok: true; replayed: boolean; refundId: string; paymentStatus: OrderPaymentStatus | string; full: boolean } | Refused> {
+  if (!input.actor.permissions.includes("payments:refund")) return refused(403, "FORBIDDEN", "İade kaydetmek için finans yetkisi gerekir.");
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
     const order = await lockOrder(tx, input.orderId);

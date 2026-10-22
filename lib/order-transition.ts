@@ -1,7 +1,9 @@
 import { cancellationBlockedByCollection, derivePaymentStatus, ledgerCoversOrder, type OrderPaymentStatus } from "./finance.ts";
 import { canTransitionOrder, type OrderStatus } from "./order-domain.ts";
+import { permissionForOrderStatus } from "./security-policy.ts";
 
-export type OrderTransitionActor = { userId: string; email: string };
+/** H5-B: `permissions` is the caller's effective set; the service re-checks it (route checks are not the only line of defence). */
+export type OrderTransitionActor = { userId: string; email: string; permissions: readonly string[] };
 export type TransitionOrderItem = { productId: string | null; quantity: number };
 
 export type OrderTransitionTx = {
@@ -22,7 +24,7 @@ export type OrderTransitionDependencies = {
 
 export type OrderTransitionResult =
   | { ok: true; paymentStatus: OrderPaymentStatus }
-  | { ok: false; code: "NOT_FOUND" | "STALE" | "INVALID_TRANSITION" | "INVENTORY_INVARIANT" | "PAYMENT_NOT_RECORDED" | "REFUND_REQUIRED"; actual?: OrderStatus };
+  | { ok: false; code: "NOT_FOUND" | "STALE" | "INVALID_TRANSITION" | "INVENTORY_INVARIANT" | "PAYMENT_NOT_RECORDED" | "REFUND_REQUIRED" | "FORBIDDEN"; actual?: OrderStatus };
 
 class TransitionRollback extends Error {
   readonly code: "STALE" | "INVENTORY_INVARIANT";
@@ -34,6 +36,8 @@ export async function transitionOrder(
   input: { orderId: string; expectedStatus: OrderStatus; nextStatus: OrderStatus; actor: OrderTransitionActor },
   deps: OrderTransitionDependencies,
 ): Promise<OrderTransitionResult> {
+  // H5-B: authority is checked here too. "paid" is money (payments:record); every other change is fulfilment (orders:write).
+  if (!input.actor.permissions.includes(permissionForOrderStatus(input.nextStatus))) return { ok: false, code: "FORBIDDEN" };
   try {
     return await deps.transaction(async (tx) => {
       const current = await tx.lockOrder(input.orderId);

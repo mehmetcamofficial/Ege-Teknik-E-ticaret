@@ -24,6 +24,7 @@ const ASSIGNABLE: readonly { value: AdminRole; label: string }[] = [
   { value: "operations_manager", label: roleLabel.operations_manager },
   { value: "catalog_manager", label: roleLabel.catalog_manager },
   { value: "support_agent", label: roleLabel.support_agent },
+  { value: "finance_manager", label: roleLabel.finance_manager },
   { value: "viewer", label: roleLabel.viewer },
 ];
 

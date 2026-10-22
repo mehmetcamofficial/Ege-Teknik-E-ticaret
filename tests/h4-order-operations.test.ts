@@ -17,7 +17,12 @@ test("H4-B every admin order handler authenticates first, reads need admin:read 
   assert.ok(routes.length >= 4, "orders, order, payments and refunds routes exist");
   for (const file of routes) for (const { method, body } of handlers(file)) {
     const permission = /getAdminUser\("([a-z:]+)"\)/.exec(body)?.[1];
-    assert.equal(permission, method === "GET" ? "admin:read" : "orders:write", `${file} ${method}`);
+    // H5-B: money and "paid" need their own finance permission, checked right after authentication (see tests/h5-rbac.test.ts).
+    const financeRoute = /payments|refunds/.test(file);
+    const paidAware = /permissionForOrderStatus/.test(body);
+    if (method === "GET" || financeRoute || paidAware) assert.equal(permission, "admin:read", `${file} ${method}`);
+    else assert.equal(permission, "orders:write", `${file} ${method}`);
+    if (financeRoute && method !== "GET") assert.match(body, /payments:(?:record|refund)/, `${file}: finance permission required`);
     const parse = [body.indexOf("readJson("), body.indexOf("request.json(")].filter((i) => i >= 0);
     if (parse.length) assert.ok(body.indexOf("getAdminUser(") < Math.min(...parse), `${file} ${method}: auth precedes body parsing`);
     assert.match(body, /Yetkisiz erişim/, `${file} ${method}: a missing permission is refused (403), not hidden in the UI`);

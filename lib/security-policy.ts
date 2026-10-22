@@ -1,11 +1,12 @@
-export type AdminRole = "super_admin" | "admin" | "owner" | "operations_manager" | "catalog_manager" | "support_agent" | "viewer";
+export type AdminRole = "super_admin" | "admin" | "owner" | "operations_manager" | "catalog_manager" | "support_agent" | "finance_manager" | "viewer";
 export type AdminPermission =
   | "catalog:write" | "orders:write" | "service:write" | "content:write" | "legal:write" | "admin:read"
   | "users:read" | "users:write" | "roles:write"
   | "integrations:read" | "integrations:write"
-  | "payments:configure" | "security:write" | "audit:read";
+  | "payments:configure" | "security:write" | "audit:read"
+  | "payments:record" | "payments:refund";
 
-export const adminRoles: readonly AdminRole[] = ["super_admin", "admin", "owner", "operations_manager", "catalog_manager", "support_agent", "viewer"];
+export const adminRoles: readonly AdminRole[] = ["super_admin", "admin", "owner", "operations_manager", "catalog_manager", "support_agent", "finance_manager", "viewer"];
 
 /**
  * Phase 6D.1 matrix. "owner" is a frozen legacy row: it keeps its pre-6D.1
@@ -16,12 +17,14 @@ export const adminRoles: readonly AdminRole[] = ["super_admin", "admin", "owner"
  * payments:configure (see maxGrantTtlHours).
  */
 export const adminPermissions: Record<AdminRole, readonly AdminPermission[]> = {
-  super_admin: ["catalog:write", "orders:write", "service:write", "content:write", "legal:write", "admin:read", "users:read", "users:write", "roles:write", "integrations:read", "integrations:write", "payments:configure", "security:write", "audit:read"],
+  super_admin: ["catalog:write", "orders:write", "service:write", "content:write", "legal:write", "admin:read", "users:read", "users:write", "roles:write", "integrations:read", "integrations:write", "payments:configure", "security:write", "audit:read", "payments:record", "payments:refund"],
   admin: ["catalog:write", "orders:write", "service:write", "content:write", "admin:read"],
   owner: ["catalog:write", "orders:write", "service:write", "content:write", "legal:write", "admin:read"],
   operations_manager: ["catalog:write", "orders:write", "service:write", "admin:read"],
   catalog_manager: ["catalog:write", "content:write", "admin:read"],
   support_agent: ["orders:write", "service:write", "admin:read"],
+  // H5-B: the only role whose BASE permissions include money handling besides super_admin. It cannot change fulfilment states.
+  finance_manager: ["payments:record", "payments:refund", "admin:read"],
   viewer: ["admin:read"],
 };
 
@@ -187,13 +190,20 @@ export const PRIVILEGED_GRANT_MAX_HOURS = 24;
 export const PRIVILEGED_GRANT_PERMISSIONS: readonly AdminPermission[] = ["users:write", "roles:write", "security:write"];
 
 /**
+ * H5-B finance permissions: recording money received and recording refunds. Held by super_admin and finance_manager;
+ * anyone else can only receive them through an audited, time-boxed grant (<= 24 hours, same ceiling as privileged work).
+ */
+export const FINANCE_PERMISSIONS: readonly AdminPermission[] = ["payments:record", "payments:refund"];
+export const isFinancePermission = (permission: string): boolean => (FINANCE_PERMISSIONS as readonly string[]).includes(permission);
+
+/**
  * Maximum grantable TTL for a permission, in hours.
  * payments:configure returns 0 = UNGRANTABLE: it stays Super-Admin-only and can
  * never flow through a temporary grant (DB CHECK + Zod + this function triple-lock it).
  */
 export function maxGrantTtlHours(permission: AdminPermission): number {
   if (permission === "payments:configure") return 0;
-  if ((PRIVILEGED_GRANT_PERMISSIONS as readonly string[]).includes(permission)) return PRIVILEGED_GRANT_MAX_HOURS;
+  if ((PRIVILEGED_GRANT_PERMISSIONS as readonly string[]).includes(permission) || isFinancePermission(permission)) return PRIVILEGED_GRANT_MAX_HOURS;
   return OPERATIONAL_GRANT_MAX_HOURS;
 }
 
@@ -240,4 +250,12 @@ export function findSecretLeak(value: unknown, seen = new Set<unknown>()): strin
     if (hit) return hit;
   }
   return null;
+}
+
+/**
+ * H5-B: the permission an order status change needs. "paid" is money, not fulfilment: it needs payments:record (AND a ledger
+ * that covers the total - lib/order-transition.ts). Every other change needs orders:write. Evaluated in the route AND in the service.
+ */
+export function permissionForOrderStatus(next: string): AdminPermission {
+  return next === "paid" ? "payments:record" : "orders:write";
 }

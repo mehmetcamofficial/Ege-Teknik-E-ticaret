@@ -110,10 +110,11 @@ export function PaymentHistoryPanel({ ledger }: { ledger: LedgerState }) {
 const refundablePayments = (l: Ledger) => l.payments.filter((p) => p.status === "paid" && p.method !== "online" && p.amount - p.refundedAmount > 0);
 const collectable = (l: Ledger) => !isClosed(l) && l.outstanding > 0;
 /** How many entry cards PaymentActionPanels renders, so the page can size the controls row without gaps. */
-export const paymentActionCount = (l: Ledger | null) => (l ? Number(collectable(l)) + Number(refundablePayments(l).length > 0) : 0);
+/** H5-B: only the cards the caller may actually use are counted/rendered (the API enforces the same permissions). */
+export const paymentActionCount = (l: Ledger | null, can: { record: boolean; refund: boolean } = { record: true, refund: true }) => (l ? Number(can.record && collectable(l)) + Number(can.refund && refundablePayments(l).length > 0) : 0);
 
 /** Collection and refund entry cards. Returned as separate panels so the page can lay them out beside the status card. */
-export function PaymentActionPanels({ orderId, ledger, onChanged }: { orderId: string; ledger: Ledger; onChanged: () => void }) {
+export function PaymentActionPanels({ orderId, ledger, onChanged, canRecord = true, canRefund = true }: { orderId: string; ledger: Ledger; onChanged: () => void; canRecord?: boolean; canRefund?: boolean }) {
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState<string>("bank_transfer");
   const [payReference, setPayReference] = useState("");
@@ -125,7 +126,7 @@ export function PaymentActionPanels({ orderId, ledger, onChanged }: { orderId: s
   const [busy, setBusy] = useState(false);
 
   const refundable = refundablePayments(ledger);
-  const canCollect = collectable(ledger);
+  const canCollect = canRecord && collectable(ledger);
 
   async function savePayment() {
     const amount = Number(payAmount);
@@ -171,7 +172,7 @@ export function PaymentActionPanels({ orderId, ledger, onChanged }: { orderId: s
           </fieldset>
         </Panel>
       )}
-      {refundable.length > 0 && (
+      {canRefund && refundable.length > 0 && (
         <Panel title="İade kaydet" description="Müşteriye geri ödenmiş parayı kaydeder; ödeme sağlayıcısında işlem yapmaz ve stok değiştirmez.">
           <fieldset className="grid gap-3" disabled={busy}>
             <legend className="sr-only">İade kaydet</legend>

@@ -158,7 +158,7 @@ test("payment status vocabulary is complete in the admin UI", () => {
 });
 
 // ---- RBAC -------------------------------------------------------------------------------------------------------
-test("finance reads need admin:read; payment and refund writes need orders:write; checked before any work", () => {
+test("finance reads need admin:read; payment/refund writes authenticate with admin:read then require payments:record / payments:refund (H5-B)", () => {
   const permission = (f: string, method: string) => {
     const src = read(f);
     const body = src.slice(src.indexOf(`export async function ${method}`));
@@ -166,9 +166,13 @@ test("finance reads need admin:read; payment and refund writes need orders:write
   };
   assert.equal(permission("app/api/admin/finance/route.ts", "GET"), "admin:read");
   assert.equal(permission("app/api/admin/orders/[id]/payments/route.ts", "GET"), "admin:read");
-  assert.equal(permission("app/api/admin/orders/[id]/payments/route.ts", "POST"), "orders:write");
-  assert.equal(permission("app/api/admin/orders/[id]/refunds/route.ts", "POST"), "orders:write");
-  assert.equal(permission("app/api/admin/orders/[id]/route.ts", "PATCH"), "orders:write");
+  // H5-B: these handlers first authenticate (admin:read), then require the finance permission from the caller's effective set.
+  assert.equal(permission("app/api/admin/orders/[id]/payments/route.ts", "POST"), "admin:read");
+  assert.equal(permission("app/api/admin/orders/[id]/refunds/route.ts", "POST"), "admin:read");
+  assert.match(read("app/api/admin/orders/[id]/payments/route.ts"), /permissions\.includes\("payments:record"\)/);
+  assert.match(read("app/api/admin/orders/[id]/refunds/route.ts"), /permissions\.includes\("payments:refund"\)/);
+  assert.equal(permission("app/api/admin/orders/[id]/route.ts", "PATCH"), "admin:read");
+  assert.match(read("app/api/admin/orders/[id]/route.ts"), /permissionForOrderStatus\(parsed\.data\.status\)/);
   assert.equal(permission("app/api/admin/orders/[id]/route.ts", "GET"), "admin:read");
   for (const role of ["viewer", "catalog_manager"]) assert.equal(roleHasPermission(role, "orders:write"), false, `${role} cannot record money`);
   for (const role of adminRoles) assert.equal(roleHasPermission(role, "admin:read"), true);
@@ -201,7 +205,7 @@ test("the order detail lists its lines instead of the old placeholder", () => {
   assert.doesNotMatch(view, /henüz listelenmiyor/);
   assert.match(view, /<OrderItemsPanel orderId=\{order\.id\} \/>/);
   for (const panel of ["PaymentSummaryPanel", "PaymentHistoryPanel", "PaymentActionPanels"]) assert.match(view, new RegExp(`<${panel} `), panel);
-  assert.match(view, /\{canWrite && \(/, "entry cards and status controls stay behind orders:write in the UI");
+  assert.match(view, /\{\(canWrite \|\| canRecordPayment \|\| canRefund\) && \(/, "entry cards and status controls stay behind the matching permissions in the UI (H5-B)");
 });
 
 // ---- migration 0013 ---------------------------------------------------------------------------------------------

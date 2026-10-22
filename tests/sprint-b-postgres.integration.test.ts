@@ -37,7 +37,7 @@ import { orderTransitionDeps } from "../lib/order-transition-db.ts";
 const URL_ENV = process.env.SPRINTB_PG_URL;
 const skip = URL_ENV ? false : "SPRINTB_PG_URL is not set (real-PostgreSQL verification is opt-in)";
 const opts = { skip, timeout: 60_000 };
-const actor = { userId: "admin-1", email: "admin@example.test" };
+const actor = { userId: "admin-1", email: "admin@example.test", permissions: ["orders:write", "payments:record", "payments:refund"] };
 const NOW = () => new Date();
 /** Drizzle wraps driver errors ("Failed query"); the PostgreSQL message is on `cause`. */
 const causedBy = (pattern: RegExp) => (error: unknown) => pattern.test(String((error as { cause?: { message?: string } })?.cause?.message ?? error));

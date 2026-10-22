@@ -69,7 +69,7 @@ export async function listIntegrationStatus(): Promise<{ key: string; displayNam
 }
 
 // ---- validation helpers (shared by the privileged routes) -------------------------------------------
-export const INVITABLE_ROLES: readonly string[] = ["super_admin", "admin", "operations_manager", "catalog_manager", "support_agent", "viewer"];
+export const INVITABLE_ROLES: readonly string[] = ["super_admin", "admin", "operations_manager", "catalog_manager", "support_agent", "finance_manager", "viewer"];
 export const ASSIGNABLE_ROLES = INVITABLE_ROLES;
 
 export function isInvitableRole(role: string): boolean {

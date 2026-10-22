@@ -26,7 +26,7 @@ const run = crypto.randomUUID().slice(0, 8).toUpperCase();
 const base = new Date(Date.UTC(1900, 0, 1));
 const at = (n: number) => new Date(base.getTime() + n * 86_400_000);
 const productId = `ptr-prod-${run}`;
-const admin = { userId: `ptr-admin-${run}`, email: `ptr-${run}@example.test` };
+const admin = { userId: `ptr-admin-${run}`, email: `ptr-${run}@example.test`, permissions: ["orders:write", "payments:record", "payments:refund"] };
 const calls: { url: string; body: URLSearchParams }[] = [];
 let nextResponse: () => Promise<Response> = async () => Response.json({ status: "success", token: `TOK${run}${calls.length}` });
 const fakeFetch = (async (u: string, init: RequestInit) => { calls.push({ url: u, body: new URLSearchParams(String(init.body)) }); return nextResponse(); }) as unknown as typeof fetch;

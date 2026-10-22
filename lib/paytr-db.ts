@@ -17,8 +17,9 @@ import {
  * URL proves nothing and changes nothing.
  */
 
-const SYSTEM_ACTOR: FinanceActor = { userId: "system:paytr", email: "paytr-callback@system" };
-const CHECKOUT_ACTOR: FinanceActor = { userId: "system:checkout", email: "customer-checkout@system" };
+// System actors are authorized by a hash-verified callback / the checkout transaction, not by a role: no admin permissions.
+const SYSTEM_ACTOR: FinanceActor = { userId: "system:paytr", email: "paytr-callback@system", permissions: [] };
+const CHECKOUT_ACTOR: FinanceActor = { userId: "system:checkout", email: "customer-checkout@system", permissions: [] };
 const IN_FLIGHT_MS = 60_000;
 type Refusal = { ok: false; status: number; code: string; error: string };
 const refuse = (status: number, code: string, error: string): Refusal => ({ ok: false, status, code, error });

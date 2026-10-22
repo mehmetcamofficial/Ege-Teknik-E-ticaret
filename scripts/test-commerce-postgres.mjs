@@ -45,6 +45,7 @@ import { BootstrapError, bootstrapDisposableDatabase, defaultStageDeps } from ".
 const TEST_FILES = [
   "tests/paytr-db.test.ts",
   "tests/finance-db.test.ts",
+  "tests/h5-rbac-db.test.ts",
   "tests/orders-db.test.ts",
   "tests/blog-db.test.ts",
   "tests/service-requests-db.test.ts",

@@ -55,7 +55,8 @@ const crumbs = [{ href: "/admin/orders", label: "Siparişler" }];
 const controlsGrid: Record<number, string> = { 1: "grid gap-6", 2: "grid grid-cols-1 gap-6 md:grid-cols-2", 3: "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" };
 
 /** Order summary from the overview endpoint, lines from the order_items snapshot, money from the payment ledger - nothing is derived or invented. */
-export default function OrderDetailView({ orderId, canWrite }: { orderId: string; canWrite: boolean }) {
+/** H5-B: `canWrite` = orders:write (fulfilment); `canRecordPayment` / `canRefund` = finance permissions. The API enforces all three. */
+export default function OrderDetailView({ orderId, canWrite, canRecordPayment = false, canRefund = false }: { orderId: string; canWrite: boolean; canRecordPayment?: boolean; canRefund?: boolean }) {
   const { data, error, loading, reload } = useAdminJson<OrderDetailResponse>(`/api/admin/orders/${orderId}`);
   const order = data?.order;
   const ledger = useOrderLedger(orderId);
@@ -130,18 +131,19 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
         <OrderItemsPanel orderId={order.id} />
         <LegalAcceptancePanel acceptances={data?.legalAcceptances ?? []} />
         <PaymentHistoryPanel ledger={ledger} />
-        {canWrite && (
-          <div className={controlsGrid[paymentActionCount(ledger.data) + 1]}>
-            {ledger.data && <PaymentActionPanels orderId={order.id} ledger={ledger.data} onChanged={refreshAll} />}
+        {(canWrite || canRecordPayment || canRefund) && (
+          <div className={controlsGrid[paymentActionCount(ledger.data, { record: canRecordPayment, refund: canRefund }) + (canWrite || canRecordPayment ? 1 : 0)]}>
+            {ledger.data && <PaymentActionPanels orderId={order.id} ledger={ledger.data} onChanged={refreshAll} canRecord={canRecordPayment} canRefund={canRefund} />}
+            {(canWrite || canRecordPayment) && (
             <Panel title="Durumu güncelle">
               <div className="grid gap-3">
                 <FormField label="Sipariş durumu" htmlFor="order-next-status">
-                  <select id="order-next-status" className={selectClass} value={selected} onChange={(e) => setNextStatus(e.target.value)}>{Object.entries(orderStatusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+                  <select id="order-next-status" className={selectClass} value={selected} onChange={(e) => setNextStatus(e.target.value)}>{Object.entries(orderStatusLabel).filter(([v]) => v === order.status || (v === "paid" ? canRecordPayment : canWrite)).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
                 </FormField>
                 <p className="text-xs text-muted-foreground">&quot;Ödendi&quot; yalnızca tutarın tamamı için tahsilat kaydı varsa seçilebilir. Tahsilatı olan sipariş iptal edilmeden önce iade kaydedilmelidir; iptal, ayrılan stoğu geri verir.</p>
                 <div className="flex flex-col gap-2">
                   <Button type="button" onClick={() => void saveStatus()} disabled={selected === order.status}>Durumu kaydet</Button>
-                  {order.status !== "cancelled" && order.status !== "delivered" && (
+                  {canWrite && order.status !== "cancelled" && order.status !== "delivered" && (
                     <Button type="button" variant="outline" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setCancelOpen(true)}>
                       Siparişi iptal et
                     </Button>
@@ -149,6 +151,7 @@ export default function OrderDetailView({ orderId, canWrite }: { orderId: string
                 </div>
               </div>
             </Panel>
+            )}
           </div>
         )}
       </div>

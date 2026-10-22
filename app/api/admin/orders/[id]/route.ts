@@ -1,7 +1,8 @@
 import { getDb } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { loadOrderAcceptedLegalDocuments } from "@/lib/legal-db";
-import { getAdminUser } from "@/lib/admin-auth";
+import { auditPermissionDenied, effectivePermissions, getAdminUser } from "@/lib/admin-auth";
+import { permissionForOrderStatus } from "@/lib/security-policy";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { orderStatuses } from "@/lib/order-domain";
@@ -46,12 +47,17 @@ const schema=z.object({status:z.enum(orderStatuses),expectedStatus:z.enum(orderS
  * This route never writes payment_status by itself - it is derived from the payment ledger.
  */
 export async function PATCH(request:Request,context:{params:Promise<{id:string}>}){
-  const user=await getAdminUser("orders:write"); if(!user)return Response.json({error:"Yetkisiz erişim"},{status:403});
+  // H5-B: authenticate first (every role holds admin:read), then require the permission this SPECIFIC change needs:
+  // "paid" -> payments:record (finance), everything else -> orders:write. A refused attempt is audited.
+  const user=await getAdminUser("admin:read"); if(!user)return Response.json({error:"Yetkisiz erişim"},{status:403});
   const parsed=schema.safeParse(await readJson(request)); if(!parsed.success)return Response.json({error:"Geçersiz sipariş durumu"},{status:400});
   const {id}=await context.params; const db=getDb();
-  const result=await transitionOrder({orderId:id,expectedStatus:parsed.data.expectedStatus,nextStatus:parsed.data.status,actor:user},orderTransitionDeps(db));
+  const permissions=await effectivePermissions(user.userId,user.role), required=permissionForOrderStatus(parsed.data.status);
+  if(!permissions.includes(required)){await auditPermissionDenied(user,required,"order",id,{attempt:"status",to:parsed.data.status});return Response.json({error:"Yetkisiz erişim"},{status:403});}
+  const result=await transitionOrder({orderId:id,expectedStatus:parsed.data.expectedStatus,nextStatus:parsed.data.status,actor:{userId:user.userId,email:user.email,permissions}},orderTransitionDeps(db));
   if(result.ok)return Response.json({ok:true,paymentStatus:result.paymentStatus});
   if(result.code==="NOT_FOUND")return Response.json({error:"Sipariş bulunamadı"},{status:404});
+  if(result.code==="FORBIDDEN")return Response.json({error:"Yetkisiz erişim"},{status:403});
   // Finance guards (Phase 3.3A), evaluated on the locked row inside the same transaction as the compare-and-set.
   if(result.code==="PAYMENT_NOT_RECORDED")return Response.json({error:"Sipariş tutarının tamamı için ödeme kaydı yok. Önce tahsilatı kaydedin.",code:result.code},{status:409});
   if(result.code==="REFUND_REQUIRED")return Response.json({error:"Bu siparişte tahsil edilmiş tutar var. İptal etmeden önce iadeyi kaydedin.",code:result.code},{status:409});

@@ -8,7 +8,7 @@ import { sendMail } from "@/lib/mail";
 import { hashPassword } from "@/lib/password";
 import { SESSION_ROTATION_GRACE_MS, rotateSessionIfDue, type RotationDeps, type RotationOutcome } from "@/lib/admin-session-rotation";
 import { verifyPassword } from "@/lib/password";
-import { ADMIN_INVITE_MAX_TTL_HOURS, PASSWORD_RESET_TOKEN_TTL_MS, SESSION_TTL_MS, canRemovePrivileged, findSecretLeak, isGrantActive, isPrivilegedRole, maxGrantTtlHours, roleHasPermission, trustedClientIp, type AdminPermission, type AdminRole } from "@/lib/security-policy";
+import { ADMIN_INVITE_MAX_TTL_HOURS, PASSWORD_RESET_TOKEN_TTL_MS, SESSION_TTL_MS, adminPermissions, canRemovePrivileged, findSecretLeak, isGrantActive, isPrivilegedRole, maxGrantTtlHours, roleHasPermission, trustedClientIp, type AdminPermission, type AdminRole } from "@/lib/security-policy";
 
 const COOKIE = "ege_admin_session";
 export type { AdminPermission, AdminRole };
@@ -89,6 +89,27 @@ export async function hasEffectivePermission(adminUserId: string, role: AdminRol
   const rows = await getDb().select({ permission: adminGrants.permission, expiresAt: adminGrants.expiresAt, revokedAt: adminGrants.revokedAt })
     .from(adminGrants).where(and(eq(adminGrants.adminUserId, adminUserId), isNull(adminGrants.revokedAt), gt(adminGrants.expiresAt, now)));
   return rows.some((g) => g.permission === required && isGrantActive(g, now));
+}
+
+/**
+ * H5-B: the complete permission set the caller holds RIGHT NOW (role permissions + live time-boxed grants, server clock).
+ * Services receive this set and re-check it, so authority never depends on a route having checked first.
+ */
+export async function effectivePermissions(adminUserId: string, role: AdminRole, now = new Date()): Promise<AdminPermission[]> {
+  const base = (adminPermissions[role as AdminRole] ?? []) as readonly AdminPermission[];
+  const rows = await getDb().select({ permission: adminGrants.permission, expiresAt: adminGrants.expiresAt, revokedAt: adminGrants.revokedAt })
+    .from(adminGrants).where(and(eq(adminGrants.adminUserId, adminUserId), isNull(adminGrants.revokedAt), gt(adminGrants.expiresAt, now)));
+  return [...new Set<AdminPermission>([...base, ...rows.filter((g) => isGrantActive(g, now)).map((g) => g.permission as AdminPermission)])];
+}
+
+/**
+ * H5-B: a refused sensitive attempt leaves a trace. Best effort: a failure to record a DENIAL never turns the refusal into
+ * success, and never changes the response. (Successful sensitive actions are audited inside their own transaction.)
+ */
+export async function auditPermissionDenied(admin: { userId: string; email: string }, required: AdminPermission, entityType: string, entityId: string, extra: Record<string, unknown> = {}): Promise<void> {
+  try {
+    await getDb().insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId: admin.userId, actorEmail: admin.email, action: "permission_denied", entityType, entityId: entityId.slice(0, 80), payload: { required, ...extra } });
+  } catch { /* the refusal stands regardless */ }
 }
 
 /** Authorization boundary PayTR will later use. No route calls this yet (out of scope). */

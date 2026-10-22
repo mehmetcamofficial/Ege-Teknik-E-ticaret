@@ -24,13 +24,13 @@ const year = 2001 + Math.floor(Math.random() * 20);
 const windowStart = new Date(Date.UTC(year, Math.floor(Math.random() * 12), 1, 0, 0, 0));
 const windowEnd = new Date(windowStart.getTime() + 20 * 24 * 60 * 60 * 1000);
 const at = (day: number) => new Date(windowStart.getTime() + day * 24 * 60 * 60 * 1000 + 3_600_000);
-const actor = { userId: `fin-admin-${run}`, email: `fin-${run}@example.test` };
+const actor = { userId: `fin-admin-${run}`, email: `fin-${run}@example.test`, permissions: ["orders:write", "payments:record", "payments:refund"] };
 const productId = `fin-prod-${run}`;
 /**
  * Status changes go through the shared compare-and-set transition (Sprint B + finance guards). The helper reads the CURRENT status the way the
  * admin UI's `expectedStatus` does, then transitions; the result is mapped back to the refusal shape these assertions use.
  */
-async function changeOrderStatus(_db: FinanceDb, input: { orderId: string; to: OrderStatus; actor: { userId: string; email: string }; now?: Date }) {
+async function changeOrderStatus(_db: FinanceDb, input: { orderId: string; to: OrderStatus; actor: { userId: string; email: string; permissions: readonly string[] }; now?: Date }) {
   const [current] = await db.select({ status: orders.status }).from(orders).where(eq(orders.id, input.orderId));
   const result = await transitionOrder({ orderId: input.orderId, expectedStatus: current!.status as OrderStatus, nextStatus: input.to, actor: input.actor }, orderTransitionDeps(db as never));
   return result.ok ? result : { ok: false as const, refusal: { code: result.code } };

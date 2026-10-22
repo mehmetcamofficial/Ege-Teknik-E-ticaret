@@ -32,8 +32,8 @@ const tsFilesIn = (dir: string): string[] => readdirSync(dir).flatMap((entry) =>
 });
 
 // ---- role model -------------------------------------------------------------------------------------
-test("the matrix defines exactly seven roles: the two new ones plus the five frozen legacy ones", () => {
-  assert.deepEqual([...adminRoles].sort(), ["admin", "catalog_manager", "operations_manager", "owner", "super_admin", "support_agent", "viewer"]);
+test("the matrix defines exactly eight roles: the legacy seven plus finance_manager (H5-B)", () => {
+  assert.deepEqual([...adminRoles].sort(), ["admin", "catalog_manager", "finance_manager", "operations_manager", "owner", "super_admin", "support_agent", "viewer"]);
   assert.deepEqual(Object.keys(adminPermissions).sort(), [...adminRoles].sort());
 });
 

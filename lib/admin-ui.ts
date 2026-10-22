@@ -55,7 +55,7 @@ export function activeNavHref(pathname: string, sections: readonly NavSection[])
 
 export const roleLabel: Record<string, string> = {
   super_admin: "Süper Yönetici", admin: "Yönetici",
-  owner: "Sahip (devredışı, legacy)", operations_manager: "Operasyon Yöneticisi", catalog_manager: "Katalog Yöneticisi", support_agent: "Destek Uzmanı", viewer: "İzleyici",
+  owner: "Sahip (devredışı, legacy)", operations_manager: "Operasyon Yöneticisi", catalog_manager: "Katalog Yöneticisi", support_agent: "Destek Uzmanı", finance_manager: "Finans Sorumlusu", viewer: "İzleyici",
 };
 export const permissionLabel: Record<AdminPermission, string> = {
   "admin:read": "Yönetim panelini görüntüleme", "catalog:write": "Katalog ve stok düzenleme", "orders:write": "Sipariş durumu güncelleme",
@@ -63,6 +63,7 @@ export const permissionLabel: Record<AdminPermission, string> = {
   "users:read": "Kullanıcıları görüntüleme", "users:write": "Kullanıcı davet/yönetim", "roles:write": "Rol ve süreli yetki yönetimi",
   "integrations:read": "Entegrasyon durumunu görüntüleme", "integrations:write": "Entegrasyon yapılandırma",
   "payments:configure": "Ödeme sağlayıcı yapılandırma (yalnızca Süper Yönetici)", "security:write": "Güvenlik yapılandırması", "audit:read": "Denetim kayıtlarını görüntüleme",
+  "payments:record": "Tahsilat kaydetme ve siparişi ödendi yapma (finans)", "payments:refund": "İade kaydetme (finans)",
 };
 
 // ---- status vocabulary ----------------------------------------------------------------------------

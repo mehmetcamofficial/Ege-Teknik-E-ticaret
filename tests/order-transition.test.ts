@@ -4,7 +4,7 @@ import test from "node:test";
 import { transitionOrder, type OrderTransitionTx } from "../lib/order-transition.ts";
 import type { OrderStatus } from "../lib/order-domain.ts";
 
-const actor = { userId: "admin-1", email: "admin@example.test" };
+const actor = { userId: "admin-1", email: "admin@example.test", permissions: ["orders:write", "payments:record", "payments:refund"] };
 type State = {
   status: OrderStatus;
   onHand: number;
