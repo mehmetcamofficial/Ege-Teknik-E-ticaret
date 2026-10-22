@@ -1,0 +1,45 @@
+{
+ "observedAt": "2026-10-22",
+ "origin": "Vercel Preview (read-only GET, no authentication data in output)",
+ "note": "Production could not and must not be observed from this task.",
+ "documents": [
+  {
+   "slug": "cookies",
+   "title": "DRAFT — PHASE 3B.3 ADMIN TEST — LEGAL REVIEW REQUIRED (v2)",
+   "versionId": "f62b7e17-98dc-48e4-8630-c2fffbfe6fa8",
+   "registryClass": "legacy_fixture"
+  },
+  {
+   "slug": "distance-sales",
+   "title": "PREVIEW TEST — distance-sales",
+   "versionId": "preview-test-ver-distance-sales-2",
+   "registryClass": "legacy_fixture"
+  },
+  {
+   "slug": "kvkk",
+   "title": "PREVIEW TEST — kvkk — NOT LEGAL TEXT — DO NOT COPY TO PRODUCTION",
+   "versionId": "c58b9077-dd52-4f32-bf3f-1dca51ba471e",
+   "registryClass": "legacy_fixture"
+  },
+  {
+   "slug": "pre-information",
+   "title": "PREVIEW TEST — pre-information",
+   "versionId": "preview-test-ver-pre-information-2",
+   "registryClass": "legacy_fixture"
+  }
+ ],
+ "required": [
+  {
+   "slug": "distance-sales",
+   "title": "PREVIEW RENDER TEST — NOT LEGAL TEXT",
+   "versionId": "p2-preview-fixture-distance-sales-render-1",
+   "registryClass": "reserved_preview_fixture"
+  },
+  {
+   "slug": "pre-information",
+   "title": "PREVIEW RENDER TEST — NOT LEGAL TEXT",
+   "versionId": "p2-preview-fixture-pre-information-render-1",
+   "registryClass": "reserved_preview_fixture"
+  }
+ ]
+}

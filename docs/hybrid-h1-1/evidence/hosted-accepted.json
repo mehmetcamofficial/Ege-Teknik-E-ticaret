@@ -1,0 +1,370 @@
+{
+  "preview": "https://ege-teknik-phase3a-dkumngr4h-dragonfire-09s-projects.vercel.app",
+  "applicationCommit": "a6b9cbc524ffadccc8a2a33e9630d5995a1aae92",
+  "matrix": [
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 1440,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 1024,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 768,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 390,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 320,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1440,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1024,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 768,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 390,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 320,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1440,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1024,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 768,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 390,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 320,
+      "status": "PASS",
+      "realPublicCatalogProducts": 77,
+      "realProductId": "airy-12000-btu-h-siyah-81",
+      "realPrice": 61400,
+      "realStock": 9,
+      "cartDrawerCheckoutUi": "PASS",
+      "providerUi": [
+        "discovery"
+      ],
+      "axeViolations": 0,
+      "focusEscape": "PASS",
+      "reducedMotion": "PASS",
+      "customerDataEntered": false,
+      "orderSubmitted": false
+    }
+  ],
+  "writesBlocked": [
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event",
+      "scope": "preview"
+    }
+  ],
+  "axeScans": 30,
+  "orderCreated": false
+}

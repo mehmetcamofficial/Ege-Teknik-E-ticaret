@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Ege Teknik Yönetim",
   description: "Ege Teknik ürün, stok ve servis yönetimi.",
+  robots: { index: false, follow: false },
   other: {
     "codex-preview": "development",
   },

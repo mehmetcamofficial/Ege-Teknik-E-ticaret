@@ -1,0 +1,51 @@
+NAV release chrome 1440
+NAV arrived chrome 1440
+SCENARIO FAILED AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled'
++ ]
+- []
+
+    at file:///Users/mehmetcam/Developer/ege-teknik-hybrid-h1-2/scripts/test-hybrid-h12.mjs:47:88 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [Array],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
++ [
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
++   'Transition was aborted because of invalid state. ViewTransition opt-in disabled'
++ ]
+- []
+
+    at file:///Users/mehmetcam/Developer/ege-teknik-hybrid-h1-2/scripts/test-hybrid-h12.mjs:47:88 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
+    'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
+    'Transition was aborted because of invalid state. ViewTransition opt-in disabled',
+    'Transition was aborted because of invalid state. ViewTransition opt-in disabled'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.15.0

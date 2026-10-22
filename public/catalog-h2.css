@@ -1,0 +1,150 @@
+/* H2 — premium catalog cards, filters and product detail. Loaded after store.css on catalog and
+   product pages only; earlier B1–B10 rules stay intact and these selectors win by order. */
+
+/* ---------- Cards ---------- */
+.store [data-products].product-grid,.store .related-section .product-grid{gap:20px}
+.store [data-products]>.product,.store .related-section .product{min-height:0;border:1px solid #dbe3dc;border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 1px 2px rgb(15 56 46/.04);transition:transform 220ms var(--motion-ease),box-shadow 220ms var(--motion-ease),border-color 220ms var(--motion-ease)}
+.store [data-products]>.product:focus-within{border-color:var(--s);box-shadow:0 0 0 3px rgb(0 108 73/.18)}
+@media(hover:hover) and (pointer:fine){
+ .store [data-products]>.product:hover,.store .related-section .product:hover{transform:translateY(-3px);border-color:#a9c2b4;box-shadow:0 18px 40px -22px rgb(15 56 46/.35)}
+}
+.store [data-products] .product-media,.store .related-section .product-media{background:radial-gradient(110% 85% at 50% 40%,#fff 0%,#fff 42%,#eef3ef 100%);border-bottom:1px solid #e6ece6}
+.store [data-products] .product-visual,.store .related-section .product-visual{aspect-ratio:16/10;height:auto;min-height:0}
+.store [data-products] .product-visual .product-image,.store .related-section .product-visual .product-image{padding:30px 18px 34px}
+.store [data-products] .product-flags{top:auto;bottom:10px;left:12px}
+.store [data-products] .product-flags .badge{font-size:12px;font-weight:700;letter-spacing:.02em;background:#fff;color:var(--p);border:1px solid #cfdcd3;border-radius:999px;padding:4px 10px}
+.store [data-products] .product-flags .badge.quote{color:#7a3d00;border-color:#e9cfa9;background:#fffaf2}
+.store [data-products] .product-body{min-height:0;padding:16px 18px 18px;gap:8px}
+.store [data-products] .product .meta{color:#006c49;font-size:12px;letter-spacing:.06em}
+.store [data-products] .product h3{min-height:0;font-size:16px;line-height:1.4}
+.store [data-products] .product h3 a{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em}
+.store [data-products] .product h3 a::after{content:"";position:absolute;inset:0;z-index:0}
+.store [data-products]>.product{position:relative}
+.store [data-products] .product .actions{position:relative;z-index:1}
+.store [data-products] .product :is(.product-tools,.product-flags){z-index:1}
+.store [data-products] .product-sku{min-height:0}
+.store [data-products] .specs{min-height:0;gap:6px;margin:0}
+.store [data-products] .spec{font-size:12px;font-weight:650;background:#f2f6f3;color:#2f3a34;border:1px solid #e1e9e3;border-radius:999px;padding:3px 9px}
+.store [data-products] .spec.btu{background:#e8f4ee;border-color:#cfe6d9;color:#0b4f37}
+.store [data-products] .product-foot{flex-direction:row;align-items:flex-end;justify-content:space-between;min-height:0;padding-top:12px;border-top:1px solid #edf1ed;gap:6px 12px}
+.store [data-products] .price{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.store [data-products] .price.is-quote{font-size:18px;color:var(--p)}
+.store [data-products] .stock-line{font-size:12.5px;white-space:nowrap}
+.store [data-products] .stock-line.is-low{color:#8a4300}
+.store [data-products] .actions{grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:4px}
+.store [data-products] .actions>*{min-height:46px;font-size:14px;border-radius:10px}
+.store [data-products] .actions .primary:disabled{background:#e9ecea;border-color:#d4dad6;color:#4b534e;cursor:not-allowed}
+.store [data-products] .product-media[data-availability=out] .product-image{opacity:.62;filter:grayscale(.4)}
+/* Loading: same footprint as a real card, shimmer only when motion is allowed. */
+.store [data-products] .product-skeleton{border-radius:14px}
+.store [data-products] .product-skeleton .product-body{min-height:236px}
+@media(prefers-reduced-motion:reduce){
+ .store [data-products]>.product,.store .related-section .product{transition:none}
+ .store [data-products]>.product:hover,.store .related-section .product:hover{transform:none}
+ .store [data-products] .product-skeleton .product-visual,.store [data-products] .skeleton-line{animation:none}
+}
+@media(max-width:1000px){.store [data-products].product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Phones: compact horizontal card, so a full screen shows two products instead of one. */
+@media(max-width:560px){
+ .store [data-products].product-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+ .store [data-products]>.product{display:grid;grid-template-columns:minmax(118px,40%) minmax(0,1fr);grid-template-rows:auto;border-radius:12px}
+ /* H2.1: white units need a visible stage on phones: soft green-grey plate, product scaled up to the column. */
+ .store [data-products] .product-media{border-bottom:0;border-right:1px solid #dfe7e1;background:linear-gradient(160deg,#f3f7f4 0%,#e6eee8 100%)}
+ .store [data-products] .product-visual{aspect-ratio:auto;height:100%;min-height:168px}
+ .store [data-products] .product-visual .product-image{padding:46px 4px 40px;transform:scale(1.08)}
+ .store [data-products] .product-flags{left:6px;bottom:8px;right:6px}
+ .store [data-products] .product-flags .badge{font-size:11px;padding:3px 7px;white-space:nowrap}
+ .store [data-products] .product-tools{inset:6px auto auto 6px;gap:4px}
+ .store [data-products] .icon-toggle{width:44px;height:44px}
+ .store [data-products] .product-body{padding:12px 12px 12px 14px;gap:6px}
+ .store [data-products] .product .meta{font-size:11px}
+ .store [data-products] .product h3{font-size:15px}
+ .store [data-products] .product h3 a{min-height:0}
+ .store [data-products] .product-sku{display:none}
+ .store [data-products] .product-foot{flex-direction:column;align-items:flex-start;padding-top:8px;gap:4px}
+ .store [data-products] .price{font-size:20px}
+ .store [data-products] .actions{grid-template-columns:minmax(0,1fr);margin-top:6px}
+ .store [data-products] .actions .ghost{display:none}
+ .store [data-products] .product-skeleton{display:grid;grid-template-columns:36% 1fr}
+ .store [data-products] .product-skeleton .product-body{min-height:168px}
+}
+
+/* ---------- Filters ---------- */
+.catalog-premium [data-active-filters]:empty{display:none}
+.catalog-premium [data-active-filters]:not(:empty){min-height:0;padding-block:14px 4px}
+.catalog-premium .active-chip{border-radius:999px;background:#e8f2ec;border-color:#a9c4b4;color:#0f382e;padding-inline:14px}
+.catalog-premium .clear-all{font-weight:700;color:#0f382e;text-decoration:underline;text-underline-offset:4px;background:none;border:0;padding-inline:8px}
+.catalog-premium .filter-group[hidden]{display:none}
+@media(min-width:1001px){
+ .catalog-premium .catalog-filters{position:sticky;top:96px;max-height:calc(100dvh - 112px);display:flex;flex-direction:column;border-radius:14px}
+ .catalog-premium .catalog-filters .filter-body{overflow-y:auto;overscroll-behavior:contain}
+}
+/* Mobile filter drawer: bottom sheet with a grab handle and an always-visible apply bar. */
+@media(max-width:1000px){
+ .catalog-premium .catalog-filters{display:flex;flex-direction:column;box-shadow:0 -18px 40px -20px rgb(15 56 46/.45)}
+ .catalog-premium .catalog-filters .filters-head{position:relative;padding-top:22px;border-bottom:1px solid var(--line)}
+ .catalog-premium .catalog-filters .filters-head::before{content:"";position:absolute;top:8px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:4px;background:#b9c7bf}
+ .catalog-premium .catalog-filters .filter-body{flex:1;overflow-y:auto;overscroll-behavior:contain}
+ .catalog-premium .catalog-filters .filters-foot{display:grid;grid-template-columns:auto 1fr;border-top:1px solid var(--line);background:#fff}
+ .catalog-premium .catalog-toolbar .filter-toggle{border-radius:10px}
+}
+
+/* ---------- Empty results ---------- */
+.catalog-premium .catalog-empty{grid-column:1/-1;min-height:0;align-items:flex-start;text-align:left;padding:36px 32px;border:1px dashed #b9c9bf;border-radius:14px;background:#fff}
+.catalog-premium .catalog-empty h2{margin-bottom:10px}
+.catalog-premium .catalog-empty>p{max-width:60ch}
+.catalog-relax-title{font-weight:700;color:var(--ink);margin:8px 0 10px!important}
+.catalog-relax{list-style:none;display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0 0 20px}
+.catalog-relax button{display:inline-flex;align-items:center;gap:10px;min-height:44px;border-radius:999px;padding-inline:16px;font-size:14px}
+.catalog-relax button b{font-weight:700;color:#006c49;background:#e8f4ee;border-radius:999px;padding:2px 8px;font-size:12.5px}
+.catalog-empty-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-top:4px}
+.catalog-empty-actions .primary{min-height:46px;padding-inline:20px}
+@media(max-width:560px){.catalog-premium .catalog-empty{padding:24px 18px}.catalog-relax button{width:100%;justify-content:space-between}}
+
+/* ---------- Product detail ---------- */
+[data-product-page] .detail-visual{border-radius:18px;background:radial-gradient(110% 85% at 50% 42%,#fff 0%,#fff 46%,#eef3ef 100%)}
+.pd-gallery-nav{position:absolute;top:50%;width:44px;height:44px;margin-top:-22px;display:grid;place-items:center;border:1px solid #cfdcd3;border-radius:999px;background:rgb(255 255 255/.94);color:var(--p);font-size:26px;line-height:1;cursor:pointer;box-shadow:0 6px 18px -10px rgb(15 56 46/.4);transition:background-color 160ms,border-color 160ms}
+.pd-gallery-nav.is-prev{left:12px}.pd-gallery-nav.is-next{right:12px}
+.pd-gallery-nav:hover{border-color:var(--s);background:#fff}
+.pd-gallery-nav:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[data-product-page] .gallery-thumb{border-radius:12px}
+.pd-offer{padding:18px 20px;border:1px solid #d6e3da;border-radius:14px;background:linear-gradient(180deg,#fff 0%,#f6faf7 100%)}
+.pd-amount{font-size:clamp(32px,3.2vw,40px)}
+.pd-status{font-size:14px;font-weight:750;padding:7px 12px;border-radius:999px}
+.pd-status.is-available{background:#e3f3ea;color:#05603a}
+.pd-status.is-soldout{background:#fbe9e5;color:#8b2e20}
+.pd-status.is-quote{background:#fdf2e2;color:#7a3d00}
+.pd-buy .add-product-cart{min-height:52px;font-size:16px;border-radius:12px}
+.pd-variants{display:grid;gap:10px}
+.pd-variants-title{margin:0;font-size:13px;font-weight:750;letter-spacing:.04em;text-transform:uppercase;color:#006c49}
+.pd-variants ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.pd-variant{display:flex;flex-direction:column;gap:2px;min-width:118px;min-height:52px;padding:8px 14px;border:1px solid #cfdcd3;border-radius:12px;background:#fff;color:var(--p);text-decoration:none;transition:border-color 160ms,box-shadow 160ms}
+.pd-variant span{font-size:14px;font-weight:700}
+.pd-variant small{font-size:12.5px;color:#454d48;font-variant-numeric:tabular-nums}
+.pd-variant:hover{border-color:var(--s)}
+.pd-variant.is-current{border:2px solid var(--p);background:#f0f8f4;padding:7px 13px}
+.pd-variant.is-out small{color:#8b2e20}
+.pd-variant:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+#bilgiler .spec-table{margin:0}
+@media(max-width:1000px){
+ .pd-sticky{gap:10px;border-top:1px solid #d6e3da;box-shadow:0 -12px 28px -18px rgb(15 56 46/.45)}
+ .pd-sticky .primary{min-height:48px;border-radius:12px}
+}
+@media(max-width:560px){.pd-gallery-nav{width:44px;height:44px}.pd-offer{padding:14px 16px}.pd-variant{min-width:calc(50% - 4px)}}
+@media(prefers-reduced-motion:reduce){.pd-gallery-nav,.pd-variant{transition:none}}
+
+/* ---------- H2.1 mobile product: price, stock and the buy box reach the first screen ---------- */
+@media(max-width:560px){
+ [data-product-page] .breadcrumbs{margin-block:4px 12px}
+ [data-product-page] .pd-hero{gap:14px}
+ [data-product-page] .detail-visual{aspect-ratio:16/10;max-height:58vw;padding:12px}
+ [data-product-page] .gallery-thumbs{gap:8px;padding:8px 2px 2px}
+ [data-product-page] .gallery-thumb{flex:0 0 56px;width:56px;height:56px;padding:4px}
+ /* Still the thumbnails' accessible description; touch users swipe the row instead. */
+ .pd-gallery-help{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+ .pd-title h1{font-size:26px;line-height:1.2}
+ .pd-offer{flex-wrap:nowrap;padding:12px 14px}
+ .pd-amount{font-size:30px}
+ .pd-status{font-size:13px;padding:6px 10px;white-space:nowrap}
+}
+

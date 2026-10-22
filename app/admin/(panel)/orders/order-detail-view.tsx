@@ -1,0 +1,180 @@
+"use client";
+
+import { useState } from "react";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+
+import { Button } from "@/components/ui/button";
+import { EmptyState, FormField, Notice, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
+import { sendAdmin, useAdminJson, type Order } from "@/components/admin/use-admin-data";
+import { orderStatusLabel, orderStatusTone, trDate, tryCurrency } from "@/lib/admin-ui";
+import { describeOrderDelivery } from "@/lib/order-delivery";
+
+type OrderDetailResponse = { order: Order; legalAcceptances: AcceptedLegalDocumentView[] };
+/** P3-LEGAL-3B: one accepted legal version, as the admin order API reports it (no legal body). */
+type AcceptedLegalDocumentView = { slug: string; title: string; version: number; documentVersionId: string; acceptedAt: string };
+/** Exact-version public URL, built from slug + id rather than persisted anywhere. */
+const acceptedLegalHref = (d: AcceptedLegalDocumentView) => `/legal/${encodeURIComponent(d.slug)}?version=${encodeURIComponent(d.documentVersionId)}`;
+
+/**
+ * Legal acceptance evidence for this order. The version text itself is NOT rendered here: the accepted
+ * version is immutable, so the exact-version link always opens precisely what the customer accepted.
+ * An order with no rows is pre-feature history, shown neutrally - never backfilled, never called corrupt.
+ */
+function LegalAcceptancePanel({ acceptances }: { acceptances: AcceptedLegalDocumentView[] }) {
+  return (
+    <Panel title="Hukuki Kabul Kayıtları" description="Sipariş sırasında kabul edilen hukuki metinlerin tam sürümleri.">
+      {!acceptances.length ? (
+        <p className="text-sm text-muted-foreground">
+          Bu sipariş için kayıtlı hukuki kabul bulunmuyor.
+          <span className="block">Bu kayıt, hukuki kabul kaydı özelliğinden önce oluşturulmuş olabilir.</span>
+        </p>
+      ) : (
+        <ul className="divide-y">
+          {acceptances.map((d) => (
+            <li key={d.documentVersionId} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0">
+                <p className="font-medium">{d.title}</p>
+                <p className="text-xs text-muted-foreground">Sürüm: {d.version} · Kabul tarihi: {trDate(d.acceptedAt, true)}</p>
+              </div>
+              <a href={acceptedLegalHref(d)} target="_blank" rel="noopener" className="text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                Kabul edilen metni görüntüle
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Panel>
+  );
+}
+import OrderItemsPanel from "./order-items-panel";
+import { PaymentActionPanels, PaymentHistoryPanel, PaymentSummaryPanel, paymentActionCount, useOrderLedger } from "./order-payments-panel";
+
+const crumbs = [{ href: "/admin/orders", label: "Siparişler" }];
+// Control cards (collection, refund, status) share one row with equal heights; the column count follows the card count.
+const controlsGrid: Record<number, string> = { 1: "grid gap-6", 2: "grid grid-cols-1 gap-6 md:grid-cols-2", 3: "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" };
+
+/** Order summary from the overview endpoint, lines from the order_items snapshot, money from the payment ledger - nothing is derived or invented. */
+/** H5-B: `canWrite` = orders:write (fulfilment); `canRecordPayment` / `canRefund` = finance permissions. The API enforces all three. */
+export default function OrderDetailView({ orderId, canWrite, canRecordPayment = false, canRefund = false }: { orderId: string; canWrite: boolean; canRecordPayment?: boolean; canRefund?: boolean }) {
+  const { data, error, loading, reload } = useAdminJson<OrderDetailResponse>(`/api/admin/orders/${orderId}`);
+  const order = data?.order;
+  const ledger = useOrderLedger(orderId);
+  const refreshAll = () => { reload(); ledger.reload(); };
+  const [nextStatus, setNextStatus] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  async function saveStatus(statusToSave?: string) {
+    const target = statusToSave ?? nextStatus;
+    if (!order || !target || target === order.status) return;
+    const r = await sendAdmin(`/api/admin/orders/${order.id}`, "PATCH", { status: target, expectedStatus: order.status });
+    if (r.ok) {
+      toast.success(`Sipariş durumu "${orderStatusLabel[target] ?? target}" olarak güncellendi.`);
+      setMessage({ tone: "success", text: "Sipariş durumu güncellendi." });
+      setNextStatus(null);
+      refreshAll();
+    } else {
+      toast.error(r.error || "Sipariş durumu güncellenemedi.");
+      setMessage({ tone: "error", text: r.error || "Sipariş durumu güncellenemedi." });
+    }
+  }
+
+  async function confirmCancel() {
+    setCancelling(true);
+    await saveStatus("cancelled");
+    setCancelling(false);
+    setCancelOpen(false);
+  }
+
+  if (!data) return <><PageHeader title="Sipariş" breadcrumb={crumbs} />{error ? <Notice tone="error">{error}</Notice> : loading ? <Notice tone="info">Yükleniyor…</Notice> : null}</>;
+  if (!order) return <><PageHeader title="Sipariş" breadcrumb={crumbs} /><EmptyState title="Sipariş bulunamadı" description="Bağlantı hatalı olabilir ya da sipariş silinmiş olabilir." /></>;
+
+  const selected = nextStatus ?? order.status;
+  const delivery = describeOrderDelivery(order);
+  // Shipping and installation only appear when the order actually charged them (new orders include installation in the product price).
+  const totals: [string, number][] = [["Ara toplam", order.subtotal], ["KDV", order.vatTotal], ...(order.shippingTotal > 0 ? [["Kargo bedeli", order.shippingTotal] as [string, number]] : []), ...(order.installationTotal > 0 ? [["Montaj bedeli", order.installationTotal] as [string, number]] : [])];
+
+  return (
+    <>
+      <PageHeader title={`Sipariş ${order.orderNumber}`} breadcrumb={crumbs} description={`Oluşturulma: ${trDate(order.createdAt, true)}`} actions={<StatusBadge tone={orderStatusTone[order.status] ?? "neutral"}>{orderStatusLabel[order.status] ?? order.status}</StatusBadge>} />
+      {message && <Notice tone={message.tone}>{message.text}</Notice>}
+      <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <Panel title="Müşteri ve teslimat" className="h-full">
+            <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 xl:grid-cols-3">
+              <div><dt className="text-muted-foreground">Müşteri</dt><dd className="font-medium">{order.customerName}</dd></div>
+              <div><dt className="text-muted-foreground">Telefon</dt><dd><a className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline" href={`tel:${order.phone}`}>{order.phone}</a></dd></div>
+              <div><dt className="text-muted-foreground">E-posta</dt><dd className="break-all">{order.email ? <a className="inline-flex min-h-11 items-center text-primary underline-offset-4 hover:underline" href={`mailto:${order.email}`}>{order.email}</a> : "—"}</dd></div>
+              <div><dt className="text-muted-foreground">İl</dt><dd>{delivery.province}</dd></div>
+              <div><dt className="text-muted-foreground">İlçe</dt><dd>{delivery.district}</dd></div>
+              <div className="sm:col-span-2 xl:col-span-3"><dt className="text-muted-foreground">Adres</dt><dd className="whitespace-pre-line">{order.address || "—"}</dd></div>
+              <div><dt className="text-muted-foreground">Teslimat yöntemi</dt><dd>{delivery.method}</dd></div>
+              <div><dt className="text-muted-foreground">Teslimat bölgesi</dt><dd>{delivery.region}</dd></div>
+              <div><dt className="text-muted-foreground">Kargo bedeli</dt><dd className="tabular-nums">{delivery.shippingFee === null ? "—" : tryCurrency(delivery.shippingFee)}</dd></div>
+              <div><dt className="text-muted-foreground">Montaj</dt><dd>{delivery.installation}</dd></div>
+              {order.notes && <div className="sm:col-span-2 xl:col-span-3"><dt className="text-muted-foreground">Sipariş notu</dt><dd className="whitespace-pre-line">{order.notes}</dd></div>}
+            </dl>
+            {!delivery.hasSnapshot && <p className="mt-3 text-xs text-muted-foreground">Bu sipariş teslimat modeli güncellenmeden önce oluşturulmuş; yeni teslimat alanları kayıtlı değil.</p>}
+          </Panel>
+          <div className="grid min-w-0 gap-6 lg:grid-rows-[auto_1fr]">
+            <Panel title="Tutar">
+              <dl className="grid gap-2 text-sm">
+                {totals.map(([label, value]) => <div key={label} className="flex justify-between gap-3"><dt className="text-muted-foreground">{label}</dt><dd className="tabular-nums">{tryCurrency(value)}</dd></div>)}
+                <div className="mt-1 flex justify-between gap-3 border-t pt-2 font-semibold"><dt>Toplam</dt><dd className="tabular-nums">{tryCurrency(order.total)}</dd></div>
+              </dl>
+            </Panel>
+            <PaymentSummaryPanel ledger={ledger} className="h-full" />
+          </div>
+        </div>
+        <OrderItemsPanel orderId={order.id} />
+        <LegalAcceptancePanel acceptances={data?.legalAcceptances ?? []} />
+        <PaymentHistoryPanel ledger={ledger} />
+        {(canWrite || canRecordPayment || canRefund) && (
+          <div className={controlsGrid[paymentActionCount(ledger.data, { record: canRecordPayment, refund: canRefund }) + (canWrite || canRecordPayment ? 1 : 0)]}>
+            {ledger.data && <PaymentActionPanels orderId={order.id} ledger={ledger.data} onChanged={refreshAll} canRecord={canRecordPayment} canRefund={canRefund} />}
+            {(canWrite || canRecordPayment) && (
+            <Panel title="Durumu güncelle">
+              <div className="grid gap-3">
+                <FormField label="Sipariş durumu" htmlFor="order-next-status">
+                  <select id="order-next-status" className={selectClass} value={selected} onChange={(e) => setNextStatus(e.target.value)}>{Object.entries(orderStatusLabel).filter(([v]) => v === order.status || (v === "paid" ? canRecordPayment : canWrite)).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+                </FormField>
+                <p className="text-xs text-muted-foreground">&quot;Ödendi&quot; yalnızca tutarın tamamı için tahsilat kaydı varsa seçilebilir. Tahsilatı olan sipariş iptal edilmeden önce iade kaydedilmelidir; iptal, ayrılan stoğu geri verir.</p>
+                <div className="flex flex-col gap-2">
+                  <Button type="button" onClick={() => void saveStatus()} disabled={selected === order.status}>Durumu kaydet</Button>
+                  {canWrite && order.status !== "cancelled" && order.status !== "delivered" && (
+                    <Button type="button" variant="outline" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setCancelOpen(true)}>
+                      Siparişi iptal et
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Panel>
+            )}
+          </div>
+        )}
+      </div>
+
+      <ConfirmDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        title="Sipariş İptal Onayı"
+        description={
+          <span>
+            <strong>{order.orderNumber}</strong> numaralı siparişi iptal etmek istediğinizden emin misiniz?
+            <br />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Not: İptal edilen siparişler finansal/yasal denetim için veritabanında saklanır ve hard-delete edilmez.
+            </span>
+          </span>
+        }
+        confirmLabel="Evet, İptal Et"
+        cancelLabel="Vazgeç"
+        variant="destructive"
+        loading={cancelling}
+        onConfirm={confirmCancel}
+      />
+    </>
+  );
+}

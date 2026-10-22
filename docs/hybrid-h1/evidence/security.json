@@ -1,0 +1,9 @@
+{
+  "scanner": "Gitleaks v8.30.1",
+  "protectedSourceHistoryFindings": 0,
+  "stagedDiffFindings": 0,
+  "ruleSuppressions": 0,
+  "forbiddenStagedArtifactPaths": 0,
+  "audit": "Only explicit H1 paths staged; no env, credentials, TLS keys, dumps, encrypted backups, private fixtures or browser session files. Screenshots use anonymous/public catalog contexts.",
+  "protectedSourceCommit": "4f70b08264f1c4cef96df47496e00f05c4637593"
+}

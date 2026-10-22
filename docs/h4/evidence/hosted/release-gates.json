@@ -1,0 +1,82 @@
+{
+  "origin": "https://ege-teknik-phase3a-h5juyeyic-dragonfire-09s-projects.vercel.app",
+  "capturedAt": "2026-10-21T23:52:01.026Z",
+  "readOnly": true,
+  "results": [
+    {
+      "name": "health: preview environment, preview Neon branch, never the Production branch",
+      "status": "PASS",
+      "detail": {
+        "ok": true,
+        "environment": "preview",
+        "branchId": "br-nameless-mountain-awib28a9"
+      }
+    },
+    {
+      "name": "admin read APIs refuse an unauthenticated caller (403, no data)",
+      "status": "PASS",
+      "detail": {
+        "/api/admin/orders": 403,
+        "/api/admin/orders/none": 403,
+        "/api/admin/orders/none/payments": 403,
+        "/api/admin/overview": 403,
+        "/api/admin/audit": 403,
+        "/api/admin/legal/documents": 403,
+        "/api/admin/users": 403,
+        "/api/admin/finance": 403
+      }
+    },
+    {
+      "name": "admin panel pages do not render for an anonymous visitor",
+      "status": "PASS",
+      "detail": {
+        "/admin/orders": 307,
+        "/admin/legal": 307,
+        "/admin/finance": 307
+      }
+    },
+    {
+      "name": "storefront security headers",
+      "status": "PASS",
+      "detail": {
+        "csp": "script-src 'self'; frame-src https://www.google.com; default-src 'self'; base-uri 'self'; object-src 'none'; frame-ances…",
+        "xcto": "nosniff",
+        "referrer": "strict-origin-when-cross-origin",
+        "hsts": true
+      }
+    },
+    {
+      "name": "Preview is not indexable",
+      "status": "PASS",
+      "detail": {
+        "xRobots": "noindex"
+      }
+    },
+    {
+      "name": "catalog API serves real products; no payment provider is exposed",
+      "status": "PASS",
+      "detail": {
+        "products": 77
+      }
+    },
+    {
+      "name": "legal documents: Preview serves ONLY registry fixtures (so no real document is published here)",
+      "status": "PASS",
+      "detail": {
+        "documents": 4,
+        "required": 2,
+        "realPublishedDocuments": 0
+      }
+    },
+    {
+      "name": "order lookup and order creation are POST-only (GET refused)",
+      "status": "PASS",
+      "detail": true
+    },
+    {
+      "name": "no source maps or env files are served",
+      "status": "PASS",
+      "detail": true
+    }
+  ]
+}

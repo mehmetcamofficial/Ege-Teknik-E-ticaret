@@ -1,0 +1,123 @@
+{
+  "engines": [
+    {
+      "engine": "webkit",
+      "version": "27.2"
+    }
+  ],
+  "matrix": [
+    {
+      "engine": "webkit",
+      "width": 1440,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 1024,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 768,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 390,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 320,
+      "status": "PASS",
+      "axe": "PASS",
+      "cartDrawerQuantityRemove": "PASS",
+      "checkoutUiAndLegalInvalidation": "PASS",
+      "cartAcrossPages": "PASS",
+      "nativeFormHistory": "PASS",
+      "filterHistory": "PASS",
+      "focusTrapEscape": "PASS",
+      "reducedMotion": "PASS",
+      "selectorContrast": "PASS"
+    }
+  ],
+  "negative": [
+    {
+      "engine": "webkit",
+      "status": "PASS",
+      "unknownVariant": "PASS",
+      "apiFailure": "PASS",
+      "freshPrice": "PASS",
+      "missingVariantLabel": "PASS",
+      "stockReduction": "PASS",
+      "overstock": "PASS",
+      "storageFailureNoSuccess": "PASS",
+      "loadingAndRetry": "PASS",
+      "crossTabLegalInvalidation": "PASS"
+    }
+  ],
+  "selector": [],
+  "writes": [
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    }
+  ],
+  "axeScans": 16
+}

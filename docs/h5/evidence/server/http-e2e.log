@@ -1,0 +1,1 @@
+[http-checkout] PASS: real local HTTP preview, order 201, immutable evidence, inventory, replay, conflict, missing/expired token, price, marketing, stock/stale-legal refusals, legacy-off checkout and scoped-on credential refusal

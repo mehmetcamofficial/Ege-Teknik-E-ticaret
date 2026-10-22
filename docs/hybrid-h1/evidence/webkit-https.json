@@ -1,0 +1,104 @@
+{
+  "catalogSha256": "379d3e16cfc9bdd8fbd1536c1846b439a5c39a7d899ab1ba0e23e9d8b1445d07",
+  "catalogProducts": 78,
+  "engines": [
+    {
+      "engine": "webkit",
+      "version": "27.2"
+    }
+  ],
+  "screenshots": [
+    "webkit-hybrid-320.png",
+    "webkit-hybrid-375.png",
+    "webkit-hybrid-768.png",
+    "webkit-hybrid-1024.png",
+    "webkit-hybrid-1440.png"
+  ],
+  "matrix": [
+    {
+      "engine": "webkit",
+      "width": 320,
+      "status": "PASS",
+      "axeViolations": 0,
+      "colors": "PASS",
+      "catalogPriceStock": "PASS",
+      "cart": "PASS",
+      "sliderKeyboard": "PASS",
+      "slideLayoutStability": "PASS",
+      "selectorAndSeriesNavigation": "PASS",
+      "backForward": "PASS",
+      "focusAndSkipLink": "PASS",
+      "reducedMotion": "PASS",
+      "slowErrorEmpty": "PASS",
+      "consentNoEvent": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 375,
+      "status": "PASS",
+      "axeViolations": 0,
+      "colors": "PASS",
+      "catalogPriceStock": "PASS",
+      "cart": "PASS",
+      "sliderKeyboard": "PASS",
+      "slideLayoutStability": "PASS",
+      "selectorAndSeriesNavigation": "PASS",
+      "backForward": "PASS",
+      "focusAndSkipLink": "PASS",
+      "reducedMotion": "PASS",
+      "slowErrorEmpty": "PASS",
+      "consentNoEvent": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 768,
+      "status": "PASS",
+      "axeViolations": 0,
+      "colors": "PASS",
+      "catalogPriceStock": "PASS",
+      "cart": "PASS",
+      "sliderKeyboard": "PASS",
+      "slideLayoutStability": "PASS",
+      "selectorAndSeriesNavigation": "PASS",
+      "backForward": "PASS",
+      "focusAndSkipLink": "PASS",
+      "reducedMotion": "PASS",
+      "slowErrorEmpty": "PASS",
+      "consentNoEvent": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 1024,
+      "status": "PASS",
+      "axeViolations": 0,
+      "colors": "PASS",
+      "catalogPriceStock": "PASS",
+      "cart": "PASS",
+      "sliderKeyboard": "PASS",
+      "slideLayoutStability": "PASS",
+      "selectorAndSeriesNavigation": "PASS",
+      "backForward": "PASS",
+      "focusAndSkipLink": "PASS",
+      "reducedMotion": "PASS",
+      "slowErrorEmpty": "PASS",
+      "consentNoEvent": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "width": 1440,
+      "status": "PASS",
+      "axeViolations": 0,
+      "colors": "PASS",
+      "catalogPriceStock": "PASS",
+      "cart": "PASS",
+      "sliderKeyboard": "PASS",
+      "slideLayoutStability": "PASS",
+      "selectorAndSeriesNavigation": "PASS",
+      "backForward": "PASS",
+      "focusAndSkipLink": "PASS",
+      "reducedMotion": "PASS",
+      "slowErrorEmpty": "PASS",
+      "consentNoEvent": "PASS"
+    }
+  ]
+}

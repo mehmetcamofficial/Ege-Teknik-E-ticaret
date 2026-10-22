@@ -1,0 +1,83 @@
+{
+  "_comment": "Frozen checksums of migrations 0000-0012. These files are applied to Production (ledger hashes match) and are IMMUTABLE. Changing an entry here is a release-blocking event: add a NEW migration instead. Verified by scripts/verify-migration-integrity.mjs (pnpm verify:migrations).",
+  "frozen": [
+    {
+      "idx": 0,
+      "tag": "0000_black_tarot",
+      "when": 1790007312710,
+      "sha256": "ee4ea7a05d29567e923deb8fc489ce889061190dc31eaf8e0d6df65ae27864ea"
+    },
+    {
+      "idx": 1,
+      "tag": "0001_graceful_rocket_racer",
+      "when": 1790008844965,
+      "sha256": "a43d508084cc424c22119006add9a90a58002d954a3a1f3672a23b4a83ff03c6"
+    },
+    {
+      "idx": 2,
+      "tag": "0002_customer_clerk_identity",
+      "when": 1790104114747,
+      "sha256": "98ef6d9d61b315a1ce32995dfdaab144366efa5a873ff9f1e4aeede9b6c04ea3"
+    },
+    {
+      "idx": 3,
+      "tag": "0003_legal_document_versioning",
+      "when": 1790199716478,
+      "sha256": "65db62bc429de3ef337137d0c44dbabe5149182419880dc5fc687a6ecaaad4fd"
+    },
+    {
+      "idx": 4,
+      "tag": "0004_order_fingerprint_installation",
+      "when": 1790200697993,
+      "sha256": "5320a426df949a569615c4f88d75ec65b82bdcec088dd6f8ae871bce0a4bdbc2"
+    },
+    {
+      "idx": 5,
+      "tag": "0005_legal_drafts_and_immutability",
+      "when": 1790202870956,
+      "sha256": "9af602e603843d58d62b3c0d3a3eea54f5618547141916bc6bbefc6f87a3d9e4"
+    },
+    {
+      "idx": 6,
+      "tag": "0006_checkout_charges_and_marketing_consents",
+      "when": 1790207595710,
+      "sha256": "a2cb4e948b7ad0c9ac7050f99294ef5ea22a88a477067bfaf79f830837a91cc3"
+    },
+    {
+      "idx": 7,
+      "tag": "0007_product_enrichment",
+      "when": 1790257441756,
+      "sha256": "4909783c6992cd81626a17c344b12a00bda635d47be5d904ddf7477c41fca6de"
+    },
+    {
+      "idx": 8,
+      "tag": "0008_product_reviews",
+      "when": 1790286929119,
+      "sha256": "6a13125af284e5a6d3d56bc1421401072f8f3806abf6f3db92cdf6766772f832"
+    },
+    {
+      "idx": 9,
+      "tag": "0009_analytics_events",
+      "when": 1790301055885,
+      "sha256": "f2167dcdfdee88f7f2c76065a15b2c73880f4405175612e671ea7ba1e8558bc4"
+    },
+    {
+      "idx": 10,
+      "tag": "0010_admin_password_resets",
+      "when": 1790357736800,
+      "sha256": "6e3aaed6318f7ef9710f63d6165bffb25a4779b53379314c533d8e9c7cff2d4e"
+    },
+    {
+      "idx": 11,
+      "tag": "0011_admin_governance",
+      "when": 1790379147585,
+      "sha256": "f740bd31ff771742ed335aa2c2f1c3f4c44d03d30dcc9c4488c612a2c95d7626"
+    },
+    {
+      "idx": 12,
+      "tag": "0012_delivery_class",
+      "when": 1790449602511,
+      "sha256": "70f1d12ff909a8377dac4bad436fee1155456c82f433bc9259c64b2b4a03c3cb"
+    }
+  ]
+}

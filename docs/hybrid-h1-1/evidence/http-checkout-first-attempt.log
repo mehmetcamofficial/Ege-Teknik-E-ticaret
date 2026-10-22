@@ -1,0 +1,17 @@
+$ node --experimental-strip-types scripts/test-checkout-http-e2e.mjs
+[http-checkout] FAIL: bad scoped LOGIN password must fail closed
+[http-checkout] Local server diagnostics (last 1200 chars): ▲ Next.js 16.3.6 (Turbopack)
+- Local:         http://127.0.0.1:43689
+- Network:       http://127.0.0.1:43689
+✓ Ready in 218ms
+✓ Running next.config.ts took 245ms
+Creating turbopack project {
+  dir: '/Users/mehmetcam/Developer/ege-teknik-hybrid-h1-1',
+  testMode: true
+}
+- Experiments (use with caution):
+  · clientTraceMetadata
+
+ GET /api/health 200 in 307ms (next.js: 262ms, proxy.ts: 9ms, application-code: 35ms)
+
+[ELIFECYCLE] Command failed with exit code 1.

@@ -1,0 +1,393 @@
+{
+  "origin": "https://127.0.0.1:44392",
+  "sha": "7d1c9ea64d0be56ef442e606d809346635b6a6c6",
+  "runs": [
+    {
+      "engine": "chrome",
+      "label": "desktop",
+      "reduced": "no-preference",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 22,
+          "shots": [
+            ".scratch/h12/ux2-trans/chrome-desktop/home-to-catalog-start.png",
+            ".scratch/h12/ux2-trans/chrome-desktop/home-to-catalog-mid.png",
+            ".scratch/h12/ux2-trans/chrome-desktop/home-to-catalog-end.png"
+          ],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 23,
+          "shots": [
+            ".scratch/h12/ux2-trans/chrome-desktop/catalog-to-product-start.png",
+            ".scratch/h12/ux2-trans/chrome-desktop/catalog-to-product-mid.png",
+            ".scratch/h12/ux2-trans/chrome-desktop/catalog-to-product-end.png"
+          ],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 24,
+          "shots": [
+            ".scratch/h12/ux2-trans/chrome-desktop/product-to-checkout-start.png",
+            ".scratch/h12/ux2-trans/chrome-desktop/product-to-checkout-mid.png",
+            ".scratch/h12/ux2-trans/chrome-desktop/product-to-checkout-end.png"
+          ],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 508
+      }
+    },
+    {
+      "engine": "chrome",
+      "label": "mobile",
+      "reduced": "no-preference",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 24,
+          "shots": [
+            ".scratch/h12/ux2-trans/chrome-mobile/home-to-catalog-start.png",
+            ".scratch/h12/ux2-trans/chrome-mobile/home-to-catalog-mid.png",
+            ".scratch/h12/ux2-trans/chrome-mobile/home-to-catalog-end.png"
+          ],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 24,
+          "shots": [
+            ".scratch/h12/ux2-trans/chrome-mobile/catalog-to-product-start.png",
+            ".scratch/h12/ux2-trans/chrome-mobile/catalog-to-product-mid.png",
+            ".scratch/h12/ux2-trans/chrome-mobile/catalog-to-product-end.png"
+          ],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 24,
+          "shots": [
+            ".scratch/h12/ux2-trans/chrome-mobile/product-to-checkout-start.png",
+            ".scratch/h12/ux2-trans/chrome-mobile/product-to-checkout-mid.png",
+            ".scratch/h12/ux2-trans/chrome-mobile/product-to-checkout-end.png"
+          ],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 508
+      }
+    },
+    {
+      "engine": "chrome",
+      "label": "mobile-reduced",
+      "reduced": "reduce",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 24,
+          "shots": [],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 22,
+          "shots": [],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 24,
+          "shots": [],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 500
+      }
+    },
+    {
+      "engine": "firefox",
+      "label": "desktop",
+      "reduced": "no-preference",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 23,
+          "shots": [
+            ".scratch/h12/ux2-trans/firefox-desktop/home-to-catalog-start.png",
+            ".scratch/h12/ux2-trans/firefox-desktop/home-to-catalog-mid.png",
+            ".scratch/h12/ux2-trans/firefox-desktop/home-to-catalog-end.png"
+          ],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 22,
+          "shots": [
+            ".scratch/h12/ux2-trans/firefox-desktop/catalog-to-product-start.png",
+            ".scratch/h12/ux2-trans/firefox-desktop/catalog-to-product-mid.png",
+            ".scratch/h12/ux2-trans/firefox-desktop/catalog-to-product-end.png"
+          ],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 23,
+          "shots": [
+            ".scratch/h12/ux2-trans/firefox-desktop/product-to-checkout-start.png",
+            ".scratch/h12/ux2-trans/firefox-desktop/product-to-checkout-mid.png",
+            ".scratch/h12/ux2-trans/firefox-desktop/product-to-checkout-end.png"
+          ],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 500
+      }
+    },
+    {
+      "engine": "firefox",
+      "label": "mobile",
+      "reduced": "no-preference",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 21,
+          "shots": [
+            ".scratch/h12/ux2-trans/firefox-mobile/home-to-catalog-start.png",
+            ".scratch/h12/ux2-trans/firefox-mobile/home-to-catalog-mid.png",
+            ".scratch/h12/ux2-trans/firefox-mobile/home-to-catalog-end.png"
+          ],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 23,
+          "shots": [
+            ".scratch/h12/ux2-trans/firefox-mobile/catalog-to-product-start.png",
+            ".scratch/h12/ux2-trans/firefox-mobile/catalog-to-product-mid.png",
+            ".scratch/h12/ux2-trans/firefox-mobile/catalog-to-product-end.png"
+          ],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 0,
+          "maxTranslateY": 14,
+          "frames": 23,
+          "shots": [
+            ".scratch/h12/ux2-trans/firefox-mobile/product-to-checkout-start.png",
+            ".scratch/h12/ux2-trans/firefox-mobile/product-to-checkout-mid.png",
+            ".scratch/h12/ux2-trans/firefox-mobile/product-to-checkout-end.png"
+          ],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 500
+      }
+    },
+    {
+      "engine": "firefox",
+      "label": "mobile-reduced",
+      "reduced": "reduce",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 23,
+          "shots": [],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 23,
+          "shots": [],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 23,
+          "shots": [],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 500
+      }
+    },
+    {
+      "engine": "webkit",
+      "label": "desktop",
+      "reduced": "no-preference",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 0.089,
+          "maxTranslateY": 12.76,
+          "frames": 20,
+          "shots": [
+            ".scratch/h12/ux2-trans/webkit-desktop/home-to-catalog-start.png",
+            ".scratch/h12/ux2-trans/webkit-desktop/home-to-catalog-mid.png",
+            ".scratch/h12/ux2-trans/webkit-desktop/home-to-catalog-end.png"
+          ],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 0.453,
+          "maxTranslateY": 7.66,
+          "frames": 21,
+          "shots": [
+            ".scratch/h12/ux2-trans/webkit-desktop/catalog-to-product-start.png",
+            ".scratch/h12/ux2-trans/webkit-desktop/catalog-to-product-mid.png",
+            ".scratch/h12/ux2-trans/webkit-desktop/catalog-to-product-end.png"
+          ],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 0.089,
+          "maxTranslateY": 12.76,
+          "frames": 23,
+          "shots": [
+            ".scratch/h12/ux2-trans/webkit-desktop/product-to-checkout-start.png",
+            ".scratch/h12/ux2-trans/webkit-desktop/product-to-checkout-mid.png",
+            ".scratch/h12/ux2-trans/webkit-desktop/product-to-checkout-end.png"
+          ],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 500
+      }
+    },
+    {
+      "engine": "webkit",
+      "label": "mobile",
+      "reduced": "no-preference",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 0.102,
+          "maxTranslateY": 12.57,
+          "frames": 23,
+          "shots": [
+            ".scratch/h12/ux2-trans/webkit-mobile/home-to-catalog-start.png",
+            ".scratch/h12/ux2-trans/webkit-mobile/home-to-catalog-mid.png",
+            ".scratch/h12/ux2-trans/webkit-mobile/home-to-catalog-end.png"
+          ],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 0.206,
+          "maxTranslateY": 11.12,
+          "frames": 24,
+          "shots": [
+            ".scratch/h12/ux2-trans/webkit-mobile/catalog-to-product-start.png",
+            ".scratch/h12/ux2-trans/webkit-mobile/catalog-to-product-mid.png",
+            ".scratch/h12/ux2-trans/webkit-mobile/catalog-to-product-end.png"
+          ],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 0.102,
+          "maxTranslateY": 12.57,
+          "frames": 24,
+          "shots": [
+            ".scratch/h12/ux2-trans/webkit-mobile/product-to-checkout-start.png",
+            ".scratch/h12/ux2-trans/webkit-mobile/product-to-checkout-mid.png",
+            ".scratch/h12/ux2-trans/webkit-mobile/product-to-checkout-end.png"
+          ],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 500
+      }
+    },
+    {
+      "engine": "webkit",
+      "label": "mobile-reduced",
+      "reduced": "reduce",
+      "steps": [
+        {
+          "name": "home-to-catalog",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 23,
+          "shots": [],
+          "url": "/catalog.html"
+        },
+        {
+          "name": "catalog-to-product",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 22,
+          "shots": [],
+          "url": "/product.html"
+        },
+        {
+          "name": "product-to-checkout",
+          "minOpacity": 1,
+          "maxTranslateY": 0,
+          "frames": 24,
+          "shots": [],
+          "url": "/checkout.html"
+        }
+      ],
+      "scrollRestore": {
+        "before": 500,
+        "after": 500
+      }
+    }
+  ]
+}

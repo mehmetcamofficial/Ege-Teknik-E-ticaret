@@ -1,0 +1,25 @@
+✔ cart add persists only identity/quantity, updates actual quantity, invalidates legal acceptance then opens drawer (52.931916ms)
+✔ failed add does not open or persist: sold out (3.061833ms)
+✔ failed add does not open or persist: unknown stock (2.889166ms)
+✔ failed add does not open or persist: quote only (2.551125ms)
+✔ failed add does not open or persist: invalid price (1.845ms)
+✔ failed add does not open or persist: absent price (1.406458ms)
+✔ unlisted variant id is rejected; a real id with missing optional SKU is preserved (1.477375ms)
+✔ quantity changes reject overstock, fractional, zero and negative requests without mutating (2.874666ms)
+✔ multiple adds respect remaining stock and never announce/open on failed extra add (1.502125ms)
+✔ storage failure produces no drawer success and leaves previous legal acceptance unchanged (1.250875ms)
+✔ catalog price wins over stale/forged price fields in persisted cart (1.663667ms)
+✔ selector light and dark surface palette meets AA; rendered cascade is checked in browsers (2.1945ms)
+✔ native storefront navigation has immediate feedback and pageshow resets BFCache state (3.027459ms)
+✔ no pending state for modal-handled clicks, modified clicks, same-page anchors, external or sensitive routes (5.097958ms)
+✔ all static storefront links including guides, regions and second-hand receive feedback (4.365ms)
+✔ drawer uses existing domain, escaped catalog fields and native modal semantics (0.719667ms)
+✔ static page entry never blocks navigation or persists sensitive form drafts (0.978792ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 226.589917

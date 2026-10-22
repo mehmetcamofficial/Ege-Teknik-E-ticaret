@@ -1,0 +1,62 @@
+[
+  {
+    "engine": "chrome",
+    "width": 375,
+    "status": "PASS",
+    "detailLinkAndRendering": "PASS",
+    "cartCheckoutSummary": "PASS",
+    "search": "PASS",
+    "orderSubmitted": false,
+    "scope": "UI with public GET fixtures; SSR product SEO and backend checkout not tested"
+  },
+  {
+    "engine": "chrome",
+    "width": 1440,
+    "status": "PASS",
+    "detailLinkAndRendering": "PASS",
+    "cartCheckoutSummary": "PASS",
+    "search": "PASS",
+    "orderSubmitted": false,
+    "scope": "UI with public GET fixtures; SSR product SEO and backend checkout not tested"
+  },
+  {
+    "engine": "firefox",
+    "width": 375,
+    "status": "PASS",
+    "detailLinkAndRendering": "PASS",
+    "cartCheckoutSummary": "PASS",
+    "search": "PASS",
+    "orderSubmitted": false,
+    "scope": "UI with public GET fixtures; SSR product SEO and backend checkout not tested"
+  },
+  {
+    "engine": "firefox",
+    "width": 1440,
+    "status": "PASS",
+    "detailLinkAndRendering": "PASS",
+    "cartCheckoutSummary": "PASS",
+    "search": "PASS",
+    "orderSubmitted": false,
+    "scope": "UI with public GET fixtures; SSR product SEO and backend checkout not tested"
+  },
+  {
+    "engine": "webkit",
+    "width": 375,
+    "status": "PASS",
+    "detailLinkAndRendering": "PASS",
+    "cartCheckoutSummary": "PASS",
+    "search": "PASS",
+    "orderSubmitted": false,
+    "scope": "UI with public GET fixtures; SSR product SEO and backend checkout not tested"
+  },
+  {
+    "engine": "webkit",
+    "width": 1440,
+    "status": "PASS",
+    "detailLinkAndRendering": "PASS",
+    "cartCheckoutSummary": "PASS",
+    "search": "PASS",
+    "orderSubmitted": false,
+    "scope": "UI with public GET fixtures; SSR product SEO and backend checkout not tested"
+  }
+]

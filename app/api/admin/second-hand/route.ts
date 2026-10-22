@@ -1,19 +1,16 @@
 import { getAdminUser } from "@/lib/admin-auth";
-import { getDb } from "@/db";
-import { auditLogs, secondHandProducts } from "@/db/schema";
-import { z } from "zod";
-
-export const secondHandSchema = z.object({
-  name:z.string().min(2).max(160), slug:z.string().min(2).max(160).regex(/^[a-z0-9-]+$/), category:z.string().min(2).max(80),
-  condition:z.string().max(80).default("İyi"), testNotes:z.string().max(3000).default(""), warranty:z.string().max(160).default(""),
-  price:z.coerce.number().int().min(0), stock:z.coerce.number().int().min(0).max(99), imageUrl:z.string().max(1000).default(""),
-  status:z.enum(["draft","published","sold"]), description:z.string().max(4000).default(""),
-});
+import { secondHandProducts } from "@/db/schema";
+import { auditedMutation } from "@/lib/admin-audited";
+import { readJson } from "@/lib/http-security";
+import { secondHandPublishBlockers } from "@/lib/second-hand-policy";
+import { secondHandSchema } from "./schema";
 
 export async function POST(request:Request){
-  const user=await getAdminUser(); if(!user)return Response.json({error:"Yetkisiz erişim"},{status:403});
-  const parsed=secondHandSchema.safeParse(await request.json().catch(()=>null)); if(!parsed.success)return Response.json({error:"İkinci el ürün alanlarını kontrol edin."},{status:400});
-  const id=crypto.randomUUID(), db=getDb(); await db.insert(secondHandProducts).values({id,...parsed.data});
-  await db.insert(auditLogs).values({id:crypto.randomUUID(),actorUserId:user.userId,actorEmail:user.email,action:"create",entityType:"second_hand_product",entityId:id,payload:JSON.stringify(parsed.data)});
+  const user=await getAdminUser("catalog:write"); if(!user)return Response.json({error:"Yetkisiz erişim"},{status:403});
+  const parsed=secondHandSchema.safeParse(await readJson(request)); if(!parsed.success)return Response.json({error:"İkinci el ürün alanlarını kontrol edin."},{status:400});
+  // P3-LEGAL-USED-01: tam ürün üzerinde yayın kapısı (taslak eksik bilgiyle kaydedilebilir).
+  const blockers=secondHandPublishBlockers(parsed.data);
+  if(blockers.length)return Response.json({error:blockers[0],blockers},{status:422});
+  const id=crypto.randomUUID(); await auditedMutation(user,{action:"create",entityType:"second_hand_product",entityId:id,payload:parsed.data},async(tx)=>{await tx.insert(secondHandProducts).values({id,...parsed.data})});
   return Response.json({ok:true,id},{status:201});
 }
