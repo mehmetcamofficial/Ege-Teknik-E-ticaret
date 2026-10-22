@@ -1,3 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://ege-teknik-trendklima.oncoconnect2.chatgpt.site/sitemap.xml
+# Sensitive HTML remains crawlable so crawlers can read noindex. Access controls are separate.
+Disallow: /api/
+Disallow: /seo/
+Sitemap: https://egeteknik.tr/sitemap.xml

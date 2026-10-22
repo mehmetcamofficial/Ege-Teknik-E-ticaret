@@ -1,0 +1,16 @@
+PASS hosted chrome 1440
+PASS hosted chrome 1024
+PASS hosted chrome 768
+PASS hosted chrome 390
+PASS hosted chrome 320
+PASS hosted firefox 1440
+PASS hosted firefox 1024
+PASS hosted firefox 768
+PASS hosted firefox 390
+PASS hosted firefox 320
+PASS hosted webkit 1440
+PASS hosted webkit 1024
+PASS hosted webkit 768
+PASS hosted webkit 390
+PASS hosted webkit 320
+Hosted Preview acceptance PASS (GET-only; no customer order)

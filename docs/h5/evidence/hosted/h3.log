@@ -1,0 +1,17 @@
+PASS H3 chrome 1440
+PASS H3 chrome 1024
+PASS H3 chrome 768
+PASS H3 chrome 390
+PASS H3 chrome 320
+PASS H3 firefox 1440
+PASS H3 firefox 1024
+PASS H3 firefox 768
+PASS H3 firefox 390
+PASS H3 firefox 320
+PASS H3 webkit 1440
+PASS H3 webkit 1024
+PASS H3 webkit 768
+PASS H3 webkit 390
+PASS H3 webkit 320
+H3 acceptance PASS
+EXIT=0

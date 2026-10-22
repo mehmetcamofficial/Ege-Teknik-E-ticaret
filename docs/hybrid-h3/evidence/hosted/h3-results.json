@@ -1,0 +1,758 @@
+{
+  "origin": "https://ege-teknik-phase3a-ddpuwwbq6-dragonfire-09s-projects.vercel.app",
+  "hosted": true,
+  "applicationCommit": "d60487a94dd68dd1dccaa7e916fca2c26eb30e0a",
+  "matrix": [
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 1440,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 1024,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 768,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 390,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 320,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1440,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 1024,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 768,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 390,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 320,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1440,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 1024,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 768,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 390,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 320,
+      "checks": {
+        "stockFix": "PASS",
+        "legalInvalidation": "PASS",
+        "networkError": "PASS",
+        "serverStock": "PASS",
+        "duplicateSubmit": "PASS",
+        "success": "PASS",
+        "reducedMotion": "PASS",
+        "mobileBar": "PASS"
+      },
+      "status": "PASS"
+    }
+  ],
+  "contrasts": [
+    {
+      "label": "chrome/1440/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "chrome/1440/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "chrome/1024/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "chrome/1024/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 46
+    },
+    {
+      "label": "chrome/768/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "chrome/768/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "chrome/390/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "chrome/390/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "chrome/320/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "chrome/320/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "firefox/1440/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "firefox/1440/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "firefox/1024/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "firefox/1024/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "firefox/768/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "firefox/768/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "firefox/390/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "firefox/390/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "firefox/320/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "firefox/320/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "webkit/1440/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "webkit/1440/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "webkit/1024/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "webkit/1024/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "webkit/768/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "webkit/768/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "webkit/390/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "webkit/390/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    },
+    {
+      "label": "webkit/320/cart-filled",
+      "minimum": 6.391306324585703,
+      "count": 33
+    },
+    {
+      "label": "webkit/320/checkout",
+      "minimum": 5.5947229535453875,
+      "count": 49
+    }
+  ],
+  "axeScans": 90,
+  "interceptedWrites": [
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/checkout/legal-preview"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    },
+    {
+      "method": "POST",
+      "path": "/api/orders"
+    }
+  ],
+  "realWritesSent": 0,
+  "orderCreated": false
+}

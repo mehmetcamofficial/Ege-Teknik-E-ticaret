@@ -1,0 +1,16 @@
+PASS H31 chrome 1440
+PASS H31 chrome 1024
+PASS H31 chrome 768
+PASS H31 chrome 390
+PASS H31 chrome 320
+PASS H31 firefox 1440
+PASS H31 firefox 1024
+PASS H31 firefox 768
+PASS H31 firefox 390
+PASS H31 firefox 320
+PASS H31 webkit 1440
+PASS H31 webkit 1024
+PASS H31 webkit 768
+PASS H31 webkit 390
+PASS H31 webkit 320
+H31 acceptance PASS

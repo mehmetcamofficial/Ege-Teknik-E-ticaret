@@ -1,0 +1,10 @@
+NAV release chrome 390
+NAV arrived chrome 390
+PASS H12 chrome 390
+NAV release firefox 390
+NAV arrived firefox 390
+PASS H12 firefox 390
+NAV release webkit 390
+NAV arrived webkit 390
+PASS H12 webkit 390
+H12 acceptance PASS

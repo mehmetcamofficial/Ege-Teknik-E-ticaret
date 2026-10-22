@@ -1,0 +1,97 @@
+{
+  "origin": "https://ege-teknik-phase3a-7w3fhxnlg-dragonfire-09s-projects.vercel.app",
+  "capturedAt": "2026-10-22T00:56:55.486Z",
+  "readOnly": true,
+  "results": [
+    {
+      "name": "health: preview environment, preview Neon branch, never the Production branch",
+      "status": "PASS",
+      "detail": {
+        "ok": true,
+        "environment": "preview",
+        "branchId": "br-nameless-mountain-awib28a9"
+      }
+    },
+    {
+      "name": "admin read APIs refuse an unauthenticated caller (403, no data)",
+      "status": "PASS",
+      "detail": {
+        "/api/admin/orders": 403,
+        "/api/admin/orders/none": 403,
+        "/api/admin/orders/none/payments": 403,
+        "/api/admin/overview": 403,
+        "/api/admin/audit": 403,
+        "/api/admin/legal/documents": 403,
+        "/api/admin/users": 403,
+        "/api/admin/finance": 403
+      }
+    },
+    {
+      "name": "admin panel pages do not render for an anonymous visitor",
+      "status": "PASS",
+      "detail": {
+        "/admin/orders": 307,
+        "/admin/legal": 307,
+        "/admin/finance": 307
+      }
+    },
+    {
+      "name": "storefront security headers",
+      "status": "PASS",
+      "detail": {
+        "csp": "script-src 'self'; frame-src https://www.google.com; default-src 'self'; base-uri 'self'; object-src 'none'; frame-ances…",
+        "xcto": "nosniff",
+        "referrer": "strict-origin-when-cross-origin",
+        "hsts": true
+      }
+    },
+    {
+      "name": "Preview is not indexable",
+      "status": "PASS",
+      "detail": {
+        "xRobots": "noindex"
+      }
+    },
+    {
+      "name": "catalog API serves real products; no payment provider is exposed",
+      "status": "PASS",
+      "detail": {
+        "products": 77
+      }
+    },
+    {
+      "name": "legal documents: Preview serves ONLY registry fixtures (so no real document is published here)",
+      "status": "PASS",
+      "detail": {
+        "documents": 4,
+        "required": 2,
+        "realPublishedDocuments": 0
+      }
+    },
+    {
+      "name": "order lookup and order creation are POST-only (GET refused)",
+      "status": "PASS",
+      "detail": true
+    },
+    {
+      "name": "H5: notification worker route is absent without its secret; admin summary and requeue refuse anonymous callers",
+      "status": "PASS",
+      "detail": {
+        "worker": 404,
+        "workerWrong": 404,
+        "summary": 403,
+        "requeueGet": 405
+      }
+    },
+    {
+      "name": "H5: checkout copy never claims an e-mail was or will certainly be sent",
+      "status": "PASS",
+      "detail": true
+    },
+    {
+      "name": "no source maps or env files are served",
+      "status": "PASS",
+      "detail": true
+    }
+  ]
+}

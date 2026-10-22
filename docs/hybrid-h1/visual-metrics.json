@@ -1,0 +1,95 @@
+{
+  "conditions": "Chrome, 960px height, reduced motion, empty cart, consent rejected, same unmodified public catalog snapshot; live and premium HTML rendered locally",
+  "metrics": [
+    {
+      "phase": "live",
+      "width": 375,
+      "heroHeight": 674,
+      "titleFontPx": "28px",
+      "productCartVisible": true,
+      "toneOptions": 2,
+      "tabs": 4,
+      "overflow": false
+    },
+    {
+      "phase": "premium",
+      "width": 375,
+      "heroHeight": 775,
+      "titleFontPx": "38px",
+      "productCartVisible": false,
+      "toneOptions": 0,
+      "tabs": 0,
+      "overflow": false
+    },
+    {
+      "phase": "hybrid",
+      "width": 375,
+      "heroHeight": 691,
+      "titleFontPx": "28px",
+      "productCartVisible": true,
+      "toneOptions": 2,
+      "tabs": 4,
+      "overflow": false
+    },
+    {
+      "phase": "live",
+      "width": 768,
+      "heroHeight": 669,
+      "titleFontPx": "30.72px",
+      "productCartVisible": true,
+      "toneOptions": 2,
+      "tabs": 4,
+      "overflow": false
+    },
+    {
+      "phase": "premium",
+      "width": 768,
+      "heroHeight": 613,
+      "titleFontPx": "42.24px",
+      "productCartVisible": false,
+      "toneOptions": 0,
+      "tabs": 0,
+      "overflow": false
+    },
+    {
+      "phase": "hybrid",
+      "width": 768,
+      "heroHeight": 679,
+      "titleFontPx": "30px",
+      "productCartVisible": true,
+      "toneOptions": 2,
+      "tabs": 4,
+      "overflow": false
+    },
+    {
+      "phase": "live",
+      "width": 1440,
+      "heroHeight": 741,
+      "titleFontPx": "54px",
+      "productCartVisible": true,
+      "toneOptions": 2,
+      "tabs": 4,
+      "overflow": false
+    },
+    {
+      "phase": "premium",
+      "width": 1440,
+      "heroHeight": 642,
+      "titleFontPx": "68px",
+      "productCartVisible": false,
+      "toneOptions": 0,
+      "tabs": 0,
+      "overflow": false
+    },
+    {
+      "phase": "hybrid",
+      "width": 1440,
+      "heroHeight": 673,
+      "titleFontPx": "46px",
+      "productCartVisible": true,
+      "toneOptions": 2,
+      "tabs": 4,
+      "overflow": false
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+PASS H2 chrome 1440
+PASS H2 chrome 1024
+PASS H2 chrome 768
+PASS H2 chrome 390
+PASS H2 chrome 320
+PASS H2 firefox 1440
+PASS H2 firefox 1024
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: help hidden behind the filter drawer
++ actual - expected
+
++ 'visible'
+- 'hidden'
+
+    at file:///Users/mehmetcam/Developer/ege-teknik-hybrid-h2/scripts/test-hybrid-h2.mjs:61:145 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'visible',
+  expected: 'hidden',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.15.0
+H2_EXIT=1

@@ -1,0 +1,1508 @@
+{
+  "snapshotVersion": 1,
+  "contentHash": "a4e2cf71ac59fdf20286555c9da2f63373f326ef34a1efa696b60234362ecb7a",
+  "counts": {
+    "entries": 16,
+    "sections": 64,
+    "faq": 31,
+    "relatedEntries": 48,
+    "links": 39,
+    "relatedProducts": 0,
+    "relatedServices": 0
+  },
+  "entries": [
+    {
+      "id": "guide:btu-kapasite-farklari",
+      "entryType": "guide",
+      "slug": "btu-kapasite-farklari",
+      "category": "secim",
+      "title": "9.000, 12.000, 18.000 ve 24.000 BTU Klima Farkları",
+      "seoTitle": "9000, 12000, 18000, 24000 BTU Klima Kaç m²'ye Uygun?",
+      "description": "9.000, 12.000, 18.000 ve 24.000 BTU/h klimalar kaç m² için uygun? Ortalama koşullarda karşıladıkları alanları tek tabloda karşılaştırın.",
+      "lead": "Duvar tipi klimalar genellikle dört standart kapasitede üretilir. Aralarındaki fark yalnız güç değil; hangi mekâna uygun oldukları, iç ünite boyutu ve elektrik tüketimi de değişir.",
+      "answer": "Ortalama koşullarda 9.000 BTU/h yaklaşık 18 m²'ye, 12.000 BTU/h 24 m²'ye, 18.000 BTU/h 36 m²'ye ve 24.000 BTU/h 48 m²'ye kadar olan alanlar için uygundur. Güneş ve yalıtım bu değerleri belirgin biçimde değiştirir.",
+      "image": {
+        "key": "fairy",
+        "alt": "Beyaz GREE Fairy duvar tipi inverter klima",
+        "caption": "GREE Fairy serisi 9.000'den 24.000 BTU/h'ye kadar dört kapasitede sunulur."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "tablo",
+          "position": 0,
+          "title": "Kapasiteye göre uygun alanlar",
+          "html": "\n<p>Aşağıdaki değerler, Klima Seçici'de kullandığımız metrekare başına yaklaşık 500 BTU/h yaklaşımıyla hesaplanmıştır. Parantez içindeki aralık, çok güneş alan ve zayıf yalıtımlı bir oda ile kuzey cepheli, iyi yalıtımlı bir oda arasındaki farkı gösterir.</p>\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>Ortalama koşullarda kapasite ve alan</caption><thead><tr><th scope=\"col\">Kapasite</th><th scope=\"col\">Ortalama koşullarda</th><th scope=\"col\">Tipik kullanım</th></tr></thead><tbody>\n<tr id=\"btu-9000\"><td><b>9.000 BTU/h</b></td><td>≈ 18 m² (12–22 m²)</td><td>Yatak odası, çocuk odası, çalışma odası</td></tr>\n<tr id=\"btu-12000\"><td><b>12.000 BTU/h</b></td><td>≈ 24 m² (17–30 m²)</td><td>Oturma odası, geniş yatak odası, küçük salon</td></tr>\n<tr id=\"btu-18000\"><td><b>18.000 BTU/h</b></td><td>≈ 36 m² (25–44 m²)</td><td>Salon, mutfakla birleşik oturma alanı</td></tr>\n<tr id=\"btu-24000\"><td><b>24.000 BTU/h</b></td><td>≈ 48 m² (33–59 m²)</td><td>Geniş ve açık plan salon, güneş alan cephe</td></tr>\n</tbody></table></div>\n<p>Kendi odanız için sonucu <a href=\"selector.html\">Klima Seçici</a> ile birkaç saniyede hesaplayabilirsiniz.</p>"
+        },
+        {
+          "sectionKey": "9000",
+          "position": 1,
+          "title": "9.000 BTU/h: küçük odalar için",
+          "html": "\n<p>Yatak odası ve çalışma odası gibi 20 m² civarı ve altındaki alanlar için yeterlidir. Kompakt iç ünitesi ve düşük güç tüketimiyle gece kullanımında da tercih edilir. Güneye bakan, geniş camlı küçük odalarda 12.000 BTU/h daha doğru olabilir.</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?btu=9000\">9.000 BTU/h modelleri görün</a></p>"
+        },
+        {
+          "sectionKey": "12000",
+          "position": 2,
+          "title": "12.000 BTU/h: en çok tercih edilen kapasite",
+          "html": "\n<p>Oturma odaları ve 25 m² civarındaki alanlar için en yaygın seçimdir. Aynı serinin 9.000 ve 12.000 BTU/h modelleri çoğunlukla aynı iç ünite gövdesini paylaşır; bu yüzden görünüm açısından fark çok azdır.</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?btu=12000\">12.000 BTU/h modelleri görün</a></p>"
+        },
+        {
+          "sectionKey": "18000",
+          "position": 3,
+          "title": "18.000 BTU/h: salonlar için",
+          "html": "\n<p>Salon ve mutfakla birleşik oturma alanları için uygundur. İç ünite belirgin biçimde büyür ve daha güçlü bir elektrik hattı gerektirebilir; montaj öncesinde sigorta ve kablo kesiti kontrol edilmelidir.</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?btu=18000\">18.000 BTU/h modelleri görün</a></p>"
+        },
+        {
+          "sectionKey": "24000",
+          "position": 4,
+          "title": "24.000 BTU/h: geniş ve açık plan alanlar",
+          "html": "\n<p>Açık plan salonlar, güneş alan büyük mekânlar ve küçük işyerleri için tercih edilir. Bu kapasitenin de yetmediği durumlarda tek duvar tipi cihaz yerine <a href=\"rehber/salon-tipi-klima.html\">salon tipi</a>, ticari veya <a href=\"rehber/multi-sistem-klima-nedir.html\">multi sistem</a> çözümler değerlendirilmelidir.</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?btu=24000\">24.000 BTU/h modelleri görün</a></p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "9.000 BTU klima kaç metrekareyi soğutur?",
+          "answer": "Ortalama güneş ve yalıtım koşullarında yaklaşık 18 m²'ye kadar olan odalar için uygundur. Kuzey cepheli ve iyi yalıtımlı bir odada bu alan biraz daha büyüyebilir."
+        },
+        {
+          "position": 1,
+          "question": "12.000 BTU klima kaç metrekareye uygundur?",
+          "answer": "Ortalama koşullarda yaklaşık 24 m²'ye kadar olan alanlar için uygundur. Güneş alan, zayıf yalıtımlı odalarda karşıladığı alan 17 m² civarına düşebilir."
+        },
+        {
+          "position": 2,
+          "question": "18.000 BTU klima kaç metrekareye uygundur?",
+          "answer": "Ortalama koşullarda yaklaşık 36 m²'ye kadar olan salonlar için uygundur."
+        },
+        {
+          "position": 3,
+          "question": "24.000 BTU klima nerelerde kullanılır?",
+          "answer": "Ortalama koşullarda yaklaşık 48 m²'ye kadar olan geniş ve açık plan salonlar, güneş alan büyük odalar ve küçük işyerlerinde kullanılır."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:klima-btu-hesaplama",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:mekana-gore-klima-secimi",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:salon-tipi-klima",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Tüm duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Klima Seçici",
+          "href": "selector.html",
+          "linkKind": "selector"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "9b0b66edcdf0670343e8f53e0d6c9445eb7a3c051447060599dbbc6fdb4000cb",
+      "sourceRef": "scripts/klima-rehberi/guides-1.mjs"
+    },
+    {
+      "id": "guide:enerji-sinifi-seer-scop",
+      "entryType": "guide",
+      "slug": "enerji-sinifi-seer-scop",
+      "category": "teknoloji",
+      "title": "Enerji Sınıfı, SEER ve SCOP Ne Anlama Gelir?",
+      "seoTitle": "Klima Enerji Sınıfı, SEER ve SCOP Nedir? Elektrik Tüketimi",
+      "description": "A++ ile A+++ arasındaki fark ne? SEER ve SCOP değerleri nasıl okunur, klima ne kadar elektrik harcar? Enerji etiketini gerçek model örnekleriyle açıklıyoruz.",
+      "lead": "Enerji etiketi, klimanın bir sezon boyunca ne kadar verimli çalıştığını tek bakışta gösterir. Etiketi doğru okumak, yıllarca ödeyeceğiniz elektrik faturasını doğrudan etkiler.",
+      "answer": "SEER soğutmada, SCOP ısıtmada sezonluk verimliliği gösterir; değer ne kadar yüksekse aynı iş için o kadar az elektrik harcanır. Enerji sınıfı (A+++, A++ …) bu değerlerin belirli aralıklara göre harfle ifadesidir.",
+      "image": {
+        "key": "enerjiEtiketi",
+        "alt": "A+++ ile D arasındaki enerji sınıfı basamaklarını ve SEER, SCOP değerlerini gösteren etiket çizimi",
+        "caption": "Etiketin üst basamakları daha yüksek SEER ve SCOP değerlerine karşılık gelir."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "seer-scop",
+          "position": 0,
+          "title": "SEER ve SCOP nedir?",
+          "html": "\n<p><b>SEER</b> (Seasonal Energy Efficiency Ratio), klimanın soğutma sezonu boyunca ürettiği toplam soğutmanın harcadığı toplam elektriğe oranıdır. <b>SCOP</b> (Seasonal Coefficient of Performance) aynı hesabı ısıtma sezonu için yapar.</p>\n<p>Örneğin SEER değeri 8,5 olan bir klima, sezon boyunca harcadığı her 1 kWh elektrik karşılığında ortalama 8,5 kWh soğutma üretir. Sezonluk değerler, farklı dış sıcaklıklardaki ve kısmi yükteki çalışmayı da hesaba kattığı için tek bir anlık ölçümden daha gerçekçidir.</p>"
+        },
+        {
+          "sectionKey": "siniflar",
+          "position": 1,
+          "title": "Enerji sınıfları hangi değerlere karşılık gelir?",
+          "html": "\n<p>Avrupa Birliği'nin klimalar için enerji etiketi düzenlemesinde (626/2011) 12 kW'a kadar split klimalar için sınıf aralıkları şöyledir:</p>\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>Soğutma (SEER) ve ısıtma (SCOP, ortalama iklim) sınıfları</caption><thead><tr><th scope=\"col\">Sınıf</th><th scope=\"col\">SEER (soğutma)</th><th scope=\"col\">SCOP (ısıtma)</th></tr></thead><tbody>\n<tr><td><b>A+++</b></td><td>8,50 ve üzeri</td><td>5,10 ve üzeri</td></tr>\n<tr><td><b>A++</b></td><td>6,10 – 8,50</td><td>4,60 – 5,10</td></tr>\n<tr><td><b>A+</b></td><td>5,60 – 6,10</td><td>4,00 – 4,60</td></tr>\n<tr><td><b>A</b></td><td>5,10 – 5,60</td><td>3,40 – 4,00</td></tr>\n</tbody></table></div>\n<p>Aynı enerji sınıfı içinde de fark olabilir. Bu nedenle iki ürünü karşılaştırırken yalnız harfe değil, etiketteki SEER ve SCOP değerine bakın.</p>"
+        },
+        {
+          "sectionKey": "ornek",
+          "position": 2,
+          "title": "Gerçek örnek: aynı kapasite, farklı verim",
+          "html": "\n<p>12.000 BTU/h GREE modellerinin enerji etiketlerindeki SEER değerleri:</p>\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>12.000 BTU/h duvar tipi GREE modelleri</caption><thead><tr><th scope=\"col\">Seri</th><th scope=\"col\">Soğutma / ısıtma sınıfı</th><th scope=\"col\">SEER (etiket)</th></tr></thead><tbody>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Airy\">Airy</a></td><td>A+++ / A++</td><td>8,5</td></tr>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Fairy\">Fairy</a></td><td>A++ / A+</td><td>7,1</td></tr>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Pular\">Pular</a></td><td>A++ / A+</td><td>6,1</td></tr>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Aphro\">Aphro</a></td><td>A++ / A+</td><td>6,1</td></tr>\n</tbody></table></div>\n<p>Aynı soğutma işini yapmak için SEER değeri 8,5 olan bir klima, SEER değeri 6,1 olan bir klimaya göre sezon boyunca yaklaşık %28 daha az elektrik harcar (6,1 ÷ 8,5 ≈ 0,72). Klimayı ne kadar uzun kullanıyorsanız bu fark o kadar önemli hâle gelir.</p>"
+        },
+        {
+          "sectionKey": "tuketim",
+          "position": 3,
+          "title": "Klima ne kadar elektrik harcar?",
+          "html": "\n<p>Kabaca bir tahmin için ürün sayfasındaki soğutma güç tüketimini (W) kullanabilirsiniz. Örneğin GREE Airy 12.000 BTU/h modelinin nominal soğutma güç tüketimi 875 W'tır; bu, nominal güçte bir saat çalışmanın yaklaşık 0,875 kWh elektrik harcadığı anlamına gelir.</p>\n<p>Gerçek tüketim genellikle bundan düşüktür: inverter klima hedef sıcaklığa ulaştıktan sonra nominal gücün altında çalışır. Tüketimi etkileyen başlıca etkenler şunlardır:</p>\n<ul class=\"g-list\">\n<li>Ayarlanan sıcaklık ile dış sıcaklık arasındaki fark</li>\n<li>Odanın yalıtımı ve güneş alma durumu</li>\n<li>Klimanın kapasitesinin odaya uygun olması</li>\n<li>Filtrelerin ve dış ünitenin temizliği</li>\n</ul>\n<p>Aylık maliyeti hesaplamak için tahmini kWh değerini faturanızdaki güncel birim fiyatla çarpabilirsiniz.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "A++ ile A+++ arasındaki fark nedir?",
+          "answer": "A+++ sınıfı soğutmada SEER değerinin 8,5 ve üzerinde olduğunu, A++ ise 6,1 ile 8,5 arasında olduğunu gösterir. Örneğin SEER 8,5 olan bir klima, SEER 6,1 olan bir klimaya göre aynı soğutma için yaklaşık %28 daha az elektrik harcar."
+        },
+        {
+          "position": 1,
+          "question": "Enerji etiketinde iki ayrı sınıf neden var?",
+          "answer": "Klimalar hem soğutma hem ısıtma yaptığı için etikette soğutma (SEER) ve ısıtma (SCOP) için ayrı sınıflar gösterilir. Ürün sayfalarımızda bu iki değer 'A+++ / A++' biçiminde birlikte yazılır."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:inverter-klima-nedir",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:gree-serileri-karsilastirma",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-bakimi-ne-zaman",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Airy serisi (A+++)",
+          "href": "catalog.html?category=Duvar%20Tipi&series=Airy",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Tüm duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "5f886daf5cef905c70b43487c5be1c6984efd7a0655df51e8dbfc8961ff8b919",
+      "sourceRef": "scripts/klima-rehberi/guides-2.mjs"
+    },
+    {
+      "id": "guide:gree-serileri-karsilastirma",
+      "entryType": "guide",
+      "slug": "gree-serileri-karsilastirma",
+      "category": "teknoloji",
+      "title": "GREE Airy, Fairy, Pular ve Aphro Karşılaştırması",
+      "seoTitle": "GREE Airy, Fairy, Pular, Aphro Karşılaştırma: Hangisi?",
+      "description": "GREE duvar tipi serilerini enerji sınıfı, SEER, kapasite, Wi-Fi, filtre ve renk seçenekleriyle yan yana karşılaştırın; ihtiyacınıza uygun seriyi bulun.",
+      "lead": "Dört GREE duvar tipi seri de inverter teknolojili ve R32 soğutucu akışkanlıdır. Aralarındaki fark verimlilik, donanım, renk seçenekleri ve fiyat seviyesinde ortaya çıkar.",
+      "answer": "En yüksek verimlilik ve iki renk seçeneği için Airy; geniş kapasite aralığı ve çok fonksiyonlu filtre için Fairy; Wi-Fi'lı ve kompakt bir model için Pular; en uygun başlangıç fiyatı için Aphro öne çıkar.",
+      "image": {
+        "key": "airySiyah",
+        "alt": "Siyah GREE Airy duvar tipi inverter klima",
+        "caption": "GREE Airy, beyaz ve siyah renk seçenekleriyle sunulur."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "tablo",
+          "position": 0,
+          "title": "Seriler yan yana",
+          "html": "\n<div class=\"g-table-wrap\"><table class=\"g-table g-compare\"><caption>GREE duvar tipi seriler (doğrulanmış üretici verisi)</caption><thead><tr><th scope=\"col\">Özellik</th><th scope=\"col\">Airy</th><th scope=\"col\">Fairy</th><th scope=\"col\">Pular</th><th scope=\"col\">Aphro</th></tr></thead><tbody>\n<tr><th scope=\"row\">Kapasiteler (BTU/h)</th><td>9.000 · 12.000 · 18.000</td><td>9.000 · 12.000 · 18.000 · 24.000</td><td>9.000 · 12.000 · 18.000 · 24.000</td><td>9.000 · 12.000</td></tr>\n<tr><th scope=\"row\">Enerji sınıfı (soğutma / ısıtma)</th><td>A+++ / A++</td><td>A++ / A+</td><td>A++ / A+</td><td>A++ / A+</td></tr>\n<tr><th scope=\"row\">SEER (etiket)</th><td>8,5 – 9,0</td><td>7,0 – 7,5</td><td>6,1 – 6,6</td><td>6,1 – 6,6</td></tr>\n<tr><th scope=\"row\">Wi-Fi kontrol</th><td>Var</td><td>Var</td><td>Var</td><td>Opsiyonel</td></tr>\n<tr><th scope=\"row\">Çok fonksiyonlu filtre</th><td>Var</td><td>Var</td><td>—</td><td>—</td></tr>\n<tr><th scope=\"row\">Renk</th><td>Beyaz, siyah</td><td>Beyaz, siyah</td><td>Mat beyaz</td><td>Beyaz</td></tr>\n<tr><th scope=\"row\">Güncel başlangıç fiyatı</th><td data-series-card=\"Airy\"><span data-series-field=\"from\">—</span></td><td data-series-card=\"Fairy\"><span data-series-field=\"from\">—</span></td><td data-series-card=\"Pular\"><span data-series-field=\"from\">—</span></td><td data-series-card=\"Aphro\"><span data-series-field=\"from\">—</span></td></tr>\n</tbody></table></div>\n<p class=\"g-note\">Teknik değerler GREE Türkiye ürün sayfalarından alınmıştır; SEER aralığı kapasiteye göre değişir. Başlangıç fiyatları sayfayı açtığınız anda ürün kataloğumuzdan okunur.</p>"
+        },
+        {
+          "sectionKey": "airy",
+          "position": 1,
+          "title": "Airy: en yüksek verimlilik",
+          "html": "\n<figure class=\"g-figure g-figure-photo\"><img src=\"/assets/home/airy-beyaz-880.webp\" width=\"822\" height=\"515\" alt=\"Beyaz GREE Airy duvar tipi klima\" loading=\"lazy\" decoding=\"async\"></figure>\n<p>Soğutmada A+++ sınıfı ve 8,5–9,0 SEER değeriyle serinin en verimli üyesidir. Beyaz ve siyah renk seçeneği, Wi-Fi ve çok fonksiyonlu filtre sunar. Uzun saatler çalışacak klimalar ve tasarıma önem verenler için uygundur.</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?category=Duvar%20Tipi&amp;series=Airy\">Airy modellerini görün</a></p>"
+        },
+        {
+          "sectionKey": "fairy",
+          "position": 2,
+          "title": "Fairy: dört kapasite, dengeli donanım",
+          "html": "\n<figure class=\"g-figure g-figure-photo\"><img src=\"/assets/home/fairy-720.webp\" width=\"720\" height=\"273\" alt=\"Beyaz GREE Fairy duvar tipi klima\" loading=\"lazy\" decoding=\"async\"></figure>\n<p>9.000'den 24.000 BTU/h'ye kadar dört kapasitesi sayesinde evin tüm odalarında aynı seriyi kullanmak isteyenler için pratik bir seçimdir. Wi-Fi ve çok fonksiyonlu filtre standarttır.</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?category=Duvar%20Tipi&amp;series=Fairy\">Fairy modellerini görün</a></p>"
+        },
+        {
+          "sectionKey": "pular",
+          "position": 3,
+          "title": "Pular: Wi-Fi'lı ve kompakt",
+          "html": "\n<figure class=\"g-figure g-figure-photo\"><img src=\"/assets/home/pular-720.webp\" width=\"720\" height=\"392\" alt=\"Mat beyaz GREE Pular duvar tipi klima\" loading=\"lazy\" decoding=\"async\"></figure>\n<p>Mat beyaz gövdesi ve kompakt iç ünitesiyle sade bir görünüm sunar; Wi-Fi kontrol standarttır. 12.000 BTU/h modelinin iç ünite genişliği 779 mm'dir (Fairy 12.000'de 889 mm).</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?category=Duvar%20Tipi&amp;series=Pular\">Pular modellerini görün</a></p>"
+        },
+        {
+          "sectionKey": "aphro",
+          "position": 4,
+          "title": "Aphro: uygun başlangıç",
+          "html": "\n<figure class=\"g-figure g-figure-photo\"><img src=\"/assets/home/aphro-720.webp\" width=\"720\" height=\"325\" alt=\"Beyaz GREE Aphro duvar tipi klima\" loading=\"lazy\" decoding=\"async\"></figure>\n<p>9.000 ve 12.000 BTU/h kapasiteleriyle küçük ve orta büyüklükteki odalar için bütçe dostu seçenektir. Wi-Fi opsiyoneldir; modelinize uygun Wi-Fi kiti için bizimle iletişime geçebilirsiniz.</p>\n<p><a class=\"g-inline-cta\" href=\"catalog.html?category=Duvar%20Tipi&amp;series=Aphro\">Aphro modellerini görün</a></p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "GREE'nin en verimli duvar tipi serisi hangisi?",
+          "answer": "Kataloğumuzdaki seriler arasında Airy, soğutmada A+++ sınıfı ve 8,5–9,0 SEER değeriyle en verimli seridir."
+        },
+        {
+          "position": 1,
+          "question": "Hangi GREE serisinde 24.000 BTU seçeneği var?",
+          "answer": "Duvar tipi serilerden Fairy ve Pular 24.000 BTU/h kapasitede sunulur."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:enerji-sinifi-seer-scop",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:wifi-klima-ne-ise-yarar",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:btu-kapasite-farklari",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Airy",
+          "href": "catalog.html?category=Duvar%20Tipi&series=Airy",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Fairy",
+          "href": "catalog.html?category=Duvar%20Tipi&series=Fairy",
+          "linkKind": "category"
+        },
+        {
+          "position": 2,
+          "label": "Pular",
+          "href": "catalog.html?category=Duvar%20Tipi&series=Pular",
+          "linkKind": "category"
+        },
+        {
+          "position": 3,
+          "label": "Aphro",
+          "href": "catalog.html?category=Duvar%20Tipi&series=Aphro",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "9cb0aef36907c22cae7aecfca5d00119b477e625df34134126d0129886e3b60a",
+      "sourceRef": "scripts/klima-rehberi/guides-2.mjs"
+    },
+    {
+      "id": "guide:ikinci-el-klima-alinir-mi",
+      "entryType": "guide",
+      "slug": "ikinci-el-klima-alinir-mi",
+      "category": "secim",
+      "title": "İkinci El Klima Alınır mı? Kontrol Listesi",
+      "seoTitle": "İkinci El Klima Alınır mı? Almadan Önce Kontrol Listesi",
+      "description": "İkinci el veya spot klima alırken kompresör, gaz, iç ünite hijyeni, uzaktan kumanda ve montaj maliyeti gibi hangi noktaları kontrol etmelisiniz?",
+      "lead": "Uygun fiyatlı bir ikinci el klima mantıklı bir seçim olabilir; ancak cihazın geçmişi bilinmiyorsa ilk yaz ciddi bir masrafa dönüşebilir. Almadan önce şu noktaları mutlaka kontrol edin.",
+      "answer": "Çalışır durumda test edilmiş, kondisyonu açıkça belirtilmiş, iç ünitesi temiz ve uzaktan kumandası olan ikinci el klimalar alınabilir. Söküm ve yeniden montaj maliyetini de fiyata ekleyerek karar verin.",
+      "image": {
+        "key": "ikinciEl",
+        "alt": "İkinci el klima alırken kontrol edilmesi gerekenleri gösteren kontrol listesi çizimi",
+        "caption": "Test edilmemiş bir klima, uygun fiyatına rağmen pahalıya mal olabilir."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "kontrol",
+          "position": 0,
+          "title": "Almadan önce kontrol listesi",
+          "html": "\n<ul class=\"g-checklist\">\n<li><b>Çalışma testi:</b> Klimayı soğutma modunda en az 15–20 dakika çalıştırın; iç üniteden çıkan havanın belirgin biçimde soğuduğunu kontrol edin.</li>\n<li><b>Kompresör sesi:</b> Dış ünitede vuruntu, sürtünme veya düzensiz ses olmamalıdır.</li>\n<li><b>Gaz durumu:</b> Gazın ne zaman ve neden eklendiğini sorun. Sık gaz eklenmesi kaçağa işaret eder.</li>\n<li><b>Hijyen:</b> İç ünite serpantini, filtre ve fan küflü veya kötü kokulu olmamalıdır.</li>\n<li><b>Kumanda ve etiket:</b> Uzaktan kumanda çalışmalı; model etiketi okunabilir olmalıdır.</li>\n<li><b>Yaş ve soğutucu akışkan:</b> Model yılı ve kullanılan akışkan (ör. R32, R410A) servis ve parça bulunabilirliğini etkiler.</li>\n</ul>"
+        },
+        {
+          "sectionKey": "maliyet",
+          "position": 1,
+          "title": "Toplam maliyeti hesaplayın",
+          "html": "\n<p>İkinci el klimanın fiyatına söküm, taşıma, yeni montaj, gerekirse yeni bakır boru ve gaz tamamlama maliyetlerini ekleyin. Toplam tutar yeni ve verimli bir cihaza yaklaşıyorsa, yeni ürün garantisi ve enerji tasarrufu nedeniyle genellikle daha iyi bir seçimdir.</p>"
+        },
+        {
+          "sectionKey": "spot",
+          "position": 2,
+          "title": "Ege Teknik Spot Ürünler",
+          "html": "\n<p>Ege Teknik <a href=\"second-hand.html\">Spot Ürünler</a> bölümünde yalnız kontrol edilmiş, kondisyonu ve test notları açıkça belirtilen tekil stoklu ürünler listelenir. İlgilendiğiniz ürün için <a href=\"contact.html?subject=ikinci-el\">bilgi isteyebilirsiniz</a>.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "İkinci el klimada gaz eksikliği nasıl anlaşılır?",
+          "answer": "Klima çalıştığı hâlde yeterince soğutmuyorsa, dış ünite bağlantılarında buzlanma veya yağlanma varsa gaz eksikliğinden şüphelenilir. Kesin tespit servis tarafından basınç ölçümüyle yapılır."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:klima-neden-sogutmaz",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-bakimi-ne-zaman",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-secimi-rehberi",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Spot Ürünler",
+          "href": "second-hand.html",
+          "linkKind": "second_hand"
+        },
+        {
+          "position": 1,
+          "label": "Yeni duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "3515ed9695341eb4499bb8efcfce14bee3ae23505d2ff239fa4f138cf25b5edb",
+      "sourceRef": "scripts/klima-rehberi/guides-1.mjs"
+    },
+    {
+      "id": "guide:inverter-klima-nedir",
+      "entryType": "guide",
+      "slug": "inverter-klima-nedir",
+      "category": "teknoloji",
+      "title": "Inverter Klima Nedir? Nasıl Tasarruf Sağlar?",
+      "seoTitle": "Inverter Klima Nedir, Nasıl Çalışır? Avantajları",
+      "description": "Inverter klima kompresör hızını ihtiyaca göre ayarlar. Klasik (on/off) klimadan farkını, enerji tasarrufunu ve konfora etkisini gerçek model verisiyle anlatıyoruz.",
+      "lead": "Bugün satılan duvar tipi klimaların neredeyse tamamı inverter teknolojisiyle çalışır. Peki inverter tam olarak neyi değiştirir ve neden daha az enerji harcar?",
+      "answer": "Inverter klima, kompresörün hızını odanın ihtiyacına göre sürekli ayarlar. İstenen sıcaklığa ulaşıldığında durmak yerine düşük devirde çalışmaya devam eder; bu sayede sıcaklık daha dengeli kalır ve sık dur-kalk kaynaklı enerji kaybı azalır.",
+      "image": {
+        "key": "inverter",
+        "alt": "Klasik klimanın dur-kalk çalışması ile inverter klimanın dengeli çalışmasını karşılaştıran grafik",
+        "caption": "Klasik klima tam güçle çalışıp durur; inverter klima hızını azaltarak dengede kalır."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "klasik",
+          "position": 0,
+          "title": "Klasik (on/off) klima nasıl çalışır?",
+          "html": "\n<p>Inverter olmayan klimalarda kompresör ya tam güçte çalışır ya da tamamen durur. Oda istenen sıcaklığa ulaşınca kompresör kapanır, sıcaklık yükselince yeniden tam güçte devreye girer. Bu döngü hem sıcaklıkta dalgalanmaya hem de her kalkışta yüksek akım çekilmesine neden olur.</p>"
+        },
+        {
+          "sectionKey": "inverter",
+          "position": 1,
+          "title": "Inverter ne yapar?",
+          "html": "\n<p>Inverter, kompresör motorunun hızını elektronik olarak değiştiren bir sürücüdür. Klima ilk çalıştığında yüksek devirle odayı hızla soğutur; hedef sıcaklığa yaklaştıkça devrini düşürür ve odanın ısı kazancını karşılayacak kadar çalışmaya devam eder.</p>\n<p>Bu esnekliği teknik özellik tablosunda görebilirsiniz. Örneğin GREE Airy 12.000 BTU/h modelinin soğutma kapasitesi üretici verisinde <b>2.900 ~ 11.942 ~ 15.354 BTU/h</b> olarak verilir: cihaz gerektiğinde nominal değerin çok altında, gerektiğinde üstünde çalışabilir.</p>"
+        },
+        {
+          "sectionKey": "avantaj",
+          "position": 2,
+          "title": "Inverter klimanın avantajları",
+          "html": "\n<ul class=\"g-checklist\">\n<li><b>Daha az enerji:</b> Sık dur-kalk yapılmadığı için sezonluk verimlilik (SEER/SCOP) daha yüksektir.</li>\n<li><b>Daha dengeli sıcaklık:</b> Oda sıcaklığı hedef değerin çevresinde küçük aralıkta kalır.</li>\n<li><b>Daha sessiz çalışma:</b> Düşük devirde hem iç hem dış ünite daha az ses çıkarır.</li>\n<li><b>Daha iyi ısıtma:</b> Soğuk havada da kapasitesini daha iyi korur.</li>\n</ul>"
+        },
+        {
+          "sectionKey": "kullanim",
+          "position": 3,
+          "title": "Inverter klimayı verimli kullanmak",
+          "html": "\n<p>Inverter klimalar uzun süre sabit bir sıcaklıkta çalıştırıldığında en verimli sonucu verir. Klimayı çok düşük bir değere ayarlayıp sık sık kapatmak yerine yazın 24–26 °C gibi makul bir sıcaklıkta açık bırakmak genellikle daha ekonomiktir. Filtrelerin temiz tutulması da verimliliği doğrudan etkiler (<a href=\"rehber/klima-bakimi-ne-zaman.html\">bakım rehberi</a>).</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Inverter klima sürekli açık kalırsa çok elektrik yakar mı?",
+          "answer": "Hayır. Hedef sıcaklığa ulaştıktan sonra düşük devirde çalıştığı için tüketimi de düşer. Sık aç-kapa yapmak yerine makul bir sıcaklıkta çalıştırmak çoğu zaman daha ekonomiktir."
+        },
+        {
+          "position": 1,
+          "question": "Tüm GREE duvar tipi klimalar inverter mı?",
+          "answer": "Kataloğumuzdaki GREE Airy, Fairy, Pular ve Aphro duvar tipi modellerin tamamı inverter teknolojiyle çalışır."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:enerji-sinifi-seer-scop",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:gree-serileri-karsilastirma",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-btu-hesaplama",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Inverter duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "6a24970dea7a9a8ada331035fcd5063fa5275fb9d547883160e40792e627b5ae",
+      "sourceRef": "scripts/klima-rehberi/guides-2.mjs"
+    },
+    {
+      "id": "guide:klima-bakimi-ne-zaman",
+      "entryType": "guide",
+      "slug": "klima-bakimi-ne-zaman",
+      "category": "montaj",
+      "title": "Klima Bakımı ve Temizliği: Ne Zaman, Nasıl Yapılır?",
+      "seoTitle": "Klima Bakımı Ne Zaman Yapılır? Filtre Temizliği Rehberi",
+      "description": "Klima filtresi ne sıklıkla temizlenmeli, periyodik bakım ne zaman yapılmalı? Evde yapabileceğiniz temizliği ve servise bırakmanız gereken işleri ayırıyoruz.",
+      "lead": "Düzenli bakım klimanın verimini korur, kötü kokuyu ve su akıtma gibi sorunları önler, cihazın ömrünü uzatır. Bazı işleri kendiniz yapabilirsiniz; bazıları ise teknik servis gerektirir.",
+      "answer": "Filtreleri yoğun kullanım döneminde birkaç haftada bir kontrol edip temizleyin; kullanım kılavuzundaki aralığı esas alın. Teknik bakımı yılda en az bir kez, tercihen soğutma sezonundan önce yaptırın.",
+      "image": {
+        "key": "bakim",
+        "alt": "Klima filtresinin çıkarılıp temizlenmesini ve bakım takvimini gösteren çizim",
+        "caption": "Filtre temizliği evde yapılabilir; serpantin, drenaj ve gaz kontrolü servis işidir."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "evde",
+          "position": 0,
+          "title": "Evde yapabileceğiniz temizlik",
+          "html": "\n<ol class=\"g-numbered\">\n<li>Klimayı kapatın ve fişini çekin veya sigortasını indirin.</li>\n<li>İç ünitenin ön kapağını açıp filtreleri kılavuzda gösterildiği gibi çıkarın.</li>\n<li>Filtreleri ılık suyla yıkayın veya elektrikli süpürgeyle tozunu alın; sert fırça ve deterjan kullanmayın.</li>\n<li>Filtreleri gölgede tamamen kurutup yerine takın.</li>\n<li>İç ünitenin dış yüzeyini kuru ve yumuşak bir bezle silin.</li>\n</ol>\n<div class=\"g-callout\"><b>Dikkat:</b> İç ünitenin içindeki fana, serpantine ve elektronik kartlara su veya sprey uygulamayın. Bu işlemler teknik servis tarafından yapılmalıdır.</div>"
+        },
+        {
+          "sectionKey": "siklik",
+          "position": 1,
+          "title": "Ne sıklıkla?",
+          "html": "\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>Önerilen bakım takvimi</caption><thead><tr><th scope=\"col\">İşlem</th><th scope=\"col\">Kim yapar?</th><th scope=\"col\">Sıklık</th></tr></thead><tbody>\n<tr><td>Filtre kontrolü ve temizliği</td><td>Kullanıcı</td><td>Yoğun kullanımda birkaç haftada bir; kılavuzdaki aralığa göre</td></tr>\n<tr><td>Periyodik teknik bakım</td><td>Teknik servis</td><td>Yılda en az bir kez, sezon öncesi</td></tr>\n<tr><td>Ticari ve yoğun kullanım</td><td>Teknik servis</td><td>Yılda iki kez önerilir</td></tr>\n</tbody></table></div>"
+        },
+        {
+          "sectionKey": "servis",
+          "position": 2,
+          "title": "Teknik bakımda neler yapılır?",
+          "html": "\n<ul class=\"g-checklist\">\n<li>İç ünite serpantini ve fanının temizliği</li>\n<li>Drenaj hattı ve tavasının kontrolü ve temizliği</li>\n<li>Dış ünite kondenserinin temizliği ve hava akışının kontrolü</li>\n<li>Çalışma basınçlarının ve gaz durumunun kontrolü</li>\n<li>Elektrik bağlantılarının ve genel çalışma performansının kontrolü</li>\n</ul>\n<p>Periyodik bakım için <a href=\"contact.html?subject=bakim\">bakım talebi oluşturabilirsiniz</a>. Filtre ve yedek parça ihtiyaçlarınız için <a href=\"catalog.html?category=Yedek%20Par%C3%A7a\">yedek parça</a> bölümüne göz atın.</p>"
+        },
+        {
+          "sectionKey": "belirtiler",
+          "position": 3,
+          "title": "Bakım zamanının geldiğini gösteren belirtiler",
+          "html": "\n<ul class=\"g-list\">\n<li>Klima çalışınca kötü koku gelmesi</li>\n<li>Soğutma performansının belirgin biçimde düşmesi (<a href=\"rehber/klima-neden-sogutmaz.html\">klima neden soğutmaz?</a>)</li>\n<li>İç üniteden su damlaması (<a href=\"rehber/klima-neden-su-akitir.html\">klima neden su akıtır?</a>)</li>\n<li>Normalden fazla ses veya titreşim</li>\n</ul>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Klima filtresi ne zaman temizlenir?",
+          "answer": "Yoğun kullanım döneminde birkaç haftada bir kontrol edilip temizlenmesi önerilir. Tozlu ortamlarda ve evcil hayvan bulunan evlerde daha sık temizlik gerekebilir; kesin aralık için kullanım kılavuzunu esas alın."
+        },
+        {
+          "position": 1,
+          "question": "Klima bakımı yılda kaç kez yapılmalı?",
+          "answer": "Evsel kullanımda yılda en az bir kez, tercihen soğutma sezonundan önce; ticari ve yoğun kullanımda yılda iki kez teknik bakım önerilir."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:klima-neden-sogutmaz",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-neden-su-akitir",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-montaji-oncesi",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Filtre ve yedek parça",
+          "href": "catalog.html?category=Yedek%20Par%C3%A7a",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Bakım talebi",
+          "href": "contact.html?subject=bakim",
+          "linkKind": "contact"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "ab5dda6aff7a5c3b14f4c3092a3bc12692d00b87474222b8a60652de8d73b795",
+      "sourceRef": "scripts/klima-rehberi/guides-3.mjs"
+    },
+    {
+      "id": "guide:klima-btu-hesaplama",
+      "entryType": "guide",
+      "slug": "klima-btu-hesaplama",
+      "category": "secim",
+      "title": "BTU Nedir? Odaya Göre Klima Kapasitesi Nasıl Hesaplanır?",
+      "seoTitle": "BTU Nedir, Klima Kapasitesi Nasıl Hesaplanır?",
+      "description": "BTU/h ne demek, kaç m² için kaç BTU gerekir? Güneş, yalıtım ve kişi sayısının kapasiteye etkisini örnek hesaplarla anlatıyoruz.",
+      "lead": "Klima kataloglarında gördüğünüz 9.000, 12.000 veya 24.000 rakamları cihazın soğutma gücünü BTU/h cinsinden gösterir. Doğru kapasiteyi bulmak için alanın yanında birkaç etkeni daha hesaba katmak gerekir.",
+      "answer": "Ortalama güneş ve yalıtım koşullarında metrekare başına yaklaşık 500 BTU/h ile başlanır; güneş alan cephe, zayıf yalıtım ve kalabalık kullanım bu değeri artırır. Sonuç en yakın üst standart kapasiteye yuvarlanır.",
+      "image": {
+        "key": "btuOlcek",
+        "alt": "9.000, 12.000, 18.000 ve 24.000 BTU/h kapasitelerin oda büyüklüğüyle ilişkisini gösteren çizim",
+        "caption": "Kapasite arttıkça klimanın ortalama koşullarda karşılayabildiği alan büyür."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "btu-nedir",
+          "position": 0,
+          "title": "BTU ve BTU/h ne demek?",
+          "html": "\n<p>BTU (British Thermal Unit) bir ısı enerjisi birimidir; yaklaşık 1,055 kilojoule'e karşılık gelir. Klimalarda kullanılan <b>BTU/h</b> ise cihazın bir saatte ortamdan uzaklaştırabildiği ısı miktarını, yani soğutma gücünü anlatır.</p>\n<p>Kilowatt ile karşılaştırmak isterseniz 12.000 BTU/h yaklaşık 3,5 kW soğutma gücüne eşittir. Bu değer, cihazın çektiği elektrik gücü değildir; klimanın ürettiği soğutma kapasitesidir.</p>\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>Standart kapasitelerin yaklaşık kW karşılığı</caption><thead><tr><th scope=\"col\">Kapasite</th><th scope=\"col\">Yaklaşık soğutma gücü</th></tr></thead><tbody>\n<tr><td>9.000 BTU/h</td><td>2,6 kW</td></tr><tr><td>12.000 BTU/h</td><td>3,5 kW</td></tr><tr><td>18.000 BTU/h</td><td>5,3 kW</td></tr><tr><td>24.000 BTU/h</td><td>7,0 kW</td></tr></tbody></table></div>"
+        },
+        {
+          "sectionKey": "hesaplama",
+          "position": 1,
+          "title": "Kapasite nasıl hesaplanır?",
+          "html": "\n<p>Ege Teknik <a href=\"selector.html\">Klima Seçici</a> aracı, ortalama bir oda için metrekare başına yaklaşık 500 BTU/h ile başlar ve sonucu şu etkenlerle düzeltir:</p>\n<ul class=\"g-list\">\n<li><b>Güneş durumu:</b> Kuzey cephede ihtiyaç yaklaşık %10 azalır; güney veya batı cephede ya da geniş cam yüzeylerde %20 artar.</li>\n<li><b>Yalıtım:</b> İyi yalıtım ve çift cam ihtiyacı yaklaşık %10 azaltır; yalıtımsız veya eski yapılarda %20 artar.</li>\n<li><b>Kişi sayısı:</b> İki kişinin üzerindeki her kişi için yaklaşık 500 BTU/h eklenir.</li>\n</ul>\n<p>Hesaplanan değer en yakın üst standart kapasiteye (9.000, 12.000, 18.000 veya 24.000 BTU/h) yuvarlanır. Sonuç iki kapasitenin sınırına çok yakınsa iki seçenek birlikte değerlendirilir.</p>"
+        },
+        {
+          "sectionKey": "ornekler",
+          "position": 2,
+          "title": "Örnek hesaplar",
+          "html": "\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>Aynı formülle üç farklı oda</caption><thead><tr><th scope=\"col\">Oda</th><th scope=\"col\">Hesap</th><th scope=\"col\">Sonuç</th></tr></thead><tbody>\n<tr><td>16 m² kuzey cepheli yatak odası, iyi yalıtım, 2 kişi</td><td>16 × 500 × 0,9 × 0,9 ≈ 6.480</td><td>9.000 BTU/h</td></tr>\n<tr><td>22 m² oturma odası, normal güneş ve yalıtım, 3 kişi</td><td>22 × 500 + 500 = 11.500</td><td>12.000 BTU/h (sınıra yakın)</td></tr>\n<tr><td>30 m² batı cepheli salon, orta yalıtım, 4 kişi</td><td>30 × 500 × 1,2 + 1.000 = 19.000</td><td>24.000 BTU/h</td></tr>\n</tbody></table></div>\n<p>İkinci örnekte sonuç 12.000 BTU/h sınırına çok yakın olduğu için Klima Seçici 12.000–18.000 aralığını gösterir ve yerinde değerlendirme önerir.</p>"
+        },
+        {
+          "sectionKey": "dikkat",
+          "position": 3,
+          "title": "Hesabın yetmediği durumlar",
+          "html": "\n<p>Formül tipik konut odaları içindir. Şu durumlarda sonucu mutlaka yerinde doğrulatın:</p>\n<ul class=\"g-checklist\">\n<li>Tavan yüksekliği 3 metreyi aşıyorsa veya mekân çift katlı (galerili) ise</li>\n<li>Mutfakla birleşik, açık planlı ve birden fazla odaya yayılan alanlarda</li>\n<li>Mağaza, ofis, restoran gibi cihaz ve insan yükü yüksek ticari mekânlarda</li>\n<li>Çatı katı veya tamamen cam cepheli mekânlarda</li>\n</ul>\n<p>Bu tür alanlar için <a href=\"rehber/yerinde-kesif-neden-onemli.html\">yerinde keşfin neden önemli olduğunu</a> anlattığımız rehbere göz atın.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "20 m² oda için kaç BTU klima gerekir?",
+          "answer": "Ortalama güneş ve yalıtım koşullarında yaklaşık 10.000 BTU/h ihtiyaç çıkar; bu da 12.000 BTU/h kapasiteye karşılık gelir. Kuzey cepheli ve iyi yalıtımlı bir odada 9.000 BTU/h yeterli olabilir."
+        },
+        {
+          "position": 1,
+          "question": "Büyük kapasite almak zarar verir mi?",
+          "answer": "Gereğinden büyük klima odayı hızla soğutup sık sık durur; bu da nem alma performansını düşürür ve konforu azaltır. İlk yatırım maliyeti de gereksiz yere artar."
+        },
+        {
+          "position": 2,
+          "question": "BTU/h değeri elektrik tüketimi midir?",
+          "answer": "Hayır. BTU/h klimanın soğutma kapasitesidir. Elektrik tüketimi ürün sayfasındaki güç tüketimi (W) ve SEER değeriyle değerlendirilir."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:btu-kapasite-farklari",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:enerji-sinifi-seer-scop",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:yerinde-kesif-neden-onemli",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "9.000 BTU/h modeller",
+          "href": "catalog.html?btu=9000",
+          "linkKind": "catalog_filter"
+        },
+        {
+          "position": 1,
+          "label": "12.000 BTU/h modeller",
+          "href": "catalog.html?btu=12000",
+          "linkKind": "catalog_filter"
+        },
+        {
+          "position": 2,
+          "label": "18.000 BTU/h modeller",
+          "href": "catalog.html?btu=18000",
+          "linkKind": "catalog_filter"
+        },
+        {
+          "position": 3,
+          "label": "24.000 BTU/h modeller",
+          "href": "catalog.html?btu=24000",
+          "linkKind": "catalog_filter"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "d04ce8543970c64452d18d19b912e61444deef861a9a3a7f9f77af7d1d5e971a",
+      "sourceRef": "scripts/klima-rehberi/guides-1.mjs"
+    },
+    {
+      "id": "guide:klima-montaji-oncesi",
+      "entryType": "guide",
+      "slug": "klima-montaji-oncesi",
+      "category": "montaj",
+      "title": "Klima Montajı Öncesi Bilinmesi Gerekenler",
+      "seoTitle": "Klima Montajı Öncesi Bilinmesi Gerekenler: Kontrol Listesi",
+      "description": "İç ve dış ünite yeri, boru mesafesi, elektrik hattı, drenaj, vakumlama ve apartman izni: klima montajından önce netleştirmeniz gereken her şey.",
+      "lead": "En verimli klima bile yanlış montajla beklenen performansı veremez. Montaj gününden önce birkaç konuyu netleştirmek hem süreci hızlandırır hem de sürpriz maliyetlerin önüne geçer.",
+      "answer": "Montajdan önce iç ve dış ünitenin yerini, aradaki boru mesafesini, elektrik hattının uygunluğunu ve yoğuşma suyunun nereye akacağını belirleyin. Apartmanlarda dış cephe kullanımı için yönetim onayı alın.",
+      "image": {
+        "key": "splitSistem",
+        "alt": "İç ünite, dış ünite, bakır boru hattı ve drenaj hattını gösteren split klima montaj şeması",
+        "caption": "Split klimada iç ve dış ünite bakır borular, enerji kablosu ve drenaj hattıyla bağlanır."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "ic-unite",
+          "position": 0,
+          "title": "İç ünitenin yeri",
+          "html": "\n<ul class=\"g-checklist\">\n<li>Havayı odanın tamamına dağıtabileceği, önü açık bir duvar seçin; genellikle odanın uzun kenarı en iyi sonucu verir.</li>\n<li>Soğuk havanın doğrudan yatağa, çalışma masasına veya oturma alanına üflenmemesine dikkat edin.</li>\n<li>Isı kaynaklarının (fırın, radyatör, doğrudan güneş) hemen yakınına monte etmeyin.</li>\n<li>Filtre bakımı için üst ve yan taraflarda kılavuzda belirtilen boşluğu bırakın.</li>\n</ul>"
+        },
+        {
+          "sectionKey": "dis-unite",
+          "position": 1,
+          "title": "Dış ünitenin yeri",
+          "html": "\n<ul class=\"g-checklist\">\n<li>Dış ünitenin önü ve arkası hava alabilmeli; kapalı ve havasız alanlar verimi düşürür.</li>\n<li>Sağlam bir konsol veya zemin üzerine, titreşimi azaltacak şekilde yerleştirilmelidir.</li>\n<li>Servis ve bakım için güvenli erişim olmalıdır.</li>\n<li>Sıcak havanın komşu pencerelerine veya yaya yoluna üflenmemesine dikkat edin.</li>\n</ul>"
+        },
+        {
+          "sectionKey": "boru-elektrik",
+          "position": 2,
+          "title": "Boru mesafesi, elektrik ve drenaj",
+          "html": "\n<p>İç ve dış ünite arasındaki bakır boru hattı mümkün olduğunca kısa tutulmalıdır. Standart montaj belirli bir boru uzunluğunu kapsar; daha uzun hatlar, ek dirsekler veya kanal içinden geçiş ek malzeme ve işçilik gerektirir.</p>\n<p>Klimanın beslendiği elektrik hattının kablo kesiti ve sigortası cihazın gücüne uygun olmalıdır; 18.000 BTU/h ve üzeri cihazlarda bu kontrol özellikle önemlidir. İç üniteden gelen yoğuşma suyu için eğimli bir drenaj yolu planlanmalı, su cepheye veya balkona kontrolsüz akmamalıdır.</p>\n<div class=\"g-callout\">Ege Teknik'te standart kapsam dışındaki borulama, elektrik, erişim ve yapı işleri montajdan önce size bildirilir ve onayınız olmadan ücretlendirilmez.</div>"
+        },
+        {
+          "sectionKey": "vakum",
+          "position": 3,
+          "title": "Vakumlama ve test: kaliteli montajın işareti",
+          "html": "\n<p>Boru bağlantıları yapıldıktan sonra hat vakum pompasıyla havasından ve neminden arındırılmalı, ardından sızdırmazlık kontrol edilmelidir. Bu adım atlanırsa sistemde kalan nem ve hava, zamanla verim kaybına ve arızalara yol açabilir. Montaj sonunda klima soğutma ve ısıtma modlarında çalıştırılarak test edilir.</p>"
+        },
+        {
+          "sectionKey": "izin",
+          "position": 4,
+          "title": "Apartman ve site izni",
+          "html": "\n<p>Dış cephe, çatı veya ortak alanlara dış ünite konulacaksa apartman ya da site yönetiminin kurallarını önceden öğrenin. Bazı sitelerde dış ünitelerin belirli bir bölgede toplanması istenebilir; bu da boru mesafesini etkiler.</p>\n<p>Emin olmadığınız her konuda <a href=\"rehber/yerinde-kesif-neden-onemli.html\">yerinde keşif</a> en doğru yoldur. <a href=\"services.html\">Montaj ve servis hizmetlerimizi</a> inceleyebilir veya <a href=\"contact.html?subject=kesif\">keşif talebi</a> oluşturabilirsiniz.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Klima montajı ne kadar sürer?",
+          "answer": "Standart bir duvar tipi klimanın montajı, mekânın koşullarına bağlı olarak genellikle birkaç saat sürer. Uzun boru hattı, kanal içi geçiş veya zor erişim süreyi uzatır."
+        },
+        {
+          "position": 1,
+          "question": "Standart montaja neler dahildir?",
+          "answer": "Kapsam ürüne göre değişir; ürün sayfasında 'Standart montaj dahil' ibaresi bulunan modellerde standart kapsam dışındaki işler montajdan önce bildirilir ve onayınız olmadan ücretlendirilmez."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:yerinde-kesif-neden-onemli",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-bakimi-ne-zaman",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:multi-sistem-klima-nedir",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Montaj ve servis",
+          "href": "services.html",
+          "linkKind": "service"
+        },
+        {
+          "position": 1,
+          "label": "Keşif talebi",
+          "href": "contact.html?subject=kesif",
+          "linkKind": "contact"
+        },
+        {
+          "position": 2,
+          "label": "Duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "383adaa196e9d84118990bf0d2f7fb79573cf7a30882dcb2eeb180781e084df9",
+      "sourceRef": "scripts/klima-rehberi/guides-3.mjs"
+    },
+    {
+      "id": "guide:klima-neden-sogutmaz",
+      "entryType": "guide",
+      "slug": "klima-neden-sogutmaz",
+      "category": "ariza",
+      "title": "Klima Neden Soğutmaz? Kontrol Edilecek 7 Nokta",
+      "seoTitle": "Klima Neden Soğutmaz? Servisi Aramadan Önce 7 Kontrol",
+      "description": "Klimanız yeterince soğutmuyorsa önce ayarları, filtreyi ve dış üniteyi kontrol edin. Evde yapabileceğiniz kontrolleri ve servis gerektiren durumları anlatıyoruz.",
+      "lead": "Klimanın soğutmaması her zaman ciddi bir arıza anlamına gelmez. Servisi aramadan önce birkaç basit kontrolle sorunun kaynağını daraltabilirsiniz.",
+      "answer": "En sık nedenler yanlış mod veya sıcaklık ayarı, tıkalı filtre, havası kesilen veya kirli dış ünite ve odaya göre yetersiz kapasitedir. Bu kontrollerden sonra sorun sürüyorsa gaz kaçağı veya elektronik bir arıza olabilir; bu durumda servis gerekir.",
+      "image": {
+        "key": "sogutmaKontrol",
+        "alt": "Kumanda ayarı, filtre ve dış ünite kontrollerini gösteren arıza kontrol çizimi",
+        "caption": "Kontrollere en basitinden başlayın: ayar, filtre, dış ünite."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "kontroller",
+          "position": 0,
+          "title": "Evde yapabileceğiniz kontroller",
+          "html": "\n<ol class=\"g-numbered\">\n<li><b>Mod ve sıcaklık:</b> Kumandanın soğutma (kar tanesi) modunda olduğundan ve ayarlanan sıcaklığın oda sıcaklığından düşük olduğundan emin olun.</li>\n<li><b>Filtre:</b> Tıkalı filtre hava akışını azaltır ve soğutmayı zayıflatır. Filtreleri temizleyin (<a href=\"rehber/klima-bakimi-ne-zaman.html\">nasıl yapılır?</a>).</li>\n<li><b>Dış ünite:</b> Dış ünitenin önü kapalı mı, üzeri örtülü mü, doğrudan ve uzun süre güneş altında mı? Havası kesilen dış ünite ısıyı atamaz.</li>\n<li><b>Kapı ve pencereler:</b> Açık kalan kapı, pencere veya sürekli açılıp kapanan bir giriş klimanın yükünü artırır.</li>\n<li><b>Kapasite:</b> Klima odaya göre küçük seçilmişse en sıcak saatlerde yetersiz kalabilir (<a href=\"rehber/klima-btu-hesaplama.html\">kapasite nasıl hesaplanır?</a>).</li>\n<li><b>Bekleme süresi:</b> İlk çalıştırmada ve mod değişikliklerinde kompresörün devreye girmesi birkaç dakika sürebilir.</li>\n<li><b>Hata kodu:</b> İç ünitenin ekranında bir kod görünüyorsa not alın; kullanım kılavuzunda anlamı yer alır ve servise bildirmeniz tanıyı hızlandırır.</li>\n</ol>"
+        },
+        {
+          "sectionKey": "servis",
+          "position": 1,
+          "title": "Servis gerektiren durumlar",
+          "html": "\n<ul class=\"g-checklist\">\n<li>İç ünite çalıştığı hâlde dış ünitenin hiç çalışmaması</li>\n<li>Bakır boru bağlantılarında buzlanma veya yağlanma</li>\n<li>Filtre temizliğine rağmen soğutmanın zamanla giderek azalması (olası gaz kaçağı)</li>\n<li>Sigortanın attırması, yanık kokusu veya olağandışı ses</li>\n</ul>\n<div class=\"g-callout\"><b>Önemli:</b> Gaz eklemek kalıcı bir çözüm değildir; önce kaçağın yeri bulunup giderilmelidir. Soğutucu akışkanla ilgili işlemleri yalnız yetkili teknik servis yapmalıdır.</div>\n<p>Arıza bildirimi için <a href=\"contact.html?subject=ariza\">servis talebi oluşturabilir</a> veya bizi arayabilirsiniz.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Klima çalışıyor ama soğuk hava vermiyor, neden?",
+          "answer": "En sık nedenler yanlış mod ayarı, tıkalı filtre ve dış ünitenin havasının kesilmesidir. Bunlar yolundaysa gaz kaçağı veya kompresör ile ilgili bir sorun olabilir; bu durumda servis gerekir."
+        },
+        {
+          "position": 1,
+          "question": "Klimanın gazı biter mi?",
+          "answer": "Sızdırmaz bir sistemde soğutucu akışkan tükenmez. Gaz azalıyorsa bir kaçak vardır ve önce kaçağın giderilmesi gerekir."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:klima-bakimi-ne-zaman",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-neden-su-akitir",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-btu-hesaplama",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Arıza ve servis talebi",
+          "href": "contact.html?subject=ariza",
+          "linkKind": "contact"
+        },
+        {
+          "position": 1,
+          "label": "Montaj ve servis",
+          "href": "services.html",
+          "linkKind": "service"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "51239a0c670c0c8018920a6f3bc21551a52fcebf7a1390509dda34bedebc32a0",
+      "sourceRef": "scripts/klima-rehberi/guides-3.mjs"
+    },
+    {
+      "id": "guide:klima-neden-su-akitir",
+      "entryType": "guide",
+      "slug": "klima-neden-su-akitir",
+      "category": "ariza",
+      "title": "Klima Neden Su Akıtır?",
+      "seoTitle": "Klima Neden Su Akıtır? İç ve Dış Ünite Su Damlatma",
+      "description": "İç üniteden su damlaması çoğunlukla tıkalı drenaj, kirli filtre veya montaj eğiminden kaynaklanır; dış ünitenin su akıtması ise genellikle normaldir.",
+      "lead": "Klima soğuturken havadaki nemi yoğuşturur; bu su normalde drenaj hortumuyla dışarı atılır. Su iç üniteden odaya damlıyorsa bu yol bir yerde aksıyor demektir.",
+      "answer": "İç üniteden su akmasının en sık nedenleri tıkalı veya kırılmış drenaj hattı, kirli filtre nedeniyle buzlanan serpantin ve iç ünitenin yanlış eğimle monte edilmesidir. Dış ünitenin su damlatması ise soğutma ve ısıtma sırasında normaldir.",
+      "image": {
+        "key": "drenaj",
+        "alt": "İç üniteden çıkan yoğuşma suyunun eğimli drenaj hortumuyla dışarı akışını gösteren çizim",
+        "caption": "Yoğuşma suyu, sürekli aşağı eğimli bir drenaj hattıyla dışarı atılmalıdır."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "ic-unite",
+          "position": 0,
+          "title": "İç üniteden su akıyorsa",
+          "html": "\n<ul class=\"g-list\">\n<li><b>Tıkalı drenaj hattı:</b> Toz, küf ve kir drenaj tavasını veya hortumu tıkayabilir. Özellikle uzun süre kullanılmayan ve bakımsız klimalarda sık görülür.</li>\n<li><b>Hortumun ezilmesi veya eğim bozukluğu:</b> Drenaj hortumu kıvrılmış, ezilmiş ya da bir noktada yukarı doğru eğim alıyorsa su geri döner.</li>\n<li><b>Kirli filtre:</b> Hava akışı azalınca serpantin buzlanabilir; buz çözüldüğünde tava taşar.</li>\n<li><b>İç ünite eğimi:</b> İç ünite drenaj tarafına doğru hafif eğimli olmalıdır. Montaj eğimi ters ise su tavadan taşar.</li>\n<li><b>Düşük gaz:</b> Gaz eksikliği de serpantinde buzlanmaya ve ardından su taşmasına yol açabilir.</li>\n</ul>"
+        },
+        {
+          "sectionKey": "ne-yapmali",
+          "position": 1,
+          "title": "Ne yapmalısınız?",
+          "html": "\n<ol class=\"g-numbered\">\n<li>Klimayı kapatın ve suyun eşyalara zarar vermemesi için altına bir kap veya havlu yerleştirin.</li>\n<li>Filtreleri kontrol edip temizleyin.</li>\n<li>Dışarıdaki drenaj hortumunun ucunun açık olduğunu ve ezilmediğini kontrol edin.</li>\n<li>Sorun sürüyorsa drenaj temizliği ve eğim kontrolü için servis isteyin.</li>\n</ol>\n<p>Düzenli <a href=\"rehber/klima-bakimi-ne-zaman.html\">bakım</a> drenaj kaynaklı sorunların büyük bölümünü önler. Servis için <a href=\"contact.html?subject=ariza\">arıza talebi oluşturabilirsiniz</a>.</p>"
+        },
+        {
+          "sectionKey": "dis-unite",
+          "position": 2,
+          "title": "Dış ünitenin su damlatması normal mi?",
+          "html": "\n<p>Evet, çoğu durumda normaldir. Isıtma modunda dış ünite serpantininde oluşan buz, cihazın otomatik defrost (buz çözme) döngüsünde erir ve dış üniteden su akar. Soğutma sırasında da bağlantı noktalarında bir miktar yoğuşma görülebilir. Suyun balkona veya cepheye kontrolsüz akmaması için montajda uygun bir tahliye yolu planlanmalıdır.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Klimadan su damlaması tehlikeli mi?",
+          "answer": "Doğrudan tehlikeli değildir ancak su elektrik prizlerine, mobilyalara veya zemine zarar verebilir. Klimayı kapatıp kaynağını tespit ettirmek gerekir."
+        },
+        {
+          "position": 1,
+          "question": "Dış ünitenin su akıtması arıza mıdır?",
+          "answer": "Genellikle hayır. Isıtma modunda defrost sırasında ve soğutmada yoğuşma nedeniyle dış üniteden su akması normaldir."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:klima-bakimi-ne-zaman",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-neden-sogutmaz",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-montaji-oncesi",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Arıza ve servis talebi",
+          "href": "contact.html?subject=ariza",
+          "linkKind": "contact"
+        },
+        {
+          "position": 1,
+          "label": "Bakım talebi",
+          "href": "contact.html?subject=bakim",
+          "linkKind": "contact"
+        },
+        {
+          "position": 2,
+          "label": "Montaj ve servis",
+          "href": "services.html",
+          "linkKind": "service"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "bf7544f622ad575d771264c75c9d2e167ecbdabf01d66a8231a98811c8073ab5",
+      "sourceRef": "scripts/klima-rehberi/guides-3.mjs"
+    },
+    {
+      "id": "guide:klima-secimi-rehberi",
+      "entryType": "guide",
+      "slug": "klima-secimi-rehberi",
+      "category": "secim",
+      "title": "Klima Seçerken Nelere Dikkat Edilmeli?",
+      "seoTitle": "Klima Seçerken Nelere Dikkat Edilmeli? 7 Adımlı Rehber",
+      "description": "Kapasite, enerji sınıfı, inverter, Wi-Fi, montaj ve servis: klima alırken karar vermeniz gereken yedi başlığı sade bir kontrol listesiyle anlatıyoruz.",
+      "lead": "Doğru klima; en pahalı ya da en güçlü olan değil, mekânınıza, kullanım alışkanlığınıza ve bütçenize uyan klimadır. Karar verirken şu yedi başlığı sırayla ele alın.",
+      "answer": "Önce mekânın ihtiyacı olan kapasiteyi (BTU/h) belirleyin, sonra enerji sınıfını, özellikleri ve montaj koşullarını karşılaştırın. Kapasite doğru değilse diğer özelliklerin hiçbiri beklediğiniz konforu vermez.",
+      "image": {
+        "key": "airyBeyaz",
+        "alt": "Beyaz GREE Airy duvar tipi inverter klima",
+        "caption": "Duvar tipi split klimalar ev ve küçük ofislerde en yaygın tercihtir."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "kapasite",
+          "position": 0,
+          "title": "1. Kapasiteyi mekâna göre belirleyin",
+          "html": "\n<p>Klimanın gücü BTU/h ile ifade edilir. Küçük kalan bir klima sürekli tam güçte çalışır ve odayı yine de yeterince soğutamaz; gereğinden büyük bir klima ise kısa aralıklarla devreye girip çıkar, nemi yeterince alamaz ve boşuna pahalıdır.</p>\n<p>Kapasiteyi yalnız metrekareye bakarak seçmeyin. Güneş alan cephe, cam yüzeyi, yalıtım, tavan yüksekliği ve odada bulunan kişi sayısı sonucu değiştirir. <a href=\"rehber/klima-btu-hesaplama.html\">BTU hesaplama rehberimiz</a> bu etkenleri tek tek açıklıyor.</p>"
+        },
+        {
+          "sectionKey": "tip",
+          "position": 1,
+          "title": "2. Klima tipini seçin",
+          "html": "\n<ul class=\"g-list\">\n<li><b>Duvar tipi split:</b> Yatak odası, oturma odası ve küçük ofisler için standart çözüm. <a href=\"catalog.html?category=Duvar%20Tipi\">Duvar tipi klimalar</a></li>\n<li><b>Salon tipi:</b> Geniş ve yüksek tavanlı salonlarda, duvarda yer olmayan alanlarda. <a href=\"rehber/salon-tipi-klima.html\">Ne zaman tercih edilir?</a></li>\n<li><b>Multi sistem:</b> Tek dış üniteye birden fazla iç ünite bağlanır; cephede tek cihaz görünür. <a href=\"rehber/multi-sistem-klima-nedir.html\">Multi sistem nedir?</a></li>\n<li><b>Ticari tipler:</b> Kaset ve yer/tavan tipi; mağaza, restoran ve ofis gibi geniş alanlar için. <a href=\"catalog.html?category=Ticari%20Klima\">Ticari klimalar</a></li>\n</ul>"
+        },
+        {
+          "sectionKey": "enerji",
+          "position": 2,
+          "title": "3. Enerji sınıfını ve SEER/SCOP değerini karşılaştırın",
+          "html": "\n<p>Enerji etiketi, klimanın sezon boyunca ne kadar verimli çalıştığını gösterir. Soğutma için SEER, ısıtma için SCOP değeri ne kadar yüksekse aynı iş için o kadar az elektrik harcanır. Yaz boyunca uzun saatler çalışan bir klimada bu fark faturaya doğrudan yansır.</p>\n<p>Etiketi nasıl okuyacağınızı <a href=\"rehber/enerji-sinifi-seer-scop.html\">enerji sınıfı ve SEER/SCOP rehberinde</a> anlattık.</p>"
+        },
+        {
+          "sectionKey": "ozellikler",
+          "position": 3,
+          "title": "4. İhtiyacınız olan özellikleri ayırın",
+          "html": "\n<p>Inverter teknolojisi bugün duvar tipi klimaların neredeyse tamamında standarttır ve kompresör hızını ihtiyaca göre ayarlayarak enerji tasarrufu sağlar (<a href=\"rehber/inverter-klima-nedir.html\">inverter nasıl çalışır?</a>). Bunun dışında şu sorular seçiminizi daraltır:</p>\n<ul class=\"g-checklist\">\n<li>Klimayı eve gelmeden açmak veya uzaktan kontrol etmek ister misiniz? Wi-Fi özelliğine bakın.</li>\n<li>Toz ve evcil hayvan tüyü sizin için önemli mi? Filtre donanımını karşılaştırın.</li>\n<li>Yatak odasında mı kullanılacak? Ürün sayfasındaki iç ünite ses değerini kontrol edin.</li>\n<li>Kış aylarında ısıtmada da kullanacak mısınız? SCOP değerine bakın.</li>\n</ul>"
+        },
+        {
+          "sectionKey": "montaj",
+          "position": 4,
+          "title": "5. Montaj koşullarını baştan netleştirin",
+          "html": "\n<p>Klimanın performansı büyük ölçüde montaja bağlıdır. Dış ünitenin yeri, iç ve dış ünite arasındaki boru mesafesi, elektrik hattı ve drenaj yolu satın almadan önce düşünülmelidir. Apartmanlarda dış cephe kullanımı için yönetim onayı gerekebilir.</p>\n<p>Ayrıntılar için <a href=\"rehber/klima-montaji-oncesi.html\">montaj öncesi bilinmesi gerekenler</a> rehberine göz atın. Emin olmadığınız durumlarda <a href=\"contact.html?subject=kesif\">yerinde keşif isteyin</a>.</p>"
+        },
+        {
+          "sectionKey": "servis",
+          "position": 5,
+          "title": "6. Servis ve garanti erişimini sorun",
+          "html": "\n<p>Klima yıllarca kullanılan bir cihazdır. Bulunduğunuz ilde bir servis organizasyonunun bulunması, periyodik bakımın ve olası bir arızanın hızlı çözülmesini sağlar. Ege Teknik; İzmir, Aydın, Muğla, Manisa, Denizli, Uşak, Afyonkarahisar, Kütahya ve Balıkesir'de satış, montaj ve servis taleplerini planlar. <a href=\"regions.html\">Hizmet bölgelerimizi görün.</a></p>"
+        },
+        {
+          "sectionKey": "butce",
+          "position": 6,
+          "title": "7. Toplam maliyeti düşünün",
+          "html": "\n<p>Karşılaştırmayı yalnız etiket fiyatıyla yapmayın. Montaj kapsamı, ek boru veya elektrik işi gerekip gerekmediği ve yıllık enerji tüketimi toplam maliyeti belirler. Verimli bir model başlangıçta biraz daha pahalı olsa da yoğun kullanımda farkı zamanla telafi edebilir.</p>\n<p>Güncel fiyatları ve stok durumunu <a href=\"catalog.html\">ürün kataloğumuzda</a> görebilir, serileri <a href=\"rehber/gree-serileri-karsilastirma.html\">GREE seri karşılaştırmasında</a> yan yana inceleyebilirsiniz.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Klima seçerken en önemli kriter nedir?",
+          "answer": "Kapasitenin (BTU/h) mekâna uygun olmasıdır. Kapasite doğru seçilmezse enerji sınıfı veya ek özellikler beklenen konforu sağlamaz."
+        },
+        {
+          "position": 1,
+          "question": "Online kapasite hesabı yeterli mi?",
+          "answer": "Ön fikir için yeterlidir. Çok güneş alan, geniş camlı, yüksek tavanlı veya ticari mekânlarda kesin kapasite yerinde keşifle belirlenmelidir."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:klima-btu-hesaplama",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:gree-serileri-karsilastirma",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:yerinde-kesif-neden-onemli",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Salon tipi klimalar",
+          "href": "catalog.html?category=Salon%20Tipi",
+          "linkKind": "category"
+        },
+        {
+          "position": 2,
+          "label": "Ticari klimalar",
+          "href": "catalog.html?category=Ticari%20Klima",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "9b3ddec324c55763848088259c3fabfa4812aa20e02f4ebe4eaf3117703254f5",
+      "sourceRef": "scripts/klima-rehberi/guides-1.mjs"
+    },
+    {
+      "id": "guide:mekana-gore-klima-secimi",
+      "entryType": "guide",
+      "slug": "mekana-gore-klima-secimi",
+      "category": "secim",
+      "title": "Yazlık, Salon, Ofis ve Mağaza İçin Klima Seçimi",
+      "seoTitle": "Yazlık, Salon, Ofis ve Mağaza İçin Klima Seçimi",
+      "description": "Yazlık evde nem ve uzun süre kapalı kalma, salonda açık plan, ofiste yoğun cihaz yükü, mağazada sürekli açılan kapı: mekâna göre klima seçerken nelere bakmalı?",
+      "lead": "Aynı metrekareye sahip iki mekân, kullanım biçimine göre çok farklı klima ihtiyacı doğurabilir. Kıyı nemi, yazlık kullanım ve ticari yük Ege'de seçimi en çok etkileyen etkenlerdir.",
+      "answer": "Yazlıkta nem alma ve kolay bakım, salonda doğru kapasite ve hava dağılımı, ofiste cihaz ve kişi yükü, mağazada ise kapı açılıp kapanmasıyla oluşan ısı kaybı öne çıkar. Ticari mekânlarda kapasite mutlaka keşifle belirlenmelidir.",
+      "image": {
+        "key": "mekanTurleri",
+        "alt": "Yazlık ev, salon, ofis ve mağaza için klima kullanımını gösteren çizim",
+        "caption": "Kullanım biçimi, aynı alan için gereken kapasiteyi değiştirir."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "yazlik",
+          "position": 0,
+          "title": "Yazlık evler ve Ege kıyısı",
+          "html": "\n<p>Kuşadası, Didim, Çeşme veya Bodrum gibi kıyı bölgelerinde yaz boyunca hem sıcaklık hem de nem yüksektir. Klimanın nem alma (dry) modu, özellikle gece konforunu belirgin biçimde artırır.</p>\n<ul class=\"g-checklist\">\n<li>Sezon başında, uzun süre kapalı kalan klimanın filtresini temizletin ve drenajını kontrol ettirin.</li>\n<li>Dış üniteyi doğrudan deniz rüzgârı ve tuzlu su serpintisi alan noktalardan mümkün olduğunca koruyun.</li>\n<li>Evde değilken klimayı açıp kapatmak veya sıcaklığı kontrol etmek istiyorsanız <a href=\"rehber/wifi-klima-ne-ise-yarar.html\">Wi-Fi özelliği</a> kullanışlıdır.</li>\n<li>Kış aylarında kısa süreli ısıtma kullanacaksanız ürünün SCOP değerine bakın.</li>\n</ul>"
+        },
+        {
+          "sectionKey": "salon",
+          "position": 1,
+          "title": "Salon ve açık plan yaşam alanları",
+          "html": "\n<p>Mutfakla birleşik, geniş camlı salonlarda ihtiyaç çoğunlukla 18.000 veya 24.000 BTU/h'dir. İç ünitenin yeri, havanın odanın tamamına ulaşıp ulaşmayacağını belirler; üniteyi uzun kenara ve oturma alanına doğrudan üflemeyecek biçimde konumlamak gerekir.</p>\n<p>Duvarda uygun yer yoksa veya alan tek duvar tipi cihaz için büyükse <a href=\"rehber/salon-tipi-klima.html\">salon tipi klima</a> iyi bir alternatiftir.</p>"
+        },
+        {
+          "sectionKey": "ofis",
+          "position": 2,
+          "title": "Ofisler",
+          "html": "\n<p>Bilgisayarlar, yazıcılar ve aynı anda çalışan birçok kişi ofiste ciddi bir ısı yükü oluşturur. Bu yüzden bir ofis, aynı büyüklükteki bir odadan daha fazla kapasite ister. Birden fazla bölmeden oluşan ofislerde her odaya ayrı iç ünite bağlanan <a href=\"rehber/multi-sistem-klima-nedir.html\">multi sistem</a> hem cephede tek dış ünite hem de odaya göre ayrı kontrol sağlar.</p>"
+        },
+        {
+          "sectionKey": "magaza",
+          "position": 3,
+          "title": "Mağaza ve işyerleri",
+          "html": "\n<p>Sürekli açılıp kapanan kapı, vitrin camları, aydınlatma ve müşteri yoğunluğu mağazalarda kapasiteyi konut hesabının çok üzerine çıkarır. Tavan yapısı uygunsa kaset tipi, yüksek tavanlı alanlarda yer/tavan tipi cihazlar havayı daha dengeli dağıtır.</p>\n<p>Ticari mekânlarda kapasite ve cihaz tipi yerinde keşifle belirlenmelidir. <a href=\"contact.html?subject=kesif\">Keşif talebi oluşturabilir</a> veya <a href=\"catalog.html?category=Ticari%20Klima\">ticari klimaları</a> inceleyebilirsiniz.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Yazlık evde klima nasıl korunur?",
+          "answer": "Sezon sonunda filtreler temizlenip klima birkaç saat fan modunda çalıştırılarak iç ünitenin kuruması sağlanabilir. Sezon başında ise bakım yaptırmak, uzun süre kapalı kalmanın yol açtığı koku ve drenaj sorunlarını önler."
+        },
+        {
+          "position": 1,
+          "question": "Mağaza için duvar tipi klima yeterli olur mu?",
+          "answer": "Küçük ve kapısı sık açılmayan işyerlerinde yeterli olabilir. Vitrinli, kalabalık veya yüksek tavanlı mağazalarda kaset ya da yer/tavan tipi cihazlar genellikle daha doğru sonuç verir."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:salon-tipi-klima",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:multi-sistem-klima-nedir",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:yerinde-kesif-neden-onemli",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Salon tipi klimalar",
+          "href": "catalog.html?category=Salon%20Tipi",
+          "linkKind": "category"
+        },
+        {
+          "position": 2,
+          "label": "Ticari klimalar",
+          "href": "catalog.html?category=Ticari%20Klima",
+          "linkKind": "category"
+        },
+        {
+          "position": 3,
+          "label": "Multi sistem",
+          "href": "catalog.html?category=Multi%20Sistem",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "6656417fed701557db661a411edf3bc4e9bee44703cf20ca6c27dbe4601f33fd",
+      "sourceRef": "scripts/klima-rehberi/guides-1.mjs"
+    },
+    {
+      "id": "guide:multi-sistem-klima-nedir",
+      "entryType": "guide",
+      "slug": "multi-sistem-klima-nedir",
+      "category": "secim",
+      "title": "Multi Sistem Klima Nedir? Kimler İçin Uygundur?",
+      "seoTitle": "Multi Sistem Klima Nedir? Avantajları ve Dikkat Edilecekler",
+      "description": "Multi sistem (multi split) klimada tek dış üniteye birden fazla iç ünite bağlanır. Nasıl çalıştığını, avantajlarını ve dış ünite seçimini anlatıyoruz.",
+      "lead": "Birden fazla odayı klimalandırmak istiyor ama cephede birden çok dış ünite görmek istemiyorsanız multi sistem klima sizin için doğru çözüm olabilir.",
+      "answer": "Multi sistem klimada tek bir dış ünite, farklı odalardaki birden fazla iç üniteyi besler. Her oda ayrı kumanda edilir; cephede tek dış ünite bulunur. Dış ünitenin kapasitesi ve bağlanabilecek iç ünite sayısı sistemin sınırlarını belirler.",
+      "image": {
+        "key": "multiSistem",
+        "alt": "Bir dış üniteye bağlı üç farklı odadaki iç üniteyi gösteren multi sistem şeması",
+        "caption": "Multi sistemde her iç ünite kendi odasının sıcaklığını ayrı ayarlar."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "nasil",
+          "position": 0,
+          "title": "Multi sistem nasıl çalışır?",
+          "html": "\n<p>Klasik split klimada bir iç ünite ile bir dış ünite eşleşir. Multi sistemde ise dış ünite, her biri ayrı bir bakır boru hattıyla bağlanan birden fazla iç üniteye soğutucu akışkan gönderir. İç üniteler aynı anda veya ayrı ayrı çalışabilir.</p>\n<p>Örneğin kataloğumuzdaki 28.000 BTU/h GREE multi dış ünitesine üretici kataloğuna göre en fazla dört iç ünite bağlanabilir. Dış ünite seçenekleri 18.000'den 48.000 BTU/h'ye kadar uzanır.</p>"
+        },
+        {
+          "sectionKey": "ic-uniteler",
+          "position": 1,
+          "title": "Hangi iç üniteler kullanılabilir?",
+          "html": "\n<p>Aynı sistemde farklı tip iç üniteler birlikte kullanılabilir. Kataloğumuzda duvar tipi (Amber, Fairy, Lomo ve Pular), tek yön ve dört yön kaset tipi ile kanallı tip multi iç üniteler bulunur. Böylece yatak odasına duvar tipi, asma tavanlı salona kaset tipi bir iç ünite bağlanabilir.</p>\n<figure class=\"g-figure g-figure-photo\"><img src=\"/assets/home/multi-480.webp\" width=\"480\" height=\"439\" alt=\"GREE multi sistem iç ve dış ünite\" loading=\"lazy\" decoding=\"async\"><figcaption>Multi sistemlerde iç ünite tipi odaya göre seçilebilir.</figcaption></figure>"
+        },
+        {
+          "sectionKey": "avantaj",
+          "position": 2,
+          "title": "Avantajları ve dikkat edilmesi gerekenler",
+          "html": "\n<div class=\"g-proscons\">\n<div><h3>Avantajları</h3><ul class=\"g-list\"><li>Cephede ve balkonda tek dış ünite</li><li>Her oda için ayrı sıcaklık ve kumanda</li><li>Farklı tip iç ünitelerin tek sistemde kullanılması</li></ul></div>\n<div><h3>Dikkat edilmesi gerekenler</h3><ul class=\"g-list\"><li>Dış ünite arızalanırsa bağlı tüm odalar etkilenir</li><li>Boru hatlarının uzunluğu ve güzergâhı dikkatle planlanmalıdır</li><li>İlk kurulum, projelendirme gerektirdiği için tek split klimalardan daha kapsamlıdır</li></ul></div>\n</div>"
+        },
+        {
+          "sectionKey": "secim",
+          "position": 3,
+          "title": "Doğru sistem nasıl seçilir?",
+          "html": "\n<p>Önce her odanın kapasite ihtiyacı ayrı ayrı belirlenir, ardından iç ünitelerin toplamına ve eşzamanlı kullanım senaryosuna göre dış ünite seçilir. Bağlanabilecek iç ünite sayısı ve kapasite oranları üreticinin tablolarına göre kontrol edilmelidir. Bu nedenle multi sistemler Ege Teknik'te projelendirme ve teklif ile satılır.</p>\n<p><a href=\"contact.html?subject=kesif\">Multi sistem için keşif isteyin</a> veya <a href=\"catalog.html?category=Multi%20Sistem\">multi sistem ürünlerini inceleyin</a>.</p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Multi sistemde her oda ayrı çalışır mı?",
+          "answer": "Evet. Her iç ünitenin kendi kumandası vardır; odalar birbirinden bağımsız açılıp kapatılabilir ve farklı sıcaklıklara ayarlanabilir."
+        },
+        {
+          "position": 1,
+          "question": "Mevcut bir split klimaya multi iç ünite eklenebilir mi?",
+          "answer": "Hayır. Multi iç üniteler, multi sistem dış ünitesiyle çalışacak şekilde tasarlanmıştır; mevcut tekli split dış üniteye ikinci bir iç ünite bağlanamaz."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:mekana-gore-klima-secimi",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-montaji-oncesi",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:yerinde-kesif-neden-onemli",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Multi sistem ürünleri",
+          "href": "catalog.html?category=Multi%20Sistem",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "fc2acb3c323de8585fa66e1319196f2045e3c8904396d1d741f54ee8c6a31d94",
+      "sourceRef": "scripts/klima-rehberi/guides-1.mjs"
+    },
+    {
+      "id": "guide:salon-tipi-klima",
+      "entryType": "guide",
+      "slug": "salon-tipi-klima",
+      "category": "secim",
+      "title": "Salon Tipi Klima Ne Zaman Tercih Edilir?",
+      "seoTitle": "Salon Tipi Klima Ne Zaman Tercih Edilir? Avantajları",
+      "description": "Salon tipi (dolap tipi) klima hangi mekânlar için uygun, duvar tipinden farkı ne? Kapasite, yerleşim ve montaj açısından salon tipi klimayı anlatıyoruz.",
+      "lead": "Salon tipi klimalar, zemine yerleştirilen dikey iç üniteleriyle geniş alanlarda güçlü ve dengeli hava dağılımı sağlar. Doğru mekânda duvar tipi cihazlardan daha iyi bir çözümdür.",
+      "answer": "Alan bir duvar tipi cihazın karşılayabileceğinden büyükse, tavan yüksekse veya duvarda iç ünite için uygun yer yoksa salon tipi klima tercih edilir. Kataloğumuzdaki GREE salon tipi modeller 24.000 ve 48.000 BTU/h kapasitededir.",
+      "image": {
+        "key": "salonTipi",
+        "alt": "GREE salon tipi inverter klima iç ünitesi",
+        "caption": "Salon tipi iç ünite zemine yerleştirilir ve havayı yüksekten, geniş bir açıyla üfler.",
+        "portrait": true
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "fark",
+          "position": 0,
+          "title": "Duvar tipinden farkı nedir?",
+          "html": "\n<p>Salon tipi klimada iç ünite duvara asılmaz; dolap gibi zemine yerleştirilir. Daha büyük fanı ve hava çıkışı sayesinde havayı uzağa ve geniş bir alana taşır. Dış ünite yapısı ve montaj mantığı split klimalarla aynıdır.</p>\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>Duvar tipi ile salon tipi karşılaştırması</caption><thead><tr><th scope=\"col\"></th><th scope=\"col\">Duvar tipi</th><th scope=\"col\">Salon tipi</th></tr></thead><tbody>\n<tr><th scope=\"row\">Kapasite</th><td>9.000–24.000 BTU/h</td><td>24.000 BTU/h ve üzeri</td></tr>\n<tr><th scope=\"row\">Yerleşim</th><td>Duvarın üst kısmı</td><td>Zemin, köşe veya duvar dibi</td></tr>\n<tr><th scope=\"row\">Uygun alan</th><td>Oda ve orta büyüklükte salon</td><td>Geniş salon, yüksek tavan, işyeri</td></tr>\n<tr><th scope=\"row\">Kapladığı yer</th><td>Zeminde yer kaplamaz</td><td>Zeminde yaklaşık bir dolap kadar yer kaplar</td></tr>\n</tbody></table></div>"
+        },
+        {
+          "sectionKey": "ne-zaman",
+          "position": 1,
+          "title": "Hangi durumlarda salon tipi seçilmeli?",
+          "html": "\n<ul class=\"g-checklist\">\n<li>Alan geniş, açık planlı ve 24.000 BTU/h duvar tipi cihazın sınırına yakın veya üstündeyse</li>\n<li>Tavan yüksek, galerili veya çift katlı bir salon varsa</li>\n<li>Duvarlar camlı, dolaplı veya iç ünite asmaya uygun değilse</li>\n<li>Restoran, kafe, mağaza veya bekleme salonu gibi kalabalık alanlarda</li>\n</ul>\n<p>Kapasite ihtiyacının 24.000 BTU/h'yi aştığı alanlarda <a href=\"selector.html\">Klima Seçici</a> sonucu doğrudan salon tipi ve ticari ürünlere yönlendirir.</p>"
+        },
+        {
+          "sectionKey": "montaj",
+          "position": 2,
+          "title": "Montajda nelere dikkat edilir?",
+          "html": "\n<p>İç ünitenin önü açık olmalı, hava akışını mobilya veya perdeler engellememelidir. Yüksek kapasite nedeniyle elektrik hattının kesiti ve sigortası, cihazın kullanım kılavuzunda belirtilen elektrik gereksinimine göre kontrol edilmelidir. İç ve dış ünite arasındaki boru güzergâhı da duvar tipine göre daha uzun olabilir.</p>\n<p>Bu nedenlerle salon tipi bir klima satın almadan önce yerinde keşif yaptırmanızı öneririz. <a href=\"contact.html?subject=kesif\">Keşif talebi oluşturun.</a></p>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Salon tipi klima evde kullanılır mı?",
+          "answer": "Evet. Özellikle geniş ve açık plan salonlarda veya duvara iç ünite asılamayan mekânlarda evde de kullanılır."
+        },
+        {
+          "position": 1,
+          "question": "Salon tipi klima daha çok elektrik harcar mı?",
+          "answer": "Kapasitesi daha yüksek olduğu için saatlik tüketimi de yüksektir. Karşılaştırmayı aynı alanı soğutan çözümler arasında ve SEER değerine bakarak yapmak gerekir."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:btu-kapasite-farklari",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:mekana-gore-klima-secimi",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:yerinde-kesif-neden-onemli",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Salon tipi klimalar",
+          "href": "catalog.html?category=Salon%20Tipi",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Ticari klimalar",
+          "href": "catalog.html?category=Ticari%20Klima",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "0c43cf846d6d51c3dcafebddf07601d789b188b9ea95140be43fa4cf1d5fc8ea",
+      "sourceRef": "scripts/klima-rehberi/guides-1.mjs"
+    },
+    {
+      "id": "guide:wifi-klima-ne-ise-yarar",
+      "entryType": "guide",
+      "slug": "wifi-klima-ne-ise-yarar",
+      "category": "teknoloji",
+      "title": "Wi-Fi Klima Ne İşe Yarar?",
+      "seoTitle": "Wi-Fi Klima Ne İşe Yarar? Uzaktan Kontrol ve Kurulum",
+      "description": "Wi-Fi özellikli klima ile telefonunuzdan açma-kapama, sıcaklık ve zamanlama yapabilirsiniz. Hangi GREE serilerinde Wi-Fi var, kurulum nasıl yapılır?",
+      "lead": "Wi-Fi özellikli bir klimayı evdeki kablosuz ağa bağladığınızda, uzaktan kumandanın yaptığı her şeyi telefonunuzdan, evde olmasanız bile yapabilirsiniz.",
+      "answer": "Wi-Fi, klimayı internet üzerinden telefonla kontrol etmenizi sağlar: eve gelmeden açabilir, unuttuğunuz klimayı kapatabilir, sıcaklığı ve zamanlamayı değiştirebilirsiniz. GREE Airy, Fairy ve Pular modellerinde Wi-Fi bulunur; Aphro'da opsiyoneldir.",
+      "image": {
+        "key": "wifi",
+        "alt": "Telefon uygulamasıyla Wi-Fi üzerinden kontrol edilen duvar tipi klima çizimi",
+        "caption": "Klima ev ağına bağlandığında telefon uygulamasıyla her yerden yönetilebilir."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "neler",
+          "position": 0,
+          "title": "Wi-Fi ile neler yapılabilir?",
+          "html": "\n<ul class=\"g-checklist\">\n<li>Eve varmadan klimayı açıp odayı önceden serinletmek veya ısıtmak</li>\n<li>Açık unutulan klimayı uzaktan kapatmak</li>\n<li>Mod, sıcaklık ve fan hızını telefondan değiştirmek</li>\n<li>Haftalık zamanlama kurmak</li>\n<li>Yazlık veya işyeri gibi sürekli bulunmadığınız mekânları uzaktan yönetmek</li>\n</ul>"
+        },
+        {
+          "sectionKey": "seriler",
+          "position": 1,
+          "title": "Hangi GREE serilerinde Wi-Fi var?",
+          "html": "\n<div class=\"g-table-wrap\"><table class=\"g-table\"><caption>Duvar tipi GREE serilerinde Wi-Fi</caption><thead><tr><th scope=\"col\">Seri</th><th scope=\"col\">Wi-Fi kontrol</th></tr></thead><tbody>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Airy\">Airy</a></td><td>Var</td></tr>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Fairy\">Fairy</a></td><td>Var</td></tr>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Pular\">Pular</a></td><td>Var</td></tr>\n<tr><td><a href=\"catalog.html?category=Duvar%20Tipi&amp;series=Aphro\">Aphro</a></td><td>Opsiyonel</td></tr>\n</tbody></table></div>\n<p>Her modelin Wi-Fi bilgisi ürün sayfasındaki teknik özelliklerde yer alır. Wi-Fi kitleri <a href=\"catalog.html?category=Yedek%20Par%C3%A7a\">yedek parça</a> bölümünde listelenir; opsiyonel modeller için uygun kiti <a href=\"contact.html?subject=yedek\">bize sorabilirsiniz</a>.</p>"
+        },
+        {
+          "sectionKey": "kurulum",
+          "position": 2,
+          "title": "Kurulum nasıl yapılır?",
+          "html": "\n<p>Kurulum genellikle birkaç dakika sürer: telefona üreticinin uygulaması yüklenir, klima eşleştirme moduna alınır ve evdeki 2,4 GHz kablosuz ağ bilgileri girilir. Adımlar modele göre küçük farklılıklar gösterebilir; ayrıntılar üreticinin <a href=\"https://tlcklima.com/wp-content/uploads/2025/10/GREE%20Klima%20Wifi%20Kurulum.pdf\" target=\"_blank\" rel=\"noopener noreferrer\">GREE klima Wi-Fi kurulum kılavuzunda<span class=\"sr-only\"> (PDF, yeni sekmede açılır)</span></a> yer alır.</p>\n<div class=\"g-callout\"><b>İpucu:</b> İç ünitenin bulunduğu odada kablosuz sinyal zayıfsa bağlantı kopabilir. Modem ile klima arasındaki mesafeyi kurulum öncesinde kontrol edin.</div>"
+        }
+      ],
+      "faq": [
+        {
+          "position": 0,
+          "question": "Wi-Fi klima internet kesilince çalışır mı?",
+          "answer": "Evet. İnternet bağlantısı yalnız uzaktan kontrol için gereklidir; klima uzaktan kumandayla normal şekilde çalışmaya devam eder."
+        }
+      ],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:gree-serileri-karsilastirma",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:inverter-klima-nedir",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:mekana-gore-klima-secimi",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Wi-Fi özellikli duvar tipi klimalar",
+          "href": "catalog.html?category=Duvar%20Tipi",
+          "linkKind": "category"
+        },
+        {
+          "position": 1,
+          "label": "Yedek parça ve Wi-Fi kiti",
+          "href": "catalog.html?category=Yedek%20Par%C3%A7a",
+          "linkKind": "category"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "722d5669cb66a1fbf66024ce2d5498f28578eed83e2158c1ef6c2e12c806a2fc",
+      "sourceRef": "scripts/klima-rehberi/guides-2.mjs"
+    },
+    {
+      "id": "guide:yerinde-kesif-neden-onemli",
+      "entryType": "guide",
+      "slug": "yerinde-kesif-neden-onemli",
+      "category": "montaj",
+      "title": "Klima Satın Almadan Önce Keşif Neden Önemlidir?",
+      "seoTitle": "Klima Keşfi Nedir, Neden Önemlidir? Yerinde Keşif",
+      "description": "Yerinde keşifte mekânın ölçüleri, güneş durumu, elektrik altyapısı ve dış ünite konumu değerlendirilir. Keşif ne zaman gerekir, nasıl talep edilir?",
+      "lead": "Online hesaplama iyi bir başlangıçtır; ancak mekânı gören bir teknik ekip, kâğıt üzerinde görünmeyen ayrıntıları yakalar. Özellikle büyük, karmaşık veya ticari alanlarda keşif doğru kararın anahtarıdır.",
+      "answer": "Keşif; doğru kapasiteyi, uygun cihaz tipini, iç ve dış ünite yerini ve montajın gerçek kapsamını satın almadan önce netleştirir. Böylece yanlış ürün, beklenmedik ek iş ve maliyet riski ortadan kalkar.",
+      "image": {
+        "key": "kesifPlan",
+        "alt": "Güneş yönü, pencereler ve ölçülerle işaretlenmiş oda planı çizimi",
+        "caption": "Keşifte odanın ölçüleri, cepheleri ve cam yüzeyleri birlikte değerlendirilir."
+      },
+      "status": "published",
+      "publishedAt": "2026-09-28T00:00:00.000Z",
+      "sections": [
+        {
+          "sectionKey": "ne-zaman",
+          "position": 0,
+          "title": "Hangi durumlarda keşif gerekir?",
+          "html": "\n<ul class=\"g-checklist\">\n<li>Alan 60 m²'yi aşıyor veya açık planlı ise</li>\n<li>Mekân çok güneş alıyor ve yalıtımı zayıfsa</li>\n<li>Mağaza, ofis, restoran gibi ticari bir alansa</li>\n<li>Birden fazla odaya multi sistem düşünülüyorsa</li>\n<li>Dış ünite için uygun yer veya boru güzergâhı belirsizse</li>\n</ul>\n<p>Bu koşullar <a href=\"selector.html\">Klima Seçici</a> sonucunda da \"Yerinde keşif önerilir\" uyarısıyla gösterilir.</p>"
+        },
+        {
+          "sectionKey": "neler",
+          "position": 1,
+          "title": "Keşifte neler değerlendirilir?",
+          "html": "\n<div class=\"g-steps\">\n<div><b>Ölçüler ve cepheler</b><p>Taban alanı, tavan yüksekliği, cam yüzeyleri ve güneş alan cepheler.</p></div>\n<div><b>Kullanım</b><p>Kişi sayısı, çalışma saatleri, ısı yayan cihazlar ve mekânın kullanım amacı.</p></div>\n<div><b>Yerleşim</b><p>İç ve dış ünitenin konumu, boru güzergâhı ve drenaj yolu.</p></div>\n<div><b>Altyapı</b><p>Elektrik hattı, sigorta ve varsa mevcut tesisatın durumu.</p></div>\n</div>"
+        },
+        {
+          "sectionKey": "sonra",
+          "position": 2,
+          "title": "Keşiften sonra ne olur?",
+          "html": "\n<p>Keşif sonunda mekâna uygun kapasite ve cihaz tipi önerilir; montaj kapsamı ve varsa ek işler açıkça belirtilir. Online satışta olan ürünlerde karar size aittir; projelendirme gerektiren multi sistem ve ticari çözümlerde teklif hazırlanır.</p>"
+        },
+        {
+          "sectionKey": "talep",
+          "position": 3,
+          "title": "Keşif nasıl talep edilir?",
+          "html": "\n<p><a href=\"contact.html?subject=kesif\">İletişim formundan</a> konu olarak \"Keşif ve montaj\"ı seçin; şehir ve ilçenizi, mekânın yaklaşık alanını ve varsa fotoğraf çekebileceğiniz bir iletişim bilgisini yazın. Ekibimiz uygun gün ve saat için sizinle iletişime geçer.</p>\n<p>Ege Teknik; İzmir, Aydın, Muğla, Manisa, Denizli, Uşak, Afyonkarahisar, Kütahya ve Balıkesir'de keşif taleplerini planlar. <a href=\"regions.html\">Hizmet bölgelerimize göz atın.</a></p>"
+        }
+      ],
+      "faq": [],
+      "relatedEntries": [
+        {
+          "relatedEntryId": "guide:klima-btu-hesaplama",
+          "position": 0,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:klima-montaji-oncesi",
+          "position": 1,
+          "label": ""
+        },
+        {
+          "relatedEntryId": "guide:mekana-gore-klima-secimi",
+          "position": 2,
+          "label": ""
+        }
+      ],
+      "links": [
+        {
+          "position": 0,
+          "label": "Klima Seçici",
+          "href": "selector.html",
+          "linkKind": "selector"
+        },
+        {
+          "position": 1,
+          "label": "Keşif talebi",
+          "href": "contact.html?subject=kesif",
+          "linkKind": "contact"
+        }
+      ],
+      "relatedProducts": [],
+      "relatedServices": [],
+      "contentHash": "0609193433eac32a7aec34c3069322ef7e5e7902315bd7e409e9a15ed58e5d8f",
+      "sourceRef": "scripts/klima-rehberi/guides-3.mjs"
+    }
+  ]
+}

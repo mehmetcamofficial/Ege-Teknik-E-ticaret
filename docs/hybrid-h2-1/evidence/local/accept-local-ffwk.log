@@ -1,0 +1,11 @@
+PASS H2 firefox 1440
+PASS H2 firefox 1024
+PASS H2 firefox 768
+PASS H2 firefox 390
+PASS H2 firefox 320
+PASS H2 webkit 1440
+PASS H2 webkit 1024
+PASS H2 webkit 768
+PASS H2 webkit 390
+PASS H2 webkit 320
+H2 acceptance PASS

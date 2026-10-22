@@ -1,0 +1,4132 @@
+{
+  "origin": "https://127.0.0.1:44392",
+  "hosted": false,
+  "applicationCommit": "3894fddfce6e3fc984a29a80c44052202b2fee61",
+  "matrix": [
+    {
+      "engine": "chrome",
+      "version": "155.0.8059.85",
+      "width": 390,
+      "status": "PASS",
+      "cartLegalHistory": "PASS",
+      "renderedContrast": "PASS",
+      "reducedMotion": "PASS",
+      "nativeScrollRestoration": "PASS",
+      "testNetworkHoldMs": 6976,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "firefox",
+      "version": "157.0",
+      "width": 390,
+      "status": "PASS",
+      "cartLegalHistory": "PASS",
+      "renderedContrast": "PASS",
+      "reducedMotion": "PASS",
+      "nativeScrollRestoration": "PASS",
+      "testNetworkHoldMs": 3860,
+      "orderSubmitted": false
+    },
+    {
+      "engine": "webkit",
+      "version": "27.2",
+      "width": 390,
+      "status": "PASS",
+      "cartLegalHistory": "PASS",
+      "renderedContrast": "PASS",
+      "reducedMotion": "PASS",
+      "nativeScrollRestoration": "PASS",
+      "testNetworkHoldMs": 3933,
+      "orderSubmitted": false
+    }
+  ],
+  "contrasts": [
+    {
+      "label": "chrome/390/hero-selector",
+      "minimum": 5.846643447424082,
+      "rows": [
+        {
+          "text": "Akıllı Klima Seçici · Keşif ve montaj",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "text": "Önce alanı tanıyalım,",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 11.65864096108404
+        },
+        {
+          "text": "sonra klimayı seçelim.",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "text": "Şehir, m², güneş ve yalıtım bilgisiyle ön kapasite önerisini hemen alı",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Sonuçla birlikte uygun modeller",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Zor mekânlar için keşif önerisi",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Klima seçiciyi aç",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Keşif talebi",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Airy",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Fairy",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Pular & Aphro",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Klima seçici",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 11.65864096108404
+        }
+      ]
+    },
+    {
+      "label": "chrome/390/hero-selector/icons",
+      "minimum": 5.846643447424082,
+      "rows": [
+        {
+          "color": [
+            0,
+            108,
+            73
+          ],
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "color": [
+            0,
+            108,
+            73
+          ],
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        }
+      ],
+      "threshold": 3
+    },
+    {
+      "label": "chrome/390/home",
+      "minimum": 5.966456269107836,
+      "rows": [
+        {
+          "text": "Akıllı Klima Seçici",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 5.966456269107836
+        },
+        {
+          "text": "Alanınıza uygun klimayı bulun",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 11.897556619804549
+        },
+        {
+          "text": "Şehir, mekân, alan, güneş, yalıtım ve kişi sayısına göre ön kapasite ö",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 8.030448210921193
+        },
+        {
+          "text": "Klima Seçici sayfası",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 5.966456269107836
+        },
+        {
+          "text": "Adım 1 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Mekânınız",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Oda alanı (m²)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kullanım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İl",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İlçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "chrome/390/selector1",
+      "minimum": 6.070473581850699,
+      "rows": [
+        {
+          "text": "Akıllı kapasite rehberi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 6.1537808342211955
+        },
+        {
+          "text": "Alanınıza uygun klimayı bulun",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 12.271095705518773
+        },
+        {
+          "text": "Üç kısa adımda ihtiyacınızı değerlendirin. Sonuç ön seçim içindir; kes",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 6.070473581850699
+        },
+        {
+          "text": "Adım 1 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Mekânınız",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Oda alanı (m²)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kullanım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İl",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İlçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "chrome/390/selector2",
+      "minimum": 10.02382783938984,
+      "rows": [
+        {
+          "text": "Adım 2 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Odanın koşulları",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Güneş",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Yalıtım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tavan yüksekliği (m)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kişi sayısı",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Geri",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "chrome/390/results",
+      "minimum": 6.391306324585703,
+      "rows": [
+        {
+          "text": "Adım 3 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bütçeniz ve ön değerlendirme",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Ürün bütçesi üst sınırı (₺, isteğe bağlı)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bütçe kapasite ihtiyacını düşürmez. Fiyatı belirtilmeyen ürünler bütçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Geri",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Ön değerlendirmeyi gör",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Ön değerlendirme",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Referans ihtiyaç yaklaşık 9.000 BTU/h.",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "İncelenebilecek kapasite sınıfı:",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": ". Kesin seçim keşifle doğrulanmalıdır.",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "5 gerçek katalog ürünü. Eksik teknik alanlar ürün detayında belirtilir",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Airy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Airy 9000 BTU/h",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺55.100",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Airy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Airy 9000 BTU/h - Siyah",
+          "color": "rgb(5, 90, 64)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.25811945731445
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺58.750",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            18,
+            66,
+            55
+          ],
+          "ratio": 11.289274833793502
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Fairy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Fairy 9000 BTU/h – Beyaz",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺40.750",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Aphro · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Gree Aphro 9000 BTU/h İnverter Duvar Tipi Klima",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺32.999",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Keşif talep et",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Karşılaştırmayı aç",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Klima danışmanı",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            250,
+            251,
+            248
+          ],
+          "ratio": 12.439233976175322
+        },
+        {
+          "text": "AI destekli sıralama, doğrulanmış ön değerlendirmeyle sınırlıdır. Kesi",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            250,
+            251,
+            248
+          ],
+          "ratio": 8.396062100929784
+        },
+        {
+          "text": "AI durumunu kontrol et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "firefox/390/hero-selector",
+      "minimum": 5.846643447424082,
+      "rows": [
+        {
+          "text": "Akıllı Klima Seçici · Keşif ve montaj",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "text": "Önce alanı tanıyalım,",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 11.65864096108404
+        },
+        {
+          "text": "sonra klimayı seçelim.",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "text": "Şehir, m², güneş ve yalıtım bilgisiyle ön kapasite önerisini hemen alı",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Sonuçla birlikte uygun modeller",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Zor mekânlar için keşif önerisi",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Klima seçiciyi aç",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Keşif talebi",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Airy",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Fairy",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Pular & Aphro",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Klima seçici",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 11.65864096108404
+        }
+      ]
+    },
+    {
+      "label": "firefox/390/hero-selector/icons",
+      "minimum": 5.846643447424082,
+      "rows": [
+        {
+          "color": [
+            0,
+            108,
+            73
+          ],
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "color": [
+            0,
+            108,
+            73
+          ],
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        }
+      ],
+      "threshold": 3
+    },
+    {
+      "label": "firefox/390/home",
+      "minimum": 5.966456269107836,
+      "rows": [
+        {
+          "text": "Akıllı Klima Seçici",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 5.966456269107836
+        },
+        {
+          "text": "Alanınıza uygun klimayı bulun",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 11.897556619804549
+        },
+        {
+          "text": "Şehir, mekân, alan, güneş, yalıtım ve kişi sayısına göre ön kapasite ö",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 8.030448210921193
+        },
+        {
+          "text": "Klima Seçici sayfası",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 5.966456269107836
+        },
+        {
+          "text": "Adım 1 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Mekânınız",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Oda alanı (m²)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kullanım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İl",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İlçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "firefox/390/selector1",
+      "minimum": 6.070473581850699,
+      "rows": [
+        {
+          "text": "Akıllı kapasite rehberi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 6.1537808342211955
+        },
+        {
+          "text": "Alanınıza uygun klimayı bulun",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 12.271095705518773
+        },
+        {
+          "text": "Üç kısa adımda ihtiyacınızı değerlendirin. Sonuç ön seçim içindir; kes",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 6.070473581850699
+        },
+        {
+          "text": "Adım 1 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Mekânınız",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Oda alanı (m²)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kullanım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İl",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İlçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "firefox/390/selector2",
+      "minimum": 10.02382783938984,
+      "rows": [
+        {
+          "text": "Adım 2 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Odanın koşulları",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Güneş",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Yalıtım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tavan yüksekliği (m)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kişi sayısı",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Geri",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "firefox/390/results",
+      "minimum": 6.391306324585703,
+      "rows": [
+        {
+          "text": "Adım 3 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bütçeniz ve ön değerlendirme",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Ürün bütçesi üst sınırı (₺, isteğe bağlı)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bütçe kapasite ihtiyacını düşürmez. Fiyatı belirtilmeyen ürünler bütçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Geri",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Ön değerlendirmeyi gör",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            254,
+            255,
+            255
+          ],
+          "ratio": 12.8963635204604
+        },
+        {
+          "text": "Ön değerlendirme",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Referans ihtiyaç yaklaşık 9.000 BTU/h.",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "İncelenebilecek kapasite sınıfı:",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": ". Kesin seçim keşifle doğrulanmalıdır.",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "5 gerçek katalog ürünü. Eksik teknik alanlar ürün detayında belirtilir",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Airy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Airy 9000 BTU/h",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺55.100",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Airy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Airy 9000 BTU/h - Siyah",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺58.750",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Fairy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Fairy 9000 BTU/h – Beyaz",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺40.750",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Aphro · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Gree Aphro 9000 BTU/h İnverter Duvar Tipi Klima",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺32.999",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Keşif talep et",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Karşılaştırmayı aç",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Klima danışmanı",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            250,
+            251,
+            248
+          ],
+          "ratio": 12.439233976175322
+        },
+        {
+          "text": "AI destekli sıralama, doğrulanmış ön değerlendirmeyle sınırlıdır. Kesi",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            250,
+            251,
+            248
+          ],
+          "ratio": 8.396062100929784
+        },
+        {
+          "text": "AI durumunu kontrol et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "webkit/390/hero-selector",
+      "minimum": 5.846643447424082,
+      "rows": [
+        {
+          "text": "Akıllı Klima Seçici · Keşif ve montaj",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "text": "Önce alanı tanıyalım,",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 11.65864096108404
+        },
+        {
+          "text": "sonra klimayı seçelim.",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "text": "Şehir, m², güneş ve yalıtım bilgisiyle ön kapasite önerisini hemen alı",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Sonuçla birlikte uygun modeller",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Zor mekânlar için keşif önerisi",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Klima seçiciyi aç",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Keşif talebi",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Airy",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Fairy",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Pular & Aphro",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 7.869188224064775
+        },
+        {
+          "text": "Klima seçici",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 11.65864096108404
+        }
+      ]
+    },
+    {
+      "label": "webkit/390/hero-selector/icons",
+      "minimum": 5.846643447424082,
+      "rows": [
+        {
+          "color": [
+            0,
+            108,
+            73
+          ],
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "color": [
+            0,
+            108,
+            73
+          ],
+          "background": [
+            242,
+            244,
+            238
+          ],
+          "ratio": 5.846643447424082
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "color": [
+            15,
+            56,
+            46
+          ],
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        }
+      ],
+      "threshold": 3
+    },
+    {
+      "label": "webkit/390/home",
+      "minimum": 5.966456269107836,
+      "rows": [
+        {
+          "text": "Akıllı Klima Seçici",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 5.966456269107836
+        },
+        {
+          "text": "Alanınıza uygun klimayı bulun",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 11.897556619804549
+        },
+        {
+          "text": "Şehir, mekân, alan, güneş, yalıtım ve kişi sayısına göre ön kapasite ö",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 8.030448210921193
+        },
+        {
+          "text": "Klima Seçici sayfası",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            241,
+            247,
+            243
+          ],
+          "ratio": 5.966456269107836
+        },
+        {
+          "text": "Adım 1 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Mekânınız",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Oda alanı (m²)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kullanım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İl",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İlçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "webkit/390/selector1",
+      "minimum": 6.070473581850699,
+      "rows": [
+        {
+          "text": "Akıllı kapasite rehberi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 6.1537808342211955
+        },
+        {
+          "text": "Alanınıza uygun klimayı bulun",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 12.271095705518773
+        },
+        {
+          "text": "Üç kısa adımda ihtiyacınızı değerlendirin. Sonuç ön seçim içindir; kes",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            250,
+            249,
+            246
+          ],
+          "ratio": 6.070473581850699
+        },
+        {
+          "text": "Adım 1 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Mekânınız",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Oda alanı (m²)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kullanım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İl",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "İlçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "webkit/390/selector2",
+      "minimum": 10.02382783938984,
+      "rows": [
+        {
+          "text": "Adım 2 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Odanın koşulları",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Güneş",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Yalıtım",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tavan yüksekliği (m)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Kişi sayısı",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Geri",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Devam et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    },
+    {
+      "label": "webkit/390/results",
+      "minimum": 6.391306324585703,
+      "rows": [
+        {
+          "text": "Adım 3 / 3",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bütçeniz ve ön değerlendirme",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Ürün bütçesi üst sınırı (₺, isteğe bağlı)",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bütçe kapasite ihtiyacını düşürmez. Fiyatı belirtilmeyen ürünler bütçe",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Geri",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Ön değerlendirmeyi gör",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            244,
+            250,
+            247
+          ],
+          "ratio": 12.220713194439169
+        },
+        {
+          "text": "Ön değerlendirme",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Referans ihtiyaç yaklaşık 9.000 BTU/h.",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "İncelenebilecek kapasite sınıfı:",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": ". Kesin seçim keşifle doğrulanmalıdır.",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "5 gerçek katalog ürünü. Eksik teknik alanlar ürün detayında belirtilir",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Airy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Airy 9000 BTU/h",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺55.100",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Airy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Airy 9000 BTU/h - Siyah",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺58.750",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Fairy · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Fairy 9000 BTU/h – Beyaz",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺40.750",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Online satış",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            227,
+            243,
+            234
+          ],
+          "ratio": 7.588554331458877
+        },
+        {
+          "text": "Aphro · Duvar Tipi",
+          "color": "rgb(0, 108, 73)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.4790164779667
+        },
+        {
+          "text": "Gree Aphro 9000 BTU/h İnverter Duvar Tipi Klima",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "9.000 BTU/h",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            234,
+            245,
+            251
+          ],
+          "ratio": 7.870069899485411
+        },
+        {
+          "text": "₺32.999",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "KDV dahil",
+          "color": "rgb(89, 97, 91)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 6.391306324585703
+        },
+        {
+          "text": "Stokta · 10 adet",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 8.72031972368693
+        },
+        {
+          "text": "Sepete Ekle",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "İncele",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Keşif talep et",
+          "color": "rgb(255, 255, 255)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Karşılaştırmayı aç",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Klima danışmanı",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            250,
+            251,
+            248
+          ],
+          "ratio": 12.439233976175322
+        },
+        {
+          "text": "AI destekli sıralama, doğrulanmış ön değerlendirmeyle sınırlıdır. Kesi",
+          "color": "rgb(69, 77, 72)",
+          "background": [
+            250,
+            251,
+            248
+          ],
+          "ratio": 8.396062100929784
+        },
+        {
+          "text": "AI durumunu kontrol et",
+          "color": "rgb(15, 56, 46)",
+          "background": [
+            255,
+            255,
+            255
+          ],
+          "ratio": 12.919639717527316
+        },
+        {
+          "text": "Hesaplama yöntemi ve sınırları",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Bu araç profesyonel keşif veya kesin mühendislik hesabı değildir. ENER",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Tek konut odası, 2–2,8 m tavan, normal/iyi yalıtım ve 60 m² sınırı var",
+          "color": "rgb(213, 231, 220)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.02382783938984
+        },
+        {
+          "text": "Referans kapasite tablosu (PDF)",
+          "color": "rgb(184, 242, 209)",
+          "background": [
+            15,
+            56,
+            46
+          ],
+          "ratio": 10.249341880162266
+        }
+      ]
+    }
+  ],
+  "navigation": [
+    {
+      "engine": "chrome",
+      "width": 390,
+      "traces": [
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 615.1000000014901,
+          "latencyMs": 3
+        },
+        {
+          "event": "animation",
+          "name": "navigation-wait",
+          "url": "/",
+          "duration": "0s"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/catalog.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 1175.2000000029802,
+          "latencyMs": 2.9000000059604645
+        },
+        {
+          "event": "animation",
+          "name": "navigation-wait",
+          "url": "/catalog.html",
+          "duration": "0s"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/product.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/product.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 2078.60000000149,
+          "latencyMs": 2.2000000029802322
+        },
+        {
+          "event": "animation",
+          "name": "navigation-wait",
+          "url": "/product.html",
+          "duration": "0s"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/checkout.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/checkout.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 1800.6000000014901,
+          "latencyMs": 2.7999999970197678
+        },
+        {
+          "event": "animation",
+          "name": "navigation-wait",
+          "url": "/checkout.html",
+          "duration": "0s"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/",
+          "duration": "0.2s"
+        },
+        {
+          "event": "animation",
+          "name": "hcProgress",
+          "url": "/",
+          "duration": "6.5s"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/checkout.html"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/catalog.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 269.69999999552965,
+          "latencyMs": 0.6999999955296516
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/",
+          "duration": "0.2s"
+        },
+        {
+          "event": "animation",
+          "name": "hcProgress",
+          "url": "/",
+          "duration": "6.5s"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/catalog.html"
+        }
+      ]
+    },
+    {
+      "engine": "firefox",
+      "width": 390,
+      "traces": [
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 433,
+          "latencyMs": 2
+        },
+        {
+          "event": "animation",
+          "name": "navigation-wait",
+          "url": "/",
+          "duration": "0s"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 399,
+          "latencyMs": 2
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/product.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 1614,
+          "latencyMs": 1
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/checkout.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 1163,
+          "latencyMs": 0
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/",
+          "duration": "0.2s"
+        },
+        {
+          "event": "animation",
+          "name": "hcProgress",
+          "url": "/",
+          "duration": "6.5s"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 94,
+          "latencyMs": 0
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/",
+          "duration": "0.2s"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        }
+      ]
+    },
+    {
+      "engine": "webkit",
+      "width": 390,
+      "traces": [
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 455,
+          "latencyMs": 3
+        },
+        {
+          "event": "animation",
+          "name": "navigation-wait",
+          "url": "/",
+          "duration": "0s"
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/catalog.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 366,
+          "latencyMs": 3
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/catalog.html"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/product.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/product.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 1503,
+          "latencyMs": 2
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/product.html"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/checkout.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/checkout.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 1079,
+          "latencyMs": 1
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/checkout.html"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/",
+          "duration": "0.2s"
+        },
+        {
+          "event": "animation",
+          "name": "hcProgress",
+          "url": "/",
+          "duration": "6.5s"
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/"
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/checkout.html"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/catalog.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        },
+        {
+          "event": "navigation-feedback",
+          "visible": true,
+          "text": "Sayfa açılıyor…",
+          "at": 79,
+          "latencyMs": 1
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/catalog.html"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/",
+          "duration": "0.2s"
+        },
+        {
+          "event": "animation",
+          "name": "hcProgress",
+          "url": "/",
+          "duration": "6.5s"
+        },
+        {
+          "event": "pageswap",
+          "transition": false,
+          "url": "/"
+        },
+        {
+          "event": "pagereveal",
+          "transition": false,
+          "url": "/catalog.html"
+        },
+        {
+          "event": "animation",
+          "name": "store-page-enter",
+          "url": "/catalog.html",
+          "duration": "0.2s"
+        }
+      ]
+    }
+  ],
+  "axeScans": 18,
+  "writesBlocked": [
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/analytics/event"
+    }
+  ],
+  "orderCreated": false
+}

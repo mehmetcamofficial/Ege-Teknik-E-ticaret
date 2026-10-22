@@ -1,0 +1,194 @@
+{
+ "generatedFrom": "repository only (no database read)",
+ "adminSlugs": [
+  "distance-sales",
+  "pre-information",
+  "kvkk",
+  "privacy",
+  "cookies",
+  "delivery-returns",
+  "terms"
+ ],
+ "checkboxSlugs": [
+  "distance-sales",
+  "pre-information"
+ ],
+ "noticeSlugs": [
+  "kvkk"
+ ],
+ "legacyFixtureIdCount": 9,
+ "reservedFixtureIds": [
+  "p2-preview-fixture-distance-sales-render-1",
+  "p2-preview-fixture-pre-information-render-1"
+ ],
+ "legacyFixtureIds": [
+  "22826878-973e-4c0d-912c-6700ace0e843",
+  "69ffd5c6-b930-4300-a183-878c99a5d02c",
+  "c58b9077-dd52-4f32-bf3f-1dca51ba471e",
+  "f62b7e17-98dc-48e4-8630-c2fffbfe6fa8",
+  "pg-test-3b3-ver-1",
+  "preview-test-ver-distance-sales-1",
+  "preview-test-ver-distance-sales-2",
+  "preview-test-ver-pre-information-1",
+  "preview-test-ver-pre-information-2"
+ ],
+ "documents": [
+  {
+   "file": "docs/legal-drafts/distance-sales.md",
+   "sha256": "cb319b88f528725329a7aaeab5905e3c22700af6ee5cd2af8ac39bdc907622da",
+   "words": 1296,
+   "title": "Mesafeli Satış Sözleşmesi",
+   "dbSlug": "distance-sales",
+   "adminCanCreateDraft": true,
+   "acceptance": "checkbox (required, version id recorded)",
+   "orderTokens": [
+    "ALICI_AD_SOYAD",
+    "ALICI_EPOSTA",
+    "ALICI_TELEFON",
+    "DIGER_EK_MASRAFLAR",
+    "FATURA_BILGILERI",
+    "KARGO_UCRETI",
+    "SIPARIS_NO",
+    "SIPARIS_TARIHI",
+    "TESLIMAT_ADRESI",
+    "TESLIMAT_YONTEMI",
+    "TOPLAM_TUTAR",
+    "URUN_SATIRLARI",
+    "URUN_TOPLAMI"
+   ],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Checkout: zorunlu kabul kutusu (sürüm kimliğiyle kaydedilir), sipariş önizlemesi, onay ekranı, /legal/[slug]"
+  },
+  {
+   "file": "docs/legal-drafts/pre-information.md",
+   "sha256": "b37bef80ac9a0448e1f1cb1758f85b9e6a7a025613e969d9e24747de93a687d1",
+   "words": 1154,
+   "title": "Ön Bilgilendirme Formu",
+   "dbSlug": "pre-information",
+   "adminCanCreateDraft": true,
+   "acceptance": "checkbox (required, version id recorded)",
+   "orderTokens": [
+    "DIGER_EK_MASRAFLAR",
+    "KARGO_UCRETI",
+    "SIPARIS_NO",
+    "SIPARIS_TARIHI",
+    "TESLIMAT_YONTEMI",
+    "TOPLAM_TUTAR",
+    "URUN_SATIRLARI",
+    "URUN_TOPLAMI"
+   ],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Checkout: zorunlu kabul kutusu (sürüm kimliğiyle kaydedilir), sipariş önizlemesi, onay ekranı, /legal/[slug]"
+  },
+  {
+   "file": "docs/legal-drafts/kvkk.md",
+   "sha256": "93ef244ffd8d493ad97eff673d5e576d59f18eab14a570d91a310c7012aa388c",
+   "words": 1427,
+   "title": "KVKK Aydınlatma Metni",
+   "dbSlug": "kvkk",
+   "adminCanCreateDraft": true,
+   "acceptance": "notice only (must be published; never a checkbox)",
+   "orderTokens": [],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Checkout: bilgilendirme bağlantısı (kutu değil); yayınlanmadan sipariş alınmaz; /legal/[slug]"
+  },
+  {
+   "file": "docs/legal-drafts/privacy.md",
+   "sha256": "d413ab20e7dcf118d10ad56610f8041115bf5b0d345ea45bc0a1daa09496a1ea",
+   "words": 902,
+   "title": "Gizlilik Politikası",
+   "dbSlug": "privacy",
+   "adminCanCreateDraft": true,
+   "acceptance": "none",
+   "orderTokens": [],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Yalnızca /legal dizini ve /legal/[slug]"
+  },
+  {
+   "file": "docs/legal-drafts/cookies.md",
+   "sha256": "6907123cbf772accd8c526e9ca30900df1d369f477945d28f49b901bf9e1632b",
+   "words": 887,
+   "title": "Çerez ve Tarayıcı Depolama Bilgilendirmesi",
+   "dbSlug": "cookies",
+   "adminCanCreateDraft": true,
+   "acceptance": "none",
+   "orderTokens": [],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Çerez bildirimi \"Ayrıntılı bilgi\" bağlantısı policies.html#privacy’e gider; /legal dizini"
+  },
+  {
+   "file": "docs/legal-drafts/delivery-returns.md",
+   "sha256": "18194bdf5c2603ede261ba54fc164ab20e5d74a46587ac84f6bfb77b88d19522",
+   "words": 1126,
+   "title": "Teslimat, Montaj, İade ve Cayma Koşulları",
+   "dbSlug": "delivery-returns",
+   "adminCanCreateDraft": true,
+   "acceptance": "none",
+   "orderTokens": [],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Yalnızca /legal dizini ve /legal/[slug]"
+  },
+  {
+   "file": "docs/legal-drafts/terms.md",
+   "sha256": "24a7541112dba0658c1992386ec62e35c2ba9159e23f35262c36b2c306b1b7a9",
+   "words": 1001,
+   "title": "İnternet Sitesi Kullanım Koşulları",
+   "dbSlug": "terms",
+   "adminCanCreateDraft": true,
+   "acceptance": "none",
+   "orderTokens": [],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Yalnızca /legal dizini ve /legal/[slug]"
+  },
+  {
+   "file": "docs/legal-drafts/installation.md",
+   "sha256": "3b5c912d5732020e58a43302d155ae22f73763ae395c3596308a7a41b76729dc",
+   "words": 1051,
+   "title": "Kurulum ve Montaj Bilgilendirmesi",
+   "dbSlug": null,
+   "adminCanCreateDraft": false,
+   "acceptance": "none",
+   "orderTokens": [],
+   "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
+   "usedIn": "Admin dilim listesinde YOK; yayın yolu tanımlı değil"
+  },
+  {
+   "file": "docs/legal-drafts/marketing-consent.md",
+   "sha256": "ee033a69dde57c7eef065044570a548c98df9312f44c054a9befa7c5e7b4a67f",
+   "words": 397,
+   "title": "Ticari Elektronik İleti (Pazarlama) İzni",
+   "dbSlug": null,
+   "adminCanCreateDraft": false,
+   "acceptance": "none",
+   "orderTokens": [
+    "EPOSTA",
+    "TELEFON"
+   ],
+   "rcBanner": "DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT",
+   "usedIn": "Özellik KAPALI; admin dilim listesinde YOK"
+  },
+  {
+   "file": "docs/legal-drafts/warranty.md",
+   "sha256": "0c1b193b79287d460ccbbd457834b9ecb10e129533b3dba42ee61011294889a9",
+   "words": 406,
+   "title": "Garanti Bilgilendirme Modeli",
+   "dbSlug": null,
+   "adminCanCreateDraft": false,
+   "acceptance": "none",
+   "orderTokens": [
+    "DIGER_ONKOSULLAR",
+    "GARANTI_SURESI",
+    "GARANTI_VEREN",
+    "KAMPANYA_ADI",
+    "KAMPANYA_BASLANGIC",
+    "KAMPANYA_BITIS",
+    "KAPSAM_DISI",
+    "KURULUM_ONKOSULU",
+    "RESMI_GARANTI_BAGLANTISI",
+    "URUN_ADI"
+   ],
+   "rcBanner": "DRAFT — LEGAL REVIEW REQUIRED · NOT PUBLISHED · NOT PRODUCTION LEGAL TEXT",
+   "usedIn": "Model taslağı; admin dilim listesinde YOK"
+  }
+ ]
+}
