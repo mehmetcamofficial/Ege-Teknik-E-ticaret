@@ -1,0 +1,112 @@
+name: GDRIVE-03 narrow CI
+
+# Produces the four status contexts that `main` requires (quality, build, postgres-integration, migration-safety) with real checks
+# scoped to the GDRIVE-03 files only. It does not build or test the website, which this change does not touch (the scope guard
+# proves that). Delete this file when the full CI from the canonical integration lands on main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gdrive03-narrow-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Static safety policy of the GDRIVE-03 workflow, verifier input guards, scope guard, Drive folder safety and administrator-evidence regressions (the DB chain test is reported as skipped here and runs in postgres-integration)
+        run: node --test tests/gdrive03-isolated-chain.test.mjs tests/gdrive03-scope-guard.test.mjs tests/gdrive03-folder-safety.test.mjs
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Every shipped script parses and the verifier module graph loads
+        run: |
+          set -euo pipefail
+          for f in scripts/gdrive03-*.mjs scripts/backup-*.mjs scripts/restore-encrypted-backup.mjs lib/backup/*.mjs; do node --check "$f"; done
+          bash -n scripts/create-verified-backup.sh
+          node --input-type=module -e "await import('./scripts/gdrive03-verify-restore.mjs'); await import('./scripts/backup-drive-upload.mjs'); await import('./lib/backup/drive-upload.mjs'); console.log('module graph loads')"
+      - name: Workflow YAML parses
+        run: ruby -ryaml -e 'ARGV.each { |f| YAML.safe_load_file(f) }; puts "workflow YAML ok"' .github/workflows/gdrive03-isolated-chain.yml .github/workflows/gdrive03-narrow-ci.yml
+
+  postgres-integration:
+    name: postgres-integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Install PostgreSQL 18 client
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+      - name: Real chain on a disposable loopback PostgreSQL 18 (pg_dump, GCM, checksum, upload logic against a fake Drive, decrypt, pg_restore, fingerprint). Fails on any skip.
+        env:
+          GDRIVE03_LOCAL_PG_ADMIN_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+        run: |
+          set -euo pipefail
+          node --test tests/gdrive03-isolated-chain.test.mjs | tee "$RUNNER_TEMP/chain.log"
+          grep -q '^ℹ fail 0' "$RUNNER_TEMP/chain.log"
+          grep -q '^ℹ skipped 0' "$RUNNER_TEMP/chain.log"
+          grep -q 'chain (fake Drive)' "$RUNNER_TEMP/chain.log"
+
+  migration-safety:
+    name: migration-safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: No migration, schema, application, deployment or production-backup file is touched; shipped workflows have no cron, secret or production name
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          git diff --name-status "$BASE_SHA" HEAD | tee "$RUNNER_TEMP/changes.txt"
+          node scripts/gdrive03-scope-guard.mjs < "$RUNNER_TEMP/changes.txt"
