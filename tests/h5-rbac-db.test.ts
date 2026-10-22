@@ -133,7 +133,8 @@ test("concurrent payments cannot over-collect and concurrent status changes appl
 test("no sensitive action exists without its audit row: a forced audit failure rolls the payment back", { skip }, async () => {
   const id = await makeOrder(), before = await snapshot(id);
   await db.execute(sql`CREATE OR REPLACE FUNCTION h5_block_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'audit blocked'; END $$`);
-  await db.execute(sql`CREATE TRIGGER h5_block_audit_trg BEFORE INSERT ON audit_logs FOR EACH ROW WHEN (NEW.entity_id = ${id}) EXECUTE FUNCTION h5_block_audit()`);
+  assert.match(id, /^[\w-]+$/, "DDL cannot take bind parameters: the id is a generated, validated literal");
+  await db.execute(sql.raw(`CREATE TRIGGER h5_block_audit_trg BEFORE INSERT ON audit_logs FOR EACH ROW WHEN (NEW.entity_id = '${id}') EXECUTE FUNCTION h5_block_audit()`));
   try {
     await assert.rejects(pay(id, 1000), /audit blocked|Failed query/);
   } finally {

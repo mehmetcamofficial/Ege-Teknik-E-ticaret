@@ -30,6 +30,12 @@ variable, the running deployment does not see it until it is redeployed (`vercel
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Optional | Sentry server/edge init | Sentry disabled. |
 | `SENTRY_AUTH_TOKEN` | Optional, build-time only | source-map upload | No upload. Never needed at runtime. |
 | `PAYMENT_PROVIDER` | Preview only today | not read by any application code | No effect (PayTR is not implemented). |
+| `LEGAL_PREVIEW_SIGNING_SECRET` (>= 32 chars, secret) | **Yes**, Production and Preview (documented in H5; found missing in Production by H4) | checkout legal preview token (`lib/legal-preview-token.ts`) | Legal preview and order creation fail closed (no order). |
+| `NOTIFICATION_DISPATCH_SECRET` (>= 32 chars, secret) | Optional (H5-A) | `GET /api/internal/notifications/dispatch` bearer | Route answers 404; no notification is ever sent. |
+| `RESEND_API_KEY`, `MAIL_FROM` | Optional (H5-A, also admin mail) | order notification worker | Rows stay queued; admin screen says e-mail is disabled; customer gets no automatic e-mail. |
+| `ORDER_ALERT_EMAILS` | Optional (H5-A) | admin new-order alert recipients (comma list, max 10) | Falls back to active super_admin / operations_manager / owner accounts. |
+| `SITE_ORIGIN`, `ADMIN_ORIGIN` | Optional (H5-A) | links inside notification e-mails | Defaults to `https://egeteknik.tr`; no admin link if no admin origin. |
+| `RESEND_API_BASE` | Test only | loopback mock provider | Ignored in Production and for non-loopback values. |
 
 ## Client-IP trust boundary (P3-S1A)
 

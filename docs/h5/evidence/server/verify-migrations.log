@@ -1,0 +1,2 @@
+$ node scripts/verify-migration-integrity.mjs
+[migration-integrity] OK: migrations 0000-0012 are byte-identical to the applied versions; journal is consistent.
