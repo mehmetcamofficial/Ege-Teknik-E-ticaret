@@ -68,11 +68,13 @@ test("H4-B customer order lookup is POST-only (the e-mail is a credential), rate
   assert.match(route, /rateLimit\(request, "order-lookup", 10, 15 \* 60_000\)/);
 });
 
-test("H4-B there is NO automatic customer notification: the mailer is used only by admin invitation/reset flows", () => {
-  // If this test fails someone added customer mail/SMS: update docs/h4/order-operations.md and the checkout copy that says
-  // "Otomatik e-posta veya SMS gönderilmez" before changing the assertion.
+test("H4-B/H5-A customer e-mail never happens inline in checkout: the legacy mailer stays admin-only, orders only enqueue", () => {
+  // H5-A replaced "no customer e-mail exists" by an outbox: checkout only enqueues (savepoint); a separate worker sends.
   const importers = walk("app").concat(walk("lib")).filter((f) => /\.(ts|tsx)$/.test(f)).filter((f) => /from "(?:@\/lib\/|\.\.?\/(?:lib\/)?)mail(?:\.ts)?"/.test(readFileSync(f, "utf8")));
-  assert.deepEqual(importers, ["lib/admin-auth.ts"]);
-  for (const f of ["app/api/orders/route.ts", "lib/checkout-authority.ts", "lib/order-transition.ts", "lib/finance-db.ts"]) assert.doesNotMatch(readFileSync(f, "utf8"), /sendMail|\.\/mail|lib\/mail|twilio|netgsm|sms/i, f);
-  assert.match(readFileSync("public/checkout.html", "utf8"), /Otomatik e-posta veya SMS gönderilmez/);
+  assert.deepEqual(importers, ["lib/admin-auth.ts"], "lib/mail.ts is still used only by admin invitation/reset flows");
+  for (const f of ["app/api/orders/route.ts", "lib/checkout-authority.ts", "lib/order-transition.ts", "lib/finance-db.ts"]) assert.doesNotMatch(readFileSync(f, "utf8"), /sendMail|lib\/mail|notifications\/provider|resendProvider|twilio|netgsm|sms/i, f);
+  assert.match(readFileSync("app/api/orders/route.ts", "utf8"), /await enqueueOrderNotifications\(tx, id\);/);
+  const copy = readFileSync("public/checkout.html", "utf8");
+  assert.match(copy, /gönderilmeye çalışılır ve ulaşması garanti edilmez; SMS gönderilmez/, "checkout copy promises neither an e-mail nor an SMS");
+  assert.doesNotMatch(copy, /e-posta(?:nıza| adresinize) gönderildi|e-postası gönderildi/i);
 });

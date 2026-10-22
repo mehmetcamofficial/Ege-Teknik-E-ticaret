@@ -109,7 +109,7 @@ try{for(const[engine,type]of[['chrome',chromium],['firefox',firefox],['webkit',w
 
   /* ===== H3.1-D payment explanation and confirmation ===== */
   await openCheckout();const checkoutText=await p.locator('[data-checkout-form]').innerText();
-  for(const t of [/Siparişiniz kaydedilir; ödeme bu adımda alınmaz/,/Ödeme alınmaz\./,/Kart bilgisi istenmez, hesabınızdan tahsilat yapılmaz/,/Otomatik e-posta veya SMS gönderilmez/,/Bu butona basmak siparişinizi kaydeder/])assert.match(checkoutText,t);
+  for(const t of [/Siparişiniz kaydedilir; ödeme bu adımda alınmaz/,/Ödeme alınmaz\./,/Kart bilgisi istenmez, hesabınızdan tahsilat yapılmaz/,/gönderilmeye çalışılır ve ulaşması garanti edilmez; SMS gönderilmez/,/Bu butona basmak siparişinizi kaydeder/])assert.match(checkoutText,t);
   assert.doesNotMatch(checkoutText,/PayTR|iyzico|havale|banka kartı/i);assert.equal(await p.locator('input[autocomplete^="cc-"],input[name*="card" i],input[name*="cvv" i]').count(),0,'no card fields');
   assert.deepEqual(await p.locator('input[name=provider]').evaluateAll(es=>es.map(e=>e.value)),['discovery'],'only the unpaid-order choice');
   await p.evaluate(()=>{const h=document.querySelectorAll('.checkout-step')[2];scrollTo(0,h.getBoundingClientRect().top+scrollY-(innerWidth<=1000?150:100))});await p.waitForTimeout(350);

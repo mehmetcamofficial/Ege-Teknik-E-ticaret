@@ -13,6 +13,7 @@ import { publicRoute, rateLimit, readJson } from "@/lib/http-security";
 import { and, eq, gte, inArray, asc, sql } from "drizzle-orm";
 
 import { loadOrderLegalEvidenceSummary } from "@/lib/legal-evidence-db";
+import { enqueueOrderNotifications } from "@/lib/notifications/outbox";
 import { LEGAL_EVIDENCE_VERSION } from "@/lib/legal-evidence";
 
 class IdempotentReplay extends Error {}
@@ -91,6 +92,9 @@ async function createOrder(request: Request) {
       for (const line of [...lines].sort((a, b) => a.product.id.localeCompare(b.product.id))) { const changed = await tx.update(inventory).set({ onHand: sql`${inventory.onHand} - ${line.quantity}`, reserved: sql`${inventory.reserved} + ${line.quantity}`, version: sql`${inventory.version} + 1`, updatedAt: new Date() }).where(and(eq(inventory.productId, line.product.id), gte(inventory.onHand, line.quantity))).returning({ id: inventory.id }); if (!changed.length) throw new Error(`OUT_OF_STOCK:${line.product.name}`); }
       await tx.insert(orderItems).values(lines.map(({ product, quantity, lineTotal, vatAmount }) => ({ id: crypto.randomUUID(), orderId: id, productId: product.id, productName: product.name, productSku: product.sku, productSlug: product.slug, unitPrice: product.price, vatRateBps: product.vatRateBps, vatAmount, quantity, lineTotal, productSnapshot: { name: product.name, sku: product.sku, slug: product.slug, category: product.category, capacity: product.capacity, unitPrice: product.price, vatRateBps: product.vatRateBps, deliveryClass: product.deliveryClass, installationIncluded: deliveryTraits(product.deliveryClass as DeliveryClass).installationIncluded, shippingEligible: deliveryTraits(product.deliveryClass as DeliveryClass).shippingEligible } })));
       await tx.insert(orderLegalAcceptances).values(binding.evidence.documents.map((doc) => ({ id: crypto.randomUUID(), orderId: id, documentVersionId: doc.documentVersionId, slug: doc.slug, title: doc.title, version: doc.version, templateContentHash: doc.templateContentHash, renderedBody: doc.renderedBody, renderedSha256: doc.renderedSha256, renderContextVersion: doc.renderContextVersion, acceptedAt: doc.acceptedAt, acceptanceType: "checkout_required" })));
+      // H5-A: queue the order e-mails in a SAVEPOINT. A failure here (missing table/grant) rolls back only the savepoint:
+      // an order is never refused or lost because of notification plumbing, and no e-mail is sent inside this transaction.
+      await enqueueOrderNotifications(tx, id);
     }, { isolationLevel: "read committed" });
   } catch (error) {
     const committed = await replay();

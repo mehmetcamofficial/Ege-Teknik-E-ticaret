@@ -290,7 +290,7 @@ test("H3.1-D checkout separates saving the order from collecting payment, with o
   const html = readFileSync("public/checkout.html", "utf8");
   assert.match(html, /Siparişiniz kaydedilir; ödeme bu adımda alınmaz\. Ödeme yöntemi sipariş sonrasında sizinle netleştirilir\./);
   assert.match(html, /<b>Ödeme alınmaz\.<\/b> Kart bilgisi istenmez, hesabınızdan tahsilat yapılmaz\./);
-  assert.match(html, /Otomatik e-posta veya SMS gönderilmez/, "no customer mailer exists (lib/mail.ts only sends admin invitations)");
+  assert.match(html, /e-posta hizmeti kullanılabilir olduğunda gönderilmeye çalışılır ve ulaşması garanti edilmez; SMS gönderilmez/, "e-mail is attempted only when the service is available and is never promised; SMS does not exist");
   assert.match(html, /Bu butona basmak siparişinizi kaydeder\. Ödeme bu adımda alınmaz ve kart bilgisi istenmez\./);
   assert.match(html, /<dt>Sipariş<\/dt><dd>Kaydedildi<\/dd>[\s\S]*<dt>Ödeme<\/dt><dd>Tahsil edilmedi<\/dd>/);
   assert.match(html, /Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi\./);

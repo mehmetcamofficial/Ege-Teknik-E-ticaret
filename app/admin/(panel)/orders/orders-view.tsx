@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DataError, EmptyState, FormField, PageHeader, Panel, StatusBadge, selectClass } from "@/components/admin/ui";
 import { RecordActions } from "@/components/admin/record-actions";
+import OrdersSummary from "./orders-summary";
 import { useAdminJson } from "@/components/admin/use-admin-data";
 import { orderStatusLabel, orderStatusTone, paymentStatusLabel, trDate, tryCurrency } from "@/lib/admin-ui";
 import type { OrderListPage } from "@/lib/orders-db";
@@ -33,6 +34,7 @@ export default function OrdersView() {
   return (
     <>
       <PageHeader title="Siparişler" description="Tüm siparişler, en yeniden eskiye." />
+      <OrdersSummary />
       {error && <DataError message={error} onRetry={reload} />}
       <Panel bodyClassName="p-0">
         <span className="sr-only" role="status">{loading ? "Veriler güncelleniyor…" : ""}</span>
