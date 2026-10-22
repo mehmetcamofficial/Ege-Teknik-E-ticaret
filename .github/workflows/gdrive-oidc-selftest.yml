@@ -33,9 +33,22 @@ jobs:
           access_token_scopes: https://www.googleapis.com/auth/drive
           create_credentials_file: false
       - name: Upload synthetic file and verify SHA-256 round trip
+        id: selftest
         env:
           GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
           GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
           GDRIVE_EXPECTED_ACCOUNT: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
           RUN_ID: ${{ github.run_id }}
         run: node scripts/gdrive-oidc-selftest.mjs
+      - name: Summary (non-secret step outcomes)
+        if: ${{ always() }}
+        env:
+          AUTH_OUTCOME: ${{ steps.gauth.outcome }}
+          SELFTEST_OUTCOME: ${{ steps.selftest.outcome }}
+        run: |
+          {
+            echo "### GDRIVE-03 self-test"
+            echo "- OIDC authentication + service account impersonation (auth action): $AUTH_OUTCOME"
+            echo "- Drive identity/folder/upload/SHA-256 round trip: $SELFTEST_OUTCOME"
+            echo "- If auth failed: check provider condition, audience, workloadIdentityUser binding. If selftest failed: see step= and code= in its log."
+          } >> "$GITHUB_STEP_SUMMARY"

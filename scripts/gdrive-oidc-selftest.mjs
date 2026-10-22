@@ -12,10 +12,16 @@ const step = (name, code) => Object.assign(new Error(code), { step: name, code }
 export async function selftest(env = process.env, client = createDriveClient({ getAccessToken: async () => env.GDRIVE_ACCESS_TOKEN })) {
   const { GDRIVE_FOLDER_ID: folder, GDRIVE_EXPECTED_ACCOUNT: account, RUN_ID: run = 'local' } = env;
   if (!env.GDRIVE_ACCESS_TOKEN) throw step('oidc_authentication', 'no_access_token');
+  if (!/^[^\s@]+@[^\s@]+$/.test(env.GDRIVE_EXPECTED_ACCOUNT ?? '')) throw step('configuration', 'missing_expected_account');
+  if (!/^[A-Za-z0-9_-]{10,200}$/.test(env.GDRIVE_FOLDER_ID ?? '')) throw step('configuration', 'invalid_folder_id');
   let about; try { about = await client.about(); } catch (e) { throw step('service_account_impersonation_or_token', e.code ?? 'about_failed'); }
   if (about.user?.emailAddress?.toLowerCase() !== account?.toLowerCase()) throw step('service_account_impersonation', 'unexpected_identity');
   let f; try { f = await client.getFolder(folder); } catch (e) { throw step('drive_folder_permission', e.code ?? 'folder_failed'); }
+  if (f.id !== folder || f.mimeType !== 'application/vnd.google-apps.folder' || f.trashed) throw step('drive_folder_permission', 'unsafe_folder');
   if (!f.capabilities?.canAddChildren) throw step('drive_folder_permission', 'folder_not_writable');
+  // Least-privilege evidence (reported, not enforced here): the identity should be able to add but not delete.
+  if (!f.driveId) console.log('WARN least_privilege: folder is not in a Shared Drive');
+  if (f.capabilities.canDeleteChildren || f.capabilities.canTrashChildren) console.log('WARN least_privilege: identity can delete/trash items in the folder (expected Contributor, add-only)');
   if ((f.permissions ?? []).some((p) => p.type === 'anyone' || p.type === 'domain')) throw step('drive_folder_permission', 'folder_shared_publicly');
   const name = `H5C-OIDC-TEST-${/^\d{1,20}$/.test(run) ? run : 'local'}.txt`;
   if ((await client.findByName(folder, name)).length) throw step('drive_upload', 'refusing_to_overwrite');
