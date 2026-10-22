@@ -1,0 +1,148 @@
+{
+ "capturedAt": "2026-10-22",
+ "method": "vercel env ls <env> (names and target environments only; values never read or stored)",
+ "requiredForProduction": {
+  "APP_ENV": {
+   "inProductionTarget": true,
+   "targets": [
+    "Production"
+   ]
+  },
+  "NEON_BRANCH_ID": {
+   "inProductionTarget": true,
+   "targets": [
+    "Production"
+   ]
+  },
+  "EXPECTED_NEON_PRODUCTION_BRANCH_ID": {
+   "inProductionTarget": true,
+   "targets": [
+    "Production"
+   ]
+  },
+  "DATABASE_URL": {
+   "inProductionTarget": true,
+   "targets": [
+    "Production"
+   ]
+  },
+  "IP_HASH_SALT": {
+   "inProductionTarget": true,
+   "targets": [
+    "Production"
+   ]
+  },
+  "LEGAL_PREVIEW_SIGNING_SECRET": {
+   "inProductionTarget": false,
+   "targets": []
+  }
+ },
+ "otherNames": {
+  "CLERK_SECRET_KEY": {
+   "productionTargets": [
+    "Production"
+   ],
+   "previewTargets": [
+    "Preview"
+   ]
+  },
+  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY": {
+   "productionTargets": [
+    "Production"
+   ],
+   "previewTargets": [
+    "Preview"
+   ]
+  },
+  "RESEND_API_KEY": {
+   "productionTargets": [],
+   "previewTargets": [
+    "Preview"
+   ]
+  },
+  "MAIL_FROM": {
+   "productionTargets": [],
+   "previewTargets": [
+    "Preview"
+   ]
+  },
+  "CHECKOUT_SCOPED_DB_ENABLED": {
+   "productionTargets": [],
+   "previewTargets": [
+    "Preview"
+   ]
+  },
+  "STOREFRONT_DATABASE_URL": {
+   "productionTargets": [],
+   "previewTargets": [
+    "Preview"
+   ]
+  },
+  "ADMIN_DATABASE_URL": {
+   "productionTargets": [],
+   "previewTargets": [
+    "Preview"
+   ]
+  },
+  "ANALYTICS_ENABLED": {
+   "productionTargets": [
+    "Production"
+   ],
+   "previewTargets": []
+  },
+  "BLOB_READ_WRITE_TOKEN": {
+   "productionTargets": [
+    "Preview",
+    "Production"
+   ],
+   "previewTargets": [
+    "Preview",
+    "Production"
+   ]
+  },
+  "SENTRY_DSN": {
+   "productionTargets": [],
+   "previewTargets": []
+  }
+ },
+ "productionNames": [
+  "ADMIN_BOOTSTRAP_EMAIL",
+  "ADMIN_BOOTSTRAP_PASSWORD_HASH",
+  "ANALYTICS_ENABLED",
+  "APP_ENV",
+  "BLOB_READ_WRITE_TOKEN",
+  "BLOB_STORE_ID",
+  "BLOB_WEBHOOK_PUBLIC_KEY",
+  "CLERK_SECRET_KEY",
+  "DATABASE_URL",
+  "EXPECTED_NEON_PRODUCTION_BRANCH_ID",
+  "IP_HASH_SALT",
+  "NEON_BRANCH_ID",
+  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+ ],
+ "previewNames": [
+  "ADMIN_BOOTSTRAP_EMAIL",
+  "ADMIN_BOOTSTRAP_PASSWORD_HASH",
+  "ADMIN_DATABASE_URL",
+  "APP_ENV",
+  "BLOB_READ_WRITE_TOKEN",
+  "BLOB_STORE_ID",
+  "BLOB_WEBHOOK_PUBLIC_KEY",
+  "CHECKOUT_SCOPED_DB_ENABLED",
+  "CLERK_SECRET_KEY",
+  "DATABASE_URL",
+  "DATABASE_URL_UNPOOLED",
+  "EXPECTED_NEON_DEVELOPMENT_BRANCH_ID",
+  "EXPECTED_NEON_PREVIEW_BRANCH_ID",
+  "EXPECTED_NEON_PRODUCTION_BRANCH_ID",
+  "IP_HASH_SALT",
+  "LEGAL_PREVIEW_SIGNING_SECRET",
+  "MAIL_FROM",
+  "NEON_BRANCH_ID",
+  "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+  "PAYMENT_PROVIDER",
+  "RESEND_API_KEY",
+  "SENTRY_AUTH_TOKEN",
+  "STOREFRONT_DATABASE_URL"
+ ]
+}

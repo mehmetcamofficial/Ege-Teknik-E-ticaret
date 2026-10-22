@@ -8,13 +8,13 @@ Her onay, `inventory.json` içindeki dosya **SHA-256** değerine verilmelidir; m
 | Belge | İncelenen SHA-256 (ilk 12) | Onay | Not/Tarih/İmza |
 |---|---|---|---|
 | distance-sales | `cb319b88f528` | ☐ | |
-| pre-information | _inventory.json_ | ☐ | |
-| kvkk | _inventory.json_ | ☐ | |
-| privacy | _inventory.json_ | ☐ | |
-| cookies | _inventory.json_ | ☐ | |
-| delivery-returns | _inventory.json_ | ☐ | |
-| terms | _inventory.json_ | ☐ | |
-| installation / warranty / marketing-consent (yayın yolu yok; yayınlanacak mı?) | _inventory.json_ | ☐ karar | |
+| pre-information | `b37bef80ac9a` | ☐ | |
+| kvkk | `93ef244ffd8d` | ☐ | |
+| privacy | `d413ab20e7dc` | ☐ | |
+| cookies | `6907123cbf77` | ☐ | |
+| delivery-returns | `18194bdf5c26` | ☐ | |
+| terms | `24a7541112db` | ☐ | |
+| installation / warranty / marketing-consent (yayın yolu yok; yayınlanacak mı?) | `3b5c912d5732` / `0c1b193b7928` / `ee033a69dde5` | ☐ karar | |
 
 ## 2. Hukuki sorular (AV) — `VERIFICATION_REQUIRED.md` kodlarıyla
 - ☐ G1 saklama ve silme matrisi · ☐ G2–G5, G10 yurt dışı aktarım/DPA (Vercel, Neon, Clerk, Sentry)
