@@ -13,7 +13,6 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
-import { signLegalPreviewToken } from "../lib/legal-preview-token.ts";
 
 const raw = process.env.CHECKOUT_HTTP_PG_URL;
 const target = (() => { try { return new URL(raw); } catch { return null; } })();

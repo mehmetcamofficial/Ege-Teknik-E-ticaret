@@ -1,5 +1,5 @@
 /** H4-A: builds docs/h4/legal-review/inventory.json from the repository only (RC files + code registries). Reads no database. */
-import{readFileSync,writeFileSync,readdirSync}from'node:fs';import{createHash}from'node:crypto';
+import{readFileSync,writeFileSync}from'node:fs';import{createHash}from'node:crypto';
 const rc=(f)=>readFileSync(`docs/legal-drafts/${f}.md`,'utf8');
 const registry=readFileSync('lib/legal-fixture-registry.ts','utf8');
 const legacyIds=[...registry.slice(registry.indexOf('LEGACY_FIXTURE_VERSION_IDS'),registry.indexOf('const LEGACY_FIXTURE_ID_SET')).matchAll(/"([^"]+)"/g)].map(m=>m[1]);
@@ -26,7 +26,6 @@ const out=docs.map(([file,slug,title,usedIn])=>{const t=rc(file),tokens=[...new 
  return{file:`docs/legal-drafts/${file}.md`,sha256:createHash('sha256').update(t).digest('hex'),words:t.split(/\s+/).length,title,dbSlug:inAdmin?slug:null,adminCanCreateDraft:inAdmin,
   acceptance:checkboxSlugs.includes(slug)?'checkbox (required, version id recorded)':noticeSlugs.includes(slug)?'notice only (must be published; never a checkbox)':'none',
   orderTokens:tokens,rcBanner:banner,usedIn}});
-const registryIds=new Set([...legacyIds,...reservedIds]);
 const result={generatedFrom:'repository only (no database read)',adminSlugs,checkboxSlugs,noticeSlugs,legacyFixtureIdCount:legacyIds.length,reservedFixtureIds:reservedIds,legacyFixtureIds:legacyIds,documents:out};
 writeFileSync('docs/h4/legal-review/inventory.json',JSON.stringify(result,null,1)+'\n');
 // Preview observation (read-only GET results captured by hand-run curl; ids classified against the registry here)
