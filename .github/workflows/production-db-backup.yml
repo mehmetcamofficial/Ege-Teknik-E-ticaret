@@ -1,0 +1,118 @@
+name: Production DB Backup (H5-C, disabled by default)
+
+# SAFE BY DEFAULT: no schedule trigger is active. The backup job needs ALL of: manual dispatch, ref == main,
+# repository variable BACKUP_ENABLED == 'true', and the protected GitHub Environment `production-backup`
+# (deployment branch policy: main only + required reviewers). Pull requests only run the secret-free test job.
+# To enable a schedule later, uncomment the cron below in a reviewed change. No artifacts are ever published.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/production-db-backup.yml'
+      - 'lib/backup/**'
+      - 'scripts/backup-*.mjs'
+      - 'scripts/create-verified-backup.sh'
+      - 'scripts/restore-encrypted-backup.mjs'
+      - 'tests/h5c-backup.test.mjs'
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "30 1 * * *"
+
+permissions: {}
+
+concurrency:
+  group: production-db-backup
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Secret-free backup, Drive (fake client) and workflow policy tests
+        run: node --test tests/h5c-backup.test.mjs tests/backup-automation.test.mjs
+
+  backup:
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.BACKUP_ENABLED == 'true' }}
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production-backup
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Install PostgreSQL 18 client
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+      - name: Dump, encrypt, verify round trip, write manifest
+        id: backup
+        shell: bash
+        env:
+          DATABASE_URL: ${{ secrets.NEON_PRODUCTION_DATABASE_URL_BACKUP }}
+          BACKUP_GCM_KEY_B64: ${{ secrets.BACKUP_GCM_KEY_B64 }}
+          BACKUP_GCM_KEY_ID: ${{ vars.BACKUP_GCM_KEY_ID }}
+        run: bash scripts/create-verified-backup.sh
+      - name: Authenticate to Google Cloud (workload identity federation, no JSON key)
+        id: gauth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2.1.10
+        with:
+          workload_identity_provider: ${{ vars.GDRIVE_WIF_PROVIDER }}
+          service_account: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive
+          create_credentials_file: false
+      - name: Upload to Drive and verify the uploaded copy
+        shell: bash
+        env:
+          GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
+          GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
+          GDRIVE_EXPECTED_ACCOUNT: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
+          ENCRYPTED_FILE: ${{ steps.backup.outputs.encrypted_file }}
+          CHECKSUM_FILE: ${{ steps.backup.outputs.checksum_file }}
+          MANIFEST_FILE: ${{ steps.backup.outputs.manifest_file }}
+        run: node scripts/backup-drive-upload.mjs
+      - name: Retention report (report-only, deletes nothing)
+        shell: bash
+        env:
+          GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
+          GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
+        run: node scripts/backup-retention-report.mjs
+      - name: Remove local backup files
+        if: ${{ always() }}
+        shell: bash
+        run: rm -rf -- "${{ steps.backup.outputs.backup_dir }}"
+
+  alert:
+    if: ${{ failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.BACKUP_ENABLED == 'true' }}
+    needs: backup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Open an admin alert issue (no secrets, no database details)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Production DB backup FAILED" \
+            --label backup-failure --body "The scheduled production backup failed. Nothing was marked successful. Run: $RUN_URL"
