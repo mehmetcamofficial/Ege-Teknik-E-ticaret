@@ -31,7 +31,9 @@ jobs:
         run: node --test tests/backup-automation.test.mjs
 
   backup:
-    if: ${{ github.event_name != 'pull_request' }}
+    # OFF BY DEFAULT: the schedule below only runs the secret-free `tests` job until the repository variable BACKUP_ENABLED is set to
+    # 'true'. Merging this workflow never starts a production dump by itself. Only runs on main (a manual dispatch from any other ref is skipped).
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.BACKUP_ENABLED == 'true' }}
     needs: tests
     runs-on: ubuntu-latest
     timeout-minutes: 20

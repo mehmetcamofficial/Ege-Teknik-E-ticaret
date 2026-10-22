@@ -199,7 +199,7 @@ test('workflow gates backup on tests and scopes GCM and OAuth secrets to separat
   const workflow = await readFile('.github/workflows/neon-production-backup.yml', 'utf8');
   assert.match(workflow, /needs: tests/);
   assert.match(workflow, /pull_request:/);
-  assert.match(workflow, /backup:\n\s+if: \$\{\{ github.event_name != 'pull_request' \}\}/);
+  assert.match(workflow, /\n  backup:\n(?:\s+#[^\n]*\n)*\s+if: \$\{\{ github.event_name != 'pull_request' && github.ref == 'refs\/heads\/main' && vars.BACKUP_ENABLED == 'true' \}\}/);
   assert.match(workflow, /notify-failure:/);
   assert.match(workflow, /postgresql-client-18/);
   assert.doesNotMatch(workflow, /BACKUP_ENCRYPTION_PASSWORD/);
@@ -207,4 +207,22 @@ test('workflow gates backup on tests and scopes GCM and OAuth secrets to separat
   const drive = workflow.slice(workflow.indexOf('- name: Upload and verify Google Drive'), workflow.indexOf('- name: Optionally'));
   assert.doesNotMatch(drive, /BACKUP_GCM_KEY_B64|DATABASE_URL/);
   assert.match(drive, /EGE_GDRIVE_FOLDER_ID/);
+});
+
+test('nightly production backup is OFF BY DEFAULT: the dump job needs main AND BACKUP_ENABLED, secrets live only in that job', async () => {
+  const raw = await readFile('.github/workflows/neon-production-backup.yml', 'utf8');
+  const workflow = raw.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  const testsJob = workflow.slice(workflow.indexOf('\n  tests:'), workflow.indexOf('\n  backup:'));
+  const backupJob = workflow.slice(workflow.indexOf('\n  backup:'), workflow.indexOf('\n  notify-failure:'));
+  const notifyJob = workflow.slice(workflow.indexOf('\n  notify-failure:'));
+  const cond = /\n  backup:\n\s+if: (\$\{\{[^\n]*\}\})/.exec(workflow)?.[1] ?? '';
+  for (const part of ["github.event_name != 'pull_request'", "github.ref == 'refs/heads/main'", "vars.BACKUP_ENABLED == 'true'"]) assert.ok(cond.includes(part), `backup condition must include ${part}`);
+  assert.equal((cond.match(/\|\|/g) ?? []).length, 0, 'conditions are ANDed, never ORed');
+  assert.doesNotMatch(testsJob, /secrets\.|id-token/);   // the only job a schedule runs by default holds no secret
+  assert.match(backupJob, /secrets\.NEON_PRODUCTION_DATABASE_URL_BACKUP/);
+  assert.equal((workflow.match(/secrets\.NEON_PRODUCTION_DATABASE_URL_BACKUP/g) ?? []).length, 1);
+  assert.doesNotMatch(notifyJob, /secrets\./);
+  // a skipped backup must not look like a failure
+  assert.match(notifyJob, /needs\.backup\.result == 'failure'/);
+  assert.doesNotMatch(notifyJob, /needs\.backup\.result == 'skipped'|!= 'success'/);
 });
