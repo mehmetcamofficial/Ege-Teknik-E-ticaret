@@ -29,6 +29,11 @@ test('static: no secret of any kind and no production identifier can reach this 
   }
   for (const needed of ['GDRIVE_TEST_WIF_PROVIDER', 'GDRIVE_TEST_SERVICE_ACCOUNT', 'GDRIVE_TEST_FOLDER_ID']) assert.ok(w.includes(`vars.${needed}`));
   assert.ok(!/vars\.(?!GDRIVE_TEST_)/.test(w), 'only GDRIVE_TEST_* variables may be read');
+  assert.deepEqual([...new Set(w.match(/vars\.[A-Z_]+/g))].sort(), ['vars.GDRIVE_TEST_EVIDENCE_PUBKEY', 'vars.GDRIVE_TEST_FOLDER_EVIDENCE', 'vars.GDRIVE_TEST_FOLDER_ID', 'vars.GDRIVE_TEST_SERVICE_ACCOUNT', 'vars.GDRIVE_TEST_WIF_PROVIDER']);
+  // evidence variables are public data (a signed document and a public key) and are handed to the upload step only
+  const uploadStep = w.slice(w.indexOf('Upload to the Drive TEST folder'), w.indexOf('Download from Drive'));
+  assert.ok(uploadStep.includes('vars.GDRIVE_TEST_FOLDER_EVIDENCE') && uploadStep.includes('vars.GDRIVE_TEST_EVIDENCE_PUBKEY'));
+  assert.equal((w.match(/GDRIVE_TEST_(FOLDER_EVIDENCE|EVIDENCE_PUBKEY)/g) ?? []).length, 2);
 });
 
 test('static: databases are loopback and synthetic, key is generated and masked in-run, prefix is synthetic', () => {

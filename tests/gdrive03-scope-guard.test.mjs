@@ -16,8 +16,10 @@ test('anything outside the allowlist is refused: app code, migrations, deploy co
   }
 });
 
-test('modifying or deleting an existing file is refused even inside the allowlist', () => {
-  assert.equal(checkChangeList(['M\tlib/backup/manifest.mjs']).length, 1);
+test('editing an allowlisted file is accepted; editing anything else, deleting or renaming is refused', () => {
+  assert.deepEqual(checkChangeList(['M\tlib/backup/drive-upload.mjs', 'A\tlib/backup/drive-folder-safety.mjs']), []);
+  assert.equal(checkChangeList(['M\tpackage.json']).length, 1);
+  assert.equal(checkChangeList(['M\tapp/page.tsx']).length, 1);
   assert.equal(checkChangeList(['D\tscripts/backup-dump.mjs']).length, 1);
   assert.equal(checkChangeList(['R100\tscripts/a.mjs\tscripts/backup-dump.mjs']).length >= 1, true);
 });

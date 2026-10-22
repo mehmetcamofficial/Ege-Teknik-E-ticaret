@@ -27,8 +27,8 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '24'
-      - name: Static safety policy of the GDRIVE-03 workflow, verifier input guards (the DB chain test is reported as skipped here and runs in postgres-integration)
-        run: node --test tests/gdrive03-isolated-chain.test.mjs tests/gdrive03-scope-guard.test.mjs
+      - name: Static safety policy of the GDRIVE-03 workflow, verifier input guards, scope guard, Drive folder safety and administrator-evidence regressions (the DB chain test is reported as skipped here and runs in postgres-integration)
+        run: node --test tests/gdrive03-isolated-chain.test.mjs tests/gdrive03-scope-guard.test.mjs tests/gdrive03-folder-safety.test.mjs
 
   build:
     name: build
