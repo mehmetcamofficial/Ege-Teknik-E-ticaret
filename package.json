@@ -13,6 +13,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\"",
+    "test:backup": "node --test tests/h5c-backup.test.mjs tests/backup-automation.test.mjs",
     "test:legal-postgres": "node scripts/test-legal-postgres.mjs",
     "test:acl-postgres": "node tests/support/test-independent-acl.mjs",
     "test:postgres": "node scripts/test-postgres-integration.mjs",
