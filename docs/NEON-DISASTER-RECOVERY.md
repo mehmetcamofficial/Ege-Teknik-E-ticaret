@@ -1,5 +1,7 @@
 # Ege Teknik — Backup ve felaket kurtarma
 
+> **DURUM (kullanımdan kaldırıldı — Production için):** Production yedeği artık `.github/workflows/production-db-backup.yml` ile alınır (GitHub OIDC → Workload Identity → özel Google Drive; GitHub artifact yok). Bu belgedeki eski akışın zamanlaması ve GitHub artifact adımı kaldırıldı; repo herkese açık olduğu için şifreli dump bile artifact olarak yayımlanmaz. Eski iş yalnızca ayrı `LEGACY_NEON_BACKUP_ENABLED` anahtarı ve manuel çalıştırmayla açılabilir; bu anahtar tanımsız kalmalıdır. Aşağıdaki artifact/zamanlama anlatımı tarihsel kayıttır.
+
 Bu yerel PR #3 adayı otomatik backup ve ayrı boş hedefte kurtarma içindir. Production'a restore/cutover, migration, merge ve deploy ayrı açık onay gerektirir. Mevcut veritabanlarını veya yedekleri silmeyin. Yeni abonelik gerekmez; mevcut runner/Drive kotaları ve retention ayrıca izlenmelidir.
 
 ## Otomatik iş akışı

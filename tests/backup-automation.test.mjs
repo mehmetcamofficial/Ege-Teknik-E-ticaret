@@ -199,7 +199,7 @@ test('workflow gates backup on tests and scopes GCM and OAuth secrets to separat
   const workflow = await readFile('.github/workflows/neon-production-backup.yml', 'utf8');
   assert.match(workflow, /needs: tests/);
   assert.match(workflow, /pull_request:/);
-  assert.match(workflow, /\n  backup:\n(?:\s+#[^\n]*\n)*\s+if: \$\{\{ github.event_name != 'pull_request' && github.ref == 'refs\/heads\/main' && vars.BACKUP_ENABLED == 'true' \}\}/);
+  assert.match(workflow, /\n  backup:\n(?:\s+#[^\n]*\n)*\s+if: \$\{\{ github.event_name == 'workflow_dispatch' && github.ref == 'refs\/heads\/main' && vars.LEGACY_NEON_BACKUP_ENABLED == 'true' \}\}/);
   assert.match(workflow, /notify-failure:/);
   assert.match(workflow, /postgresql-client-18/);
   assert.doesNotMatch(workflow, /BACKUP_ENCRYPTION_PASSWORD/);
@@ -209,14 +209,24 @@ test('workflow gates backup on tests and scopes GCM and OAuth secrets to separat
   assert.match(drive, /EGE_GDRIVE_FOLDER_ID/);
 });
 
-test('nightly production backup is OFF BY DEFAULT: the dump job needs main AND BACKUP_ENABLED, secrets live only in that job', async () => {
+test('legacy Neon backup flow is retired for production: no schedule, no GitHub artifact, own separate switch', async () => {
+  const raw = await readFile('.github/workflows/neon-production-backup.yml', 'utf8');
+  const workflow = raw.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  assert.doesNotMatch(workflow, /^\s*(schedule:|- cron:)/m);                       // never starts by itself
+  assert.doesNotMatch(workflow, /upload-artifact|retention-days/);                  // the repository is public: no artifact of production data
+  assert.equal((workflow.match(/vars\.BACKUP_ENABLED\b/g) ?? []).length, 0);        // BACKUP_ENABLED belongs to production-db-backup.yml only
+  assert.match(workflow, /vars\.LEGACY_NEON_BACKUP_ENABLED == 'true'/);
+  assert.doesNotMatch(workflow, /pull_request_target|workflow_run|repository_dispatch/);
+});
+
+test('legacy Neon backup job: dispatch from main AND its own legacy switch, secrets live only in that job', async () => {
   const raw = await readFile('.github/workflows/neon-production-backup.yml', 'utf8');
   const workflow = raw.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
   const testsJob = workflow.slice(workflow.indexOf('\n  tests:'), workflow.indexOf('\n  backup:'));
   const backupJob = workflow.slice(workflow.indexOf('\n  backup:'), workflow.indexOf('\n  notify-failure:'));
   const notifyJob = workflow.slice(workflow.indexOf('\n  notify-failure:'));
   const cond = /\n  backup:\n\s+if: (\$\{\{[^\n]*\}\})/.exec(workflow)?.[1] ?? '';
-  for (const part of ["github.event_name != 'pull_request'", "github.ref == 'refs/heads/main'", "vars.BACKUP_ENABLED == 'true'"]) assert.ok(cond.includes(part), `backup condition must include ${part}`);
+  for (const part of ["github.event_name == 'workflow_dispatch'", "github.ref == 'refs/heads/main'", "vars.LEGACY_NEON_BACKUP_ENABLED == 'true'"]) assert.ok(cond.includes(part), `backup condition must include ${part}`);
   assert.equal((cond.match(/\|\|/g) ?? []).length, 0, 'conditions are ANDed, never ORed');
   assert.doesNotMatch(testsJob, /secrets\.|id-token/);   // the only job a schedule runs by default holds no secret
   assert.match(backupJob, /secrets\.NEON_PRODUCTION_DATABASE_URL_BACKUP/);
