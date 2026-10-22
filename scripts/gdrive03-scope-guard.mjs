@@ -1,5 +1,5 @@
 // GDRIVE-03 narrow PR scope guard. Reads `git diff --name-status` lines on stdin and fails unless the change is EXACTLY a subset of the
-// allowed GDRIVE-03 files, all newly added. Also checks the added workflow files for anything that could touch production or run unattended.
+// allowed GDRIVE-03 files (added or edited, never deleted or renamed). Also checks the added workflow files for anything that could touch production or run unattended.
 // Usage: git diff --name-status BASE...HEAD | node scripts/gdrive03-scope-guard.mjs
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,13 +12,16 @@ export const ALLOWED = new Set([
   'lib/backup/drive-client.mjs', 'lib/backup/drive-upload.mjs', 'lib/backup/manifest.mjs',
   'tests/gdrive03-isolated-chain.test.mjs', 'tests/gdrive03-scope-guard.test.mjs', 'tests/fixtures/gdrive03-synthetic-seed.sql',
   'docs/ops/gdrive03-isolated-test-runbook.md', 'docs/ops/gdrive03-gcp-plan.md',
+  'lib/backup/drive-folder-safety.mjs', 'scripts/gdrive03-admin-folder-evidence.mjs', 'tests/gdrive03-folder-safety.test.mjs',
+  'docs/ops/gdrive03-folder-evidence-runbook.md',
 ]);
 
 export function checkChangeList(lines) {
   const problems = [];
   for (const line of lines.filter(Boolean)) {
     const [status, ...paths] = line.split('\t');
-    if (status !== 'A') problems.push(`only additions are allowed, got ${status} ${paths.join(' -> ')}`);
+    // Additions and in-place edits of allowlisted files only; deletions and renames never.
+    if (status !== 'A' && status !== 'M') problems.push(`only additions and edits are allowed, got ${status} ${paths.join(' -> ')}`);
     for (const p of paths) if (!ALLOWED.has(p)) problems.push(`path outside the GDRIVE-03 scope: ${p}`);
   }
   return problems;

@@ -94,6 +94,9 @@ jobs:
           GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
           GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_TEST_FOLDER_ID }}
           GDRIVE_EXPECTED_ACCOUNT: ${{ vars.GDRIVE_TEST_SERVICE_ACCOUNT }}
+          # Needed because Drive does not return permissions for Shared Drive folders: signed administrator evidence + its public key.
+          GDRIVE_FOLDER_EVIDENCE: ${{ vars.GDRIVE_TEST_FOLDER_EVIDENCE }}
+          GDRIVE_EVIDENCE_PUBKEY: ${{ vars.GDRIVE_TEST_EVIDENCE_PUBKEY }}
           ENCRYPTED_FILE: ${{ steps.backup.outputs.encrypted_file }}
           CHECKSUM_FILE: ${{ steps.backup.outputs.checksum_file }}
           MANIFEST_FILE: ${{ steps.backup.outputs.manifest_file }}
