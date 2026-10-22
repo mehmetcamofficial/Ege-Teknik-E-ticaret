@@ -86,6 +86,8 @@ jobs:
           GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
           GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
           GDRIVE_EXPECTED_ACCOUNT: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
+          GDRIVE_FOLDER_EVIDENCE: ${{ vars.GDRIVE_FOLDER_EVIDENCE }}
+          GDRIVE_EVIDENCE_PUBKEY: ${{ vars.GDRIVE_EVIDENCE_PUBKEY }}
           ENCRYPTED_FILE: ${{ steps.backup.outputs.encrypted_file }}
           CHECKSUM_FILE: ${{ steps.backup.outputs.checksum_file }}
           MANIFEST_FILE: ${{ steps.backup.outputs.manifest_file }}
@@ -114,5 +116,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh issue create --repo "$GITHUB_REPOSITORY" --title "Production DB backup FAILED" \
-            --label backup-failure --body "The scheduled production backup failed. Nothing was marked successful. Run: $RUN_URL"
+          gh label create backup-failure --repo "$GITHUB_REPOSITORY" --color B60205 --description "Production database backup failure" --force || true
+          if ! gh issue create --repo "$GITHUB_REPOSITORY" --title "Production DB backup FAILED" \
+            --label backup-failure --body "Production backup failed. No successful backup was recorded. Run: $RUN_URL"; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Production DB backup FAILED" \
+              --body "Production backup failed. Label creation or labelled alert failed. Run: $RUN_URL"
+          fi
