@@ -236,3 +236,65 @@ test('legacy Neon backup job: dispatch from main AND its own legacy switch, secr
   assert.match(notifyJob, /needs\.backup\.result == 'failure'/);
   assert.doesNotMatch(notifyJob, /needs\.backup\.result == 'skipped'|!= 'success'/);
 });
+
+// ---- trigger matrix: evaluate the real `if:` expressions of both production-capable workflows for every event, ref and switch value ----
+const strip = (raw) => raw.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+/** GitHub expression `==`/`!=` on strings is case-insensitive; a missing variable is the empty string. */
+function evaluateIf(expression, ctx) {
+  const body = expression.replace(/^\$\{\{\s*|\s*\}\}$/g, '');
+  const js = body
+    .replace(/github\.event_name/g, 'c.event').replace(/github\.ref\b/g, 'c.ref')
+    .replace(/vars\.LEGACY_NEON_BACKUP_ENABLED/g, 'c.legacy').replace(/vars\.BACKUP_ENABLED/g, 'c.backup')
+    .replace(/([A-Za-z0-9_.]+)\s*(==|!=)\s*('[^']*')/g, (_m, l, op, r) => `${op === '!=' ? '!' : ''}eq(${l}, ${r})`);
+  assert.match(js, /^[\sA-Za-z0-9_.,'()&|!/]+$/, `unexpected token in condition: ${js}`);
+  return Boolean(new Function('eq', 'c', `return (${js});`)((a, b) => String(a ?? '').toLowerCase() === String(b).toLowerCase(), ctx));
+}
+const jobCondition = (raw, job) => new RegExp(`\\n  ${job}:\\n(?:\\s+#[^\\n]*\\n)*\\s+if: (\\$\\{\\{[^\\n]*\\}\\})`).exec(raw)?.[1] ?? '';
+const EVENTS = ['pull_request', 'pull_request_target', 'push', 'schedule', 'workflow_dispatch', 'workflow_run', 'repository_dispatch', 'release'];
+const REFS = ['refs/heads/main', 'refs/heads/feature/x', 'refs/pull/26/merge', 'refs/tags/v1'];
+const SWITCH = [undefined, '', 'false', 'FALSE', '0', 'yes', ' true', 'true', 'TRUE'];
+
+test('trigger matrix: legacy Neon flow produces NO production dump unless dispatched from main with its own switch set', async () => {
+  const raw = await readFile('.github/workflows/neon-production-backup.yml', 'utf8');
+  const cond = jobCondition(raw, 'backup');
+  assert.ok(cond, 'legacy backup condition found');
+  let runs = 0;
+  for (const event of EVENTS) for (const ref of REFS) for (const legacy of SWITCH) for (const backup of SWITCH) {
+    const run = evaluateIf(cond, { event, ref, legacy, backup });
+    const expected = event === 'workflow_dispatch' && ref === 'refs/heads/main' && (legacy ?? '').toLowerCase() === 'true';
+    assert.equal(run, expected, `event=${event} ref=${ref} legacy=${legacy} backup=${backup}`);
+    if (run) { runs++; assert.notEqual(legacy, undefined); }
+  }
+  assert.ok(runs > 0, 'the matrix does contain the one deliberate run path');
+  // BACKUP_ENABLED alone (the NEW flow's switch) never starts the legacy job; with LEGACY unset nothing runs for any event or ref
+  for (const event of EVENTS) for (const ref of REFS) for (const backup of SWITCH) assert.equal(evaluateIf(cond, { event, ref, legacy: undefined, backup }), false);
+});
+
+test('trigger matrix: the new production flow needs BACKUP_ENABLED and main; the legacy switch alone never starts it', async () => {
+  const raw = await readFile('.github/workflows/production-db-backup.yml', 'utf8');
+  const cond = jobCondition(raw, 'backup');
+  assert.ok(cond, 'production backup condition found');
+  for (const event of EVENTS) for (const ref of REFS) for (const legacy of SWITCH) for (const backup of SWITCH) {
+    const run = evaluateIf(cond, { event, ref, legacy, backup });
+    const expected = event !== 'pull_request' && ref === 'refs/heads/main' && (backup ?? '').toLowerCase() === 'true';
+    assert.equal(run, expected, `event=${event} ref=${ref} legacy=${legacy} backup=${backup}`);
+  }
+  for (const event of EVENTS) for (const ref of REFS) for (const legacy of SWITCH) assert.equal(evaluateIf(cond, { event, ref, legacy, backup: undefined }), false);
+});
+
+test('declared triggers: legacy flow has only pull_request (path filtered, tests job) and workflow_dispatch; the new flow has no schedule', async () => {
+  const legacy = strip(await readFile('.github/workflows/neon-production-backup.yml', 'utf8'));
+  const on = (text) => text.slice(text.indexOf('\non:'), text.indexOf('\npermissions:')).split('\n').filter((l) => /^  [a-z_]+:/.test(l)).map((l) => l.trim().replace(/:.*/, ''));
+  assert.deepEqual(on(legacy), ['pull_request', 'workflow_dispatch']);
+  const current = strip(await readFile('.github/workflows/production-db-backup.yml', 'utf8'));
+  assert.deepEqual(on(current), ['pull_request', 'workflow_dispatch']);
+  for (const text of [legacy, current]) assert.doesNotMatch(text, /^\s*(schedule:|- cron:)|pull_request_target|workflow_run|repository_dispatch/m);
+  // the only job a pull request or an unset switch can run is the secret-free tests job
+  for (const text of [legacy, current]) assert.doesNotMatch(text.slice(text.indexOf('\n  tests:'), text.indexOf('\n  backup:')), /secrets\.|id-token|environment:/);
+});
+
+test('both flows publish no GitHub artifact and the legacy flow never reads the new flow\'s switch', async () => {
+  for (const f of ['neon-production-backup.yml', 'production-db-backup.yml']) assert.doesNotMatch(strip(await readFile(`.github/workflows/${f}`, 'utf8')), /upload-artifact|retention-days/);
+  assert.doesNotMatch(strip(await readFile('.github/workflows/neon-production-backup.yml', 'utf8')), /vars\.BACKUP_ENABLED/);
+  assert.doesNotMatch(strip(await readFile('.github/workflows/production-db-backup.yml', 'utf8')), /LEGACY_NEON_BACKUP_ENABLED/);
+});
