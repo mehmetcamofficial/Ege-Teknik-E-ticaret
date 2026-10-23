@@ -47,3 +47,11 @@ New `tests/pr22-main-reconciliation.test.mjs` is a non-destructive regression gu
 - Live Preview connection as `ege_preview_storefront`: LOGIN true, INHERIT true, BYPASSRLS true, SELECT admin_users true. **Do not use for restricted storefront**.
 - `to_regclass('public.legal_acceptances')` is null in Preview; inspect actual legal table names and schema mappings before migration planning.
 - Real negative ACL queries and real HTTP checkout, migration dry-run, full CI, Preview runtime identity and Vercel deploy remain outstanding. **Production NO-GO**.
+
+## Existing isolated QA branch checks — 2026-10-23
+
+- Attempt to create fresh Preview child `qa-pr37-acl-isolated-20261023` was rejected by Neon with **HTTP 422 branches limit exceeded**. No branch created, no deletions or writes.
+- Existing QA child `br-spring-scene-aw3gf2qf` (`qa-checkout-e2e-isolated-20261014`) inspected **read-only**: 20 applied migration rows (max id 20). Legal acceptance table is **`public.order_legal_acceptances`**, not `public.legal_acceptances`; earlier missing-table observation is a naming mismatch, not evidence of missing legal acceptance support.
+- Actual login as `ege_qa_storefront_login`: LOGIN true, NOINHERIT, BYPASSRLS false; products SELECT true, admin_users SELECT false, orders SELECT false / INSERT true, legal_documents SELECT true, order_legal_acceptances INSERT true. Direct `SELECT count(*) FROM public.admin_users` **permission denied**; products count **89**.
+- Actual login as `ege_qa_admin_login`: LOGIN true, NOINHERIT, BYPASSRLS false; admin_users SELECT true, products SELECT false, orders SELECT/INSERT false, legal_documents SELECT false. Direct `SELECT count(*) FROM public.products` **permission denied**; admin_users count **3**.
+- These are **real authenticated SQL role / negative permission checks**, but not full runtime HTTP checkout or admin RBAC proofs. The QA branch is older than current main (through migration 0020 vs 0023) and cannot certify the final release schema. Fresh isolated migration dry-run is blocked by Neon branch limit; do not delete existing branches without approval.
