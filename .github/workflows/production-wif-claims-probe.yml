@@ -1,0 +1,62 @@
+name: Production WIF OIDC claims probe (manual, no cloud access)
+
+# Read-only OIDC claim comparison. Does not authenticate to Google Cloud,
+# access Google Drive, read repository/environment secrets, or run a backup.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  probe:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production-backup
+    permissions:
+      id-token: write
+    steps:
+      - name: Check OIDC claims without printing token or subject
+        shell: bash
+        env:
+          EXPECTED_REPOSITORY: mehmetcamofficial/Ege-Teknik-E-ticaret
+          EXPECTED_REPOSITORY_ID: '1378579933'
+          EXPECTED_OWNER_ID: '73923157'
+          EXPECTED_REF: refs/heads/main
+          EXPECTED_ENVIRONMENT: production-backup
+          EXPECTED_DEFAULT_SUB: repo:mehmetcamofficial/Ege-Teknik-E-ticaret:environment:production-backup
+          EXPECTED_IMMUTABLE_SUB: repo:mehmetcamofficial@73923157/Ege-Teknik-E-ticaret@1378579933:environment:production-backup
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const expected = {
+            repository: process.env.EXPECTED_REPOSITORY,
+            repository_id: process.env.EXPECTED_REPOSITORY_ID,
+            repository_owner_id: process.env.EXPECTED_OWNER_ID,
+            ref: process.env.EXPECTED_REF,
+            environment: process.env.EXPECTED_ENVIRONMENT,
+            event_name: 'workflow_dispatch',
+          };
+          const reqUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+          const reqToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+          if (!reqUrl || !reqToken) throw new Error('OIDC request unavailable');
+          const url = new URL(reqUrl);
+          url.searchParams.set('audience', '//iam.googleapis.com/projects/186271281412/locations/global/workloadIdentityPools/ege-teknik-github-backup/providers/github-actions');
+          const response = await fetch(url, { headers: { Authorization: 'Bearer ' + reqToken } });
+          if (!response.ok) throw new Error('OIDC request failed: HTTP ' + response.status);
+          const body = await response.json();
+          if (typeof body.value !== 'string' || body.value.split('.').length !== 3) throw new Error('Invalid OIDC response');
+          const claims = JSON.parse(Buffer.from(body.value.split('.')[1], 'base64url').toString('utf8'));
+          let failed = false;
+          for (const [key, value] of Object.entries(expected)) {
+            const ok = claims[key] === value;
+            console.log('claim.' + key + ': ' + (ok ? 'PASS' : 'FAIL'));
+            if (!ok) failed = true;
+          }
+          const defaultSub = claims.sub === process.env.EXPECTED_DEFAULT_SUB;
+          const immutableSub = claims.sub === process.env.EXPECTED_IMMUTABLE_SUB;
+          console.log('subject.matches_current_provider: ' + (defaultSub ? 'PASS' : 'FAIL'));
+          console.log('subject.matches_immutable_candidate: ' + (immutableSub ? 'YES' : 'NO'));
+          if (!defaultSub && !immutableSub) console.log('subject.format: UNRECOGNIZED (value intentionally suppressed)');
+          if (failed || !defaultSub) process.exitCode = 1;
+          NODE
