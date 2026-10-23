@@ -3,7 +3,7 @@ name: Production DB Backup (H5-C)
 # Scheduled daily at 01:30 UTC (04:30 Türkiye). Backup runs only on main when
 # BACKUP_ENABLED == 'true', with the production-backup environment branch policy.
 # Pull requests only run secret-free tests. No backup artifacts are published.
-# Drive upload fails closed if signed folder evidence is expired or invalid.
+# Drive upload fails closed if live folder or Shared Drive permissions are unsafe or unavailable.
 on:
   pull_request:
     paths:
@@ -86,8 +86,6 @@ jobs:
           GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
           GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
           GDRIVE_EXPECTED_ACCOUNT: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
-          GDRIVE_FOLDER_EVIDENCE: ${{ vars.GDRIVE_FOLDER_EVIDENCE }}
-          GDRIVE_EVIDENCE_PUBKEY: ${{ vars.GDRIVE_EVIDENCE_PUBKEY }}
           ENCRYPTED_FILE: ${{ steps.backup.outputs.encrypted_file }}
           CHECKSUM_FILE: ${{ steps.backup.outputs.checksum_file }}
           MANIFEST_FILE: ${{ steps.backup.outputs.manifest_file }}
