@@ -31,7 +31,6 @@ jobs:
           GDRIVE_FOLDER_EVIDENCE: ${{ vars.GDRIVE_FOLDER_EVIDENCE }}
           GDRIVE_EVIDENCE_PUBKEY: ${{ vars.GDRIVE_EVIDENCE_PUBKEY }}
           GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
-          GITHUB_OUTPUT_FILE: ${{ github.output }}
         run: |
           set -euo pipefail
           node --input-type=module <<'NODE'
