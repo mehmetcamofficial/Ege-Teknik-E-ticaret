@@ -36,3 +36,14 @@ Compared current main with PR #22 at immutable SHA for the following overlapping
 | `drizzle-pg/meta/_journal.json` | Current main extends to 0023; PR #22 only to 0020 | Keep main; never roll back journal |
 
 New `tests/pr22-main-reconciliation.test.mjs` is a non-destructive regression guard for these decisions. This does **not** certify that all 63 PR #22 files were reconciled or that real Preview/Production DB gates passed. The remaining review must focus on checkout API, migrations and remaining test/script differences before Production promotion.
+
+## Checkout/legal and live Neon role verification — 2026-10-23
+
+- Identical Git blobs between PR #22 and current main: `lib/scoped-checkout-replay.ts`, `lib/http-security.ts`, `scripts/test-legal-postgres.mjs`, `tests/checkout-compliance.test.ts`, `tests/legal-checkout.test.ts`, `drizzle-pg/0019_scoped_checkout_replay.sql`, `drizzle-pg/0020_legacy_legal_acceptance_immutability.sql`. Keep main.
+- `app/api/orders/route.ts`: main adds `enqueueOrderNotifications` via savepoint; PR #22 lacks this later outbox behavior. Keep main.
+- Live **read-only** Neon migration count: Preview `br-nameless-mountain-awib28a9` = 19 rows, max id 19; Production `br-nameless-grass-aw9qpndy` = 14 rows, max id 14. Current main journal ends at 0023; no database migrations applied.
+- Live Preview connection as `ege_preview_storefront_lp`: LOGIN true, NOINHERIT, BYPASSRLS false, SELECT products true, SELECT admin_users false, SELECT legal_documents true, INSERT orders true. This is entitlement evidence only, not complete HTTP checkout proof.
+- Live Preview connection as `ege_preview_admin_lp`: LOGIN true, NOINHERIT, BYPASSRLS false, SELECT products/admin_users/legal_documents false and INSERT orders false. Not a functioning admin runtime as currently granted.
+- Live Preview connection as `ege_preview_storefront`: LOGIN true, INHERIT true, BYPASSRLS true, SELECT admin_users true. **Do not use for restricted storefront**.
+- `to_regclass('public.legal_acceptances')` is null in Preview; inspect actual legal table names and schema mappings before migration planning.
+- Real negative ACL queries and real HTTP checkout, migration dry-run, full CI, Preview runtime identity and Vercel deploy remain outstanding. **Production NO-GO**.
