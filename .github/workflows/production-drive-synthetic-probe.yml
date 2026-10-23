@@ -1,0 +1,87 @@
+name: Production Drive synthetic upload/download probe (manual)
+
+# Safe manual probe: synthetic bytes only. No database access, deletion, or production backup enablement.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  drive-probe:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production-backup
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Authenticate production service account via WIF
+        id: gauth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193
+        with:
+          workload_identity_provider: ${{ vars.GDRIVE_WIF_PROVIDER }}
+          service_account: ${{ vars.GDRIVE_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/drive
+          create_credentials_file: false
+      - name: Check signed folder evidence and test synthetic upload/download
+        shell: bash
+        env:
+          GDRIVE_ACCESS_TOKEN: ${{ steps.gauth.outputs.access_token }}
+          GDRIVE_FOLDER_ID: ${{ vars.GDRIVE_BACKUP_FOLDER_ID }}
+          GDRIVE_FOLDER_EVIDENCE: ${{ vars.GDRIVE_FOLDER_EVIDENCE }}
+          GDRIVE_EVIDENCE_PUBKEY: ${{ vars.GDRIVE_EVIDENCE_PUBKEY }}
+          EXPECTED_DRIVE_ID: 0AHAh9uEJd-AQUk9PVA
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { randomBytes, createHash } from 'node:crypto';
+          import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+          import { tmpdir } from 'node:os';
+          import { join } from 'node:path';
+          import { createDriveClient } from './lib/backup/drive-client.mjs';
+          import { assessFolderSafety } from './lib/backup/drive-folder-safety.mjs';
+
+          const token = process.env.GDRIVE_ACCESS_TOKEN;
+          const folderId = process.env.GDRIVE_FOLDER_ID;
+          const evidenceB64 = process.env.GDRIVE_FOLDER_EVIDENCE;
+          const publicKeyPem = process.env.GDRIVE_EVIDENCE_PUBKEY;
+          if (!token || !folderId || !evidenceB64 || !publicKeyPem) throw new Error('probe_configuration_missing');
+          const client = createDriveClient({ getAccessToken: async () => token });
+          const temp = await mkdtemp(join(tmpdir(), 'ege-drive-probe-'));
+          const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
+          try {
+            const folder = await client.getFolder(folderId);
+            if (folder.id !== folderId || folder.driveId !== process.env.EXPECTED_DRIVE_ID ||
+                folder.mimeType !== 'application/vnd.google-apps.folder' || folder.trashed ||
+                folder.capabilities?.canAddChildren !== true) throw new Error('folder_identity_or_write_access_failed');
+            assessFolderSafety(folder, { evidenceB64, publicKeyPem, now: new Date() });
+            console.log('signed_folder_safety: PASS');
+            const original = randomBytes(1024);
+            const source = join(temp, 'synthetic.bin');
+            const destination = join(temp, 'downloaded.bin');
+            await writeFile(source, original, { mode: 0o600 });
+            const name = 'probe-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT + '-' + randomBytes(6).toString('hex') + '.bin';
+            const uploaded = await client.uploadResumable(folderId, name, source, { size: original.length });
+            if (!uploaded.id || uploaded.name !== name || Number(uploaded.size) !== original.length) throw new Error('upload_metadata_mismatch');
+            console.log('synthetic_upload: PASS');
+            await client.downloadToFile(uploaded.id, destination);
+            if (digest(original) !== digest(await readFile(destination))) throw new Error('sha256_mismatch');
+            console.log('synthetic_download: PASS');
+            console.log('sha256_integrity: PASS');
+            console.log('probe_file_id: ' + uploaded.id);
+            console.log('probe_retained_for_admin_cleanup: YES');
+          } catch (error) {
+            const safeCodes = new Set(['probe_configuration_missing','folder_identity_or_write_access_failed','upload_metadata_mismatch','sha256_mismatch']);
+            const code = safeCodes.has(error?.message) ? error.message :
+              /^[a-z_]+$/.test(error?.code ?? '') ? error.code : 'probe_failed';
+            console.error('drive_probe: FAIL (' + code + ')');
+            process.exitCode = 1;
+          } finally {
+            await rm(temp, { recursive: true, force: true });
+          }
+          NODE
