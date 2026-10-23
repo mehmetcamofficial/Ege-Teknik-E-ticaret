@@ -19,3 +19,20 @@ Status: **NO-GO / isolated evaluation branch only**. No Production or Preview co
 6. Only after gates pass, merge the new main-based PR; then inspect Vercel Preview and explicitly approve a separately controlled Production promotion.
 
 **Decision:** Do not merge PR #22, run Production migrations or trigger Production deployment until these gates pass. Existing production backup remains unchanged.
+
+## Focused source reconciliation — 2026-10-23
+
+Compared current main with PR #22 at immutable SHA for the following overlapping implementation files. Decision is **keep current main**, not cherry-pick older versions:
+
+| Area | PR #22 vs current main | Resolution |
+| --- | --- | --- |
+| `dashboard-view.tsx`, `products-view.tsx`, `admin-shell.tsx` | Identical blobs | Already integrated; no copy needed |
+| `finance-view.tsx`, `orders-view.tsx` | Current main adds `DataError` with retry; orders also has `OrdersSummary` | Keep newer accessible retry and order summary |
+| `profitability-calculator.tsx` | Current main adds 15-second timeout, privacy disclosure and revised request states | Keep current main |
+| `lib/ai/profitability-gateway.ts` | Current main uses centralized `gatewayDecision`, budget enforcement and topic-only outbound request | Keep current main; old standalone AI gateway is a security regression |
+| `app/api/admin/finance/profitability/ai/route.ts` | Current main supplies `aiBudget` and bounded user-facing failures | Keep current main |
+| `lib/admin-auth.ts` | Current main includes `effectivePermissions` and denied-action auditing | Keep current main; old file would remove security features |
+| `lib/admin-ui.ts` | Current main includes finance role and permission labels | Keep current main |
+| `drizzle-pg/meta/_journal.json` | Current main extends to 0023; PR #22 only to 0020 | Keep main; never roll back journal |
+
+New `tests/pr22-main-reconciliation.test.mjs` is a non-destructive regression guard for these decisions. This does **not** certify that all 63 PR #22 files were reconciled or that real Preview/Production DB gates passed. The remaining review must focus on checkout API, migrations and remaining test/script differences before Production promotion.
