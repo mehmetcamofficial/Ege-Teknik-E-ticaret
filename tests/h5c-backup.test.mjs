@@ -135,3 +135,28 @@ test('scripts never print secret variables', async () => {
     assert.ok(!/echo[^\n]*(KEY_B64|DATABASE_URL|ACCESS_TOKEN)|console\.\w+\([^\n]*(env\.\w*(KEY|TOKEN|DATABASE)|process\.env\.\w*(KEY|TOKEN|DATABASE))/.test(s), f);
   }
 });
+
+test('Production Drive upload forwards signed folder evidence in the backup job', async () => {
+  const w = await readFile('.github/workflows/production-db-backup.yml', 'utf8');
+  const [beforeBackup, backup] = w.split(/^  backup:$/m);
+  const upload = backup.split('      - name: Upload to Drive and verify the uploaded copy')[1]?.split('      - name: Retention report')[0];
+  assert.ok(upload, 'Drive upload step must exist');
+  for (const key of ['GDRIVE_FOLDER_EVIDENCE', 'GDRIVE_EVIDENCE_PUBKEY']) {
+    assert.ok(upload.includes(key + ': '), key + ' must be forwarded');
+    assert.ok(upload.includes('vars.' + key), key + ' must use a GitHub variable');
+    assert.ok(!beforeBackup.includes(key), 'test job must not use Production folder evidence');
+  }
+  assert.ok(upload.includes('run: node scripts/backup-drive-upload.mjs'));
+});
+
+test('Production backup alert has an issue fallback when the label is unavailable', async () => {
+  const w = await readFile('.github/workflows/production-db-backup.yml', 'utf8');
+  const alert = w.split(/^  alert:$/m)[1];
+  assert.ok(alert, 'alert job must exist');
+  assert.ok(alert.includes('issues: write'));
+  assert.ok(alert.includes('gh label create backup-failure'));
+  assert.ok(alert.includes('if ! gh issue create'));
+  assert.ok(alert.includes('--label backup-failure'));
+  assert.ok(alert.includes('then\n            gh issue create'));
+  assert.ok(alert.includes('No successful backup was recorded'));
+});
