@@ -90,6 +90,22 @@ test('Drive client exposes no delete / trash / share methods', async () => {
   assert.deepEqual(keys.sort(), ['about', 'downloadToFile', 'findByName', 'getFolder', 'listChildren', 'listPermissions', 'uploadResumable']);
 });
 
+test('Drive permission reader paginates and refuses empty or unavailable lists', async () => {
+  const { createDriveClient } = await import('../lib/backup/drive-client.mjs');
+  const seen = [];
+  const fetchImpl = async (url) => {
+    seen.push(url);
+    const u = new URL(url);
+    if (u.searchParams.get('pageToken') === 'next') return { status: 200, json: async () => ({ permissions: [{ type: 'user', role: 'writer' }] }) };
+    return { status: 200, json: async () => ({ permissions: [{ type: 'user', role: 'organizer' }], nextPageToken: 'next' }) };
+  };
+  const client = createDriveClient({ getAccessToken: async () => 'fake', fetchImpl });
+  assert.equal((await client.listPermissions('folderid1234567890')).length, 2);
+  assert.equal(seen.length, 2);
+  const empty = createDriveClient({ getAccessToken: async () => 'fake', fetchImpl: async () => ({ status: 200, json: async () => ({ permissions: [] }) }) });
+  await assert.rejects(empty.listPermissions('folderid1234567890'), { code: 'permissions_unavailable' });
+});
+
 test('manifest rejects secret-shaped content and wrong postgres major', async (t) => {
   const s = await makeSet(t), m = JSON.parse(await readFile(s.files.manifest, 'utf8'));
   validateManifest(m);
