@@ -120,7 +120,7 @@ test('workflow policy: no artifacts, pinned actions, gated backup job, secrets o
   const w = await readFile('.github/workflows/production-db-backup.yml', 'utf8');
   assert.match(w, /^permissions: \{\}$/m);
   assert.ok(!/upload-artifact|pull_request_target/.test(w));
-  assert.ok(!/^\s*schedule:/m.test(w), 'schedule must stay commented out');
+  assert.match(w, /^  schedule:\n    - cron: "30 1 \* \* \*"$/m, 'daily backup schedule must be explicit');
   for (const m of w.matchAll(/uses:\s*(\S+)/g)) assert.match(m[1], /@[0-9a-f]{40}$/, `unpinned action ${m[1]}`);
   const [head, rest] = w.split(/^  backup:$/m);
   assert.ok(!/secrets\./.test(head), 'tests job must not see secrets');

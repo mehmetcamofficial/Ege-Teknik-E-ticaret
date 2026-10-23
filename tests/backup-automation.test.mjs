@@ -287,8 +287,10 @@ test('declared triggers: legacy flow has only pull_request (path filtered, tests
   const on = (text) => text.slice(text.indexOf('\non:'), text.indexOf('\npermissions:')).split('\n').filter((l) => /^  [a-z_]+:/.test(l)).map((l) => l.trim().replace(/:.*/, ''));
   assert.deepEqual(on(legacy), ['pull_request', 'workflow_dispatch']);
   const current = strip(await readFile('.github/workflows/production-db-backup.yml', 'utf8'));
-  assert.deepEqual(on(current), ['pull_request', 'workflow_dispatch']);
-  for (const text of [legacy, current]) assert.doesNotMatch(text, /^\s*(schedule:|- cron:)|pull_request_target|workflow_run|repository_dispatch/m);
+  assert.deepEqual(on(current), ['pull_request', 'workflow_dispatch', 'schedule']);
+  assert.doesNotMatch(legacy, /^\s*(schedule:|- cron:)|pull_request_target|workflow_run|repository_dispatch/m);
+  assert.doesNotMatch(current, /pull_request_target|workflow_run|repository_dispatch/);
+  assert.match(current, /^  schedule:\n    - cron: "30 1 \* \* \*"$/m);
   // the only job a pull request or an unset switch can run is the secret-free tests job
   for (const text of [legacy, current]) assert.doesNotMatch(text.slice(text.indexOf('\n  tests:'), text.indexOf('\n  backup:')), /secrets\.|id-token|environment:/);
 });
