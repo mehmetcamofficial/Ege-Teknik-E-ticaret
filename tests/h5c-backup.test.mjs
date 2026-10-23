@@ -28,7 +28,8 @@ function fakeDrive(o = {}) {
   const client = {
     calls, store,
     about: async () => ({ user: { emailAddress: o.account ?? ACCOUNT } }),
-    getFolder: async (id) => ({ id, mimeType: 'application/vnd.google-apps.folder', trashed: false, capabilities: { canAddChildren: true }, permissions: o.permissions ?? [{ type: 'user' }] }),
+    getFolder: async (id) => ({ id, mimeType: 'application/vnd.google-apps.folder', trashed: false, capabilities: { canAddChildren: true }, driveId: 'shared-drive-1234567890', permissions: o.permissions ?? [{ type: 'user' }] }),
+    listPermissions: async (id) => id === 'shared-drive-1234567890' ? (o.drivePermissions ?? [{ type: 'user' }]) : (o.permissions ?? [{ type: 'user' }]),
     findByName: async (_f, n) => (o.existing === n || store.has(n) ? [{ name: n }] : []),
     uploadResumable: async (_f, name, path, { size }) => {
       calls.push(name);
@@ -65,6 +66,18 @@ test('fake Drive: wrong account and publicly shared folder are refused before up
     const c = fakeDrive(o); await assert.rejects(up(c, s), { code }); assert.equal(c.calls.length, 0);
   }
 });
+test('fake Drive: publicly shared Shared Drive or unavailable permissions fail closed', async (t) => {
+  const s = await makeSet(t);
+  for (const [o, code] of [
+    [{ drivePermissions: [{ type: 'domain' }] }, 'folder_is_shared_publicly'],
+    [{ drivePermissions: [] }, 'folder_permissions_unavailable'],
+    [{ permissions: [] }, 'folder_permissions_unavailable'],
+  ]) {
+    const c = fakeDrive(o);
+    await assert.rejects(up(c, s), { code });
+    assert.equal(c.calls.length, 0);
+  }
+});
 test('fake Drive: checksum file mismatch and non-authenticated archive are refused', async (t) => {
   const s = await makeSet(t); await writeFile(s.files.checksum, `${'0'.repeat(64)}  ${s.name}\n`);
   await assert.rejects(up(fakeDrive(), s), { code: 'checksum_file_mismatch' });
@@ -74,7 +87,7 @@ test('fake Drive: checksum file mismatch and non-authenticated archive are refus
 test('Drive client exposes no delete / trash / share methods', async () => {
   const { createDriveClient } = await import('../lib/backup/drive-client.mjs');
   const keys = Object.keys(createDriveClient({ getAccessToken: async () => 't' }));
-  assert.deepEqual(keys.sort(), ['about', 'downloadToFile', 'findByName', 'getFolder', 'listChildren', 'uploadResumable']);
+  assert.deepEqual(keys.sort(), ['about', 'downloadToFile', 'findByName', 'getFolder', 'listChildren', 'listPermissions', 'uploadResumable']);
 });
 
 test('manifest rejects secret-shaped content and wrong postgres major', async (t) => {
@@ -136,16 +149,13 @@ test('scripts never print secret variables', async () => {
   }
 });
 
-test('Production Drive upload forwards signed folder evidence in the backup job', async () => {
+test('Production Drive upload uses live permissions, not expiring signed evidence', async () => {
   const w = await readFile('.github/workflows/production-db-backup.yml', 'utf8');
   const [beforeBackup, backup] = w.split(/^  backup:$/m);
   const upload = backup.split('      - name: Upload to Drive and verify the uploaded copy')[1]?.split('      - name: Retention report')[0];
   assert.ok(upload, 'Drive upload step must exist');
-  for (const key of ['GDRIVE_FOLDER_EVIDENCE', 'GDRIVE_EVIDENCE_PUBKEY']) {
-    assert.ok(upload.includes(key + ': '), key + ' must be forwarded');
-    assert.ok(upload.includes('vars.' + key), key + ' must use a GitHub variable');
-    assert.ok(!beforeBackup.includes(key), 'test job must not use Production folder evidence');
-  }
+  assert.doesNotMatch(upload, /GDRIVE_FOLDER_EVIDENCE|GDRIVE_EVIDENCE_PUBKEY/);
+  assert.ok(!beforeBackup.includes('GDRIVE_FOLDER_EVIDENCE'));
   assert.ok(upload.includes('run: node scripts/backup-drive-upload.mjs'));
 });
 
