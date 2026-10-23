@@ -1,7 +1,7 @@
-name: Production WIF OIDC claims probe (manual, no cloud access)
+name: Production WIF OIDC and STS probe (manual)
 
-# Read-only OIDC claim comparison. Does not authenticate to Google Cloud,
-# access Google Drive, read repository/environment secrets, or run a backup.
+# Manual identity-only probe. No database, Drive, backup, or IAM mutation.
+# Never print the JWT, STS token, service-account token, or raw API response.
 on:
   workflow_dispatch:
 
@@ -16,7 +16,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - name: Check OIDC claims without printing token or subject
+      - name: Verify immutable OIDC claims, STS exchange and SA impersonation
         shell: bash
         env:
           EXPECTED_REPOSITORY: mehmetcamofficial/Ege-Teknik-E-ticaret
@@ -24,8 +24,9 @@ jobs:
           EXPECTED_OWNER_ID: '73923157'
           EXPECTED_REF: refs/heads/main
           EXPECTED_ENVIRONMENT: production-backup
-          EXPECTED_DEFAULT_SUB: repo:mehmetcamofficial/Ege-Teknik-E-ticaret:environment:production-backup
-          EXPECTED_IMMUTABLE_SUB: repo:mehmetcamofficial@73923157/Ege-Teknik-E-ticaret@1378579933:environment:production-backup
+          EXPECTED_SUB: repo:mehmetcamofficial@73923157/Ege-Teknik-E-ticaret@1378579933:environment:production-backup
+          WIF_AUDIENCE: //iam.googleapis.com/projects/186271281412/locations/global/workloadIdentityPools/ege-teknik-github-backup/providers/github-actions
+          TARGET_SA: ege-teknik-backup-uploader@ege-teknik-backup.iam.gserviceaccount.com
         run: |
           set -euo pipefail
           node <<'NODE'
@@ -36,27 +37,60 @@ jobs:
             ref: process.env.EXPECTED_REF,
             environment: process.env.EXPECTED_ENVIRONMENT,
             event_name: 'workflow_dispatch',
+            sub: process.env.EXPECTED_SUB,
           };
-          const reqUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
-          const reqToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
-          if (!reqUrl || !reqToken) throw new Error('OIDC request unavailable');
-          const url = new URL(reqUrl);
-          url.searchParams.set('audience', '//iam.googleapis.com/projects/186271281412/locations/global/workloadIdentityPools/ege-teknik-github-backup/providers/github-actions');
-          const response = await fetch(url, { headers: { Authorization: 'Bearer ' + reqToken } });
-          if (!response.ok) throw new Error('OIDC request failed: HTTP ' + response.status);
-          const body = await response.json();
-          if (typeof body.value !== 'string' || body.value.split('.').length !== 3) throw new Error('Invalid OIDC response');
-          const claims = JSON.parse(Buffer.from(body.value.split('.')[1], 'base64url').toString('utf8'));
-          let failed = false;
+          const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+          const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+          if (!requestUrl || !requestToken) throw new Error('GitHub OIDC environment unavailable');
+          const audience = process.env.WIF_AUDIENCE;
+          const oidcUrl = new URL(requestUrl);
+          oidcUrl.searchParams.set('audience', audience);
+          const oidcResponse = await fetch(oidcUrl, {
+            headers: { Authorization: 'Bearer ' + requestToken },
+          });
+          if (!oidcResponse.ok) throw new Error('GitHub OIDC request failed (HTTP ' + oidcResponse.status + ')');
+          const oidc = await oidcResponse.json();
+          const jwt = oidc.value;
+          if (typeof jwt !== 'string' || jwt.split('.').length !== 3) throw new Error('Malformed GitHub OIDC JWT');
+          const claims = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString('utf8'));
+          let mismatched = false;
           for (const [key, value] of Object.entries(expected)) {
             const ok = claims[key] === value;
             console.log('claim.' + key + ': ' + (ok ? 'PASS' : 'FAIL'));
-            if (!ok) failed = true;
+            if (!ok) mismatched = true;
           }
-          const defaultSub = claims.sub === process.env.EXPECTED_DEFAULT_SUB;
-          const immutableSub = claims.sub === process.env.EXPECTED_IMMUTABLE_SUB;
-          console.log('subject.matches_current_provider: ' + (defaultSub ? 'PASS' : 'FAIL'));
-          console.log('subject.matches_immutable_candidate: ' + (immutableSub ? 'YES' : 'NO'));
-          if (!defaultSub && !immutableSub) console.log('subject.format: UNRECOGNIZED (value intentionally suppressed)');
-          if (failed || !defaultSub) process.exitCode = 1;
+          if (mismatched) throw new Error('OIDC claims mismatch; STS request intentionally skipped');
+          const stsResponse = await fetch('https://sts.googleapis.com/v1/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              audience,
+              grantType: 'urn:ietf:params:oauth:grant-type:token-exchange',
+              requestedTokenType: 'urn:ietf:params:oauth:token-type:access_token',
+              subjectTokenType: 'urn:ietf:params:oauth:token-type:jwt',
+              subjectToken: jwt,
+              scope: 'https://www.googleapis.com/auth/cloud-platform',
+            }),
+          });
+          if (!stsResponse.ok) throw new Error('Google STS exchange failed (HTTP ' + stsResponse.status + '); response body suppressed');
+          const sts = await stsResponse.json();
+          if (typeof sts.access_token !== 'string') throw new Error('STS returned no access token');
+          console.log('google_sts_exchange: PASS');
+          const sa = encodeURIComponent(process.env.TARGET_SA);
+          const iamResponse = await fetch('https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/' + sa + ':generateAccessToken', {
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer ' + sts.access_token,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              scope: ['https://www.googleapis.com/auth/cloud-platform'],
+              lifetime: '600s',
+            }),
+          });
+          if (!iamResponse.ok) throw new Error('Service-account impersonation failed (HTTP ' + iamResponse.status + '); response body suppressed');
+          const credential = await iamResponse.json();
+          if (typeof credential.accessToken !== 'string') throw new Error('IAM Credentials returned no access token');
+          console.log('service_account_impersonation: PASS');
+          console.log('identity_only_probe: PASS (no resource operations performed)');
           NODE
