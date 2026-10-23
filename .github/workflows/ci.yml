@@ -87,6 +87,10 @@ jobs:
           # NOT named *_DATABASE_URL: tests/ci-workflow-policy.test.ts forbids that token here.
           COMMERCE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:commerce-postgres
+      - name: Real Drizzle migration upgrade 0018 to 0023 (ledger 19 to 24)
+        env:
+          MIGRATION_UPGRADE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: node scripts/test-migration-upgrade-pr37.mjs
       - name: Real HTTP checkout with a restricted LOGIN and disposable PostgreSQL
         env:
           # The runner refuses non-CI, non-loopback or non-sprintb targets and owns
