@@ -1,9 +1,9 @@
-name: Production DB Backup (H5-C, disabled by default)
+name: Production DB Backup (H5-C)
 
-# SAFE BY DEFAULT: no schedule trigger is active. The backup job needs ALL of: manual dispatch, ref == main,
-# repository variable BACKUP_ENABLED == 'true', and the protected GitHub Environment `production-backup`
-# (deployment branch policy: main only + required reviewers). Pull requests only run the secret-free test job.
-# To enable a schedule later, uncomment the cron below in a reviewed change. No artifacts are ever published.
+# Scheduled daily at 01:30 UTC (04:30 Türkiye). Backup runs only on main when
+# BACKUP_ENABLED == 'true', with the production-backup environment branch policy.
+# Pull requests only run secret-free tests. No backup artifacts are published.
+# Drive upload fails closed if signed folder evidence is expired or invalid.
 on:
   pull_request:
     paths:
@@ -14,8 +14,8 @@ on:
       - 'scripts/restore-encrypted-backup.mjs'
       - 'tests/h5c-backup.test.mjs'
   workflow_dispatch:
-  # schedule:
-  #   - cron: "30 1 * * *"
+  schedule:
+    - cron: "30 1 * * *"
 
 permissions: {}
 
