@@ -64,3 +64,7 @@ New `tests/pr22-main-reconciliation.test.mjs` is a non-destructive regression gu
 - Authenticated SQL as `ege_preview_admin_lp`: `admin_users` SELECT denied; not usable for expected admin reads. `ege_preview_storefront` has BYPASSRLS true; never treat as restricted storefront.
 - `scripts/test-checkout-http-e2e.mjs` explicitly refuses any remote Neon URL: it requires CI=true, loopback host, `sprintb*` disposable database and drops public/drizzle schemas. **Do not run it against Neon**. Native loopback PostgreSQL/Next server access is required for actual HTTP checkout E2E; no such HTTP test was executed in this verification.
 - Result: SQL schema apply PASS, live least-privilege gate FAIL, Drizzle history BLOCKED, native HTTP E2E BLOCKED. Production NO-GO.
+
+## Isolated storefront ACL remediation — 2026-10-23
+
+On QA child `br-broad-rain-awuc5ogv` only, revoked direct SELECT on orders, order_items, order_legal_acceptances, customers, addresses from `ege_preview_storefront_lp`; granted EXECUTE on `checkout_replay_by_key(text,text)` and INSERT on notification_outbox. Verified authenticated storefront SQL: orders SELECT false, legal evidence SELECT false, admin_users SELECT false, replay EXECUTE true, outbox INSERT true. All five entitlement checks PASS. Admin role remains unremediated. The branch still has 19 Drizzle ledger entries despite schema SQL through 0023; no manual ledger insertion. Local loopback HTTP E2E not run because local PostgreSQL/Next runner is unavailable in connector environment. Production/Preview untouched; NO-GO.
