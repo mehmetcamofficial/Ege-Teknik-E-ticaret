@@ -198,37 +198,37 @@ function fakeDrive(folder) {
   return { calls, store,
     async about() { return { user: { emailAddress: SA } }; },
     async getFolder() { return folder; },
+    async listPermissions(id) { return id === DRIVE ? (folder.drivePermissions ?? [{ type: 'user', role: 'organizer' }]) : (folder.permissions ?? []); },
     async findByName() { return []; },
     async uploadResumable(_f, name, path, { size }) { calls.push('upload'); const id = `id${store.size}`; store.set(id, { name, data: await readFile(path) }); return { id, name, size: String(size) }; },
     async downloadToFile(id, dest) { await writeFile(dest, store.get(id).data, { flag: 'wx' }); } };
 }
 const upload = (client, set, extra = {}) => uploadBackupSet({ client, folderId: FOLDER, expectedAccount: SA, files: set.files, workRoot: set.dir, now: NOW, evidencePublicKey: K.pub, ...extra });
 
-test('uploader: Shared Drive folder without permission list is refused BEFORE any upload unless verified evidence is supplied', async () => {
+test('uploader: live Shared Drive and folder permissions fail closed, regardless of signed evidence', async () => {
   const set = await uploadSet();
   try {
     let c = fakeDrive(sharedDriveFolder());
-    await assert.rejects(upload(c, set), { code: 'folder_permissions_unavailable' }); assert.equal(c.calls.length, 0);
-    c = fakeDrive(sharedDriveFolder());
-    await assert.rejects(upload(c, set, { folderEvidence: signed(evidence({}, { drive_domain: true })) }), { code: 'folder_is_shared_publicly' }); assert.equal(c.calls.length, 0);
-    c = fakeDrive(sharedDriveFolder());
-    await assert.rejects(upload(c, set, { folderEvidence: signed(evidence({ observed_at: new Date(NOW.getTime() - EVIDENCE_MAX_AGE_MS - 1).toISOString() })) }), { code: 'folder_evidence_expired' }); assert.equal(c.calls.length, 0);
-    c = fakeDrive(sharedDriveFolder());
-    await assert.rejects(upload(c, set, { folderEvidence: signed(evidence({}), OTHER.priv) }), { code: 'folder_evidence_invalid' }); assert.equal(c.calls.length, 0);
+    await assert.rejects(upload(c, set), { code: 'folder_permissions_unavailable' });
+    assert.equal(c.calls.length, 0);
+    c = fakeDrive(sharedDriveFolder({ permissions: [{ type: 'user', role: 'writer' }], drivePermissions: [{ type: 'domain', role: 'reader' }] }));
+    await assert.rejects(upload(c, set, { folderEvidence: signed(evidence()) }), { code: 'folder_is_shared_publicly' });
+    assert.equal(c.calls.length, 0);
     c = fakeDrive(sharedDriveFolder({ permissions: [{ type: 'anyone', role: 'reader' }] }));
-    await assert.rejects(upload(c, set, { folderEvidence: signed(evidence()) }), { code: 'folder_is_shared_publicly' }); assert.equal(c.calls.length, 0);
-    c = fakeDrive(sharedDriveFolder());
-    const r = await upload(c, set, { folderEvidence: signed(evidence()) });
+    await assert.rejects(upload(c, set), { code: 'folder_is_shared_publicly' });
+    assert.equal(c.calls.length, 0);
+    c = fakeDrive(sharedDriveFolder({ permissions: [{ type: 'user', role: 'writer' }] }));
+    const r = await upload(c, set);
     assert.equal(r.status, 'PASS'); assert.equal(c.calls.length, 3);
   } finally { await rm(set.dir, { recursive: true, force: true }); }
 });
 
-test('uploader: ordinary My Drive folder with an API permission list needs no evidence; unchanged earlier refusals still apply', async () => {
+test('uploader: missing Shared Drive identity is refused; existing safety checks still apply', async () => {
   const set = await uploadSet();
   try {
     const c = fakeDrive({ id: FOLDER, mimeType: 'application/vnd.google-apps.folder', trashed: false, capabilities: { canAddChildren: true }, permissions: [{ type: 'user', role: 'writer' }] });
-    assert.equal((await upload(c, set)).status, 'PASS');
-    await assert.rejects(upload(fakeDrive({ ...sharedDriveFolder(), capabilities: { canAddChildren: false } }), set, { folderEvidence: signed(evidence()) }), { code: 'folder_not_writable' });
-    await assert.rejects(upload(fakeDrive({ ...sharedDriveFolder(), trashed: true }), set, { folderEvidence: signed(evidence()) }), { code: 'unsafe_folder' });
+    await assert.rejects(upload(c, set), { code: 'drive_identity_missing' });
+    await assert.rejects(upload(fakeDrive({ ...sharedDriveFolder(), capabilities: { canAddChildren: false } }), set), { code: 'folder_not_writable' });
+    await assert.rejects(upload(fakeDrive({ ...sharedDriveFolder(), trashed: true }), set), { code: 'unsafe_folder' });
   } finally { await rm(set.dir, { recursive: true, force: true }); }
 });
