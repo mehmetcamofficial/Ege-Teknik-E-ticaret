@@ -77,3 +77,21 @@ test("the migration job verifies 0011 and 0012 hashes offline and runs the safet
 test("every script the workflow calls exists in package.json", () => {
   for (const script of ["lint", "typecheck", "test", "build", "test:postgres", "verify:migrations"]) assert.ok(pkg.scripts[script], script);
 });
+
+test("PR #37 worker suites run in the PostgreSQL job against this run's marked service container and cannot pass silently", () => {
+  const job = workflow.slice(workflow.indexOf("  postgres-integration:"), workflow.indexOf("  build:"));
+  const mark = job.indexOf("node scripts/ci-mark-disposable-cluster.mjs"), suites = job.indexOf("node --experimental-strip-types scripts/test-pr37-worker-http.mjs");
+  assert.ok(mark > 0 && suites > mark, "the cluster is marked before the suites run");
+  assert.ok(suites > job.indexOf("run: pnpm test:http-checkout"), "they run after the existing suites");
+  assert.match(job, /MARK_PG_URL: postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/sprintb_ci\n/);
+  assert.match(job, /PR37_HTTP_PG_URL: postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/sprintb_ci\n/);
+  assert.match(job, /PR37_HTTP_DB: sprintb_pr37_http\n/, "a new sprintb* database, never the service database itself");
+  assert.match(job, /set -euo pipefail\n/, "a failing suite behind tee still fails the step");
+  for (const line of ['"[worker-acl] PASS 10/10 checks"', '"[pr37-http] PASS"', '"[pr37-http] cleanup: scratch database and roles dropped"']) {
+    assert.ok(job.includes(`grep -qF ${line} "$log"`), `a missing pass line fails the job: ${line}`);
+  }
+  assert.doesNotMatch(job, /PR37_HTTP_CLONE_FROM|PR37_LAB_WORKER_PASSWORD/, "CI never uses the lab clone mode");
+  assert.doesNotMatch(job, /PR37_DISPOSABLE_ATTEST:/, "the marker comes only from the marking step, never from a literal in the workflow");
+  assert.equal(workflow.match(/node-version-file/g)?.length, 4, "no extra job was added");
+  assert.match(job, /timeout-minutes: 30\n/);
+});

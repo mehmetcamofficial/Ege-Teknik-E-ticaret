@@ -3,7 +3,8 @@
  * PR #37: scoped notification worker on the REAL HTTP routes and a brand-new disposable PostgreSQL database.
  * The e-mail provider is a LOOPBACK mock: no real e-mail, no real payment.
  *
- * It creates its own database on a cluster whose data_directory contains "pr37-worker-pg" and REFUSES if that database already
+ * It creates its own database on a cluster that scripts/disposable-cluster-attest.mjs accepts as disposable (the local lab cluster whose
+ * data_directory contains "pr37-worker-pg", or a CI service container marked by this very run) and REFUSES if that database already
  * exists (the migration bootstrap resets the schema, so it must never touch an existing database). It drops the database and
  * every role it created when it finishes.
  *
@@ -26,6 +27,7 @@ import * as schema from "../db/schema.ts";
 import { requeueDeadNotification, sweepMissingNotifications } from "../lib/notifications/outbox.ts";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
+import { attestDisposableCluster } from "./disposable-cluster-attest.mjs";
 
 const refuse = (why) => { console.error(`[pr37-http] REFUSED: ${why}`); process.exit(1); };
 const parse = (raw) => { try { return new URL(raw); } catch { return null; } };
@@ -41,8 +43,8 @@ if (LAB_MODE && !process.env.PR37_LAB_WORKER_PASSWORD) refuse("clone mode needs 
 const STRESS_ROUNDS = Math.min(Math.max(Number(process.env.PR37_STRESS_ROUNDS ?? 0) || 0, 0), 60);
 const storePassword = secret(), adminPassword = secret(), workerPassword = LAB_MODE ? process.env.PR37_LAB_WORKER_PASSWORD : secret(), signingSecret = secret(), dispatchSecret = secret() + secret();
 const probePassword = secret();
-const ROLE = { storefront: "sprintb_http_storefront", admin: "sprintb_http_admin", probeBypass: "sprintb_http_probe_bypass", probeAdmin: "sprintb_http_probe_admin",
-  workerGroup: LAB_MODE ? "sprintb_pr37_notification_worker" : "sprintb_http_notification_worker", workerLogin: LAB_MODE ? "sprintb_pr37_worker_login" : "sprintb_http_worker_login" };
+const ROLE = { storefront: "sprintb_pr37h_storefront", admin: "sprintb_pr37h_admin", probeBypass: "sprintb_pr37h_probe_bypass", probeAdmin: "sprintb_pr37h_probe_admin",
+  workerGroup: LAB_MODE ? "sprintb_pr37_notification_worker" : "sprintb_pr37h_notification_worker", workerLogin: LAB_MODE ? "sprintb_pr37_worker_login" : "sprintb_pr37h_worker_login" };
 const urlFor = (db, user, password) => { const u = new URL(base0); u.pathname = `/${db}`; if (user) { u.username = user; u.password = password; } return u.toString(); };
 const maintenanceUrl = urlFor("postgres");
 const raw = urlFor(DB);                                   // owner/superuser on the NEW database
@@ -52,6 +54,7 @@ const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8")
 
 const maintenance = new pg.Pool({ connectionString: maintenanceUrl, max: 1 });
 let owner;
+let createdDatabase = false;   // cleanup may only remove what THIS run created: a refused (pre-existing) database must survive untouched
 let port = 44000 + Math.floor(Math.random() * 1000), base = `http://127.0.0.1:${port}`, server, fullLog = "";
 const bodies = [], dispatchBodies = [];                    // every HTTP body the QA saw, for the leak scan
 const results = {};
@@ -131,14 +134,17 @@ assert.doesNotMatch(operatorSql, /:"[a-z_]+"|:'[a-z_]+'/, "all operator SQL plac
 
 try {
   // ---- 0. the cluster is the PR37 lab, and the database is NEW ------------------------------------------------------------------------
-  const dataDir = (await maintenance.query("SHOW data_directory")).rows[0].data_directory;
-  assert.match(dataDir, /pr37-worker-pg/, "data_directory is not the PR37 lab cluster");
+  const route = await attestDisposableCluster({ url: maintenanceUrl, query: (text, params) => maintenance.query(text, params), env: process.env });
+  results.cluster = `disposable cluster attested (${route} route)`;
   assert.equal((await maintenance.query("SELECT 1 FROM pg_database WHERE datname = $1", [DB])).rowCount, 0, "database already exists: refusing to reuse or reset it");
+  const ownedRoles = [ROLE.probeBypass, ROLE.probeAdmin, ROLE.storefront, ROLE.admin, ...(LAB_MODE ? [] : [ROLE.workerLogin, ROLE.workerGroup])];
+  assert.equal((await maintenance.query("SELECT 1 FROM pg_roles WHERE rolname = ANY($1)", [ownedRoles])).rowCount, 0, "role already exists: refusing to reuse or drop it");
   if (LAB_MODE) {
     assert.equal((await maintenance.query("SELECT 1 FROM pg_database WHERE datname = $1", [CLONE_FROM])).rowCount, 1, "template database exists");
     assert.equal(Number((await maintenance.query("SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname = $1", [CLONE_FROM])).rows[0].n), 0, "nobody is connected to the template database");
     await maintenance.query(`CREATE DATABASE "${DB}" TEMPLATE "${CLONE_FROM}"`);
   } else await maintenance.query(`CREATE DATABASE "${DB}"`);
+  createdDatabase = true;
   owner = new pg.Pool({ connectionString: raw, max: 3 });
   if (!LAB_MODE) await bootstrapDisposableDatabase({ Pool: pg.Pool, drizzle, migrate, url: raw, journal, migrationsFolder: "drizzle-pg", ...defaultStageDeps, log: () => {} });
   assert.equal(Number((await owner.query("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations")).rows[0].n), journal.entries.length, "all migrations applied");
@@ -430,8 +436,9 @@ try {
   await stopServer();
   await new Promise((r) => mock.close(r));
   if (owner) await owner.end().catch(() => {});
-  // remove everything this run created (database first, then the roles that owned privileges in it)
-  try {
+  // remove everything this run created (database first, then the roles that owned privileges in it) - and nothing else
+  if (!createdDatabase) console.log("[pr37-http] cleanup: nothing was created by this run, nothing is dropped");
+  else try {
     await maintenance.query(`DROP DATABASE IF EXISTS "${DB}" WITH (FORCE)`);
     const created = [ROLE.probeBypass, ROLE.probeAdmin, ROLE.storefront, ROLE.admin, ...(LAB_MODE ? [] : [ROLE.workerLogin, ROLE.workerGroup])];
     for (const r of created) await maintenance.query(`DROP ROLE IF EXISTS ${r}`);

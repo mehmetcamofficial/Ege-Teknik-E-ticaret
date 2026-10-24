@@ -166,9 +166,24 @@ test("the bootstrap is test-only: nothing in the application imports it", () => 
   assert.match(worker, /process\.env\.CI !== "true"/, "the PR37 worker runner must refuse non-CI execution");
   assert.match(worker, /\/\^sprintb\[a-z0-9_\]\{3,40\}\$\/\.test\(DB\)/, "it only creates a sprintb* database");
   assert.match(worker, /\["127\.0\.0\.1", "localhost", "::1"\]/, "it must refuse remote databases");
-  assert.match(worker, /pr37-worker-pg/, "it must refuse any cluster other than the PR37 lab");
+  // The cluster proof lives in one shared module (see tests/disposable-cluster-attest.test.ts for its behavioural tests).
+  assert.match(worker, /await attestDisposableCluster\(/, "it must attest that the cluster is disposable before creating anything");
+  const attest = readFileSync("scripts/disposable-cluster-attest.mjs", "utf8");
+  assert.match(attest, /pr37-worker-pg/, "the local lab cluster route is kept");
+  assert.match(attest, /ege-disposable-ci:/, "the CI route needs a per-run marker");
+  assert.match(attest, /RECOVERY_PORT = "55432"/, "the recovery cluster is always refused");
+  assert.match(attest, /\^\(postgres\|sprintb\[a-z0-9_\]\*\)\$/, "a cluster holding any other database is refused");
+  const acl = readFileSync("scripts/test-notification-worker-acl.mjs", "utf8");
+  assert.match(acl, /await attestDisposableCluster\(/, "the ACL matrix attests the cluster too");
   assert.match(worker, /database already exists: refusing to reuse or reset it/, "it must never reset an existing database");
   assert.match(worker, /DROP DATABASE IF EXISTS/, "it removes the database it created");
+  // Role names are private to this suite: scripts/test-*-http*.mjs create sprintb_http_* roles in the same CI container and never drop them.
+  assert.doesNotMatch(worker, /sprintb_http_/, "no role name may collide with the other HTTP runners");
+  assert.match(worker, /storefront: "sprintb_pr37h_storefront"/);
+  assert.match(worker, /let createdDatabase = false;/, "cleanup is gated on ownership");
+  assert.match(worker, /if \(!createdDatabase\) console\.log\([^)]*nothing is dropped/, "a refused run drops nothing");
+  assert.ok(worker.indexOf("role already exists: refusing to reuse or drop it") < worker.indexOf("CREATE DATABASE"), "pre-existing roles are refused before anything is created");
+  assert.ok(worker.indexOf("createdDatabase = true;") > worker.indexOf("CREATE DATABASE"), "ownership is claimed only after the database was actually created");
   for (const file of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs"]) {
     const httpRunner = readFileSync(file, "utf8");
     assert.match(httpRunner, /process\.env\.CI !== "true"/, `${file} must refuse non-CI execution`);

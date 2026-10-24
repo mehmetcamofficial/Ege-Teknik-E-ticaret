@@ -9,10 +9,12 @@
  *      occur after the INSERT privilege was accepted)
  *
  * env: WORKER_ACL_ADMIN_URL (owner/admin of the SAME database), WORKER_ACL_WORKER_URL (worker LOGIN), CI=true.
- * Refuses anything that is not a loopback `sprintb*` database. Prints no password, URL or row data.
+ * Refuses anything that is not a loopback `sprintb*` database on a cluster scripts/disposable-cluster-attest.mjs accepts as disposable.
+ * Prints no password, URL or row data.
  */
 import assert from "node:assert/strict";
 import pg from "pg";
+import { attestDisposableCluster } from "./disposable-cluster-attest.mjs";
 
 const adminRaw = process.env.WORKER_ACL_ADMIN_URL, workerRaw = process.env.WORKER_ACL_WORKER_URL;
 const parse = (raw) => { try { return new URL(raw); } catch { return null; } };
@@ -38,6 +40,9 @@ const expectedSet = new Set(Object.entries(MINIMAL).flatMap(([t, privs]) => Obje
 
 const admin = new pg.Pool({ connectionString: adminRaw, max: 2 });
 const worker = new pg.Pool({ connectionString: workerRaw, max: 2 });
+// The cluster itself must be provably disposable (same proof as the HTTP suite) before any statement is sent through the worker.
+try { await attestDisposableCluster({ url: adminRaw, query: (text, params) => admin.query(text, params), env: process.env }); }
+catch (error) { await Promise.allSettled([admin.end(), worker.end()]); refuse(error instanceof Error ? error.message : "disposable cluster refused"); }
 const results = [];
 const record = (name, ok, detail = "") => { results.push({ name, ok, detail }); console.log(`[worker-acl] ${ok ? "PASS" : "FAIL"} ${name}${detail ? " - " + detail : ""}`); };
 const check = async (name, fn) => { try { await fn(); record(name, true); } catch (error) { record(name, false, (error instanceof Error ? error.message : String(error)).slice(0, 300)); } };
