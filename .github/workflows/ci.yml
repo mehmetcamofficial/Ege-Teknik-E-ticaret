@@ -45,7 +45,7 @@ jobs:
   postgres-integration:
     name: postgres-integration
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:18-alpine
@@ -97,6 +97,24 @@ jobs:
           # the schema reset; no hosted connection or application credentials.
           CHECKOUT_HTTP_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:http-checkout
+      - name: Mark this job's PostgreSQL service container as the disposable cluster of this run
+        env:
+          # Throwaway service container of this job only. The script refuses anything that is not a loopback sprintb* database inside GitHub Actions.
+          MARK_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: node scripts/ci-mark-disposable-cluster.mjs
+      - name: Notification worker ACL matrix and real HTTP checkout and dispatch regression (any failure or missing pass line fails the job)
+        env:
+          # The suites attest the cluster (loopback, no foreign database, not the recovery port, no hosted compute, PR37_DISPOSABLE_ATTEST from the
+          # previous step), create their OWN new sprintb* database and roles, use a loopback mock mail provider, and drop everything afterwards.
+          PR37_HTTP_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+          PR37_HTTP_DB: sprintb_pr37_http
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/pr37-worker-http.log"
+          node --experimental-strip-types scripts/test-pr37-worker-http.mjs 2>&1 | tee "$log"
+          grep -qF "[worker-acl] PASS 10/10 checks" "$log"
+          grep -qF "[pr37-http] PASS" "$log"
+          grep -qF "[pr37-http] cleanup: scratch database and roles dropped" "$log"
 
   build:
     name: build
