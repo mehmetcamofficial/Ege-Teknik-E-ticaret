@@ -122,13 +122,12 @@ test("H5-A the admin banner says so when e-mail is disabled and never claims del
   assert.equal(describeNotifications({ providerConfigured: true, providerReason: null, adminRecipientsConfigured: true, byStatus: { pending: 1 }, oldestWaitingSeconds: 1200 }).tone, "warning");
 });
 
-test("H5-A worker route requires a long secret (404 when absent, 401 when wrong) and returns counts only", () => {
-  const route = readFileSync("app/api/internal/notifications/dispatch/route.ts", "utf8");
-  assert.match(route, /secret\.length < 32\) return Response\.json\(\{ error: "not_configured" \}, \{ status: 404/);
-  assert.match(route, /timingSafeEqual/);
-  assert.match(route, /status: 401/);
+test("H5-A worker route is GET-only, delegates to the tested handler and never reads a request body", () => {
+  const route = readFileSync("app/api/internal/notifications/dispatch/route.ts", "utf8"), handler = readFileSync("lib/notifications/dispatch-handler.ts", "utf8");
   assert.doesNotMatch(route, /export (?:async function|const) POST/, "GET only (cron style); no body is read");
-  assert.match(route, /cache-control": "no-store"/);
+  assert.match(route, /handleDispatch\(/);
+  assert.match(handler, /cache-control": "no-store"/);
+  assert.doesNotMatch(handler, /request\.(?:json|text|formData|arrayBuffer)/);
 });
 
 test("H5-A the worker never logs or audits a raw address, subject or body", () => {
@@ -141,4 +140,46 @@ test("H5-A the worker never logs or audits a raw address, subject or body", () =
   assert.match(outbox, /ON CONFLICT \(dedupe_key\) DO NOTHING/);
   assert.match(outbox, /FOR UPDATE SKIP LOCKED/);
   assert.match(outbox, /tx\.transaction\(async \(savepoint\)/, "enqueue runs in a SAVEPOINT");
+});
+
+// ---- PR #37: dedicated scoped notification worker (source-level locks; the live behaviour is proven by scripts/test-pr37-worker-http.mjs) ----
+const outboxSource = () => readFileSync("lib/notifications/outbox.ts", "utf8");
+/** Code only: block and line comments are removed so that explanations may name a table without counting as a use of it. */
+const codeOnly = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+test("PR37 the worker route can reach no database connection other than the dedicated worker one", () => {
+  const route = readFileSync("app/api/internal/notifications/dispatch/route.ts", "utf8");
+  assert.deepEqual([...route.matchAll(/import \{([^}]*)\} from "@\/db"/g)].flatMap((m) => m[1].split(",").map((x) => x.trim())), ["getNotificationWorkerDb"]);
+  assert.doesNotMatch(route, /\bgetDb\b|getAdminDb|getStorefrontDb|getCheckoutDb|getPool|getScopedPool|process\.env\.(?:DATABASE_URL|ADMIN_DATABASE_URL|STOREFRONT_DATABASE_URL)/);
+});
+
+test("PR37 the worker has no admin_users fallback and reads only explicit order columns", () => {
+  const outbox = codeOnly(outboxSource());
+  assert.doesNotMatch(outbox, /adminUsers|admin_users/, "the worker role has no access to admin_users, so the code must not touch it");
+  assert.doesNotMatch(outbox, /\.select\(\)\.from\((?:orders|orderItems)\)/, "select() without a column list would need table-level SELECT");
+  assert.match(outbox, /select\(\{\s*\n?\s*id: orders\.id/);
+  for (const sensitive of ["orders.phone", "orders.address", "orders.notes", "orders.billingAddressSnapshot", "orders.requestFingerprint", "orders.idempotencyKey"]) {
+    assert.ok(!outbox.includes(sensitive), `${sensitive} is never read by the worker`);
+  }
+});
+
+test("PR37 audit INSERT names exactly the seven granted columns and binds every value as a parameter", () => {
+  const outbox = outboxSource();
+  const block = /INSERT INTO public\.audit_logs \(([\s\S]*?)\)\s*VALUES \(([\s\S]*?)\)\s*`/.exec(outbox);
+  assert.ok(block, "explicit audit INSERT present");
+  assert.deepEqual(block[1].split(",").map((c) => c.trim()).filter(Boolean), ["id", "actor_user_id", "actor_email", "action", "entity_type", "entity_id", "payload"]);
+  assert.equal((block[2].match(/\$\{/g) ?? []).length, 7, "seven bound parameters, no string concatenation");
+  assert.doesNotMatch(block[0], /request_id|ip_hash|created_at/);
+  assert.match(block[2], /JSON\.stringify\(payload\)\}::jsonb/);
+});
+
+test("PR37 the operator SQL grants exactly the minimal column set and nothing broad", () => {
+  const sql = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8").split("\n").filter((l) => !/^\s*--/.test(l)).join("\n");
+  assert.doesNotMatch(sql, /GRANT\s+ALL|(?<!NO)SUPERUSER|(?<!NO)BYPASSRLS|(?<!NO)CREATEROLE|(?<!NO)CREATEDB|(?<!NO)REPLICATION|WITH GRANT OPTION|TO PUBLIC/i);
+  assert.match(sql, /NOSUPERUSER[^;]*NOBYPASSRLS/);
+  assert.match(sql, /WITH INHERIT TRUE, SET FALSE/);
+  for (const table of ["admin_users", "customers", "payments", "drizzle"]) assert.ok(!sql.includes(table), `${table} is not granted`);
+  const grants = [...sql.matchAll(/GRANT\s+(SELECT|INSERT|UPDATE)\s*\(([^)]*)\)\s+ON\s+public\.(\w+)/g)].map((m) => `${m[3]}:${m[1]}:${m[2].split(",").map((c) => c.trim()).sort().join(",")}`).sort();
+  assert.deepEqual(grants.map((g) => g.split(":").slice(0, 2).join(":")), ["audit_logs:INSERT", "notification_outbox:INSERT", "notification_outbox:SELECT", "notification_outbox:UPDATE", "order_items:SELECT", "orders:SELECT"]);
+  assert.ok(!/DELETE|TRUNCATE|TRIGGER|REFERENCES/i.test(sql.replace(/NOCREATEROLE/g, "")), "no DELETE/TRUNCATE/TRIGGER/REFERENCES");
 });

@@ -38,8 +38,8 @@ Veri: `GET /api/admin/orders/summary` (admin:read; yalnızca sayılar). Oturumlu
 
 ## Etkinleştirme (ayrı, onaylı bir görev; bu görevde yapılmadı)
 1. Migration **0022** uygula (önce yedek). 2. Kapsamlı checkout kullanılıyorsa `docs/ops/notification-outbox-grants-20261022.sql`.
-3. Ortam değişkenleri (adlar): `RESEND_API_KEY`, `MAIL_FROM`, `ORDER_ALERT_EMAILS` (virgüllü; yoksa aktif süper yönetici/operasyon yöneticisi/sahip),
-   `NOTIFICATION_DISPATCH_SECRET` (≥32 karakter), `SITE_ORIGIN`, `ADMIN_ORIGIN`. 4. İşçiyi zamanlayın (ör. Vercel Cron, her dakika; `vercel.json` bu görevde **eklenmedi**).
+3. Ortam değişkenleri (adlar): `RESEND_API_KEY`, `MAIL_FROM`, `ORDER_ALERT_EMAILS` (virgüllü; **zorunlu**, `admin_users` yedeği yoktur — PR #37),
+   `NOTIFICATION_DISPATCH_SECRET` (≥32 karakter), `NOTIFICATION_WORKER_DATABASE_URL` (`docs/ops/notification-worker-grants-20261024.sql` ile oluşturulan ayrı rol), isteğe bağlı `NOTIFICATION_SWEEP_WINDOW_MINUTES` + `NOTIFICATION_SWEEP_NOT_BEFORE` (uzun kesinti kurtarma; yalnızca ikisi birlikte ve geçerliyse), `SITE_ORIGIN`, `ADMIN_ORIGIN`. 4. İşçiyi zamanlayın (ör. Vercel Cron, her dakika; `vercel.json` bu görevde **eklenmedi**).
 5. Gönderici alan adı doğrulaması (SPF/DKIM) ve KVKK metninde e-posta işleyicisi (Resend) — **hukuk incelemesi**.
 
 ## Açık noktalar

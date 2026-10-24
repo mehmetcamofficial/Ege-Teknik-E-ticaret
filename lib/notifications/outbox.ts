@@ -12,8 +12,10 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "../../db/schema.ts";
 import { maskEmail, renderAdminNewOrder, renderCustomerOrderReceived, type OrderEmailData, type Rendered, type SiteLinks } from "./templates.ts";
 import { providerStatus, type NotificationProvider } from "./provider.ts";
+import { DEFAULT_SWEEP_WINDOW_MINUTES, sweepBounds } from "./sweep-window.ts";
+import { sqlStateOf } from "./sqlstate.ts";
 
-const { auditLogs, notificationOutbox, orders, orderItems, adminUsers } = schema;
+const { auditLogs, notificationOutbox, orders, orderItems } = schema;
 type Db = NodePgDatabase<typeof schema>;
 type Tx = Pick<Db, "insert" | "select" | "update" | "execute" | "transaction">;
 
@@ -23,7 +25,7 @@ export const MAX_ATTEMPTS = 5;
 /** Delay after failed attempt n (1-based). Five attempts in total: 1 min, 5 min, 30 min, 2 h between them. */
 export const RETRY_DELAYS_SECONDS = [60, 300, 1800, 7200] as const;
 export const LOCK_SECONDS = 300;
-export const SWEEP_WINDOW_MINUTES = 30;
+export const SWEEP_WINDOW_MINUTES = DEFAULT_SWEEP_WINDOW_MINUTES;
 export const SYSTEM_ACTOR = { userId: "system:notification-worker", email: "system@notifications.invalid" } as const;
 export const dedupeKeyFor = (orderId: string, kind: OutboxKind): string => `order:${orderId}:${kind}`;
 
@@ -39,14 +41,35 @@ export async function enqueueOrderNotifications(tx: Pick<Db, "transaction">, ord
     });
     return { queued: true };
   } catch (error) {
-    const code = typeof (error as { code?: unknown })?.code === "string" ? String((error as { code: string }).code).slice(0, 8) : "unknown";
+    const code = sqlStateOf(error);
     console.error("notification_enqueue_failed", { code });
     return { queued: false, code };
   }
 }
 
 async function audit(db: Tx, action: string, entityId: string, payload: Record<string, unknown>) {
-  await db.insert(auditLogs).values({ id: crypto.randomUUID(), actorUserId: SYSTEM_ACTOR.userId, actorEmail: SYSTEM_ACTOR.email, action, entityType: "notification", entityId, payload });
+  // Explicit columns preserve the notification worker's column-level INSERT ACL.
+  // PostgreSQL supplies defaults for request_id, ip_hash and created_at.
+  await db.execute(sql`
+    INSERT INTO public.audit_logs (
+      id,
+      actor_user_id,
+      actor_email,
+      action,
+      entity_type,
+      entity_id,
+      payload
+    )
+    VALUES (
+      ${crypto.randomUUID()},
+      ${SYSTEM_ACTOR.userId},
+      ${SYSTEM_ACTOR.email},
+      ${action},
+      ${"notification"},
+      ${entityId},
+      ${JSON.stringify(payload)}::jsonb
+    )
+  `);
 }
 
 export type WorkerEnv = Record<string, string | undefined>;
@@ -58,7 +81,14 @@ export function parseRecipientList(value: string | undefined): string[] {
 }
 
 async function loadOrder(db: Tx, orderId: string): Promise<(OrderEmailData & { orderId: string; email: string }) | null> {
-  const [o] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  // Explicit columns: the worker role holds column-level SELECT on exactly these fields (no phone, street address, notes,
+  // billing snapshot, request fingerprint or idempotency key). `select()` without a list would need every column.
+  const [o] = await db.select({
+    id: orders.id, orderNumber: orders.orderNumber, createdAt: orders.createdAt, subtotal: orders.subtotal, vatTotal: orders.vatTotal,
+    shippingTotal: orders.shippingTotal, installationTotal: orders.installationTotal, total: orders.total, customerName: orders.customerName,
+    email: orders.email, shippingAddressSnapshot: orders.shippingAddressSnapshot, installationPreference: orders.installationPreference,
+    city: orders.city, paymentStatus: orders.paymentStatus, status: orders.status,
+  }).from(orders).where(eq(orders.id, orderId)).limit(1);
   if (!o) return null;
   const items = await db.select({ productName: orderItems.productName, quantity: orderItems.quantity, unitPrice: orderItems.unitPrice, lineTotal: orderItems.lineTotal }).from(orderItems).where(eq(orderItems.orderId, orderId));
   const snap = (o.shippingAddressSnapshot ?? {}) as { district?: string; delivery?: { method?: string } };
@@ -69,12 +99,8 @@ async function loadOrder(db: Tx, orderId: string): Promise<(OrderEmailData & { o
   };
 }
 
-async function adminRecipients(db: Tx, env: WorkerEnv): Promise<string[]> {
-  const configured = parseRecipientList(env.ORDER_ALERT_EMAILS);
-  if (configured.length) return configured;
-  const rows = await db.select({ email: adminUsers.email, role: adminUsers.role }).from(adminUsers).where(eq(adminUsers.active, true));
-  return parseRecipientList(rows.filter((r) => ["super_admin", "operations_manager", "owner"].includes(r.role)).map((r) => r.email).join(","));
-}
+/** Operations recipients come ONLY from ORDER_ALERT_EMAILS. The worker role has no access to admin_users, so there is no table fallback. */
+const adminRecipients = (env: WorkerEnv): string[] => parseRecipientList(env.ORDER_ALERT_EMAILS);
 
 export type ProcessResult = { processed: number; sent: number; retried: number; dead: number };
 
@@ -114,7 +140,7 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
         to = EMAIL_SHAPE.test(order.email) ? [order.email.trim()] : [];
         rendered = renderCustomerOrderReceived(order, siteLinks(env));
       } else {
-        to = await adminRecipients(db, env);
+        to = adminRecipients(env);
         rendered = renderAdminNewOrder(order, siteLinks(env));
       }
       const masked = to.length ? to.map(maskEmail).join(",") : "***";
@@ -123,17 +149,21 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
       if (sent.ok) await finish("sent", null, masked);
       else if (sent.retryable && row.attempts < MAX_ATTEMPTS) await finish("retry", sent.code, masked);
       else await finish("dead", sent.retryable ? "attempts_exhausted" : sent.code, masked);
-    } catch {
-      // The row is still 'sending' with a lock; it becomes due again when the lock expires. Nothing sensitive is logged.
-      console.error("notification_dispatch_row_failed", { kind: row.kind });
+    } catch (error) {
+      // The row is still 'sending' with a lock; it becomes due again when the lock expires. Only the kind and a SQLSTATE are logged.
+      console.error("notification_dispatch_row_failed", { kind: row.kind, code: sqlStateOf(error) });
     }
   }
   return result;
 }
 
-/** Re-enqueues orders created in the last SWEEP_WINDOW_MINUTES that have no outbox row (recovers a failed savepoint). Never touches older orders. */
-export async function sweepMissingNotifications(db: Db, now = new Date()): Promise<number> {
-  const since = new Date(now.getTime() - SWEEP_WINDOW_MINUTES * 60_000), settled = new Date(now.getTime() - 60_000);
+/**
+ * Re-enqueues orders that have no outbox row (recovers a refused or failed savepoint). By default only the last 30 minutes; with
+ * NOTIFICATION_SWEEP_WINDOW_MINUTES + a go-live floor NOTIFICATION_SWEEP_NOT_BEFORE it also recovers a long worker outage (see
+ * sweep-window.ts). Orders from before the floor are never touched, and the unique dedupe key makes a duplicate notification impossible.
+ */
+export async function sweepMissingNotifications(db: Db, now = new Date(), env: WorkerEnv = {}): Promise<number> {
+  const { since, settled } = sweepBounds(env, now);
   const res = await db.execute(sql`
     INSERT INTO notification_outbox (id, kind, order_id, dedupe_key)
     SELECT gen_random_uuid()::text, k.kind, o.id, 'order:' || o.id || ':' || k.kind
@@ -144,7 +174,7 @@ export async function sweepMissingNotifications(db: Db, now = new Date()): Promi
 }
 
 export async function runNotificationWorker(input: { db: Db; provider: NotificationProvider | null; env: WorkerEnv; now?: Date; limit?: number }) {
-  const swept = await sweepMissingNotifications(input.db, input.now);
+  const swept = await sweepMissingNotifications(input.db, input.now, input.env);
   return { swept, ...(await dispatchOutbox(input)) };
 }
 

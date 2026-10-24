@@ -159,8 +159,16 @@ test("the bootstrap is test-only: nothing in the application imports it", () => 
     .split("\n").filter(Boolean).sort();
   assert.ok(existsSync(BOOTSTRAP), "the bootstrap module must exist");
   // H4-C and H5-A added runners, generated from the HTTP E2E harness, with exactly the same refusal guards (asserted below).
-  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-migration-upgrade-pr37.mjs", RUNNER].sort(),
+  // PR #37 added the scoped-worker HTTP QA runner; unlike the others it creates its OWN new database (guards asserted below).
+  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-migration-upgrade-pr37.mjs", "scripts/test-pr37-worker-http.mjs", RUNNER].sort(),
     "only the disposable PostgreSQL runners may import the destructive bootstrap");
+  const worker = readFileSync("scripts/test-pr37-worker-http.mjs", "utf8");
+  assert.match(worker, /process\.env\.CI !== "true"/, "the PR37 worker runner must refuse non-CI execution");
+  assert.match(worker, /\/\^sprintb\[a-z0-9_\]\{3,40\}\$\/\.test\(DB\)/, "it only creates a sprintb* database");
+  assert.match(worker, /\["127\.0\.0\.1", "localhost", "::1"\]/, "it must refuse remote databases");
+  assert.match(worker, /pr37-worker-pg/, "it must refuse any cluster other than the PR37 lab");
+  assert.match(worker, /database already exists: refusing to reuse or reset it/, "it must never reset an existing database");
+  assert.match(worker, /DROP DATABASE IF EXISTS/, "it removes the database it created");
   for (const file of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs"]) {
     const httpRunner = readFileSync(file, "utf8");
     assert.match(httpRunner, /process\.env\.CI !== "true"/, `${file} must refuse non-CI execution`);
