@@ -61,14 +61,15 @@ export function clusterProblems({ host, port, facts }, env) {
 export async function readClusterFacts(query, env) {
   const databases = (await query("SELECT datname FROM pg_database WHERE NOT datistemplate ORDER BY 1")).rows.map((r) => r.datname);
   const extensions = Number((await query("SELECT count(*)::int AS n FROM pg_extension WHERE extname LIKE 'neon%'")).rows[0].n);
-  const setting = (await query("SELECT current_setting('neon.endpoint_id', true) AS v")).rows[0].v;
+  // The EXISTENCE of any neon.* setting is the signal (a defined but empty value must not read as "not Neon").
+  const settings = Number((await query("SELECT count(*)::int AS n FROM pg_settings WHERE name LIKE 'neon.%'")).rows[0].n);
   let dataDirectory = null;
   try { dataDirectory = (await query("SHOW data_directory")).rows[0].data_directory; } catch { /* needs superuser or pg_read_all_settings */ }
   const wanted = env.PR37_DISPOSABLE_ATTEST ?? "";
   const markers = ATTEST_PATTERN.test(wanted)
     ? (await query("SELECT 1 FROM pg_database WHERE shobj_description(oid, 'pg_database') = $1", [wanted])).rows.map(() => wanted)
     : [];
-  return { databases, neon: extensions > 0 || (setting !== null && setting !== undefined && setting !== ""), dataDirectory, markers };
+  return { databases, neon: extensions > 0 || settings > 0, dataDirectory, markers };
 }
 
 /**

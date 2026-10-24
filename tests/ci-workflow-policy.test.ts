@@ -95,3 +95,16 @@ test("PR #37 worker suites run in the PostgreSQL job against this run's marked s
   assert.equal(workflow.match(/node-version-file/g)?.length, 4, "no extra job was added");
   assert.match(job, /timeout-minutes: 30\n/);
 });
+
+test("B9 runs in the PostgreSQL job on the marked container and cannot pass by skipping", () => {
+  const job = workflow.slice(workflow.indexOf("  postgres-integration:"), workflow.indexOf("  build:"));
+  assert.ok(job.indexOf("node scripts/test-b9-postgres.mjs") > job.indexOf("node scripts/ci-mark-disposable-cluster.mjs"), "the cluster is marked before B9 runs");
+  assert.match(job, /B9_PG_URL: postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/sprintb_ci\n/);
+  assert.doesNotMatch(workflow, /B9_PG_DB|B9_TEST/, "the database name and the test's own variable are set by the runner, never by the workflow");
+  for (const line of ['"[b9-postgres] OK: 1 test executed against real PostgreSQL, 0 skipped."', '"[b9-postgres] cleanup: scratch database dropped"']) {
+    assert.ok(job.includes(`grep -qF ${line} "$log"`), `a missing line fails the job: ${line}`);
+  }
+  assert.equal(workflow.match(/node-version-file/g)?.length, 4, "no extra job was added");
+  assert.doesNotMatch(workflow, /^[ \t]+permissions:/m);
+  assert.match(pkg.scripts["test:b9-postgres"], /test-b9-postgres\.mjs/);
+});
