@@ -47,11 +47,11 @@ test("the CI attestation cannot be forged, replayed or borrowed", () => {
 });
 
 type Row = Record<string, unknown>;
-const fakeQuery = (answers: { databases: string[]; neonExtensions?: number; neonSetting?: string | null; dataDirectory?: string | "denied"; markerHit?: boolean }) =>
+const fakeQuery = (answers: { databases: string[]; neonExtensions?: number; neonSettings?: number; dataDirectory?: string | "denied"; markerHit?: boolean }) =>
   async (text: string): Promise<{ rows: Row[] }> => {
     if (/FROM pg_database WHERE NOT datistemplate/.test(text)) return { rows: answers.databases.map((datname) => ({ datname })) };
     if (/FROM pg_extension/.test(text)) return { rows: [{ n: answers.neonExtensions ?? 0 }] };
-    if (/neon\.endpoint_id/.test(text)) return { rows: [{ v: answers.neonSetting ?? null }] };
+    if (/FROM pg_settings WHERE name LIKE 'neon\.%'/.test(text)) return { rows: [{ n: answers.neonSettings ?? 0 }] };
     if (/SHOW data_directory/.test(text)) { if (answers.dataDirectory === "denied" || answers.dataDirectory === undefined) throw new Error("permission denied"); return { rows: [{ data_directory: answers.dataDirectory }] }; }
     if (/shobj_description/.test(text)) return { rows: answers.markerHit ? [{ "?column?": 1 }] : [] };
     throw new Error("unexpected query");
@@ -66,7 +66,7 @@ test("attestDisposableCluster: accepts the CI cluster, reports the route, and re
   const refusals: [string, Parameters<typeof fakeQuery>[0], string, Record<string, string | undefined>][] = [
     ["foreign_database_present", { databases: ["postgres", "sprintb_ci", "neondb"], markerHit: true }, "postgresql://u:SECRETPW@127.0.0.1:5432/sprintb_ci", ciEnv()],
     ["neon_or_unknown", { databases: ["postgres"], neonExtensions: 1, markerHit: true }, "postgresql://u:SECRETPW@127.0.0.1:5432/sprintb_ci", ciEnv()],
-    ["neon_or_unknown", { databases: ["postgres"], neonSetting: "ep-123", markerHit: true }, "postgresql://u:SECRETPW@127.0.0.1:5432/sprintb_ci", ciEnv()],
+    ["neon_or_unknown", { databases: ["postgres"], neonSettings: 3, markerHit: true }, "postgresql://u:SECRETPW@127.0.0.1:5432/sprintb_ci", ciEnv()],
     ["no_attestation", { databases: ["postgres", "sprintb_ci"], markerHit: false }, "postgresql://u:SECRETPW@127.0.0.1:5432/sprintb_ci", ciEnv()],
     ["recovery_port", { databases: ["postgres", "sprintb_ci"], markerHit: true }, "postgresql://u:SECRETPW@127.0.0.1:55432/sprintb_ci", ciEnv()],
     ["not_loopback", { databases: ["postgres", "sprintb_ci"], markerHit: true }, "postgresql://u:SECRETPW@ep-prod.neon.example/sprintb_ci", ciEnv()],

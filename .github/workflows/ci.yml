@@ -115,6 +115,17 @@ jobs:
           grep -qF "[worker-acl] PASS 10/10 checks" "$log"
           grep -qF "[pr37-http] PASS" "$log"
           grep -qF "[pr37-http] cleanup: scratch database and roles dropped" "$log"
+      - name: B9 AI budget on real PostgreSQL (the test must run and pass; a skip or a missing OK line fails the job)
+        env:
+          # Same marked service container as the worker suites; the runner attests it again, creates its OWN sprintb_b9* database, runs
+          # only tests/ai-budget-db-b9.test.ts with a minimal environment and drops only that database.
+          B9_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/b9-postgres.log"
+          node scripts/test-b9-postgres.mjs 2>&1 | tee "$log"
+          grep -qF "[b9-postgres] OK: 1 test executed against real PostgreSQL, 0 skipped." "$log"
+          grep -qF "[b9-postgres] cleanup: scratch database dropped" "$log"
 
   build:
     name: build
