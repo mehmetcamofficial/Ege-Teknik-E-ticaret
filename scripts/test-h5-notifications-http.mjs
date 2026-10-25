@@ -1,11 +1,29 @@
 #!/usr/bin/env node
 /**
- * H5-A: order notifications end to end on the REAL HTTP route and a disposable PostgreSQL, with a LOOPBACK mock of the
- * e-mail provider (no real e-mail can be sent). Harness generated from scripts/test-checkout-http-e2e.mjs; same guards.
+ * H5-A: order notifications end to end on the REAL HTTP route and a disposable PostgreSQL, with a LOOPBACK mock of the e-mail provider
+ * (no real e-mail can be sent). Since PR #37 the dispatch route runs as a dedicated least-privilege WORKER identity (own LOGIN role created from
+ * the operator SQL, NOTIFICATION_WORKER_DATABASE_URL) and fails closed; this suite creates that identity, asserts each fail-closed answer and
+ * drives delivery through it.
+ *
+ * Isolation and ownership (this suite runs in CI, in the PostgreSQL job):
+ *   - env: H5_PG_URL (login of a disposable cluster; its database part is ignored). The cluster must pass scripts/disposable-cluster-attest.mjs
+ *     (loopback, never port 55432, no foreign database, not a hosted compute, lab cluster or this CI run's marker). It creates its OWN database
+ *     and its OWN roles, all with random per-run names; it never resets or alters anything that existed before.
+ *   - ownership is PROVEN by oid in a private ledger (scripts/test-resource-ledger.mjs), never by a name or a comment: the suite drops only
+ *     objects whose current oid equals the one recorded at creation. A SIGKILLed run is recovered with scripts/h5-recover-leftovers.mjs under the
+ *     same proof; a normal run never touches another run's resources.
+ *   - the mock mail server, the Next process group, the database and the roles are removed on success, failure, time-out AND SIGINT/SIGTERM
+ *     (the signal handler cleans up on its own dedicated connection, bounded by timeouts).
+ *   - the dev server gets an allow-listed environment: no ambient mail, payment or database credential can reach it.
+ * Log lines CI relies on appear only when true: "[h5-http] PASS: ..." after every assertion, "[h5-http] cleanup: owned resources removed" after
+ * every owned object was removed (and the exit code is non-zero if it was not).
  */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { spawn } from "node:child_process";
+import { startNextDev } from "./http-test-server.mjs";
+import { workerOperatorSql } from "./notification-worker-test-role.mjs";
+import { attestDisposableCluster } from "./disposable-cluster-attest.mjs";
+import { openLedger, processStart, releaseOwned } from "./test-resource-ledger.mjs";
 import { readFileSync } from "node:fs";
 import { drizzle } from "drizzle-orm/node-postgres";
 import http from "node:http";
@@ -17,22 +35,23 @@ import pg from "pg";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
 
-const raw = process.env.CHECKOUT_HTTP_PG_URL;
-const target = (() => { try { return new URL(raw); } catch { return null; } })();
-if (process.env.CI !== "true" || !target || !["127.0.0.1", "localhost", "::1"].includes(target.hostname)
-  || !target.pathname.slice(1).startsWith("sprintb") || !["postgres:", "postgresql:"].includes(target.protocol)) {
-  console.error("[h5-notify] REFUSED: requires CI and a disposable sprintb loopback PostgreSQL URL");
-  process.exit(1);
-}
+const refuse = (why) => { console.error(`[h5-http] REFUSED: ${why}`); process.exit(1); };
+const base0 = (() => { try { return new URL(process.env.H5_PG_URL ?? ""); } catch { return null; } })();
+if (process.env.CI !== "true") refuse("requires CI=true");
+if (!base0 || !["postgres:", "postgresql:"].includes(base0.protocol)) refuse("H5_PG_URL must be a PostgreSQL URL");
+if (!["127.0.0.1", "localhost", "::1"].includes(base0.hostname.replace(/^\[|\]$/g, ""))) refuse("loopback PostgreSQL URL required");
+if (base0.port === "55432") refuse("the recovery cluster port is never allowed");
+
 const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
 const secret = () => randomBytes(24).toString("hex");
-const storePassword = secret(), adminPassword = secret(), signingSecret = secret();
-const owner = new pg.Pool({ connectionString: raw, max: 3 });
-const dbUrl = (role, password) => { const u = new URL(raw); u.username = role; u.password = password; return u.toString(); };
-const storefrontUrl = dbUrl("sprintb_http_storefront", storePassword);
-const adminUrl = dbUrl("sprintb_http_admin", adminPassword);
-let port = 43000 + Math.floor(Math.random() * 1000);
-let base = `http://127.0.0.1:${port}`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const urlFor = (db, user, password) => { const u = new URL(base0); u.pathname = `/${db}`; if (user) { u.username = user; u.password = password; } return u.toString(); };
+const maintenanceUrl = urlFor("postgres");
+const maintenance = new pg.Pool({ connectionString: maintenanceUrl, max: 1 });
+const storePassword = secret(), adminPassword = secret(), workerPassword = secret(), signingSecret = secret();
+// Per-run names, set once the ledger (and with it this run's random nonce) exists.
+let ledger, DB, ROLE, rawUrl, storefrontUrl, adminUrl, workerUrl, owner;
+let base = "";   // set from the server the OS gave a port to (scripts/http-test-server.mjs)
 let server;
 let serverOutput = "";
 const log = (line) => { serverOutput = (serverOutput + line).slice(-6000); };
@@ -49,42 +68,107 @@ const count = async (table) => Number((await owner.query(`SELECT count(*)::int A
 const assertStatus = (result, status, label) => {
   assert.equal(result.status, status, `${label}: HTTP ${result.status} / code ${result.data?.code ?? "none"}`);
 };
+const saveServers = () => { if (ledger) { ledger.state.servers = server ? [{ pid: server.pid, start: processStart(server.pid) }] : []; ledger.save(); } };
 const stopServer = async () => {
   if (!server) return;
-  const child = server;
+  const running = server;
   server = undefined;
-  child.kill("SIGTERM");
-  await Promise.race([
-    new Promise((resolve) => child.once("exit", resolve)),
-    new Promise((resolve) => setTimeout(resolve, 4000)),
-  ]);
+  await running.stop();
+  saveServers();
 };
+// The dev server never inherits the ambient environment: no mail, payment, auth or database credential of the developer's shell or CI job can reach it.
+const PASSTHROUGH = ["PATH", "HOME", "LANG", "LC_ALL", "TMPDIR", "TZ", "CI", "USER", "SHELL"];
+const ambient = Object.fromEntries(PASSTHROUGH.filter((k) => process.env[k] !== undefined).map((k) => [k, process.env[k]]));
 const startServer = async (overrides) => {
-  port += 1;
-  base = `http://127.0.0.1:${port}`;
   serverOutput = "";
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "-H", "127.0.0.1", "-p", String(port)],
-    { env: { ...process.env, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci",
+  server = await startNextDev({ onOutput: log, env: { ...ambient, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci",
       EXPECTED_NEON_DEVELOPMENT_BRANCH_ID: "disposable-http-ci",
-      DATABASE_URL: raw, STOREFRONT_DATABASE_URL: storefrontUrl, ADMIN_DATABASE_URL: adminUrl,
+      DATABASE_URL: rawUrl, STOREFRONT_DATABASE_URL: storefrontUrl, ADMIN_DATABASE_URL: adminUrl,
       CHECKOUT_SCOPED_DB_ENABLED: "true", LEGAL_PREVIEW_SIGNING_SECRET: signingSecret,
       IP_HASH_SALT: secret(), LOCAL_BUILD_NO_UPLOAD: "1", NEXT_TELEMETRY_DISABLED: "1",
-      ...overrides }, stdio: ["ignore", "pipe", "pipe"] });
-  server.stdout.on("data", (chunk) => log(chunk.toString()));
-  server.stderr.on("data", (chunk) => log(chunk.toString()));
-  let ready = false;
-  for (let i = 0; i < 90; i++) {
-    if (server.exitCode !== null) throw Error("local Next server exited before readiness");
-    try {
-      const response = await fetch(base + "/api/health", { signal: AbortSignal.timeout(1000) });
-      if (response.status < 500) { ready = true; break; }
-    } catch { /* compile/startup */ }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-  assert.ok(ready, "local Next server did not become ready");
+      ...overrides } });
+  base = server.base;
+  saveServers();
 };
+// ---------- loopback mock of the e-mail provider (top level, so EVERY exit path can close it) ----------
+const mail = { calls: [], mode: 200 };
+const mock = http.createServer((req, res) => {
+  let raw = ""; req.on("data", (c) => (raw += c)); req.on("end", () => {
+    mail.calls.push({ url: req.url, headers: req.headers, body: JSON.parse(raw || "{}") });
+    res.writeHead(mail.mode, { "content-type": "application/json" }); res.end("{}");
+  });
+});
+await new Promise((r) => mock.listen(0, "127.0.0.1", r));
+const mockBase = `http://127.0.0.1:${mock.address().port}`;
+assert.match(mockBase, /^http:\/\/127\.0\.0\.1:\d+$/, "the mail provider is a loopback mock: no real e-mail can be sent");
+
+// A creation that is in flight when a signal arrives finishes (and is recorded) before cleanup decides what it owns.
+let inflight = Promise.resolve();
+const own = (fn) => { const promise = (async () => fn())(); inflight = promise.catch(() => {}); return promise; };
+const recordRoles = async (names) => {
+  const rows = (await owner.query("SELECT rolname, oid::text AS oid FROM pg_roles WHERE rolname = ANY($1)", [names])).rows;
+  for (const name of names) { const row = rows.find((r) => r.rolname === name); assert.ok(row, "a role this run just created must exist"); ledger.state.roles.push({ name, oid: row.oid }); }
+  ledger.save();
+};
+
+/** Idempotent; used by success, failure, time-out and SIGINT/SIGTERM alike. Prints the "removed" line only if EVERYTHING owned is gone. */
+let cleanupResult;
+const cleanup = () => (cleanupResult ??= (async () => {
+  const problems = [];
+  await Promise.race([inflight, sleep(10_000)]);
+  await stopServer().catch(() => problems.push("the dev server process group could not be stopped"));
+  await new Promise((resolve) => { mock.closeAllConnections?.(); mock.close(() => resolve(undefined)); });
+  if (owner) await owner.end().catch(() => {});
+  const owned = ledger ? ledger.state.databases.length + ledger.state.roles.length : 0;
+  if (owned) {
+    // A dedicated connection with its own timeouts: the pool above may be mid-query or already ended.
+    const admin = new pg.Client({ connectionString: maintenanceUrl, connectionTimeoutMillis: 10_000, statement_timeout: 20_000 });
+    try { await admin.connect(); problems.push(...await releaseOwned({ query: (t, p) => admin.query(t, p), databases: ledger.state.databases, roles: ledger.state.roles })); }
+    catch { problems.push("could not connect to the cluster to remove the owned resources"); }
+    finally { await admin.end().catch(() => {}); }
+  }
+  await maintenance.end().catch(() => {});
+  if (problems.length) {
+    console.error("[h5-http] cleanup INCOMPLETE (the ledger is kept; recover with scripts/h5-recover-leftovers.mjs):");
+    for (const problem of problems) console.error(`    ${problem}`);
+    process.exitCode = 1;
+    return false;
+  }
+  ledger?.remove();
+  console.log(owned ? "[h5-http] cleanup: owned resources removed" : "[h5-http] cleanup: nothing was created by this run");
+  return true;
+})());
+// A hung step must end the run, and so must a signal: clean up (bounded), then exit non-zero. (The launcher defers to these handlers.)
+const TIME_LIMIT_MS = 240_000;
+const watchdog = setTimeout(async () => {
+  console.error(`[h5-http] FAIL: overall time limit of ${TIME_LIMIT_MS / 1000}s exceeded`);
+  await Promise.race([cleanup(), sleep(45_000)]);
+  process.exit(1);
+}, TIME_LIMIT_MS);
+watchdog.unref();
+for (const [signal, code] of [["SIGINT", 130], ["SIGTERM", 143]]) {
+  process.on(signal, async () => {
+    console.error(`[h5-http] ${signal}: cleaning up before exit`);
+    await Promise.race([cleanup(), sleep(45_000)]);
+    process.exit(code);
+  });
+}
 try {
-  await bootstrapDisposableDatabase({ Pool: pg.Pool, drizzle, migrate, url: raw, journal,
+  const route = await attestDisposableCluster({ url: maintenanceUrl, query: (t, p) => maintenance.query(t, p), env: process.env });
+  const systemId = (await maintenance.query("SELECT system_identifier::text AS id FROM pg_control_system()")).rows[0].id;
+  ledger = openLedger({ suite: "h5", systemId });   // before anything is created: a run that cannot be recovered creates nothing
+  DB = `sprintb_h5_${ledger.nonce}`;
+  ROLE = { store: `${DB}_store`, admin: `${DB}_admin`, group: `${DB}_worker`, login: `${DB}_wlogin` };
+  rawUrl = urlFor(DB);
+  storefrontUrl = urlFor(DB, ROLE.store, storePassword); adminUrl = urlFor(DB, ROLE.admin, adminPassword); workerUrl = urlFor(DB, ROLE.login, workerPassword);
+  assert.equal((await maintenance.query("SELECT 1 FROM pg_database WHERE datname = $1", [DB])).rowCount, 0, "database already exists: refusing to reuse or reset it");
+  await own(async () => {
+    await maintenance.query(`CREATE DATABASE "${DB}"`);
+    ledger.state.databases.push({ name: DB, oid: (await maintenance.query("SELECT oid::text AS oid FROM pg_database WHERE datname = $1", [DB])).rows[0].oid });
+    ledger.save();
+  });
+  owner = new pg.Pool({ connectionString: rawUrl, max: 3 });
+  await bootstrapDisposableDatabase({ Pool: pg.Pool, drizzle, migrate, url: rawUrl, journal,
     migrationsFolder: "drizzle-pg", ...defaultStageDeps, log: () => {} });
   await owner.query("INSERT INTO products (id, slug, name, sku, price, sale_mode, delivery_class, status) VALUES ('http-product', 'http-product', 'HTTP Test Product', 'HTTP-TEST', 10000, 'online', 'shippable', 'published')");
   await owner.query("INSERT INTO inventory (id, product_id, on_hand, reserved) VALUES ('http-inventory', 'http-product', 3, 0)");
@@ -96,29 +180,24 @@ try {
       VALUES ($1, $2, 1, $3, $4, $5, '2020-01-01', '2020-01-01', 'owner-1')`,
       [`http-version-${slug}`, `http-doc-${slug}`, title, body, hashLegalDocument({ title, body })]);
   }
-  await owner.query(`DO $$ BEGIN
-    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'sprintb_http_storefront') THEN
-      CREATE ROLE sprintb_http_storefront LOGIN PASSWORD '${storePassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
-    ELSE
-      ALTER ROLE sprintb_http_storefront WITH PASSWORD '${storePassword}';
-    END IF;
-    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'sprintb_http_admin') THEN
-      CREATE ROLE sprintb_http_admin LOGIN PASSWORD '${adminPassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS;
-    ELSE
-      ALTER ROLE sprintb_http_admin WITH PASSWORD '${adminPassword}';
-    END IF;
-  END $$`);
-  await owner.query("GRANT USAGE ON SCHEMA public TO sprintb_http_storefront, sprintb_http_admin");
+  // Fresh, private storefront and admin roles (this suite no longer alters roles other suites created).
+  await own(async () => {
+    await owner.query(`CREATE ROLE "${ROLE.store}" LOGIN PASSWORD '${storePassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);
+    await recordRoles([ROLE.store]);
+    await owner.query(`CREATE ROLE "${ROLE.admin}" LOGIN PASSWORD '${adminPassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);
+    await recordRoles([ROLE.admin]);
+  });
+  await owner.query(`GRANT USAGE ON SCHEMA public TO "${ROLE.store}", "${ROLE.admin}"`);
   await owner.query(`GRANT SELECT ON products, inventory, legal_documents, legal_document_versions,
-    rate_limit_buckets TO sprintb_http_storefront`);
+    rate_limit_buckets TO "${ROLE.store}"`);
   await owner.query(`GRANT INSERT ON customers, addresses, orders, order_items,
-    order_legal_acceptances, rate_limit_buckets TO sprintb_http_storefront`);
-  await owner.query("GRANT UPDATE (on_hand, reserved, version, updated_at) ON inventory TO sprintb_http_storefront");
-  await owner.query("GRANT UPDATE (count, window_started_at, expires_at) ON rate_limit_buckets TO sprintb_http_storefront");
-  await owner.query("GRANT DELETE ON rate_limit_buckets TO sprintb_http_storefront");
-  await owner.query("GRANT UPDATE (created_at) ON legal_documents TO sprintb_http_storefront");
-  await owner.query("GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO sprintb_http_storefront");
-  await owner.query("GRANT EXECUTE ON FUNCTION public.checkout_replay_by_key(text,text) TO sprintb_http_storefront");
+    order_legal_acceptances, rate_limit_buckets TO "${ROLE.store}"`);
+  await owner.query(`GRANT UPDATE (on_hand, reserved, version, updated_at) ON inventory TO "${ROLE.store}"`);
+  await owner.query(`GRANT UPDATE (count, window_started_at, expires_at) ON rate_limit_buckets TO "${ROLE.store}"`);
+  await owner.query(`GRANT DELETE ON rate_limit_buckets TO "${ROLE.store}"`);
+  await owner.query(`GRANT UPDATE (created_at) ON legal_documents TO "${ROLE.store}"`);
+  await owner.query(`GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO "${ROLE.store}"`);
+  await owner.query(`GRANT EXECUTE ON FUNCTION public.checkout_replay_by_key(text,text) TO "${ROLE.store}"`);
   const probe = new pg.Pool({ connectionString: storefrontUrl, max: 1 });
   try {
     const p = (await probe.query(`SELECT current_user AS role,
@@ -130,27 +209,22 @@ try {
       has_table_privilege(current_user, 'orders', 'SELECT') AS orders_read,
       has_table_privilege(current_user, 'order_items', 'SELECT') AS items_read,
       has_table_privilege(current_user, 'order_legal_acceptances', 'SELECT') AS evidence_read`)).rows[0];
-    assert.deepEqual(p, { role: "sprintb_http_storefront", orders_update: false,
+    assert.deepEqual(p, { role: ROLE.store, orders_update: false,
       order_column_update: false, products_update: false, can_lock: true, can_replay: true,
       orders_read: false, items_read: false, evidence_read: false });
   } finally { await probe.end(); }
+  // The dedicated worker identity, created from the operator SQL exactly as an operator would (minimal column-level grants); one statement, all or nothing.
+  await own(async () => {
+    await owner.query(workerOperatorSql({ database: DB, group: ROLE.group, login: ROLE.login, password: workerPassword }));
+    await recordRoles([ROLE.group, ROLE.login]);
+  });
 
   await startServer({});
-
-  // ---------- loopback mock of the e-mail provider ----------
-  const mail = { calls: [], mode: 200 };
-  const mock = http.createServer((req, res) => {
-    let raw = ""; req.on("data", (c) => (raw += c)); req.on("end", () => {
-      mail.calls.push({ url: req.url, headers: req.headers, body: JSON.parse(raw || "{}") });
-      res.writeHead(mail.mode, { "content-type": "application/json" }); res.end("{}");
-    });
-  });
-  await new Promise((r) => mock.listen(0, "127.0.0.1", r));
-  const mockBase = `http://127.0.0.1:${mock.address().port}`;
   const dispatchSecret = secret() + secret();
   const dbx = drizzleClient(owner, { schema });
   const dispatch = async (token = dispatchSecret) => { const r = await fetch(base + "/api/internal/notifications/dispatch", { headers: token ? { authorization: "Bearer " + token } : {}, signal: AbortSignal.timeout(25000) }); return { status: r.status, data: await r.json().catch(() => null) }; };
-  const outbox = async () => (await owner.query("SELECT kind, status, attempts, last_error_code, dedupe_key, next_attempt_at, order_id FROM notification_outbox ORDER BY created_at, kind")).rows;
+  let order1Id = "";   // once set, order 1's parked rows are excluded: the worker's own sweep may legitimately look at it again
+  const outbox = async () => (await owner.query("SELECT kind, status, attempts, last_error_code, dedupe_key, next_attempt_at, order_id FROM notification_outbox WHERE order_id <> $1 ORDER BY created_at, kind", [order1Id])).rows;
   const cart = { customerName: "Ada <b>Yılmaz</b>", phone: "05000000000", email: "customer@example.test",
     city: "İzmir", district: "Bornova", address: "Disposable address test street 10",
     paymentProvider: "discovery", items: [{ productId: "http-product", quantity: 1 }], delivery: "pickup", expectedTotal: 10000, legalAcceptances: [] };
@@ -160,27 +234,37 @@ try {
     const accepted = { ...body, legalPreviewToken: p.data.legalPreviewToken, legalAcceptances: p.data.documents.map((d) => d.documentVersionId) };
     const o = await request("/api/orders", accepted, key); return { accepted, o };
   };
-  const results = {};
+  const results = { cluster: `disposable cluster attested (${route} route)` };
   await owner.query("UPDATE inventory SET on_hand = 50 WHERE product_id = 'http-product'");
   await owner.query("DELETE FROM rate_limit_buckets");
 
-  // ---- 1. The storefront role has NO grant on the outbox: the order must still succeed (savepoint isolation) ----
+  // ---- 1. Dispatch endpoint: authorization and fail-closed configuration (PR #37 contract), BEFORE any order exists ----
+  const alerts = { ORDER_ALERT_EMAILS: "ops@example.test, boss@example.test" };
+  assert.equal((await dispatch()).status, 404, "secret not configured: the route does not exist");
+  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret });
+  assert.equal((await dispatch(null)).status, 401, "no credentials");
+  assert.equal((await dispatch("x".repeat(40))).status, 401, "wrong secret");
+  const noRecipients = await dispatch();
+  assert.equal(noRecipients.status, 503, "no ORDER_ALERT_EMAILS: fail closed (there is no admin_users fallback)"); assert.equal(noRecipients.data?.error, "not_configured");
+  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, ...alerts });
+  const noWorker = await dispatch();
+  assert.equal(noWorker.status, 503, "no worker URL: fail closed, never the owner/storefront/admin connection"); assert.equal(noWorker.data?.error, "worker_unavailable");
+  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, ...alerts, NOTIFICATION_WORKER_DATABASE_URL: storefrontUrl });
+  const sharedRole = await dispatch();
+  assert.equal(sharedRole.status, 503, "a worker URL that reuses the storefront role is refused"); assert.equal(sharedRole.data?.error, "worker_unavailable");
+  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, ...alerts, NOTIFICATION_WORKER_DATABASE_URL: workerUrl });
+  const notConfigured = await dispatch();
+  assert.equal(notConfigured.status, 200);
+  assert.equal(notConfigured.data.providerConfigured, false, "no e-mail service configured is reported, not hidden");
+  assert.equal(notConfigured.data.sent, 0);
+  results.dispatchAuth = "404 absent / 401 none / 401 wrong / 503 no recipients / 503 no worker URL / 503 shared role / 200 correct worker";
+
+  // ---- 2. The storefront role has NO grant on the outbox: the order must still succeed (savepoint isolation) ----
   const first = await placeOrder("h5-order-1");
   assertStatus(first.o, 201, "order succeeds although the outbox insert is not permitted");
   assert.equal((await outbox()).length, 0, "the failed savepoint left no outbox row");
   assert.equal(await count("orders"), 1);
   results.outboxFailureDoesNotBlockOrder = true;
-
-  // ---- 2. Dispatch endpoint authorization ----
-  assert.equal((await dispatch()).status, 404, "secret not configured: the route does not exist");
-  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret });
-  assert.equal((await dispatch(null)).status, 401, "no credentials");
-  assert.equal((await dispatch("x".repeat(40))).status, 401, "wrong secret");
-  const notConfigured = await dispatch();
-  assert.equal(notConfigured.status, 200);
-  assert.equal(notConfigured.data.providerConfigured, false, "no e-mail service configured is reported, not hidden");
-  assert.equal(notConfigured.data.sent, 0);
-  results.dispatchAuth = "404 absent / 401 none / 401 wrong / 200 correct";
 
   // ---- 3. The sweep recovers the order whose enqueue failed, but only inside the 30-minute window (orders are immutable: the clock moves, not the row) ----
   const swept = await sweepMissingNotifications(dbx, new Date(Date.now() + 5 * 60_000));
@@ -191,11 +275,13 @@ try {
   assert.equal((await outbox()).every((r) => r.attempts === 0), true);
   await owner.query("DELETE FROM notification_outbox");
   assert.equal(await sweepMissingNotifications(dbx, new Date(Date.now() + 3 * 3_600_000)), 0, "an old order is never back-filled (no mail for history)");
+  order1Id = (await owner.query("SELECT id FROM orders ORDER BY created_at LIMIT 1")).rows[0].id;
+  await owner.query("INSERT INTO notification_outbox (id, kind, order_id, dedupe_key, status, sent_at) SELECT gen_random_uuid()::text, k.kind, $1, 'order:' || $1 || ':' || k.kind, 'sent', now() FROM (VALUES ('order_customer_received'), ('order_admin_new')) AS k(kind)", [order1Id]);
   results.sweep = "recovers a failed enqueue within 30 minutes; never back-fills older orders";
 
   // ---- 4. With the grant, orders enqueue inline; replay does not duplicate ----
-  await owner.query("GRANT INSERT ON notification_outbox TO sprintb_http_storefront");
-  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "Ege Teknik <noreply@example.test>", RESEND_API_BASE: mockBase, ORDER_ALERT_EMAILS: "ops@example.test, boss@example.test", SITE_ORIGIN: "https://egeteknik.tr", ADMIN_ORIGIN: "https://admin.example.test" });
+  await owner.query(`GRANT INSERT ON notification_outbox TO "${ROLE.store}"`);
+  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "Ege Teknik <noreply@example.test>", RESEND_API_BASE: mockBase, ...alerts, SITE_ORIGIN: "https://egeteknik.tr", ADMIN_ORIGIN: "https://admin.example.test", NOTIFICATION_WORKER_DATABASE_URL: workerUrl });
   const second = await placeOrder("h5-order-2");
   assertStatus(second.o, 201, "order 2");
   const rows2 = await outbox();
@@ -275,16 +361,16 @@ try {
   const off = await operationsSummary(dbx, {});
   assert.deepEqual([off.notifications.providerConfigured, off.notifications.providerReason], [false, "RESEND_API_KEY_missing"]);
   results.summary = { awaitingPayment: on.orders.awaitingPayment, disabledReported: true };
-  await new Promise((r) => mock.close(r));
-  console.log("[h5-notify] PASS " + JSON.stringify(results));
+  console.log("[h5-http] PASS: scoped-worker notification integration");
+  console.log("[h5-http] results " + JSON.stringify(results));
 
 } catch (error) {
-  console.error("[h5-notify] FAIL:", error instanceof Error ? error.message : String(error));
-  console.error("[h5-notify] Local server diagnostics (last 1200 chars):", serverOutput.slice(-1200).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]"));
+  console.error("[h5-http] FAIL:", (error instanceof Error ? error.message : String(error)).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]"));
+  console.error("[h5-http] Local server diagnostics (last 1200 chars):", serverOutput.slice(-1200).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]"));
   process.exitCode = 1;
 } finally {
-  await stopServer();
-  await owner.end();
+  await cleanup();
+  clearTimeout(watchdog);
 }
 
 function created2OrderNumber(res) { return res.data.orderNumber; }

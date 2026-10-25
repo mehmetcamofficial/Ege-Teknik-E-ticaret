@@ -17,7 +17,9 @@
  */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { spawn, spawnSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
+import { startNextDev } from "./http-test-server.mjs";
+import { workerOperatorSql } from "./notification-worker-test-role.mjs";
 import { readFileSync } from "node:fs";
 import http from "node:http";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -55,7 +57,7 @@ const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8")
 const maintenance = new pg.Pool({ connectionString: maintenanceUrl, max: 1 });
 let owner;
 let createdDatabase = false;   // cleanup may only remove what THIS run created: a refused (pre-existing) database must survive untouched
-let port = 44000 + Math.floor(Math.random() * 1000), base = `http://127.0.0.1:${port}`, server, fullLog = "";
+let base = "", server, fullLog = "";   // base is set from the server the OS gave a port to (scripts/http-test-server.mjs)
 const bodies = [], dispatchBodies = [];                    // every HTTP body the QA saw, for the leak scan
 const results = {};
 const log = (chunk) => { fullLog = (fullLog + chunk).slice(-2_000_000); };
@@ -87,24 +89,18 @@ const dispatch = async (token = dispatchSecret) => {
 const count = async (table) => Number((await owner.query(`SELECT count(*)::int AS n FROM ${table}`)).rows[0].n);
 const assertStatus = (r, status, label) => assert.equal(r.status, status, `${label}: HTTP ${r.status} / ${r.data?.code ?? r.data?.error ?? "none"}`);
 const stopServer = async () => {
-  if (!server) return; const child = server; server = undefined; child.kill("SIGTERM");
-  await Promise.race([new Promise((r) => child.once("exit", r)), new Promise((r) => setTimeout(r, 5000))]);
+  if (!server) return;
+  const running = server;
+  server = undefined;
+  await running.stop();
 };
 const startServer = async (overrides) => {
-  port += 1; base = `http://127.0.0.1:${port}`;
   const env = { ...process.env, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci", EXPECTED_NEON_DEVELOPMENT_BRANCH_ID: "disposable-http-ci",
     DATABASE_URL: raw, STOREFRONT_DATABASE_URL: storefrontUrl, ADMIN_DATABASE_URL: adminUrl, CHECKOUT_SCOPED_DB_ENABLED: "true",
     LEGAL_PREVIEW_SIGNING_SECRET: signingSecret, IP_HASH_SALT: secret(), LOCAL_BUILD_NO_UPLOAD: "1", NEXT_TELEMETRY_DISABLED: "1", ...overrides };
   for (const [k, v] of Object.entries(env)) if (v === undefined) delete env[k];
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "-H", "127.0.0.1", "-p", String(port)], { env, stdio: ["ignore", "pipe", "pipe"] });
-  server.stdout.on("data", (c) => log(c.toString())); server.stderr.on("data", (c) => log(c.toString()));
-  let ready = false;
-  for (let i = 0; i < 120; i++) {
-    if (server.exitCode !== null) throw Error("local Next server exited before readiness");
-    try { const r = await fetch(base + "/api/health", { signal: AbortSignal.timeout(1500) }); if (r.status < 500) { ready = true; break; } } catch { /* starting */ }
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  assert.ok(ready, "local Next server did not become ready");
+  server = await startNextDev({ env, onOutput: log });
+  base = server.base;
 };
 
 // ---- environments of the server under test ---------------------------------------------------------------------------------------
@@ -127,10 +123,7 @@ const placeOrder = async (key, over = {}) => {
 let order1Id = "";
 const outbox = async () => (await owner.query("SELECT id, kind, status, attempts, last_error_code, dedupe_key, next_attempt_at, order_id FROM notification_outbox WHERE order_id <> $1 ORDER BY created_at, kind", [order1Id])).rows;
 
-const grantsSql = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8");
-const ident = (v) => { assert.match(v, /^[a-z][a-z0-9_]{2,62}$/); return `"${v}"`; };
-const operatorSql = grantsSql.replaceAll(':"dbname"', ident(DB)).replaceAll(':"worker_role"', ident(ROLE.workerGroup)).replaceAll(':"worker_login"', ident(ROLE.workerLogin)).replaceAll(":'worker_password'", `'${workerPassword}'`);
-assert.doesNotMatch(operatorSql, /:"[a-z_]+"|:'[a-z_]+'/, "all operator SQL placeholders were substituted");
+const operatorSql = workerOperatorSql({ database: DB, group: ROLE.workerGroup, login: ROLE.workerLogin, password: workerPassword });
 
 try {
   // ---- 0. the cluster is the PR37 lab, and the database is NEW ------------------------------------------------------------------------
