@@ -108,3 +108,21 @@ test("B9 runs in the PostgreSQL job on the marked container and cannot pass by s
   assert.doesNotMatch(workflow, /^[ \t]+permissions:/m);
   assert.match(pkg.scripts["test:b9-postgres"], /test-b9-postgres\.mjs/);
 });
+
+test("H5 runs in the PostgreSQL job on the marked container, after the marking step, and can neither skip nor leave resources unnoticed", () => {
+  const job = workflow.slice(workflow.indexOf("  postgres-integration:"), workflow.indexOf("  build:"));
+  const mark = job.indexOf("node scripts/ci-mark-disposable-cluster.mjs"), h5 = job.indexOf("node --experimental-strip-types scripts/test-h5-notifications-http.mjs");
+  assert.ok(mark > 0 && h5 > mark, "the cluster is marked before H5 runs");
+  assert.ok(h5 > job.indexOf("node scripts/test-b9-postgres.mjs"), "it runs after the existing PostgreSQL suites");
+  assert.match(job, /H5_PG_URL: postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/sprintb_ci\n/);
+  assert.doesNotMatch(workflow, /H5_PG_DB|RESEND|MAIL_FROM|ORDER_ALERT/, "no mail variable can reach H5 from the workflow");
+  const step = job.slice(job.indexOf("- name: H5 scoped-worker"));
+  assert.match(step, /set -euo pipefail\n/, "a failing suite behind tee still fails the step");
+  for (const line of ['"[h5-http] PASS: scoped-worker notification integration"', '"[h5-http] cleanup: owned resources removed"']) {
+    assert.ok(step.includes(`grep -qF ${line} "$log"`), `a missing line fails the job: ${line}`);
+  }
+  assert.equal(workflow.match(/node-version-file/g)?.length, 4, "no extra job was added");
+  assert.doesNotMatch(workflow, /^[ \t]+permissions:/m, "no job widens the read-only default");
+  assert.doesNotMatch(workflow, /secrets\.|continue-on-error/);
+});
+

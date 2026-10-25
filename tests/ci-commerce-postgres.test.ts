@@ -200,12 +200,20 @@ test("the bootstrap is test-only: nothing in the application imports it", () => 
   assert.match(worker, /if \(!createdDatabase\) console\.log\([^)]*nothing is dropped/, "a refused run drops nothing");
   assert.ok(worker.indexOf("role already exists: refusing to reuse or drop it") < worker.indexOf("CREATE DATABASE"), "pre-existing roles are refused before anything is created");
   assert.ok(worker.indexOf("createdDatabase = true;") > worker.indexOf("CREATE DATABASE"), "ownership is claimed only after the database was actually created");
-  for (const file of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs"]) {
+  for (const file of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs"]) {
     const httpRunner = readFileSync(file, "utf8");
     assert.match(httpRunner, /process\.env\.CI !== "true"/, `${file} must refuse non-CI execution`);
     assert.match(httpRunner, /target\.pathname\.slice\(1\)\.startsWith\("sprintb"\)/, `${file} must refuse non-disposable databases`);
     assert.match(httpRunner, /\["127\.0\.0\.1", "localhost", "::1"\]/, `${file} must refuse remote databases`);
   }
+  // H5 creates its OWN database and roles (random per-run names) on an attested cluster, so its guards are stricter than the generic runners'.
+  const h5 = readFileSync("scripts/test-h5-notifications-http.mjs", "utf8");
+  assert.match(h5, /process\.env\.CI !== "true"\) refuse\("requires CI=true"\)/, "H5 refuses non-CI execution");
+  assert.match(h5, /\["127\.0\.0\.1", "localhost", "::1"\]\.includes\(base0\.hostname/, "H5 refuses remote databases");
+  assert.match(h5, /base0\.port === "55432"\) refuse/, "H5 refuses the recovery cluster");
+  assert.match(h5, /await attestDisposableCluster\(/, "H5 proves the cluster is disposable before creating anything");
+  assert.match(h5, /DB = `sprintb_h5_\$\{ledger\.nonce\}`/, "H5 only ever creates its own sprintb_h5_<nonce> database");
+  assert.doesNotMatch(h5, /CHECKOUT_HTTP_PG_URL/, "H5 no longer works on the checkout runners' shared database");
   assert.doesNotMatch(bootstrapSource, /DATABASE_URL_UNPOOLED|NEON_BRANCH_ID|MIGRATION_TARGET_ENV/);
   assert.doesNotMatch(bootstrapSource, /process\.env/, "it has no environment of its own: the caller passes the URL in");
 });

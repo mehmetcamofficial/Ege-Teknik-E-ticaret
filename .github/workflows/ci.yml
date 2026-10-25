@@ -126,6 +126,17 @@ jobs:
           node scripts/test-b9-postgres.mjs 2>&1 | tee "$log"
           grep -qF "[b9-postgres] OK: 1 test executed against real PostgreSQL, 0 skipped." "$log"
           grep -qF "[b9-postgres] cleanup: scratch database dropped" "$log"
+      - name: H5 scoped-worker notification integration on real PostgreSQL (a failure, a skip, a missing line or an incomplete cleanup fails the job)
+        env:
+          # Same marked service container. The suite attests it again, creates its OWN database and roles with random per-run names, uses a
+          # loopback mock instead of any mail provider, and removes only what it proves it created (oid ledger); see the header of the script.
+          H5_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/h5-http.log"
+          node --experimental-strip-types scripts/test-h5-notifications-http.mjs 2>&1 | tee "$log"
+          grep -qF "[h5-http] PASS: scoped-worker notification integration" "$log"
+          grep -qF "[h5-http] cleanup: owned resources removed" "$log"
 
   build:
     name: build
