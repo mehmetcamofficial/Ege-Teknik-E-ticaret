@@ -42,6 +42,7 @@ const secret = () => randomBytes(24).toString("hex");
 const CLONE_FROM = process.env.PR37_HTTP_CLONE_FROM ?? "", LAB_MODE = CLONE_FROM !== "";
 if (LAB_MODE && (!/^sprintb[a-z0-9_]{3,40}$/.test(CLONE_FROM) || CLONE_FROM === DB)) refuse("PR37_HTTP_CLONE_FROM must be a different sprintb* database");
 if (LAB_MODE && !process.env.PR37_LAB_WORKER_PASSWORD) refuse("clone mode needs PR37_LAB_WORKER_PASSWORD");
+if (LAB_MODE) refuse("clone mode is retired: the worker now reads orders through public.notification_orders (created by the current operator SQL), which a lab database created earlier does not have");
 const STRESS_ROUNDS = Math.min(Math.max(Number(process.env.PR37_STRESS_ROUNDS ?? 0) || 0, 0), 60);
 const storePassword = secret(), adminPassword = secret(), workerPassword = LAB_MODE ? process.env.PR37_LAB_WORKER_PASSWORD : secret(), signingSecret = secret(), dispatchSecret = secret() + secret();
 const probePassword = secret();
@@ -173,7 +174,7 @@ try {
   const aclOut = (acl.stdout + acl.stderr).replace(/postgres(?:ql)?:\/\/[^\s]+/g, "[redacted]");
   console.log(aclOut.trim().split("\n").filter((l) => /worker-acl\] (PASS|FAIL|INFO)/.test(l)).map((l) => "  " + l).join("\n"));
   assert.equal(acl.status, 0, "ACL matrix on the narrow ACL must pass completely");
-  results.aclMatrix = "10/10 on the column-level ACL";
+  results.aclMatrix = "11/11 on the ACL (the worker has no privilege on orders; it reads the notification_orders view)";
 
   // ---- 2. R1: no dispatch secret -> route absent; order 1 succeeds although the storefront has NO outbox grant ---------------------------
   await startServer(fullEnv({ NOTIFICATION_DISPATCH_SECRET: undefined }));
@@ -185,6 +186,32 @@ try {
   assert.equal(await count("orders"), 1);
   assert.equal((await dispatch()).status, 404, "secret not configured: the route does not exist");
   results.outboxFailureDoesNotBlockOrder = "201, no outbox row, order intact";
+
+  // ---- 2b. R-01 data minimisation on REAL checkout data: the worker sees the district and the delivery method, never the phone or the street address ----
+  {
+    const VIEW_COLUMNS = ["city", "created_at", "customer_name", "delivery_method", "district", "email", "id", "installation_preference", "installation_total", "order_number", "payment_status", "shipping_total", "status", "subtotal", "total", "vat_total"];
+    const wp = new pg.Pool({ connectionString: workerUrl, max: 1 });
+    try {
+      const stored = (await owner.query("SELECT shipping_address_snapshot ->> 'phone' AS phone, shipping_address_snapshot ->> 'line1' AS line1 FROM orders WHERE id = $1", [order1Id])).rows[0];
+      assert.ok(stored.phone && stored.line1, "precondition: the stored snapshot really holds the customer's phone and street address");
+      const row = (await wp.query("SELECT * FROM public.notification_orders WHERE id = $1", [order1Id])).rows[0];
+      assert.equal(row.district, "Bornova", "the worker can read the district it needs");
+      assert.ok(row.delivery_method, "the worker can read the delivery method it needs");
+      assert.deepEqual(Object.keys(row).sort(), VIEW_COLUMNS, "the view returns exactly the whitelisted columns");
+      const everything = JSON.stringify((await wp.query("SELECT * FROM public.notification_orders")).rows);
+      assert.ok(!everything.includes(stored.phone) && !everything.includes(stored.line1) && !everything.includes("Disposable address"), "no value of any order the worker can read contains the phone or the street address");
+      const denied = async (sqlText) => wp.query(sqlText).then(() => "ok", (error) => error.code);
+      assert.equal(await denied("SELECT shipping_address_snapshot FROM public.orders"), "42501", "the snapshot column is refused by the database");
+      assert.equal(await denied("SELECT shipping_address_snapshot ->> 'line1' FROM public.orders"), "42501", "so is a JSON key taken out of it");
+      assert.equal(await denied("SELECT phone FROM public.orders"), "42501", "and the phone column");
+      assert.equal(await denied("SELECT id FROM public.orders"), "42501", "the orders table is refused as a whole");
+      assert.equal(await denied("SELECT phone FROM public.notification_orders"), "42703", "the view has no phone column");
+      assert.equal(await denied("SELECT shipping_address_snapshot FROM public.notification_orders"), "42703", "the view has no snapshot column");
+      const wholeRow = (await wp.query("SELECT to_jsonb(o) AS j FROM public.notification_orders o WHERE id = $1", [order1Id])).rows[0].j;
+      assert.deepEqual(Object.keys(wholeRow).sort(), VIEW_COLUMNS);
+    } finally { await wp.end(); }
+    results.dataMinimisation = "worker reads district + delivery method; phone and street address (stored in the snapshot) are unreachable: 42501 on orders, 42703 on the view, absent from every value";
+  }
 
   // ---- 3. fail-closed configuration matrix: every misconfiguration answers 503 and never reaches the provider -----------------------------
   await owner.query(`INSERT INTO admin_users (id, external_user_id, email, role, active) VALUES ('fallback-bait', 'password:bait', 'bait-admin@example.test', 'super_admin', true) ON CONFLICT DO NOTHING`);
@@ -291,13 +318,13 @@ try {
   results.delivery = "exact content, escaping, idempotency keys, masked audit under the 7-column ACL, no duplicate";
 
   // ---- 8b. the endpoint runs as the worker role: remove ONE grant and it must fail closed ------------------------------------------------
-  await owner.query(`REVOKE SELECT (created_at) ON public.orders FROM ${ROLE.workerGroup}`);
+  await owner.query(`REVOKE SELECT ON public.notification_orders FROM ${ROLE.workerGroup}`);   // table-level: a column REVOKE cannot undo a table-level GRANT
   const revokedMark = fullLog.length, revoked = await dispatch();
   assert.equal(revoked.status, 503); assert.deepEqual(revoked.data, { error: "worker_unavailable" });
   assert.ok(await logged(/notification_dispatch_unavailable[^\n]*42501/, revokedMark), "the refusal is SQLSTATE 42501 and only the code is logged");
-  await owner.query(`GRANT SELECT (created_at) ON public.orders TO ${ROLE.workerGroup}`);
+  await owner.query(`GRANT SELECT ON public.notification_orders TO ${ROLE.workerGroup}`);
   assert.equal((await dispatch()).status, 200, "grant restored: the worker works again");
-  results.workerIdentity = "dispatch connects as the worker LOGIN only; one revoked column grant -> 503 (42501), restored -> 200";
+  results.workerIdentity = "dispatch connects as the worker LOGIN only; the one grant on the orders view revoked -> 503 (42501), restored -> 200";
 
   // ---- 9. retry, dead letter, requeue, maximum attempts -------------------------------------------------------------------------------
   const third = await placeOrder("pr37-order-3"); assertStatus(third.o, 201, "order 3");

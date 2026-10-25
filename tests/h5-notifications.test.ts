@@ -153,13 +153,18 @@ test("PR37 the worker route can reach no database connection other than the dedi
   assert.doesNotMatch(route, /\bgetDb\b|getAdminDb|getStorefrontDb|getCheckoutDb|getPool|getScopedPool|process\.env\.(?:DATABASE_URL|ADMIN_DATABASE_URL|STOREFRONT_DATABASE_URL)/);
 });
 
-test("PR37 the worker has no admin_users fallback and reads only explicit order columns", () => {
+test("PR37 the worker has no admin_users fallback and reads orders ONLY through the notification_orders view (R-01)", () => {
   const outbox = codeOnly(outboxSource());
   assert.doesNotMatch(outbox, /adminUsers|admin_users/, "the worker role has no access to admin_users, so the code must not touch it");
   assert.doesNotMatch(outbox, /\.select\(\)\.from\((?:orders|orderItems)\)/, "select() without a column list would need table-level SELECT");
-  assert.match(outbox, /select\(\{\s*\n?\s*id: orders\.id/);
-  for (const sensitive of ["orders.phone", "orders.address", "orders.notes", "orders.billingAddressSnapshot", "orders.requestFingerprint", "orders.idempotencyKey"]) {
-    assert.ok(!outbox.includes(sensitive), `${sensitive} is never read by the worker`);
+  const workerPart = outbox.slice(0, outbox.indexOf("export async function operationsSummary"));   // operationsSummary is the ADMIN summary (admin connection), not the worker
+  assert.match(workerPart, /FROM public\.notification_orders WHERE id = \$\{orderId\}/, "an order is loaded from the view");
+  assert.match(workerPart, /FROM public\.notification_orders o CROSS JOIN/, "the sweep reads the view too");
+  assert.doesNotMatch(workerPart, /(?:FROM|JOIN)\s+(?:public\.)?orders\b|\.from\(orders\)|\borders\.[a-zA-Z]/, "the worker code never names the orders table");
+  assert.doesNotMatch(workerPart, /shippingAddressSnapshot|shipping_address_snapshot/, "the snapshot (it holds the phone and the street address) is never read by the worker");
+  const withoutProviderField = workerPart.replace(/idempotencyKey: row\.dedupeKey/g, "");   // the e-mail provider's own message field, not orders.idempotency_key
+  for (const sensitive of ["phone", "address", "notes", "billing_address_snapshot", "billingAddressSnapshot", "request_fingerprint", "requestFingerprint", "idempotency_key", "idempotencyKey"]) {
+    assert.ok(!new RegExp(`\\b${sensitive}\\b`).test(withoutProviderField), `${sensitive} is never read by the worker`);
   }
 });
 
@@ -173,13 +178,27 @@ test("PR37 audit INSERT names exactly the seven granted columns and binds every 
   assert.match(block[2], /JSON\.stringify\(payload\)\}::jsonb/);
 });
 
-test("PR37 the operator SQL grants exactly the minimal column set and nothing broad", () => {
+test("PR37 the operator SQL grants exactly the minimal set, gives the worker NOTHING on orders and exposes only the whitelisted view (R-01)", () => {
   const sql = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8").split("\n").filter((l) => !/^\s*--/.test(l)).join("\n");
   assert.doesNotMatch(sql, /GRANT\s+ALL|(?<!NO)SUPERUSER|(?<!NO)BYPASSRLS|(?<!NO)CREATEROLE|(?<!NO)CREATEDB|(?<!NO)REPLICATION|WITH GRANT OPTION|TO PUBLIC/i);
   assert.match(sql, /NOSUPERUSER[^;]*NOBYPASSRLS/);
   assert.match(sql, /WITH INHERIT TRUE, SET FALSE/);
   for (const table of ["admin_users", "customers", "payments", "drizzle"]) assert.ok(!sql.includes(table), `${table} is not granted`);
   const grants = [...sql.matchAll(/GRANT\s+(SELECT|INSERT|UPDATE)\s*\(([^)]*)\)\s+ON\s+public\.(\w+)/g)].map((m) => `${m[3]}:${m[1]}:${m[2].split(",").map((c) => c.trim()).sort().join(",")}`).sort();
-  assert.deepEqual(grants.map((g) => g.split(":").slice(0, 2).join(":")), ["audit_logs:INSERT", "notification_outbox:INSERT", "notification_outbox:SELECT", "notification_outbox:UPDATE", "order_items:SELECT", "orders:SELECT"]);
+  assert.deepEqual(grants.map((g) => g.split(":").slice(0, 2).join(":")), ["audit_logs:INSERT", "notification_outbox:INSERT", "notification_outbox:SELECT", "notification_outbox:UPDATE", "order_items:SELECT"], "column-level grants: no orders entry any more");
+  const tableLevel = [...sql.matchAll(/GRANT\s+(?!\w+\s*\()([A-Z, ]+?)\s+ON\s+(?:TABLE\s+)?public\.(\w+)\s+TO/g)].map((m) => `${m[1].trim()} ON ${m[2]}`);
+  assert.deepEqual(tableLevel, ["SELECT ON notification_orders"], "the only table-level grant is SELECT on the view");
+  assert.ok(!/GRANT[^;]*\bpublic\.orders\b/.test(sql) && !/GRANT[^;]*\bON\s+orders\b/.test(sql), "nothing is granted on the orders table itself");
+  const view = /CREATE VIEW public\.notification_orders WITH \(([^)]*)\) AS([\s\S]*?);/.exec(sql);
+  assert.ok(view, "the view is created by the operator SQL");
+  assert.match(view[1], /security_barrier = true/); assert.match(view[1], /security_invoker = false/);
+  assert.doesNotMatch(view[2], /\b(phone|address|notes|billing_address_snapshot|request_fingerprint|idempotency_key|customer_id|legal_evidence_version)\b/, "the view selects no sensitive column");
+  assert.equal((view[2].match(/shipping_address_snapshot/g) ?? []).length, 2, "the snapshot is referenced twice, only to extract the district and the method");
+  assert.match(view[2], /shipping_address_snapshot ->> 'district' AS district/); assert.match(view[2], /shipping_address_snapshot -> 'delivery' ->> 'method' AS delivery_method/);
+  assert.match(view[2], /FROM public\.orders AS o/, "every reference is schema-qualified");
+  assert.match(sql, /REVOKE ALL ON public\.notification_orders FROM PUBLIC;/);
   assert.ok(!/DELETE|TRUNCATE|TRIGGER|REFERENCES/i.test(sql.replace(/NOCREATEROLE/g, "")), "no DELETE/TRUNCATE/TRIGGER/REFERENCES");
+  const raw = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8");
+  assert.match(raw, /DROP VIEW public\.notification_orders;/, "the rollback block removes the view, which is owned by the operator, not by the worker");
+  assert.doesNotMatch(raw, /no phone, street address/, "the old, wrong claim that a column grant hid the street address is gone");
 });

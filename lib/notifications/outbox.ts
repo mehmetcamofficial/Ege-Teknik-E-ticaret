@@ -15,7 +15,7 @@ import { providerStatus, type NotificationProvider } from "./provider.ts";
 import { DEFAULT_SWEEP_WINDOW_MINUTES, sweepBounds } from "./sweep-window.ts";
 import { sqlStateOf } from "./sqlstate.ts";
 
-const { auditLogs, notificationOutbox, orders, orderItems } = schema;
+const { auditLogs, notificationOutbox, orderItems } = schema;
 type Db = NodePgDatabase<typeof schema>;
 type Tx = Pick<Db, "insert" | "select" | "update" | "execute" | "transaction">;
 
@@ -80,22 +80,28 @@ export function parseRecipientList(value: string | undefined): string[] {
   return [...new Set((value ?? "").split(",").map((s) => s.trim().toLowerCase()).filter((s) => EMAIL_SHAPE.test(s)))].slice(0, 10);
 }
 
+type NotificationOrderRow = {
+  id: string; orderNumber: string; createdAt: Date | string; subtotal: number; vatTotal: number; shippingTotal: number; installationTotal: number; total: number;
+  customerName: string; email: string; installationPreference: string | null; city: string; paymentStatus: string; status: string;
+  district: string | null; deliveryMethod: string | null;
+};
+
 async function loadOrder(db: Tx, orderId: string): Promise<(OrderEmailData & { orderId: string; email: string }) | null> {
-  // Explicit columns: the worker role holds column-level SELECT on exactly these fields (no phone, street address, notes,
-  // billing snapshot, request fingerprint or idempotency key). `select()` without a list would need every column.
-  const [o] = await db.select({
-    id: orders.id, orderNumber: orders.orderNumber, createdAt: orders.createdAt, subtotal: orders.subtotal, vatTotal: orders.vatTotal,
-    shippingTotal: orders.shippingTotal, installationTotal: orders.installationTotal, total: orders.total, customerName: orders.customerName,
-    email: orders.email, shippingAddressSnapshot: orders.shippingAddressSnapshot, installationPreference: orders.installationPreference,
-    city: orders.city, paymentStatus: orders.paymentStatus, status: orders.status,
-  }).from(orders).where(eq(orders.id, orderId)).limit(1);
+  // The worker role has NO privilege on the orders table. It reads an order only through public.notification_orders, which carries the 14
+  // columns the e-mails need plus the district and the delivery method extracted from the shipping snapshot. Phone, street address (both live
+  // inside that snapshot), notes, billing snapshot, fingerprint and idempotency key are not reachable. Orders that predate the delivery
+  // snapshot have NULL there and get the same defaults as before ("dealer", no district).
+  const [o] = (await db.execute(sql`
+    SELECT id, order_number AS "orderNumber", created_at AS "createdAt", subtotal, vat_total AS "vatTotal", shipping_total AS "shippingTotal",
+           installation_total AS "installationTotal", total, customer_name AS "customerName", email, installation_preference AS "installationPreference",
+           city, payment_status AS "paymentStatus", status, district, delivery_method AS "deliveryMethod"
+    FROM public.notification_orders WHERE id = ${orderId} LIMIT 1`)).rows as NotificationOrderRow[];
   if (!o) return null;
   const items = await db.select({ productName: orderItems.productName, quantity: orderItems.quantity, unitPrice: orderItems.unitPrice, lineTotal: orderItems.lineTotal }).from(orderItems).where(eq(orderItems.orderId, orderId));
-  const snap = (o.shippingAddressSnapshot ?? {}) as { district?: string; delivery?: { method?: string } };
   return {
-    orderId: o.id, orderNumber: o.orderNumber, createdAt: o.createdAt, items, subtotal: o.subtotal, vatTotal: o.vatTotal, shippingTotal: o.shippingTotal, installationTotal: o.installationTotal, total: o.total,
-    customerName: o.customerName, email: o.email, deliveryMethod: snap.delivery?.method ?? "dealer", installationIncluded: o.installationPreference === "included_standard",
-    city: o.city, district: snap.district ?? "", paymentStatus: o.paymentStatus, status: o.status,
+    orderId: o.id, orderNumber: o.orderNumber, createdAt: new Date(o.createdAt), items, subtotal: o.subtotal, vatTotal: o.vatTotal, shippingTotal: o.shippingTotal, installationTotal: o.installationTotal, total: o.total,
+    customerName: o.customerName, email: o.email, deliveryMethod: o.deliveryMethod ?? "dealer", installationIncluded: o.installationPreference === "included_standard",
+    city: o.city, district: o.district ?? "", paymentStatus: o.paymentStatus, status: o.status,
   };
 }
 
@@ -167,7 +173,7 @@ export async function sweepMissingNotifications(db: Db, now = new Date(), env: W
   const res = await db.execute(sql`
     INSERT INTO notification_outbox (id, kind, order_id, dedupe_key)
     SELECT gen_random_uuid()::text, k.kind, o.id, 'order:' || o.id || ':' || k.kind
-    FROM orders o CROSS JOIN (VALUES ('order_customer_received'), ('order_admin_new')) AS k(kind)
+    FROM public.notification_orders o CROSS JOIN (VALUES ('order_customer_received'), ('order_admin_new')) AS k(kind)
     WHERE o.created_at >= ${since} AND o.created_at <= ${settled}
     ON CONFLICT (dedupe_key) DO NOTHING`);
   return res.rowCount ?? 0;

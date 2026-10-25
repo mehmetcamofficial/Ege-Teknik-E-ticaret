@@ -112,7 +112,7 @@ jobs:
           set -euo pipefail
           log="$RUNNER_TEMP/pr37-worker-http.log"
           node --experimental-strip-types scripts/test-pr37-worker-http.mjs 2>&1 | tee "$log"
-          grep -qF "[worker-acl] PASS 10/10 checks" "$log"
+          grep -qF "[worker-acl] PASS 11/11 checks" "$log"
           grep -qF "[pr37-http] PASS" "$log"
           grep -qF "[pr37-http] cleanup: scratch database and roles dropped" "$log"
       - name: B9 AI budget on real PostgreSQL (the test must run and pass; a skip or a missing OK line fails the job)
