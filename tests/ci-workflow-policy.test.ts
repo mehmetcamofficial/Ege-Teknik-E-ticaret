@@ -90,6 +90,7 @@ test("PR #37 worker suites run in the PostgreSQL job against this run's marked s
   for (const line of ['"[worker-acl] PASS 11/11 checks"', '"[pr37-http] PASS"', '"[pr37-http] cleanup: scratch database and roles dropped"']) {
     assert.ok(job.includes(`grep -qF ${line} "$log"`), `a missing pass line fails the job: ${line}`);
   }
+  assert.ok(job.includes(`grep -qF '"claimFencing":"12/12 scenarios' "$log"`), "the R-03 claim-fencing scenarios must all pass for the job to pass");
   assert.doesNotMatch(job, /PR37_HTTP_CLONE_FROM|PR37_LAB_WORKER_PASSWORD/, "CI never uses the lab clone mode");
   assert.doesNotMatch(job, /PR37_DISPOSABLE_ATTEST:/, "the marker comes only from the marking step, never from a literal in the workflow");
   assert.equal(workflow.match(/node-version-file/g)?.length, 4, "no extra job was added");

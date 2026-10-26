@@ -6,6 +6,8 @@
 --   :"dbname"           target database name           :"worker_role"   NOLOGIN group role that owns the grants
 --   :"worker_login"     LOGIN role used in the URL     :'worker_password' strong random password for the LOGIN role (never commit it)
 -- Never run against Production without the release approval and a Neon snapshot/branch taken first.
+-- ORDER: migration 0024_notification_claim_token FIRST (this file references notification_outbox.claim_token; without it the file fails atomically with 42703),
+-- then this file, then the worker code. Rollback of the column: see the header of drizzle-pg/0024_notification_claim_token.sql.
 -- RE-RUNNABILITY: this file is deliberately NOT idempotent. It is one transaction and CREATE ROLE has no IF NOT EXISTS, so a second run
 -- fails at the first statement and rolls back completely (nothing is half-applied). To re-apply, run the ROLLBACK block at the bottom first.
 -- The password must not appear on a command line (process lists show it): put `\set worker_password` + the value in a private 0600 file that
@@ -18,7 +20,9 @@
 --                 phone number and street address), phone, address, notes, billing snapshot, request fingerprint, idempotency key and
 --                 the payment/legal evidence columns are NOT reachable through any path.
 --   order_items   SELECT 5 columns (order_id, product_name, quantity, unit_price, line_total)
---   notification_outbox  SELECT its own queue columns, INSERT 4 columns (sweep), UPDATE 7 state columns (claim/retry/dead/sent)
+--   notification_outbox  SELECT its own queue columns, INSERT 4 columns (sweep), UPDATE 8 state columns (claim/retry/dead/sent). claim_token (migration 0024, R-03)
+--                 is the per-claim fencing token: it holds no personal data and is the only column added for it; without it a worker whose lease
+--                 expired could overwrite the result of the worker that re-claimed the row.
 --   audit_logs    INSERT 7 columns (request_id, ip_hash and created_at keep their defaults)
 -- Deliberately NOT granted: anything on admin_users and every other table, DELETE/TRUNCATE/TRIGGER/REFERENCES anywhere, UPDATE of
 -- any other column, CREATE on any schema, USAGE on the drizzle schema, EXECUTE on any application function.
@@ -55,10 +59,10 @@ REVOKE ALL ON public.notification_orders FROM PUBLIC;
 GRANT SELECT ON public.notification_orders TO :"worker_role";
 GRANT SELECT (order_id, product_name, quantity, unit_price, line_total) ON public.order_items TO :"worker_role";
 
-GRANT SELECT (id, kind, order_id, dedupe_key, status, attempts, next_attempt_at, last_attempt_at, locked_until, last_error_code, sent_at, created_at)
+GRANT SELECT (id, kind, order_id, dedupe_key, status, attempts, next_attempt_at, last_attempt_at, locked_until, claim_token, last_error_code, sent_at, created_at)
   ON public.notification_outbox TO :"worker_role";
 GRANT INSERT (id, kind, order_id, dedupe_key) ON public.notification_outbox TO :"worker_role";
-GRANT UPDATE (status, attempts, last_attempt_at, next_attempt_at, locked_until, last_error_code, sent_at) ON public.notification_outbox TO :"worker_role";
+GRANT UPDATE (status, attempts, last_attempt_at, next_attempt_at, locked_until, claim_token, last_error_code, sent_at) ON public.notification_outbox TO :"worker_role";
 
 GRANT INSERT (id, actor_user_id, actor_email, action, entity_type, entity_id, payload) ON public.audit_logs TO :"worker_role";
 
