@@ -159,7 +159,7 @@ test("the bootstrap is test-only: nothing in the application imports it", () => 
     .split("\n").filter(Boolean).sort();
   assert.ok(existsSync(BOOTSTRAP), "the bootstrap module must exist");
   // H4-C and H5-A added runners, generated from the HTTP E2E harness, with exactly the same refusal guards (asserted below).
-  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", RUNNER].sort(),
+  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-migration-upgrade-pr37.mjs", RUNNER].sort(),
     "only the disposable PostgreSQL runners may import the destructive bootstrap");
   for (const file of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs"]) {
     const httpRunner = readFileSync(file, "utf8");
