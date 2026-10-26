@@ -35,6 +35,11 @@ import pg from "pg";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
 
+// R-04: a send budget key is mandatory (without it nothing is sent); this suite sends many mails to the same few addresses, so the limits are lifted here.
+// The limits themselves are proven by scripts/notification-budget-scenarios.mjs.
+const BUDGET_ENV = { NOTIFICATION_RATE_KEY: "r04-test-key-not-a-secret-0123456789abcdef", NOTIFICATION_CUSTOMER_DOMAIN_PER_HOUR: "100000", NOTIFICATION_CUSTOMER_PER_HOUR: "100000", NOTIFICATION_CUSTOMER_PER_DAY: "100000", NOTIFICATION_CUSTOMER_GLOBAL_PER_DAY: "100000",
+  NOTIFICATION_OPS_PER_HOUR: "100000", NOTIFICATION_OPS_PER_DAY: "100000", NOTIFICATION_OPS_GLOBAL_PER_DAY: "100000" };
+
 const refuse = (why) => { console.error(`[h5-http] REFUSED: ${why}`); process.exit(1); };
 const base0 = (() => { try { return new URL(process.env.H5_PG_URL ?? ""); } catch { return null; } })();
 if (process.env.CI !== "true") refuse("requires CI=true");
@@ -281,7 +286,7 @@ try {
 
   // ---- 4. With the grant, orders enqueue inline; replay does not duplicate ----
   await owner.query(`GRANT INSERT ON notification_outbox TO "${ROLE.store}"`);
-  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "Ege Teknik <noreply@example.test>", RESEND_API_BASE: mockBase, ...alerts, SITE_ORIGIN: "https://egeteknik.tr", ADMIN_ORIGIN: "https://admin.example.test", NOTIFICATION_WORKER_DATABASE_URL: workerUrl });
+  await stopServer(); await startServer({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "Ege Teknik <noreply@example.test>", RESEND_API_BASE: mockBase, ...BUDGET_ENV, ...alerts, SITE_ORIGIN: "https://egeteknik.tr", ADMIN_ORIGIN: "https://admin.example.test", NOTIFICATION_WORKER_DATABASE_URL: workerUrl });
   const second = await placeOrder("h5-order-2");
   assertStatus(second.o, 201, "order 2");
   const rows2 = await outbox();
@@ -356,7 +361,7 @@ try {
   results.concurrencyAndCrash = "6 concurrent workers -> 1 send; stale lock reclaimed; exhausted row dead";
 
   // ---- 8. Operations summary and the disabled-service state ----
-  const on = await operationsSummary(dbx, { RESEND_API_KEY: "k", MAIL_FROM: "x@example.test", ORDER_ALERT_EMAILS: "ops@example.test" });
+  const on = await operationsSummary(dbx, { RESEND_API_KEY: "k", MAIL_FROM: "x@example.test", ORDER_ALERT_EMAILS: "ops@example.test", ...BUDGET_ENV });
   assert.equal(on.notifications.providerConfigured, true); assert.equal(on.orders.awaitingPayment, await count("orders")); assert.ok(on.orders.last24h >= 1);
   const off = await operationsSummary(dbx, {});
   assert.deepEqual([off.notifications.providerConfigured, off.notifications.providerReason], [false, "RESEND_API_KEY_missing"]);

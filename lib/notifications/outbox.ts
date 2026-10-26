@@ -12,6 +12,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "../../db/schema.ts";
 import { maskEmail, renderAdminNewOrder, renderCustomerOrderReceived, type OrderEmailData, type Rendered, type SiteLinks } from "./templates.ts";
 import { providerStatus, type NotificationProvider } from "./provider.ts";
+import { budgetConfig, budgetEntries, reserveSend } from "./send-budget.ts";
 import { DEFAULT_SWEEP_WINDOW_MINUTES, sweepBounds } from "./sweep-window.ts";
 import { sqlStateOf } from "./sqlstate.ts";
 
@@ -83,14 +84,15 @@ async function loadOrder(db: Tx, orderId: string): Promise<(OrderEmailData & { o
 /** Operations recipients come ONLY from ORDER_ALERT_EMAILS. The worker role has no access to admin_users, so there is no table fallback. */
 const adminRecipients = (env: WorkerEnv): string[] => parseRecipientList(env.ORDER_ALERT_EMAILS);
 
-export type ProcessResult = { processed: number; sent: number; retried: number; dead: number };
+export type ProcessResult = { processed: number; sent: number; retried: number; dead: number; suppressed: number };
 
 export async function dispatchOutbox(input: { db: Db; provider: NotificationProvider | null; env: WorkerEnv; now?: Date; limit?: number }): Promise<ProcessResult & { providerConfigured: boolean }> {
   const { db, provider, env } = input, now = input.now ?? new Date(), limit = Math.min(Math.max(input.limit ?? 20, 1), 50);
   const status = providerStatus(env);
-  const empty = { processed: 0, sent: 0, retried: 0, dead: 0, providerConfigured: status.configured };
+  const budget = budgetConfig(env);                                  // R-04: no send budget configured = nothing is sent (rows stay pending, no attempt is burned)
+  const empty = { processed: 0, sent: 0, retried: 0, dead: 0, suppressed: 0, providerConfigured: status.configured && budget.ok };
   // Not configured: rows stay pending and untouched (no attempt is burned); the admin panel shows the reason.
-  if (!provider || !status.configured) return empty;
+  if (!provider || !status.configured || !budget.ok) return empty;
   // Rows whose lock expired after the final allowed attempt are dead, never re-sent.
   await db.execute(sql`UPDATE notification_outbox SET status = 'dead', last_error_code = 'stalled', locked_until = NULL, claim_token = NULL WHERE status = 'sending' AND locked_until < ${now} AND attempts >= ${MAX_ATTEMPTS}`);
   const claimed = (await db.execute(sql`
@@ -106,7 +108,7 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
     // and its audit row are ONE statement (the audit INSERT reads the UPDATE's RETURNING; it has no RETURNING of its own because the worker may append
     // audit rows but not read them), so they commit or fail together. Returns whether this
     // claim was still the owner. `attempts` is deliberately not the fence: a requeue resets it to 0, so an old claim could match a new one.
-    const finish = async (outcome: "sent" | "retry" | "dead", code: string | null, masked: string): Promise<boolean> => {
+    const finish = async (outcome: "sent" | "retry" | "dead" | "suppressed", code: string | null, masked: string): Promise<boolean> => {
       let change, action: string, payload: Record<string, unknown>;
       if (outcome === "sent") {
         change = sql`status = 'sent', sent_at = ${now}, last_error_code = NULL`; action = "notification_sent"; payload = { kind: row.kind, attempts: row.attempts, recipient: masked };
@@ -114,6 +116,9 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
         const delay = retryDelaySeconds(row.attempts) ?? RETRY_DELAYS_SECONDS.at(-1)!;
         change = sql`status = 'pending', next_attempt_at = ${new Date(now.getTime() + delay * 1000)}, last_error_code = ${code}`;
         action = "notification_retry_scheduled"; payload = { kind: row.kind, attempts: row.attempts, code, delaySeconds: delay, recipient: masked };
+      } else if (outcome === "suppressed") {
+        // The send budget (R-04) is exhausted: terminal and explicit, never retried by itself; an operator can requeue it after the window.
+        change = sql`status = 'dead', last_error_code = ${code}`; action = "notification_suppressed"; payload = { kind: row.kind, attempts: row.attempts, code, recipient: masked };
       } else {
         change = sql`status = 'dead', last_error_code = ${code}`; action = "notification_dead"; payload = { kind: row.kind, attempts: row.attempts, code, recipient: masked };
       }
@@ -127,7 +132,7 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
           SELECT ${crypto.randomUUID()}, ${SYSTEM_ACTOR.userId}, ${SYSTEM_ACTOR.email}, ${action}, 'notification', moved.id, ${JSON.stringify(payload)}::jsonb FROM moved)
         SELECT id FROM moved`)).rows.length === 1;
       if (!applied) { console.warn("notification_claim_lost", { kind: row.kind, outcome }); return false; }
-      if (outcome === "sent") result.sent++; else if (outcome === "retry") result.retried++; else result.dead++;
+      if (outcome === "sent") result.sent++; else if (outcome === "retry") result.retried++; else if (outcome === "suppressed") result.suppressed++; else result.dead++;
       return true;
     };
     // Before anything is sent: is this claim still ours, and extend the lease from NOW so the whole send (provider timeout included) fits inside it
@@ -149,7 +154,19 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
       }
       const masked = to.length ? to.map(maskEmail).join(",") : "***";
       if (!to.length) { await finish("dead", row.kind === "order_customer_received" ? "invalid_recipient" : "no_recipient", masked); continue; }
+      const entries = budgetEntries(budget.config, row.kind === "order_customer_received" ? "customer" : "ops", to);
+      if (!entries) { await finish("dead", "invalid_recipient", masked); continue; }
       if (!(await holdClaim())) { console.warn("notification_claim_lost", { kind: row.kind, outcome: "before_send" }); continue; }
+      // R-04: reserve the send budget (atomic, idempotent per row) AFTER ownership is proven and BEFORE the provider is called. Any failure to
+      // reserve sends nothing. The reservation and the provider call cannot be one transaction: a crash in between leaves the unit spent, never unspent.
+      let reservation;
+      try { reservation = await reserveSend(db, row.id, entries, input.now ?? null); }
+      catch (error) {
+        console.error("notification_budget_unavailable", { kind: row.kind, code: sqlStateOf(error) });
+        await finish(row.attempts < MAX_ATTEMPTS ? "retry" : "dead", "budget_unavailable", masked);
+        continue;
+      }
+      if (reservation.outcome === "limited") { await finish("suppressed", reservation.code, masked); continue; }
       const sent = await provider.send({ to, ...rendered, idempotencyKey: row.dedupeKey });
       if (sent.ok) await finish("sent", null, masked);
       else if (sent.retryable && row.attempts < MAX_ATTEMPTS) await finish("retry", sent.code, masked);
@@ -198,9 +215,11 @@ export async function operationsSummary(db: Db, env: WorkerEnv, now = new Date()
   const counts = (await db.execute(sql`SELECT status, kind, count(*)::int AS n FROM notification_outbox GROUP BY 1, 2`)).rows as { status: string; kind: string; n: number }[];
   const [oldest] = (await db.execute(sql`SELECT extract(epoch FROM (${now}::timestamptz - min(created_at)))::int AS age FROM notification_outbox WHERE status IN ('pending','sending')`)).rows as { age: number | null }[];
   const [o] = (await db.execute(sql`SELECT count(*) FILTER (WHERE status = 'pending_payment')::int AS awaiting, count(*) FILTER (WHERE created_at >= ${new Date(now.getTime() - 86_400_000)})::int AS last24h, max(created_at) AS newest FROM orders`)).rows as { awaiting: number; last24h: number; newest: Date | null }[];
+  const suppressedRows = (await db.execute(sql`SELECT last_error_code AS code, count(*)::int AS n FROM notification_outbox WHERE status = 'dead' AND last_error_code LIKE 'rate\\_limited\\_%' GROUP BY 1`)).rows as { code: string; n: number }[];
+  const suppressed = Object.fromEntries(suppressedRows.map((r) => [r.code, r.n]));
   const byStatus: Record<string, number> = { pending: 0, sending: 0, sent: 0, dead: 0 };
   for (const c of counts) byStatus[c.status] = (byStatus[c.status] ?? 0) + c.n;
-  const provider = providerStatus(env);
+  const provider = providerStatus(env), budget = budgetConfig(env);
   return { orders: { awaitingPayment: o?.awaiting ?? 0, last24h: o?.last24h ?? 0, newestAt: o?.newest ? new Date(o.newest).toISOString() : null },
-    notifications: { providerConfigured: provider.configured, providerReason: provider.reason ?? null, adminRecipientsConfigured: parseRecipientList(env.ORDER_ALERT_EMAILS).length > 0, byStatus, oldestWaitingSeconds: oldest?.age ?? null } };
+    notifications: { providerConfigured: provider.configured && budget.ok, providerReason: provider.reason ?? (budget.ok ? null : budget.reason), adminRecipientsConfigured: parseRecipientList(env.ORDER_ALERT_EMAILS).length > 0, byStatus, suppressed, oldestWaitingSeconds: oldest?.age ?? null } };
 }

@@ -111,7 +111,15 @@ try {
         AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.classid = 'pg_proc'::regclass AND d.objid = p.oid AND d.deptype = 'e')
         AND p.prorettype NOT IN ('pg_catalog.trigger'::regtype, 'pg_catalog.event_trigger'::regtype)
         AND has_function_privilege($1, p.oid, 'EXECUTE') ORDER BY 1`, [login])).rows.map((r) => r.fn);
-    assert.deepEqual(reachable, [], `the worker can execute no application function (reachable: ${reachable.join(", ") || "none"})`);
+    // The ONE function the worker may call is the send-budget reservation (R-04). It is SECURITY DEFINER by design, so it is pinned hard: exactly this
+    // signature, owned by neither the worker nor a group of it, a fixed search_path with pg_temp last, and not executable by PUBLIC.
+    assert.deepEqual(reachable, ["public.reserve_notification_send [SECURITY DEFINER]"], `the worker can execute exactly the reservation function (reachable: ${reachable.join(", ") || "none"})`);
+    const f = (await admin.query(`SELECT p.proconfig, pg_get_userbyid(p.proowner) AS owner, p.proowner, pg_get_function_identity_arguments(p.oid) AS args,
+      has_function_privilege('public', p.oid, 'EXECUTE') AS pub, has_function_privilege($1, p.oid, 'EXECUTE WITH GRANT OPTION') AS grantable
+      FROM pg_proc p WHERE p.oid = 'public.reserve_notification_send(text,text[],text[],integer[],timestamptz)'::regprocedure`, [login])).rows[0];
+    assert.deepEqual(f.proconfig, ["search_path=pg_catalog, public, pg_temp"], "a pinned search_path, pg_temp last");
+    assert.equal(f.pub, false, "PUBLIC cannot execute it"); assert.equal(f.grantable, false, "the worker cannot pass EXECUTE on");
+    assert.ok(!(await admin.query("SELECT 1 FROM pg_roles r JOIN pg_auth_members m ON m.roleid = r.oid JOIN pg_roles w ON w.oid = m.member WHERE w.rolname = $1 AND r.oid = $2", [login, f.proowner])).rowCount, "not owned by a role the worker belongs to");
   });
 
   await check("5. every other public table is unreadable: admin_users and all non-allowed tables answer 42501", async () => {
@@ -172,6 +180,11 @@ try {
       "UPDATE public.audit_logs SET action = 'x' WHERE false",
       "DELETE FROM public.audit_logs WHERE false",
       "TRUNCATE public.audit_logs",
+      // R-04: the budget tables are reachable only through the reservation function
+      "INSERT INTO public.notification_send_budget (bucket_key, window_start, used) VALUES ('x', now(), 1)",
+      "UPDATE public.notification_send_budget SET used = 0 WHERE false", "DELETE FROM public.notification_send_budget WHERE false", "TRUNCATE public.notification_send_budget",
+      "INSERT INTO public.notification_send_reservation (outbox_id) VALUES ('x')", "DELETE FROM public.notification_send_reservation WHERE false", "UPDATE public.notification_send_reservation SET reserved_at = now() WHERE false",
+      "SELECT used FROM public.notification_send_budget WHERE false", "SELECT outbox_id FROM public.notification_send_reservation WHERE false",
     ];
     const bad = [];
     for (const sqlText of cases) { const code = await attempt(sqlText); if (code !== "42501") bad.push(`${code}: ${sqlText.slice(0, 60)}`); }
@@ -215,6 +228,11 @@ try {
     assert.equal(await attempt("UPDATE public.notification_outbox SET claim_token = replace(gen_random_uuid()::text, '-', '') WHERE false"), "ok", "and writable (claim)");
     // The fenced result: one statement, the audit row is inserted from the UPDATE's RETURNING (R-03); it needs no privilege beyond the columns above.
     assert.equal(await attempt("WITH moved AS (UPDATE public.notification_outbox SET status = 'sent', sent_at = now(), last_error_code = NULL, locked_until = NULL, claim_token = NULL WHERE id = 'x' AND status = 'sending' AND claim_token = 'y' RETURNING id), logged AS (INSERT INTO public.audit_logs (id, actor_user_id, actor_email, action, entity_type, entity_id, payload) SELECT gen_random_uuid()::text, 'system:acl-test', 'system@notifications.invalid', 'acl_probe', 'notification', moved.id, '{}'::jsonb FROM moved) SELECT id FROM moved"), "ok", "the fenced finish statement");
+    // R-04: the reservation function passes the privilege check (a missing outbox row answers 23503 AFTER it) and refuses malformed input with 22023 BEFORE touching anything.
+    assert.equal(await attempt("SELECT public.reserve_notification_send('no-such-outbox-row', ARRAY['c:k1:h:acl'], ARRAY['hour'], ARRAY[3], now())"), "23503", "the worker may call the reservation");
+    for (const bad of ["SELECT public.reserve_notification_send('x', ARRAY['bad key!'], ARRAY['hour'], ARRAY[3], now())", "SELECT public.reserve_notification_send('x', ARRAY['k'], ARRAY['week'], ARRAY[3], now())",
+      "SELECT public.reserve_notification_send('x', ARRAY['k'], ARRAY['hour'], ARRAY[0], now())", "SELECT public.reserve_notification_send('x', ARRAY['k','j'], ARRAY['hour'], ARRAY[3], now())",
+      "SELECT public.reserve_notification_send('x y', ARRAY['k'], ARRAY['hour'], ARRAY[3], now())"]) assert.equal(await attempt(bad), "22023", bad);
     assert.equal(await attempt("SELECT id FROM public.notification_outbox WHERE status = 'pending' AND next_attempt_at <= now() ORDER BY next_attempt_at LIMIT 1 FOR UPDATE SKIP LOCKED"), "ok");
     assert.equal(await attempt("INSERT INTO public.audit_logs (id, actor_user_id, actor_email, action, entity_type, entity_id, payload) VALUES (gen_random_uuid()::text, 'system:acl-test', 'system@notifications.invalid', 'acl_probe', 'notification', 'x', '{\"recipient\":\"c***@e***.test\"}'::jsonb)"), "ok");
     assert.equal(await attempt("INSERT INTO public.notification_outbox (id, kind, order_id, dedupe_key) VALUES (gen_random_uuid()::text, 'order_admin_new', 'no-such-order', 'order:no-such-order:order_admin_new') ON CONFLICT (dedupe_key) DO NOTHING"), "23503");

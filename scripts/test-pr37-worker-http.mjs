@@ -26,8 +26,10 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import * as schema from "../db/schema.ts";
-import { LOCK_SECONDS, MAX_ATTEMPTS, dispatchOutbox, requeueDeadNotification, sweepMissingNotifications } from "../lib/notifications/outbox.ts";
+import { LOCK_SECONDS, MAX_ATTEMPTS, dispatchOutbox, enqueueOrderNotifications, operationsSummary, requeueDeadNotification, sweepMissingNotifications } from "../lib/notifications/outbox.ts";
+import { budgetConfig, budgetEntries, reserveSend } from "../lib/notifications/send-budget.ts";
 import { runClaimFencingScenarios } from "./notification-claim-scenarios.mjs";
+import { runBudgetScenarios } from "./notification-budget-scenarios.mjs";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
 import { attestDisposableCluster } from "./disposable-cluster-attest.mjs";
@@ -110,7 +112,11 @@ const mail = { calls: [], mode: 200 };
 const mock = http.createServer((req, res) => { let b = ""; req.on("data", (c) => (b += c)); req.on("end", () => { mail.calls.push({ url: req.url, headers: req.headers, body: JSON.parse(b || "{}") }); res.writeHead(mail.mode, { "content-type": "application/json" }); res.end("{}"); }); });
 await new Promise((r) => mock.listen(0, "127.0.0.1", r));
 const mockBase = `http://127.0.0.1:${mock.address().port}`;
-const fullEnv = (extra = {}) => ({ NOTIFICATION_DISPATCH_SECRET: dispatchSecret, RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "Ege Teknik <noreply@example.test>", RESEND_API_BASE: mockBase,
+// R-04: a send budget key is mandatory (without it nothing is sent). The suites send many mails to the same few addresses, so their limits are lifted;
+// the limits themselves are proven by scripts/notification-budget-scenarios.mjs with their own low settings.
+const BUDGET_ENV = { NOTIFICATION_RATE_KEY: "r04-test-key-not-a-secret-0123456789abcdef", NOTIFICATION_CUSTOMER_DOMAIN_PER_HOUR: "100000", NOTIFICATION_CUSTOMER_PER_HOUR: "100000", NOTIFICATION_CUSTOMER_PER_DAY: "100000", NOTIFICATION_CUSTOMER_GLOBAL_PER_DAY: "100000",
+  NOTIFICATION_OPS_PER_HOUR: "100000", NOTIFICATION_OPS_PER_DAY: "100000", NOTIFICATION_OPS_GLOBAL_PER_DAY: "100000" };
+const fullEnv = (extra = {}) => ({ ...BUDGET_ENV, NOTIFICATION_DISPATCH_SECRET: dispatchSecret, RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "Ege Teknik <noreply@example.test>", RESEND_API_BASE: mockBase,
   ORDER_ALERT_EMAILS: "ops@example.test, boss@example.test", SITE_ORIGIN: "https://egeteknik.tr", ADMIN_ORIGIN: "https://admin.example.test", NOTIFICATION_WORKER_DATABASE_URL: workerUrl, ...extra });
 
 const cart = { customerName: "Ada <b>Yılmaz</b>", phone: "05000000000", email: "customer@example.test", city: "İzmir", district: "Bornova", address: "Disposable address test street 10",
@@ -418,11 +424,38 @@ try {
   const fencePool = new pg.Pool({ connectionString: workerUrl, max: 3 });   // the worker LOGIN has CONNECTION LIMIT 10 and the dev server holds some
   try {
     const outcome = await runClaimFencingScenarios({ dispatchOutbox, requeueDeadNotification, db: drizzle(fencePool, { schema }), ownerDb: drizzle(owner, { schema }), owner,
-      env: { RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "orders@example.test", ORDER_ALERT_EMAILS: "ops@example.test" }, lockSeconds: LOCK_SECONDS, maxAttempts: MAX_ATTEMPTS, concurrency: 3 });
+      env: { RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "orders@example.test", ORDER_ALERT_EMAILS: "ops@example.test", ...BUDGET_ENV }, lockSeconds: LOCK_SECONDS, maxAttempts: MAX_ATTEMPTS, concurrency: 3 });
     for (const o of outcome) console.log(`[pr37-http] claim-fencing ${o.ok ? "PASS" : "FAIL"}: ${o.name}${o.ok ? "" : ` - ${o.detail}`}`);
     assert.deepEqual(outcome.filter((o) => !o.ok).map((o) => `${o.name}: ${o.detail}`), [], "every claim-fencing scenario must pass");
     results.claimFencing = `${outcome.length}/${outcome.length} scenarios under the worker role (V1-V3, concurrent claim, crash, timeout, requeue ABA, batch vs lease, stalled sweep, audit atomicity, idempotency key, token invariant)`;
   } finally { await fencePool.end(); }
+
+  // ---- 10d. R-04 send budget: per-recipient and global caps at SEND time, under the worker role -------------------------------------------------------
+  const budgetPool = new pg.Pool({ connectionString: workerUrl, max: 3 });
+  try {
+    const bdb = drizzle(budgetPool, { schema });
+    const outcome = await runBudgetScenarios({ dispatchOutbox, requeueDeadNotification, operationsSummary, enqueueOrderNotifications, reserveSend, budgetEntries, budgetConfig, db: bdb, ownerDb: drizzle(owner, { schema }), owner,
+      maxAttempts: MAX_ATTEMPTS, concurrency: 3 });
+    for (const o of outcome) console.log(`[pr37-http] send-budget ${o.ok ? "PASS" : "FAIL"}: ${o.name}${o.ok ? "" : ` - ${o.detail}`}`);
+    assert.deepEqual(outcome.filter((o) => !o.ok).map((o) => `${o.name}: ${o.detail}`), [], "every send-budget scenario must pass");
+    results.sendBudget = `${outcome.length}/${outcome.length} scenarios under the worker role (hourly, daily, global, ops separation, 50 concurrent, normalisation, domain cap, idempotent enqueue, retry, database failure, bad configuration, requeue after the window, stale claim, key rotation, no address stored)`;
+
+    // The real checkout path: five orders for ONE address, each passing the per-IP checkout limiter as if from a fresh address (the harness clears the IP bucket
+    // before every order). Every order must succeed; only the recipient's hourly budget decides how many mails go out.
+    await owner.query("UPDATE inventory SET on_hand = 100000 WHERE product_id = 'http-product'");
+    const victim = "victim-r04-http@example.test", codes = [];
+    for (let i = 0; i < 5; i++) codes.push((await placeOrder(`pr37-r04-${i}`, { email: victim })).o.status);
+    assert.deepEqual(codes, [201, 201, 201, 201, 201], "every order is accepted regardless of the notification limit");
+    const sentTo = [];
+    const lowEnv = { RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "orders@example.test", ORDER_ALERT_EMAILS: "ops@example.test, boss@example.test", ...BUDGET_ENV, NOTIFICATION_RATE_KEY_ID: "http1", NOTIFICATION_CUSTOMER_PER_HOUR: "3" };
+    const live = await dispatchOutbox({ db: bdb, provider: { send: async (m) => { sentTo.push(m.to.join(",")); return { ok: true }; } }, env: lowEnv, limit: 50 });
+    const toVictim = sentTo.filter((x) => x === victim).length;
+    assert.equal(toVictim, 3, "three mails reach the address, not five"); assert.equal(live.suppressed, 2);
+    assert.equal((await owner.query("SELECT count(*)::int AS n FROM notification_outbox WHERE status = 'dead' AND last_error_code = 'rate_limited_hour'")).rows[0].n >= 2, true);
+    assert.equal((await owner.query("SELECT count(*)::int AS n FROM orders WHERE email = $1", [victim])).rows[0].n, 5, "all five orders exist");
+    assert.ok(sentTo.some((x) => x.includes("ops@example.test")), "operations alerts for those orders were still sent");
+    results.sendBudgetCheckout = "5 real checkouts to one address: 5 x 201, 3 mails sent, 2 suppressed, 5 orders kept, operations alerts unaffected";
+  } finally { await budgetPool.end(); }
 
   if (STRESS_ROUNDS > 0) {
     await owner.query("UPDATE inventory SET on_hand = 100000 WHERE product_id = 'http-product'");
@@ -455,7 +488,7 @@ try {
   assert.deepEqual(scan(checkoutBodies, secretsOnly), [], "checkout responses carry no secret");
   const echoed = scan(checkoutBodies, customerData);
   results.checkoutEchoesOwnData = echoed.length ? `info: checkout responses return ${echoed.join(", ")} to the requesting customer only` : "none";
-  assert.ok(dispatchBodies.length > 20 && dispatchBodies.every((b) => Object.keys(JSON.parse(b)).every((k) => ["error", "ok", "swept", "processed", "sent", "retried", "dead", "providerConfigured"].includes(k))), "dispatch answers counts and generic errors only");
+  assert.ok(dispatchBodies.length > 20 && dispatchBodies.every((b) => Object.keys(JSON.parse(b)).every((k) => ["error", "ok", "swept", "processed", "sent", "retried", "dead", "suppressed", "providerConfigured"].includes(k))), "dispatch answers counts and generic errors only");
   results.leakScan = `clean: server log (${Math.round(fullLog.length / 1024)} KiB) and ${dispatchBodies.length} dispatch answers carry no secret or customer datum; checkout responses carry no secret`;
 
   console.log("[pr37-http] PASS " + JSON.stringify(results));
