@@ -6,7 +6,8 @@
 --   :"dbname"           target database name           :"worker_role"   NOLOGIN group role that owns the grants
 --   :"worker_login"     LOGIN role used in the URL     :'worker_password' strong random password for the LOGIN role (never commit it)
 -- Never run against Production without the release approval and a Neon snapshot/branch taken first.
--- ORDER: migration 0024_notification_claim_token FIRST (this file references notification_outbox.claim_token; without it the file fails atomically with 42703),
+-- ORDER: migrations 0024_notification_claim_token and 0025_notification_send_budget FIRST (this file references notification_outbox.claim_token and
+-- public.reserve_notification_send; without them the file fails atomically with 42703 / 42883),
 -- then this file, then the worker code. Rollback of the column: see the header of drizzle-pg/0024_notification_claim_token.sql.
 -- RE-RUNNABILITY: this file is deliberately NOT idempotent. It is one transaction and CREATE ROLE has no IF NOT EXISTS, so a second run
 -- fails at the first statement and rolls back completely (nothing is half-applied). To re-apply, run the ROLLBACK block at the bottom first.
@@ -25,7 +26,9 @@
 --                 expired could overwrite the result of the worker that re-claimed the row.
 --   audit_logs    INSERT 7 columns (request_id, ip_hash and created_at keep their defaults)
 -- Deliberately NOT granted: anything on admin_users and every other table, DELETE/TRUNCATE/TRIGGER/REFERENCES anywhere, UPDATE of
--- any other column, CREATE on any schema, USAGE on the drizzle schema, EXECUTE on any application function.
+-- any other column, CREATE on any schema, USAGE on the drizzle schema, EXECUTE on any application function EXCEPT the one send-budget
+-- reservation function (R-04, migration 0025): reserve_notification_send is SECURITY DEFINER, touches only the two budget tables (opaque HMAC bucket
+-- keys, no address, no order data) and is the worker's ONLY access to them; the worker has no privilege on those tables themselves.
 -- Why a view (R-01 of the PR #38 security review): a column-level GRANT cannot restrict the KEYS inside a jsonb column, so granting SELECT on
 -- orders.shipping_address_snapshot exposed phone and street address of every order. The view is created WITH (security_invoker = false), i.e.
 -- it reads orders with its OWNER's rights (the operator running this file, never the worker), so the worker needs no privilege on orders at
@@ -65,6 +68,9 @@ GRANT INSERT (id, kind, order_id, dedupe_key) ON public.notification_outbox TO :
 GRANT UPDATE (status, attempts, last_attempt_at, next_attempt_at, locked_until, claim_token, last_error_code, sent_at) ON public.notification_outbox TO :"worker_role";
 
 GRANT INSERT (id, actor_user_id, actor_email, action, entity_type, entity_id, payload) ON public.audit_logs TO :"worker_role";
+
+-- R-04: the send-budget reservation is the worker's only access to the budget tables (it has no table privilege on them).
+GRANT EXECUTE ON FUNCTION public.reserve_notification_send(text, text[], text[], integer[], timestamptz) TO :"worker_role";
 
 COMMIT;
 
