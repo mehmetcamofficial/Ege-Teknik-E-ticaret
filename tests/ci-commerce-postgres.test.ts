@@ -159,14 +159,61 @@ test("the bootstrap is test-only: nothing in the application imports it", () => 
     .split("\n").filter(Boolean).sort();
   assert.ok(existsSync(BOOTSTRAP), "the bootstrap module must exist");
   // H4-C and H5-A added runners, generated from the HTTP E2E harness, with exactly the same refusal guards (asserted below).
-  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-migration-upgrade-pr37.mjs", RUNNER].sort(),
+  // PR #37 added the scoped-worker HTTP QA runner; unlike the others it creates its OWN new database (guards asserted below).
+  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-b9-postgres.mjs", "scripts/test-migration-upgrade-pr37.mjs", "scripts/test-pr37-worker-http.mjs", RUNNER].sort(),
     "only the disposable PostgreSQL runners may import the destructive bootstrap");
-  for (const file of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs"]) {
+  const worker = readFileSync("scripts/test-pr37-worker-http.mjs", "utf8");
+  assert.match(worker, /process\.env\.CI !== "true"/, "the PR37 worker runner must refuse non-CI execution");
+  assert.match(worker, /\/\^sprintb\[a-z0-9_\]\{3,40\}\$\/\.test\(DB\)/, "it only creates a sprintb* database");
+  assert.match(worker, /\["127\.0\.0\.1", "localhost", "::1"\]/, "it must refuse remote databases");
+  // The cluster proof lives in one shared module (see tests/disposable-cluster-attest.test.ts for its behavioural tests).
+  assert.match(worker, /await attestDisposableCluster\(/, "it must attest that the cluster is disposable before creating anything");
+  const attest = readFileSync("scripts/disposable-cluster-attest.mjs", "utf8");
+  assert.match(attest, /pr37-worker-pg/, "the local lab cluster route is kept");
+  assert.match(attest, /ege-disposable-ci:/, "the CI route needs a per-run marker");
+  assert.match(attest, /RECOVERY_PORT = "55432"/, "the recovery cluster is always refused");
+  assert.match(attest, /\^\(postgres\|sprintb\[a-z0-9_\]\*\)\$/, "a cluster holding any other database is refused");
+  // B9 runner: creates its OWN database after attesting the cluster, drops only that, and refuses to pass on a skip.
+  const b9 = readFileSync("scripts/test-b9-postgres.mjs", "utf8");
+  assert.match(b9, /process\.env\.CI !== "true"/, "the B9 runner refuses non-CI execution");
+  assert.match(b9, /base\.port === "55432"/, "it never accepts the recovery port");
+  assert.match(b9, /\^sprintb_b9\[a-z0-9_\]\{0,30\}\$/, "it only creates a sprintb_b9* database");
+  assert.match(b9, /await attestDisposableCluster\(/, "it attests the cluster before creating anything");
+  assert.match(b9, /database already exists: refusing to reuse or reset it/, "it never resets an existing database");
+  assert.match(b9, /let createdDatabase = false;/);
+  assert.match(b9, /if \(!createdDatabase\) console\.log\([^)]*nothing is dropped/, "a refused run drops nothing");
+  assert.ok(b9.indexOf("createdDatabase = true;") > b9.indexOf("CREATE DATABASE"), "ownership is claimed only after the database was created");
+  assert.doesNotMatch(b9, /CREATE ROLE|DROP ROLE/, "it creates and drops no role");
+  assert.match(b9, /skipped \?\? 1\) !== 0/, "a skip fails the gate");
+  const b9test = readFileSync("tests/ai-budget-db-b9.test.ts", "utf8");
+  assert.doesNotMatch(b9test, /55489/, "the fixed port is gone");
+  assert.match(b9test, /notEqual\(target\.port,'55432'/, "the test itself still refuses the recovery cluster");
+  assert.match(b9test, /startsWith\('\/sprintb_b9'\)/, "and still requires the disposable database name");
+  const acl = readFileSync("scripts/test-notification-worker-acl.mjs", "utf8");
+  assert.match(acl, /await attestDisposableCluster\(/, "the ACL matrix attests the cluster too");
+  assert.match(worker, /database already exists: refusing to reuse or reset it/, "it must never reset an existing database");
+  assert.match(worker, /DROP DATABASE IF EXISTS/, "it removes the database it created");
+  // Role names are private to this suite: scripts/test-*-http*.mjs create sprintb_http_* roles in the same CI container and never drop them.
+  assert.doesNotMatch(worker, /sprintb_http_/, "no role name may collide with the other HTTP runners");
+  assert.match(worker, /storefront: "sprintb_pr37h_storefront"/);
+  assert.match(worker, /let createdDatabase = false;/, "cleanup is gated on ownership");
+  assert.match(worker, /if \(!createdDatabase\) console\.log\([^)]*nothing is dropped/, "a refused run drops nothing");
+  assert.ok(worker.indexOf("role already exists: refusing to reuse or drop it") < worker.indexOf("CREATE DATABASE"), "pre-existing roles are refused before anything is created");
+  assert.ok(worker.indexOf("createdDatabase = true;") > worker.indexOf("CREATE DATABASE"), "ownership is claimed only after the database was actually created");
+  for (const file of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs"]) {
     const httpRunner = readFileSync(file, "utf8");
     assert.match(httpRunner, /process\.env\.CI !== "true"/, `${file} must refuse non-CI execution`);
     assert.match(httpRunner, /target\.pathname\.slice\(1\)\.startsWith\("sprintb"\)/, `${file} must refuse non-disposable databases`);
     assert.match(httpRunner, /\["127\.0\.0\.1", "localhost", "::1"\]/, `${file} must refuse remote databases`);
   }
+  // H5 creates its OWN database and roles (random per-run names) on an attested cluster, so its guards are stricter than the generic runners'.
+  const h5 = readFileSync("scripts/test-h5-notifications-http.mjs", "utf8");
+  assert.match(h5, /process\.env\.CI !== "true"\) refuse\("requires CI=true"\)/, "H5 refuses non-CI execution");
+  assert.match(h5, /\["127\.0\.0\.1", "localhost", "::1"\]\.includes\(base0\.hostname/, "H5 refuses remote databases");
+  assert.match(h5, /base0\.port === "55432"\) refuse/, "H5 refuses the recovery cluster");
+  assert.match(h5, /await attestDisposableCluster\(/, "H5 proves the cluster is disposable before creating anything");
+  assert.match(h5, /DB = `sprintb_h5_\$\{ledger\.nonce\}`/, "H5 only ever creates its own sprintb_h5_<nonce> database");
+  assert.doesNotMatch(h5, /CHECKOUT_HTTP_PG_URL/, "H5 no longer works on the checkout runners' shared database");
   assert.doesNotMatch(bootstrapSource, /DATABASE_URL_UNPOOLED|NEON_BRANCH_ID|MIGRATION_TARGET_ENV/);
   assert.doesNotMatch(bootstrapSource, /process\.env/, "it has no environment of its own: the caller passes the URL in");
 });

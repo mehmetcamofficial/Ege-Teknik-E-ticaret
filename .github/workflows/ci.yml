@@ -45,7 +45,7 @@ jobs:
   postgres-integration:
     name: postgres-integration
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:18-alpine
@@ -87,7 +87,7 @@ jobs:
           # NOT named *_DATABASE_URL: tests/ci-workflow-policy.test.ts forbids that token here.
           COMMERCE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:commerce-postgres
-      - name: Real Drizzle migration upgrade 0018 to 0023 (ledger 19 to 24)
+      - name: Real Drizzle migration upgrade 0018 to 0025 (ledger 19 to 26)
         env:
           MIGRATION_UPGRADE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: node scripts/test-migration-upgrade-pr37.mjs
@@ -97,6 +97,49 @@ jobs:
           # the schema reset; no hosted connection or application credentials.
           CHECKOUT_HTTP_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:http-checkout
+      - name: Mark this job's PostgreSQL service container as the disposable cluster of this run
+        env:
+          # Throwaway service container of this job only. The script refuses anything that is not a loopback sprintb* database inside GitHub Actions.
+          MARK_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: node scripts/ci-mark-disposable-cluster.mjs
+      - name: Notification worker ACL matrix and real HTTP checkout and dispatch regression (any failure or missing pass line fails the job)
+        env:
+          # The suites attest the cluster (loopback, no foreign database, not the recovery port, no hosted compute, PR37_DISPOSABLE_ATTEST from the
+          # previous step), create their OWN new sprintb* database and roles, use a loopback mock mail provider, and drop everything afterwards.
+          PR37_HTTP_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+          PR37_HTTP_DB: sprintb_pr37_http
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/pr37-worker-http.log"
+          node --experimental-strip-types scripts/test-pr37-worker-http.mjs 2>&1 | tee "$log"
+          grep -qF "[worker-acl] PASS 11/11 checks" "$log"
+          grep -qF "[pr37-http] PASS" "$log"
+          grep -qF '"claimFencing":"12/12 scenarios' "$log"
+          grep -qF '"sendBudget":"17/17 scenarios' "$log"
+          grep -qF '"sendBudgetCheckout":"5 real checkouts' "$log"
+          grep -qF "[pr37-http] cleanup: scratch database and roles dropped" "$log"
+      - name: B9 AI budget on real PostgreSQL (the test must run and pass; a skip or a missing OK line fails the job)
+        env:
+          # Same marked service container as the worker suites; the runner attests it again, creates its OWN sprintb_b9* database, runs
+          # only tests/ai-budget-db-b9.test.ts with a minimal environment and drops only that database.
+          B9_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/b9-postgres.log"
+          node scripts/test-b9-postgres.mjs 2>&1 | tee "$log"
+          grep -qF "[b9-postgres] OK: 1 test executed against real PostgreSQL, 0 skipped." "$log"
+          grep -qF "[b9-postgres] cleanup: scratch database dropped" "$log"
+      - name: H5 scoped-worker notification integration on real PostgreSQL (a failure, a skip, a missing line or an incomplete cleanup fails the job)
+        env:
+          # Same marked service container. The suite attests it again, creates its OWN database and roles with random per-run names, uses a
+          # loopback mock instead of any mail provider, and removes only what it proves it created (oid ledger); see the header of the script.
+          H5_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/h5-http.log"
+          node --experimental-strip-types scripts/test-h5-notifications-http.mjs 2>&1 | tee "$log"
+          grep -qF "[h5-http] PASS: scoped-worker notification integration" "$log"
+          grep -qF "[h5-http] cleanup: owned resources removed" "$log"
 
   build:
     name: build
@@ -143,12 +186,12 @@ jobs:
         run: echo "70f1d12ff909a8377dac4bad436fee1155456c82f433bc9259c64b2b4a03c3cb  drizzle-pg/0012_delivery_class.sql" | sha256sum --check -
       - name: Historical migrations 0000-0012 unchanged, journal consistent (offline, no database)
         run: pnpm verify:migrations
-      - name: Migration chain 0000-0023 is complete (journal == SQL files, contiguous, timestamps increasing)
+      - name: Migration chain 0000-0025 is complete (journal == SQL files, contiguous, timestamps increasing)
         run: |
           node -e '
             const j = require("./drizzle-pg/meta/_journal.json").entries;
-            if (j.length !== 24 || j[0].tag !== "0000_black_tarot" || j[23].tag !== "0023_finance_permissions") { console.error("expected migrations 0000-0023, found " + j.length); process.exit(1); }
-            console.log("migration chain: 24 entries, 0000..0023");
+            if (j.length !== 26 || j[0].tag !== "0000_black_tarot" || j[25].tag !== "0025_notification_send_budget") { console.error("expected migrations 0000-0025, found " + j.length); process.exit(1); }
+            console.log("migration chain: 26 entries, 0000..0025");
           '
       - name: Migration and first-admin bootstrap safety tests
         run: >-
