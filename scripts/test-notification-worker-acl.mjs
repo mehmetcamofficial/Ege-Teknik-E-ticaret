@@ -31,9 +31,9 @@ const MINIMAL = {
   notification_orders: { SELECT: ["city", "created_at", "customer_name", "delivery_method", "district", "email", "id", "installation_preference", "installation_total", "order_number", "payment_status", "shipping_total", "status", "subtotal", "total", "vat_total"] },
   order_items: { SELECT: ["line_total", "order_id", "product_name", "quantity", "unit_price"] },
   notification_outbox: {
-    SELECT: ["attempts", "created_at", "dedupe_key", "id", "kind", "last_attempt_at", "last_error_code", "locked_until", "next_attempt_at", "order_id", "sent_at", "status"],
+    SELECT: ["attempts", "claim_token", "created_at", "dedupe_key", "id", "kind", "last_attempt_at", "last_error_code", "locked_until", "next_attempt_at", "order_id", "sent_at", "status"],
     INSERT: ["dedupe_key", "id", "kind", "order_id"],
-    UPDATE: ["attempts", "last_attempt_at", "last_error_code", "locked_until", "next_attempt_at", "sent_at", "status"],
+    UPDATE: ["attempts", "claim_token", "last_attempt_at", "last_error_code", "locked_until", "next_attempt_at", "sent_at", "status"],
   },
   audit_logs: { INSERT: ["action", "actor_email", "actor_user_id", "entity_id", "entity_type", "id", "payload"] },
 };
@@ -211,6 +211,10 @@ try {
     assert.equal(await attempt("SELECT order_id, product_name, quantity, unit_price, line_total FROM public.order_items WHERE false"), "ok");
     assert.equal(await attempt("SELECT id, kind, order_id, dedupe_key, status, attempts, next_attempt_at, last_attempt_at, locked_until, last_error_code, sent_at, created_at FROM public.notification_outbox WHERE false"), "ok");
     assert.equal(await attempt("UPDATE public.notification_outbox SET status = 'pending', attempts = 0, last_attempt_at = now(), next_attempt_at = now(), locked_until = NULL, last_error_code = NULL, sent_at = NULL WHERE false"), "ok");
+    assert.equal(await attempt("SELECT id, claim_token FROM public.notification_outbox WHERE status = 'sending' AND claim_token = 'x' AND false"), "ok", "the fencing token is readable");
+    assert.equal(await attempt("UPDATE public.notification_outbox SET claim_token = replace(gen_random_uuid()::text, '-', '') WHERE false"), "ok", "and writable (claim)");
+    // The fenced result: one statement, the audit row is inserted from the UPDATE's RETURNING (R-03); it needs no privilege beyond the columns above.
+    assert.equal(await attempt("WITH moved AS (UPDATE public.notification_outbox SET status = 'sent', sent_at = now(), last_error_code = NULL, locked_until = NULL, claim_token = NULL WHERE id = 'x' AND status = 'sending' AND claim_token = 'y' RETURNING id), logged AS (INSERT INTO public.audit_logs (id, actor_user_id, actor_email, action, entity_type, entity_id, payload) SELECT gen_random_uuid()::text, 'system:acl-test', 'system@notifications.invalid', 'acl_probe', 'notification', moved.id, '{}'::jsonb FROM moved) SELECT id FROM moved"), "ok", "the fenced finish statement");
     assert.equal(await attempt("SELECT id FROM public.notification_outbox WHERE status = 'pending' AND next_attempt_at <= now() ORDER BY next_attempt_at LIMIT 1 FOR UPDATE SKIP LOCKED"), "ok");
     assert.equal(await attempt("INSERT INTO public.audit_logs (id, actor_user_id, actor_email, action, entity_type, entity_id, payload) VALUES (gen_random_uuid()::text, 'system:acl-test', 'system@notifications.invalid', 'acl_probe', 'notification', 'x', '{\"recipient\":\"c***@e***.test\"}'::jsonb)"), "ok");
     assert.equal(await attempt("INSERT INTO public.notification_outbox (id, kind, order_id, dedupe_key) VALUES (gen_random_uuid()::text, 'order_admin_new', 'no-such-order', 'order:no-such-order:order_admin_new') ON CONFLICT (dedupe_key) DO NOTHING"), "23503");

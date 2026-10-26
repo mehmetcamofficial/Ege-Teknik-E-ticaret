@@ -87,7 +87,7 @@ jobs:
           # NOT named *_DATABASE_URL: tests/ci-workflow-policy.test.ts forbids that token here.
           COMMERCE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: pnpm test:commerce-postgres
-      - name: Real Drizzle migration upgrade 0018 to 0023 (ledger 19 to 24)
+      - name: Real Drizzle migration upgrade 0018 to 0024 (ledger 19 to 25)
         env:
           MIGRATION_UPGRADE_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
         run: node scripts/test-migration-upgrade-pr37.mjs
@@ -114,6 +114,7 @@ jobs:
           node --experimental-strip-types scripts/test-pr37-worker-http.mjs 2>&1 | tee "$log"
           grep -qF "[worker-acl] PASS 11/11 checks" "$log"
           grep -qF "[pr37-http] PASS" "$log"
+          grep -qF '"claimFencing":"12/12 scenarios' "$log"
           grep -qF "[pr37-http] cleanup: scratch database and roles dropped" "$log"
       - name: B9 AI budget on real PostgreSQL (the test must run and pass; a skip or a missing OK line fails the job)
         env:
@@ -183,12 +184,12 @@ jobs:
         run: echo "70f1d12ff909a8377dac4bad436fee1155456c82f433bc9259c64b2b4a03c3cb  drizzle-pg/0012_delivery_class.sql" | sha256sum --check -
       - name: Historical migrations 0000-0012 unchanged, journal consistent (offline, no database)
         run: pnpm verify:migrations
-      - name: Migration chain 0000-0023 is complete (journal == SQL files, contiguous, timestamps increasing)
+      - name: Migration chain 0000-0024 is complete (journal == SQL files, contiguous, timestamps increasing)
         run: |
           node -e '
             const j = require("./drizzle-pg/meta/_journal.json").entries;
-            if (j.length !== 24 || j[0].tag !== "0000_black_tarot" || j[23].tag !== "0023_finance_permissions") { console.error("expected migrations 0000-0023, found " + j.length); process.exit(1); }
-            console.log("migration chain: 24 entries, 0000..0023");
+            if (j.length !== 25 || j[0].tag !== "0000_black_tarot" || j[24].tag !== "0024_notification_claim_token") { console.error("expected migrations 0000-0024, found " + j.length); process.exit(1); }
+            console.log("migration chain: 25 entries, 0000..0024");
           '
       - name: Migration and first-admin bootstrap safety tests
         run: >-

@@ -169,6 +169,13 @@
       "when": 1792627200000,
       "tag": "0023_finance_permissions",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792713600000,
+      "tag": "0024_notification_claim_token",
+      "breakpoints": true
     }
   ]
 }

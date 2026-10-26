@@ -47,31 +47,6 @@ export async function enqueueOrderNotifications(tx: Pick<Db, "transaction">, ord
   }
 }
 
-async function audit(db: Tx, action: string, entityId: string, payload: Record<string, unknown>) {
-  // Explicit columns preserve the notification worker's column-level INSERT ACL.
-  // PostgreSQL supplies defaults for request_id, ip_hash and created_at.
-  await db.execute(sql`
-    INSERT INTO public.audit_logs (
-      id,
-      actor_user_id,
-      actor_email,
-      action,
-      entity_type,
-      entity_id,
-      payload
-    )
-    VALUES (
-      ${crypto.randomUUID()},
-      ${SYSTEM_ACTOR.userId},
-      ${SYSTEM_ACTOR.email},
-      ${action},
-      ${"notification"},
-      ${entityId},
-      ${JSON.stringify(payload)}::jsonb
-    )
-  `);
-}
-
 export type WorkerEnv = Record<string, string | undefined>;
 export const siteLinks = (env: WorkerEnv): SiteLinks => ({ siteOrigin: env.SITE_ORIGIN?.trim() || "https://egeteknik.tr", adminOrigin: env.ADMIN_ORIGIN?.trim() || env.SITE_ORIGIN?.trim() || undefined });
 
@@ -117,28 +92,51 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
   // Not configured: rows stay pending and untouched (no attempt is burned); the admin panel shows the reason.
   if (!provider || !status.configured) return empty;
   // Rows whose lock expired after the final allowed attempt are dead, never re-sent.
-  await db.execute(sql`UPDATE notification_outbox SET status = 'dead', last_error_code = 'stalled', locked_until = NULL WHERE status = 'sending' AND locked_until < ${now} AND attempts >= ${MAX_ATTEMPTS}`);
+  await db.execute(sql`UPDATE notification_outbox SET status = 'dead', last_error_code = 'stalled', locked_until = NULL, claim_token = NULL WHERE status = 'sending' AND locked_until < ${now} AND attempts >= ${MAX_ATTEMPTS}`);
   const claimed = (await db.execute(sql`
-    UPDATE notification_outbox SET status = 'sending', locked_until = ${new Date(now.getTime() + LOCK_SECONDS * 1000)}, attempts = attempts + 1, last_attempt_at = ${now}
+    UPDATE notification_outbox SET status = 'sending', locked_until = ${new Date(now.getTime() + LOCK_SECONDS * 1000)}, attempts = attempts + 1, last_attempt_at = ${now},
+      claim_token = replace(gen_random_uuid()::text, '-', '')
     WHERE id IN (SELECT id FROM notification_outbox WHERE (status = 'pending' AND next_attempt_at <= ${now}) OR (status = 'sending' AND locked_until < ${now})
                  ORDER BY next_attempt_at, created_at LIMIT ${limit} FOR UPDATE SKIP LOCKED)
-    RETURNING id, kind, order_id AS "orderId", dedupe_key AS "dedupeKey", attempts`)).rows as { id: string; kind: OutboxKind; orderId: string; dedupeKey: string; attempts: number }[];
+    RETURNING id, kind, order_id AS "orderId", dedupe_key AS "dedupeKey", attempts, claim_token AS "claimToken"`)).rows as { id: string; kind: OutboxKind; orderId: string; dedupeKey: string; attempts: number; claimToken: string }[];
   const result = { ...empty, processed: claimed.length };
   for (const row of claimed) {
-    const finish = async (outcome: "sent" | "retry" | "dead", code: string | null, masked: string) => {
+    // Fencing (R-03). Every claim carries its own random token; a result is applied only WHERE the row still holds THAT token, so a worker whose
+    // lease expired and whose row was re-claimed, requeued or finished by someone else changes nothing and writes no audit line. The state change
+    // and its audit row are ONE statement (the audit INSERT reads the UPDATE's RETURNING; it has no RETURNING of its own because the worker may append
+    // audit rows but not read them), so they commit or fail together. Returns whether this
+    // claim was still the owner. `attempts` is deliberately not the fence: a requeue resets it to 0, so an old claim could match a new one.
+    const finish = async (outcome: "sent" | "retry" | "dead", code: string | null, masked: string): Promise<boolean> => {
+      let change, action: string, payload: Record<string, unknown>;
       if (outcome === "sent") {
-        await db.update(notificationOutbox).set({ status: "sent", sentAt: now, lastErrorCode: null, lockedUntil: null }).where(and(eq(notificationOutbox.id, row.id), eq(notificationOutbox.status, "sending")));
-        await audit(db, "notification_sent", row.id, { kind: row.kind, attempts: row.attempts, recipient: masked }); result.sent++;
+        change = sql`status = 'sent', sent_at = ${now}, last_error_code = NULL`; action = "notification_sent"; payload = { kind: row.kind, attempts: row.attempts, recipient: masked };
       } else if (outcome === "retry") {
         const delay = retryDelaySeconds(row.attempts) ?? RETRY_DELAYS_SECONDS.at(-1)!;
-        await db.update(notificationOutbox).set({ status: "pending", nextAttemptAt: new Date(now.getTime() + delay * 1000), lastErrorCode: code, lockedUntil: null }).where(and(eq(notificationOutbox.id, row.id), eq(notificationOutbox.status, "sending")));
-        await audit(db, "notification_retry_scheduled", row.id, { kind: row.kind, attempts: row.attempts, code, delaySeconds: delay, recipient: masked }); result.retried++;
+        change = sql`status = 'pending', next_attempt_at = ${new Date(now.getTime() + delay * 1000)}, last_error_code = ${code}`;
+        action = "notification_retry_scheduled"; payload = { kind: row.kind, attempts: row.attempts, code, delaySeconds: delay, recipient: masked };
       } else {
-        await db.update(notificationOutbox).set({ status: "dead", lastErrorCode: code, lockedUntil: null }).where(and(eq(notificationOutbox.id, row.id), eq(notificationOutbox.status, "sending")));
-        await audit(db, "notification_dead", row.id, { kind: row.kind, attempts: row.attempts, code, recipient: masked }); result.dead++;
+        change = sql`status = 'dead', last_error_code = ${code}`; action = "notification_dead"; payload = { kind: row.kind, attempts: row.attempts, code, recipient: masked };
       }
+      // Explicit audit columns preserve the worker's column-level INSERT ACL (request_id, ip_hash and created_at keep their defaults).
+      const applied = (await db.execute(sql`
+        WITH moved AS (
+          UPDATE notification_outbox SET ${change}, locked_until = NULL, claim_token = NULL
+          WHERE id = ${row.id} AND status = 'sending' AND claim_token = ${row.claimToken} RETURNING id),
+        logged AS (
+          INSERT INTO public.audit_logs (id, actor_user_id, actor_email, action, entity_type, entity_id, payload)
+          SELECT ${crypto.randomUUID()}, ${SYSTEM_ACTOR.userId}, ${SYSTEM_ACTOR.email}, ${action}, 'notification', moved.id, ${JSON.stringify(payload)}::jsonb FROM moved)
+        SELECT id FROM moved`)).rows.length === 1;
+      if (!applied) { console.warn("notification_claim_lost", { kind: row.kind, outcome }); return false; }
+      if (outcome === "sent") result.sent++; else if (outcome === "retry") result.retried++; else result.dead++;
+      return true;
     };
+    // Before anything is sent: is this claim still ours, and extend the lease from NOW so the whole send (provider timeout included) fits inside it
+    // however long the earlier rows of the batch took. A lost claim means another worker owns the row: this one must not send it.
+    const holdClaim = async () => (await db.execute(sql`
+      UPDATE notification_outbox SET locked_until = ${new Date((input.now ?? new Date()).getTime() + LOCK_SECONDS * 1000)}
+      WHERE id = ${row.id} AND status = 'sending' AND claim_token = ${row.claimToken} RETURNING id`)).rows.length === 1;
     try {
+      if (!/^[0-9a-f]{32}$/.test(row.claimToken ?? "")) throw new Error("claim_token_invalid");   // fail closed: never send a row whose claim cannot be proven
       const order = await loadOrder(db, row.orderId);
       if (!order) { await finish("dead", "order_missing", "***"); continue; }
       let to: string[], rendered: Rendered;
@@ -151,6 +149,7 @@ export async function dispatchOutbox(input: { db: Db; provider: NotificationProv
       }
       const masked = to.length ? to.map(maskEmail).join(",") : "***";
       if (!to.length) { await finish("dead", row.kind === "order_customer_received" ? "invalid_recipient" : "no_recipient", masked); continue; }
+      if (!(await holdClaim())) { console.warn("notification_claim_lost", { kind: row.kind, outcome: "before_send" }); continue; }
       const sent = await provider.send({ to, ...rendered, idempotencyKey: row.dedupeKey });
       if (sent.ok) await finish("sent", null, masked);
       else if (sent.retryable && row.attempts < MAX_ATTEMPTS) await finish("retry", sent.code, masked);

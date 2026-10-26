@@ -26,7 +26,8 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import * as schema from "../db/schema.ts";
-import { requeueDeadNotification, sweepMissingNotifications } from "../lib/notifications/outbox.ts";
+import { LOCK_SECONDS, MAX_ATTEMPTS, dispatchOutbox, requeueDeadNotification, sweepMissingNotifications } from "../lib/notifications/outbox.ts";
+import { runClaimFencingScenarios } from "./notification-claim-scenarios.mjs";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
 import { attestDisposableCluster } from "./disposable-cluster-attest.mjs";
@@ -411,6 +412,17 @@ try {
     mail.calls.length = 0; await dispatch(); assert.equal(mail.calls.length, 0, "nothing is ever sent twice");
     results.outageRecovery = "default 30 min window leaves a 2 h-old unnotified order forever; window+floor recovers it once via the worker role; unsafe config recovers nothing; 4 mails, 0 duplicates";
   } finally { await workerPool.end(); }
+
+  // ---- 10c. R-03 claim ownership: a worker whose lease expired can neither change nor audit the row another worker re-claimed ------------------------
+  // Dispatch runs through the dedicated WORKER role (the fenced UPDATE + audit INSERT statement must work under the narrow ACL); seeding and inspection use the owner.
+  const fencePool = new pg.Pool({ connectionString: workerUrl, max: 3 });   // the worker LOGIN has CONNECTION LIMIT 10 and the dev server holds some
+  try {
+    const outcome = await runClaimFencingScenarios({ dispatchOutbox, requeueDeadNotification, db: drizzle(fencePool, { schema }), ownerDb: drizzle(owner, { schema }), owner,
+      env: { RESEND_API_KEY: "test-key-not-real", MAIL_FROM: "orders@example.test", ORDER_ALERT_EMAILS: "ops@example.test" }, lockSeconds: LOCK_SECONDS, maxAttempts: MAX_ATTEMPTS, concurrency: 3 });
+    for (const o of outcome) console.log(`[pr37-http] claim-fencing ${o.ok ? "PASS" : "FAIL"}: ${o.name}${o.ok ? "" : ` - ${o.detail}`}`);
+    assert.deepEqual(outcome.filter((o) => !o.ok).map((o) => `${o.name}: ${o.detail}`), [], "every claim-fencing scenario must pass");
+    results.claimFencing = `${outcome.length}/${outcome.length} scenarios under the worker role (V1-V3, concurrent claim, crash, timeout, requeue ABA, batch vs lease, stalled sweep, audit atomicity, idempotency key, token invariant)`;
+  } finally { await fencePool.end(); }
 
   if (STRESS_ROUNDS > 0) {
     await owner.query("UPDATE inventory SET on_hand = 100000 WHERE product_id = 'http-product'");

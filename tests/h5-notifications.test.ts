@@ -153,6 +153,31 @@ test("PR37 the worker route can reach no database connection other than the dedi
   assert.doesNotMatch(route, /\bgetDb\b|getAdminDb|getStorefrontDb|getCheckoutDb|getPool|getScopedPool|process\.env\.(?:DATABASE_URL|ADMIN_DATABASE_URL|STOREFRONT_DATABASE_URL)/);
 });
 
+test("R-03 every worker result is fenced by the claim token and its audit line is part of the same statement", () => {
+  const outbox = codeOnly(outboxSource());
+  const worker = outbox.slice(0, outbox.indexOf("export async function operationsSummary"));
+  assert.match(worker, /claim_token = replace\(gen_random_uuid\(\)::text, '-', ''\)/, "every claim writes a fresh random token");
+  assert.match(worker, /RETURNING id, kind, order_id AS "orderId", dedupe_key AS "dedupeKey", attempts, claim_token AS "claimToken"/, "and gets it back");
+  assert.match(worker, /WHERE id = \$\{row\.id\} AND status = 'sending' AND claim_token = \$\{row\.claimToken\} RETURNING id\)/, "a result is applied only to the claim that owns the row");
+  assert.match(worker, /WITH moved AS \([\s\S]*?UPDATE notification_outbox SET \$\{change\}, locked_until = NULL, claim_token = NULL[\s\S]*?logged AS \(\s*INSERT INTO public\.audit_logs[\s\S]*?FROM moved\)\s*SELECT id FROM moved/, "state change and audit insert are one statement");
+  assert.doesNotMatch(worker, /db\.update\(notificationOutbox\)|\baudit\(/, "no unfenced update and no separate audit insert remain in the worker path");
+  assert.match(worker, /claim_token_invalid/, "a claim whose token cannot be proven is never sent (fail closed)");
+  assert.ok(worker.indexOf("holdClaim()") > 0 && worker.indexOf("holdClaim()") < worker.indexOf("provider.send("), "ownership is checked and the lease renewed immediately before the provider call");
+  assert.match(worker, /SET status = 'dead', last_error_code = 'stalled', locked_until = NULL, claim_token = NULL/, "the stalled sweep drops the token (the CHECK ties it to 'sending')");
+  assert.doesNotMatch(worker, /attempts = \$\{row\.attempts\}/, "attempts is not the fence: a requeue resets it");
+});
+
+test("R-03 migration 0024 is additive and the worker gets exactly one new column privilege pair", () => {
+  const sql = readFileSync("drizzle-pg/0024_notification_claim_token.sql", "utf8");
+  assert.match(sql, /ADD COLUMN "claim_token" text;/);
+  assert.match(sql, /"claim_token" IS NULL OR \("notification_outbox"\."status" = 'sending' AND "notification_outbox"\."claim_token" ~ '\^\[0-9a-f\]\{32\}\$'\)/);
+  assert.doesNotMatch(sql.replace(/^--.*$/gm, ""), /\b(DROP|DELETE|TRUNCATE|UPDATE|INSERT|GRANT|REVOKE)\b/i, "no data change, no drop, no grant in the migration");
+  const operator = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8");
+  const grant = (privilege: string) => operator.match(new RegExp(`GRANT ${privilege} \\(([^)]*)\\)\\s+ON public\\.notification_outbox`))?.[1].split(",").map((c) => c.trim()) ?? [];
+  assert.ok(grant("SELECT").includes("claim_token") && grant("UPDATE").includes("claim_token"), "the worker reads and writes the token");
+  assert.ok(!grant("INSERT").includes("claim_token"), "but cannot choose a token at insert time");
+});
+
 test("PR37 the worker has no admin_users fallback and reads orders ONLY through the notification_orders view (R-01)", () => {
   const outbox = codeOnly(outboxSource());
   assert.doesNotMatch(outbox, /adminUsers|admin_users/, "the worker role has no access to admin_users, so the code must not touch it");
@@ -170,10 +195,10 @@ test("PR37 the worker has no admin_users fallback and reads orders ONLY through 
 
 test("PR37 audit INSERT names exactly the seven granted columns and binds every value as a parameter", () => {
   const outbox = outboxSource();
-  const block = /INSERT INTO public\.audit_logs \(([\s\S]*?)\)\s*VALUES \(([\s\S]*?)\)\s*`/.exec(outbox);
-  assert.ok(block, "explicit audit INSERT present");
+  const block = /INSERT INTO public\.audit_logs \(([\s\S]*?)\)\s*SELECT ([\s\S]*?) FROM moved\)/.exec(outbox);
+  assert.ok(block, "explicit audit INSERT present (it reads the fenced UPDATE's RETURNING)");
   assert.deepEqual(block[1].split(",").map((c) => c.trim()).filter(Boolean), ["id", "actor_user_id", "actor_email", "action", "entity_type", "entity_id", "payload"]);
-  assert.equal((block[2].match(/\$\{/g) ?? []).length, 7, "seven bound parameters, no string concatenation");
+  assert.equal((block[2].match(/\$\{/g) ?? []).length, 5, "five bound parameters (id, actor user, actor e-mail, action, payload); the entity type is a fixed literal and the entity id comes from the UPDATE; no string concatenation");
   assert.doesNotMatch(block[0], /request_id|ip_hash|created_at/);
   assert.match(block[2], /JSON\.stringify\(payload\)\}::jsonb/);
 });
