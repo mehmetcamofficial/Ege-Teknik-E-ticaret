@@ -78,6 +78,17 @@ test('fake Drive: publicly shared Shared Drive or unavailable permissions fail c
     assert.equal(c.calls.length, 0);
   }
 });
+test('fake Drive: missing or invalid Shared Drive identity refuses before permissions or upload', async (t) => {
+  const s = await makeSet(t);
+  for (const driveId of [undefined, '', 'bad!']) {
+    const c = fakeDrive(), getFolder = c.getFolder;
+    c.getFolder = async (id) => ({ ...await getFolder(id), driveId });
+    c.listPermissions = async () => { assert.fail('permissions must not be queried without a valid Shared Drive identity'); };
+    await assert.rejects(up(c, s), { code: 'drive_identity_missing' });
+    assert.equal(c.calls.length, 0);
+    assert.equal(c.store.size, 0);
+  }
+});
 test('fake Drive: checksum file mismatch and non-authenticated archive are refused', async (t) => {
   const s = await makeSet(t); await writeFile(s.files.checksum, `${'0'.repeat(64)}  ${s.name}\n`);
   await assert.rejects(up(fakeDrive(), s), { code: 'checksum_file_mismatch' });

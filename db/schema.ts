@@ -185,7 +185,7 @@ export const contentRedirects=pgTable("content_redirects",{id:text("id").primary
   check("content_redirects_status_ck",sql`${t.statusCode} IN (301,308)`),
 ]);
 /** H5-A: transactional notification outbox (migration 0022). Rows hold no recipient, subject or body. */
-export const notificationOutbox=pgTable("notification_outbox",{id:text("id").primaryKey(),kind:text("kind").notNull(),orderId:text("order_id").notNull().references(()=>orders.id),dedupeKey:text("dedupe_key").notNull(),status:text("status").notNull().default("pending"),attempts:integer("attempts").notNull().default(0),nextAttemptAt:timestamp("next_attempt_at",{withTimezone:true}).notNull().defaultNow(),lockedUntil:timestamp("locked_until",{withTimezone:true}),lastErrorCode:text("last_error_code"),lastAttemptAt:timestamp("last_attempt_at",{withTimezone:true}),sentAt:timestamp("sent_at",{withTimezone:true}),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
+export const notificationOutbox=pgTable("notification_outbox",{id:text("id").primaryKey(),kind:text("kind").notNull(),orderId:text("order_id").notNull().references(()=>orders.id),dedupeKey:text("dedupe_key").notNull(),status:text("status").notNull().default("pending"),attempts:integer("attempts").notNull().default(0),nextAttemptAt:timestamp("next_attempt_at",{withTimezone:true}).notNull().defaultNow(),lockedUntil:timestamp("locked_until",{withTimezone:true}),claimToken:text("claim_token"),lastErrorCode:text("last_error_code"),lastAttemptAt:timestamp("last_attempt_at",{withTimezone:true}),sentAt:timestamp("sent_at",{withTimezone:true}),createdAt:timestamp("created_at",{withTimezone:true}).notNull().defaultNow()},t=>[
   uniqueIndex("notification_outbox_dedupe_uq").on(t.dedupeKey),
   index("notification_outbox_due_idx").on(t.status,t.nextAttemptAt),
   index("notification_outbox_order_idx").on(t.orderId),
@@ -195,4 +195,5 @@ export const notificationOutbox=pgTable("notification_outbox",{id:text("id").pri
   check("notification_outbox_sent_ck",sql`(${t.status} = 'sent') = (${t.sentAt} IS NOT NULL)`),
   check("notification_outbox_dedupe_ck",sql`${t.dedupeKey} = 'order:' || ${t.orderId} || ':' || ${t.kind}`),
   check("notification_outbox_error_ck",sql`${t.lastErrorCode} IS NULL OR ${t.lastErrorCode} ~ '^[a-z0-9_]{1,40}$'`),
+  check("notification_outbox_claim_token_ck",sql`${t.claimToken} IS NULL OR (${t.status} = 'sending' AND ${t.claimToken} ~ '^[0-9a-f]{32}$')`),
 ]);

@@ -76,3 +76,133 @@ test("scoped endpoints must remain on the same database and branch", () => {
   const directAdmin = "postgresql://admin_role:secret@ep-example.c-12.us-east-1.aws.neon.tech/neondb";
   assert.equal(resolveScopedDatabaseUrl("storefront", { DATABASE_URL: direct, STOREFRONT_DATABASE_URL: pooledStorefront, ADMIN_DATABASE_URL: directAdmin }), pooledStorefront);
 });
+
+
+test("scoped URLs reject connection parameter overrides", () => {
+  const overrides = [
+    "user=owner",
+    "host=production.example.test",
+    "database=otherdb",
+    "sslmode=disable",
+    "options=-c%20search_path%3Dpublic",
+  ];
+
+  for (const query of overrides) {
+    for (const key of [
+      "STOREFRONT_DATABASE_URL",
+      "ADMIN_DATABASE_URL",
+      "DATABASE_URL",
+    ] as const) {
+      const env = {
+        ...configured,
+        [key]: `${configured[key]}?${query}`,
+      };
+
+      assert.throws(
+        () => resolveScopedDatabaseUrl("storefront", env),
+        /contains unsupported connection parameters/,
+        `${key}: ${query}`,
+      );
+    }
+  }
+});
+
+
+test("encoded PostgreSQL roles cannot bypass scope separation", () => {
+  const cases = [
+    {
+      ...configured,
+      STOREFRONT_DATABASE_URL:
+        "postgresql://%6Fwner:dummy@db.example.test/app",
+    },
+    {
+      ...configured,
+      STOREFRONT_DATABASE_URL:
+        "postgresql://admin%5Frole:dummy@db.example.test/app",
+    },
+    {
+      ...configured,
+      ADMIN_DATABASE_URL:
+        "postgresql://storefront%5Frole:dummy@db.example.test/app",
+    },
+  ];
+
+  for (const env of cases) {
+    assert.throws(
+      () => resolveScopedDatabaseUrl("storefront", env),
+      /different PostgreSQL roles|cannot reuse the legacy/,
+    );
+  }
+});
+
+test("invalid PostgreSQL role encoding fails closed", () => {
+  assert.throws(
+    () => resolveScopedDatabaseUrl("storefront", {
+      ...configured,
+      STOREFRONT_DATABASE_URL:
+        "postgresql://bad%ZZ:dummy@db.example.test/app",
+    }),
+    /Invalid PostgreSQL role encoding/,
+  );
+});
+
+
+test("scoped URLs accept approved Neon TLS parameters", () => {
+  const approved = [
+    "sslmode=require",
+    "sslmode=verify-ca",
+    "sslmode=verify-full",
+    "channel_binding=require",
+    "channel_binding=prefer",
+    "sslmode=require&channel_binding=require",
+  ];
+
+  for (const query of approved) {
+    for (const key of [
+      "DATABASE_URL",
+      "STOREFRONT_DATABASE_URL",
+      "ADMIN_DATABASE_URL",
+    ] as const) {
+      const env = {
+        ...configured,
+        [key]: `${configured[key]}?${query}`,
+      };
+
+      assert.equal(
+        resolveScopedDatabaseUrl("storefront", env),
+        env.STOREFRONT_DATABASE_URL,
+      );
+    }
+  }
+});
+
+test("scoped URLs reject duplicate and unsupported parameters", () => {
+  const rejected = [
+    "sslmode=disable",
+    "sslmode=require&sslmode=disable",
+    "channel_binding=require&channel_binding=prefer",
+    "sslmode=require&user=owner",
+    "options=-c%20search_path%3Dpublic",
+    "host=production.example.test",
+    "database=otherdb",
+    "user=owner",
+  ];
+
+  for (const query of rejected) {
+    for (const key of [
+      "DATABASE_URL",
+      "STOREFRONT_DATABASE_URL",
+      "ADMIN_DATABASE_URL",
+    ] as const) {
+      const env = {
+        ...configured,
+        [key]: `${configured[key]}?${query}`,
+      };
+
+      assert.throws(
+        () => resolveScopedDatabaseUrl("storefront", env),
+        /contains unsupported connection parameters/,
+      );
+    }
+  }
+});
