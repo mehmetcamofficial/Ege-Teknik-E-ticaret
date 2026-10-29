@@ -12,7 +12,32 @@ function parsePostgresUrl(value: string, key: string): URL {
   if (!["postgres:", "postgresql:"].includes(url.protocol) || !url.hostname || !url.username || !url.pathname || url.pathname === "/") {
     throw new Error(`${key} must be a valid PostgreSQL URL.`);
   }
+  // Permit only explicitly approved TLS-related connection parameters.
+  // Reject identity, endpoint, session overrides and duplicate parameters.
+  const allowedParameters: Record<string, readonly string[]> = {
+    sslmode: ["require", "verify-ca", "verify-full"],
+    channel_binding: ["require", "prefer"],
+  };
+  const seen = new Set<string>();
+  for (const [name, value] of url.searchParams) {
+    if (seen.has(name) || !allowedParameters[name]?.includes(value)) {
+      throw new Error(`${key} contains unsupported connection parameters.`);
+    }
+    seen.add(name);
+  }
+  if (url.search && seen.size === 0) {
+    throw new Error(`${key} contains unsupported connection parameters.`);
+  }
   return url;
+}
+
+/** Compare PostgreSQL roles after URL percent-decoding. */
+function databaseRole(url: URL): string {
+  try {
+    return decodeURIComponent(url.username);
+  } catch {
+    throw new Error("Invalid PostgreSQL role encoding.");
+  }
 }
 
 /** Direct and Neon -pooler endpoints for the same branch are equivalent. */
@@ -31,13 +56,13 @@ export function resolveScopedDatabaseUrl(scope: DatabaseScope, env: DatabaseEnv)
 
   const storefrontUrl = parsePostgresUrl(storefront, "STOREFRONT_DATABASE_URL");
   const adminUrl = parsePostgresUrl(admin, "ADMIN_DATABASE_URL");
-  if (storefrontUrl.username === adminUrl.username) {
+  if (databaseRole(storefrontUrl) === databaseRole(adminUrl)) {
     throw new Error("Storefront and admin database connections must use different PostgreSQL roles.");
   }
   const legacy = env.DATABASE_URL;
   if (!legacy) throw new Error("DATABASE_URL is required to verify scoped database branch isolation.");
   const legacyUrl = parsePostgresUrl(legacy, "DATABASE_URL");
-  if (storefrontUrl.username === legacyUrl.username || adminUrl.username === legacyUrl.username) {
+  if (databaseRole(storefrontUrl) === databaseRole(legacyUrl) || databaseRole(adminUrl) === databaseRole(legacyUrl)) {
     throw new Error("Scoped database connections cannot reuse the legacy database role.");
   }
   const expected = databaseEndpoint(legacyUrl);

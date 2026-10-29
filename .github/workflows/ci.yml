@@ -129,6 +129,18 @@ jobs:
           node scripts/test-b9-postgres.mjs 2>&1 | tee "$log"
           grep -qF "[b9-postgres] OK: 1 test executed against real PostgreSQL, 0 skipped." "$log"
           grep -qF "[b9-postgres] cleanup: scratch database dropped" "$log"
+      - name: Database runtime attestation on real PostgreSQL sessions (a skip, a missing OK line or an incomplete cleanup fails the job)
+        env:
+          # Same marked service container. The runner attests it again, creates its OWN sprintb_dbatt_* databases and roles (random names and password),
+          # runs only tests/db-runtime-attestation-postgres.test.ts with a minimal environment and drops only what it proves it created (oid ledger).
+          # The Neon endpoint check is client-side: the Neon-form URLs in that test do NOT verify a real Neon endpoint.
+          DB_ATTEST_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/db-attestation-postgres.log"
+          node scripts/test-db-attestation-postgres.mjs 2>&1 | tee "$log"
+          grep -qF "[db-attestation] OK: 12 tests executed against real PostgreSQL sessions, 0 skipped." "$log"
+          grep -qF "[db-attestation] cleanup: scratch databases and roles dropped" "$log"
       - name: H5 scoped-worker notification integration on real PostgreSQL (a failure, a skip, a missing line or an incomplete cleanup fails the job)
         env:
           # Same marked service container. The suite attests it again, creates its OWN database and roles with random per-run names, uses a

@@ -16,6 +16,7 @@
     "test:backup": "node --test tests/h5c-backup.test.mjs tests/backup-automation.test.mjs tests/gdrive03-isolated-chain.test.mjs tests/gdrive03-folder-safety.test.mjs tests/gdrive03-scope-guard.test.mjs",
     "test:legal-postgres": "node scripts/test-legal-postgres.mjs",
     "test:b9-postgres": "node scripts/test-b9-postgres.mjs",
+    "test:db-attestation-postgres": "node scripts/test-db-attestation-postgres.mjs",
     "test:acl-postgres": "node tests/support/test-independent-acl.mjs",
     "test:postgres": "node scripts/test-postgres-integration.mjs",
     "test:http-checkout": "node --experimental-strip-types scripts/test-checkout-http-e2e.mjs",

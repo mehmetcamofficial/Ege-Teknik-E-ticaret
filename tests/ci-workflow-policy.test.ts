@@ -98,6 +98,27 @@ test("PR #37 worker suites run in the PostgreSQL job against this run's marked s
   assert.match(job, /timeout-minutes: 30\n/);
 });
 
+test("the database attestation gate runs in the PostgreSQL job on the marked container, targets only the service container and cannot pass by skipping", () => {
+  const job = workflow.slice(workflow.indexOf("  postgres-integration:"), workflow.indexOf("  build:"));
+  const marker = job.indexOf("node scripts/ci-mark-disposable-cluster.mjs"), gate = job.indexOf("node scripts/test-db-attestation-postgres.mjs");
+  assert.ok(marker >= 0 && gate > marker, "the cluster is marked (the marker step exists) before the gate runs: a missing marker step must not satisfy the ordering by comparing with -1");
+  const step = job.slice(job.indexOf("- name: Database runtime attestation on real PostgreSQL sessions"), job.indexOf("- name: H5 scoped-worker"));
+  assert.match(step, /set -euo pipefail\n/, "a failing runner behind tee still fails the step");
+  assert.match(job, /DB_ATTEST_PG_URL: postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/sprintb_ci\n/, "loopback service container only: no Neon, Preview or Production URL");
+  assert.doesNotMatch(workflow, /DB_ATTEST_TEST_CONFIG/, "the test's own configuration is built by the runner, never by the workflow");
+  for (const line of ['"[db-attestation] OK: 12 tests executed against real PostgreSQL sessions, 0 skipped."', '"[db-attestation] cleanup: scratch databases and roles dropped"'])
+    assert.ok(job.includes(`grep -qF ${line} "$log"`), `a missing line fails the job: ${line}`);
+  assert.match(pkg.scripts["test:db-attestation-postgres"], /test-db-attestation-postgres\.mjs/);
+  const runner = readFileSync("scripts/test-db-attestation-postgres.mjs", "utf8");
+  assert.match(runner, /EXPECTED_TESTS = 12;/); assert.match(runner, /refuse\("loopback PostgreSQL URL required"\)/);
+  const testFile = readFileSync("tests/db-runtime-attestation-postgres.test.ts", "utf8");
+  assert.equal((testFile.match(/^test\("PG: /gm) ?? []).length, 12, "the number of tests in the file equals EXPECTED_TESTS: removing a test cannot go unnoticed");
+  assert.match(runner, /await attestDisposableCluster\(\{ url: urlFor\("postgres"\)/, "the cluster is proven disposable by the shared attestation, not by something local");
+  assert.match(runner, /counters\.skipped \?\? 1\) !== 0\) throw/, "a skipped test fails the run"); assert.match(runner, /counters\.tests !== EXPECTED_TESTS \|\| counters\.pass !== EXPECTED_TESTS\) throw/, "fewer or more tests than expected fails the run");
+  assert.ok(runner.includes("OK: ${EXPECTED_TESTS} tests executed against real PostgreSQL sessions, 0 skipped.") && runner.includes("cleanup: scratch databases and roles dropped"), "the runner prints exactly the lines the workflow greps for");
+  assert.match(runner, /port === "55432"/); assert.doesNotMatch(runner, /console\.(log|error)\([^)]*\b(password|DB_ATTEST_PG_URL)\b/, "no credential is printed");
+});
+
 test("B9 runs in the PostgreSQL job on the marked container and cannot pass by skipping", () => {
   const job = workflow.slice(workflow.indexOf("  postgres-integration:"), workflow.indexOf("  build:"));
   assert.ok(job.indexOf("node scripts/test-b9-postgres.mjs") > job.indexOf("node scripts/ci-mark-disposable-cluster.mjs"), "the cluster is marked before B9 runs");
