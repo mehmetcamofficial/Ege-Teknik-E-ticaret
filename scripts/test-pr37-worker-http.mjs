@@ -20,6 +20,7 @@ import { randomBytes } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { startNextDev } from "./http-test-server.mjs";
 import { workerOperatorSql } from "./notification-worker-test-role.mjs";
+import { applyStorefrontGrants } from "./checkout-storefront-grants.mjs";
 import { readFileSync } from "node:fs";
 import http from "node:http";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -164,15 +165,8 @@ try {
   await owner.query(`CREATE ROLE ${ROLE.probeAdmin} LOGIN PASSWORD '${probePassword}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);
   await owner.query(`GRANT SELECT (id) ON public.admin_users TO ${ROLE.probeAdmin}`);
   await owner.query(`GRANT USAGE ON SCHEMA public TO ${ROLE.probeBypass}, ${ROLE.probeAdmin}`);   // the identity query must reach its verdict, not stop at "no schema access"
-  await owner.query(`GRANT USAGE ON SCHEMA public TO ${ROLE.storefront}, ${ROLE.admin}`);
-  await owner.query(`GRANT SELECT ON products, inventory, legal_documents, legal_document_versions, rate_limit_buckets TO ${ROLE.storefront}`);
-  await owner.query(`GRANT INSERT ON customers, addresses, orders, order_items, order_legal_acceptances, rate_limit_buckets TO ${ROLE.storefront}`);
-  await owner.query(`GRANT UPDATE (on_hand, reserved, version, updated_at) ON inventory TO ${ROLE.storefront}`);
-  await owner.query(`GRANT UPDATE (count, window_started_at, expires_at) ON rate_limit_buckets TO ${ROLE.storefront}`);
-  await owner.query(`GRANT DELETE ON rate_limit_buckets TO ${ROLE.storefront}`);
-  await owner.query(`GRANT UPDATE (created_at) ON legal_documents TO ${ROLE.storefront}`);
-  await owner.query(`GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO ${ROLE.storefront}`);
-  await owner.query(`GRANT EXECUTE ON FUNCTION public.checkout_replay_by_key(text,text) TO ${ROLE.storefront}`);
+  await owner.query(`GRANT USAGE ON SCHEMA public TO ${ROLE.admin}`);
+  await applyStorefrontGrants((text) => owner.query(text), ROLE.storefront);   // docs/ops/checkout-storefront-grants-20261029.sql: the one reviewed source
   if (!LAB_MODE) await owner.query(operatorSql);              // the candidate's operator SQL, textually substituted, creates the worker identity
   results.operatorSql = LAB_MODE ? "not applied: the lab's own worker roles and ACL (as fixed) are used" : "applied to the new database only";
 

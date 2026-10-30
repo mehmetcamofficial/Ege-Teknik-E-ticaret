@@ -5,4 +5,5 @@
 -- Replace :storefront_role with the real role name of the environment. Never run against Production without the release approval.
 GRANT INSERT ON TABLE public.notification_outbox TO :storefront_role;
 -- Deliberately NOT granted: SELECT, UPDATE, DELETE. The storefront can queue a row; it cannot read or alter any notification.
--- The worker runs on DATABASE_URL (the owner/admin connection) and needs no extra grant.
+-- The storefront role itself comes from docs/ops/checkout-storefront-grants-20261029.sql; this file adds ONLY the outbox INSERT on top of it.
+-- The worker does NOT use this connection: since PR #37 it has its own identity (docs/ops/notification-worker-grants-20261024.sql, NOTIFICATION_WORKER_DATABASE_URL).
