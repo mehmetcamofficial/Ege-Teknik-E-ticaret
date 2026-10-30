@@ -13,6 +13,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
+import { applyStorefrontGrants } from "./checkout-storefront-grants.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
 import { signLegalPreviewToken } from "../lib/legal-preview-token.ts";
 
@@ -89,17 +90,8 @@ try {
       ALTER ROLE sprintb_http_admin WITH PASSWORD '${adminPassword}';
     END IF;
   END $$`);
-  await owner.query("GRANT USAGE ON SCHEMA public TO sprintb_http_storefront, sprintb_http_admin");
-  await owner.query(`GRANT SELECT ON products, inventory, legal_documents, legal_document_versions,
-    rate_limit_buckets TO sprintb_http_storefront`);
-  await owner.query(`GRANT INSERT ON customers, addresses, orders, order_items,
-    order_legal_acceptances, rate_limit_buckets TO sprintb_http_storefront`);
-  await owner.query("GRANT UPDATE (on_hand, reserved, version, updated_at) ON inventory TO sprintb_http_storefront");
-  await owner.query("GRANT UPDATE (count, window_started_at, expires_at) ON rate_limit_buckets TO sprintb_http_storefront");
-  await owner.query("GRANT DELETE ON rate_limit_buckets TO sprintb_http_storefront");
-  await owner.query("GRANT UPDATE (created_at) ON legal_documents TO sprintb_http_storefront");
-  await owner.query("GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO sprintb_http_storefront");
-  await owner.query("GRANT EXECUTE ON FUNCTION public.checkout_replay_by_key(text,text) TO sprintb_http_storefront");
+  await owner.query("GRANT USAGE ON SCHEMA public TO sprintb_http_admin");
+  await applyStorefrontGrants((text) => owner.query(text), "sprintb_http_storefront");   // docs/ops/checkout-storefront-grants-20261029.sql: the one reviewed source
   const probe = new pg.Pool({ connectionString: storefrontUrl, max: 1 });
   try {
     const p = (await probe.query(`SELECT current_user AS role,

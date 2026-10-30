@@ -141,6 +141,17 @@ jobs:
           node scripts/test-db-attestation-postgres.mjs 2>&1 | tee "$log"
           grep -qF "[db-attestation] OK: 12 tests executed against real PostgreSQL sessions, 0 skipped." "$log"
           grep -qF "[db-attestation] cleanup: scratch databases and roles dropped" "$log"
+      - name: Checkout storefront ACL matrix on real PostgreSQL (a failure, a skip, a missing OK line or an incomplete cleanup fails the job)
+        env:
+          # Same marked service container. The runner attests it again, creates its OWN sprintb_ckacl_* database and roles (random names and password),
+          # migrates it, applies docs/ops/checkout-storefront-grants-20261029.sql and drops only what it proves it created (oid ledger).
+          CHECKOUT_ACL_PG_URL: postgresql://postgres:postgres@127.0.0.1:5432/sprintb_ci
+        run: |
+          set -euo pipefail
+          log="$RUNNER_TEMP/checkout-acl-postgres.log"
+          node scripts/test-checkout-acl-postgres.mjs 2>&1 | tee "$log"
+          grep -qF "[checkout-acl] OK: 13 checks executed against real PostgreSQL sessions, 0 skipped." "$log"
+          grep -qF "[checkout-acl] cleanup: scratch database and roles dropped" "$log"
       - name: H5 scoped-worker notification integration on real PostgreSQL (a failure, a skip, a missing line or an incomplete cleanup fails the job)
         env:
           # Same marked service container. The suite attests it again, creates its OWN database and roles with random per-run names, uses a
