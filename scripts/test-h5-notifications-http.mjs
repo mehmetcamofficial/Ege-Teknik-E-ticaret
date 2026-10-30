@@ -33,6 +33,7 @@ import { requeueDeadNotification, operationsSummary, sweepMissingNotifications }
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import { bootstrapDisposableDatabase, defaultStageDeps } from "./disposable-postgres-bootstrap.mjs";
+import { applyStorefrontGrants } from "./checkout-storefront-grants.mjs";
 import { hashLegalDocument } from "../lib/legal.ts";
 
 // R-04: a send budget key is mandatory (without it nothing is sent); this suite sends many mails to the same few addresses, so the limits are lifted here.
@@ -192,17 +193,8 @@ try {
     await owner.query(`CREATE ROLE "${ROLE.admin}" LOGIN PASSWORD '${adminPassword}' NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`);
     await recordRoles([ROLE.admin]);
   });
-  await owner.query(`GRANT USAGE ON SCHEMA public TO "${ROLE.store}", "${ROLE.admin}"`);
-  await owner.query(`GRANT SELECT ON products, inventory, legal_documents, legal_document_versions,
-    rate_limit_buckets TO "${ROLE.store}"`);
-  await owner.query(`GRANT INSERT ON customers, addresses, orders, order_items,
-    order_legal_acceptances, rate_limit_buckets TO "${ROLE.store}"`);
-  await owner.query(`GRANT UPDATE (on_hand, reserved, version, updated_at) ON inventory TO "${ROLE.store}"`);
-  await owner.query(`GRANT UPDATE (count, window_started_at, expires_at) ON rate_limit_buckets TO "${ROLE.store}"`);
-  await owner.query(`GRANT DELETE ON rate_limit_buckets TO "${ROLE.store}"`);
-  await owner.query(`GRANT UPDATE (created_at) ON legal_documents TO "${ROLE.store}"`);
-  await owner.query(`GRANT EXECUTE ON FUNCTION public.lock_checkout_products(text[]) TO "${ROLE.store}"`);
-  await owner.query(`GRANT EXECUTE ON FUNCTION public.checkout_replay_by_key(text,text) TO "${ROLE.store}"`);
+  await owner.query(`GRANT USAGE ON SCHEMA public TO "${ROLE.admin}"`);
+  await applyStorefrontGrants((text) => owner.query(text), ROLE.store);   // docs/ops/checkout-storefront-grants-20261029.sql: the one reviewed source
   const probe = new pg.Pool({ connectionString: storefrontUrl, max: 1 });
   try {
     const p = (await probe.query(`SELECT current_user AS role,

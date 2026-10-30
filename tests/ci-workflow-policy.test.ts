@@ -119,6 +119,33 @@ test("the database attestation gate runs in the PostgreSQL job on the marked con
   assert.match(runner, /port === "55432"/); assert.doesNotMatch(runner, /console\.(log|error)\([^)]*\b(password|DB_ATTEST_PG_URL)\b/, "no credential is printed");
 });
 
+test("the checkout storefront ACL matrix runs in the PostgreSQL job on the marked container, targets only the service container and cannot pass by skipping", () => {
+  const job = workflow.slice(workflow.indexOf("  postgres-integration:"), workflow.indexOf("  build:"));
+  const marker = job.indexOf("node scripts/ci-mark-disposable-cluster.mjs"), gate = job.indexOf("node scripts/test-checkout-acl-postgres.mjs");
+  assert.ok(marker >= 0 && gate > marker, "the cluster is marked before the gate runs");
+  const step = job.slice(job.indexOf("- name: Checkout storefront ACL matrix on real PostgreSQL"), job.indexOf("- name: H5 scoped-worker"));
+  assert.match(step, /set -euo pipefail\n/, "a failing runner behind tee still fails the step");
+  assert.match(step, /CHECKOUT_ACL_PG_URL: postgresql:\/\/postgres:postgres@127\.0\.0\.1:5432\/sprintb_ci\n/, "loopback service container only: no Neon, Preview or Production URL");
+  for (const line of ['"[checkout-acl] OK: 13 checks executed against real PostgreSQL sessions, 0 skipped."', '"[checkout-acl] cleanup: scratch database and roles dropped"'])
+    assert.ok(step.includes(`grep -qF ${line} "$log"`), `a missing line fails the job: ${line}`);
+  assert.match(pkg.scripts["test:checkout-acl-postgres"], /test-checkout-acl-postgres\.mjs/);
+  const runner = readFileSync("scripts/test-checkout-acl-postgres.mjs", "utf8");
+  assert.match(runner, /EXPECTED_CHECKS = 13;/); assert.match(runner, /refuse\("loopback PostgreSQL URL required"\)/); assert.match(runner, /port === "55432"/);
+  assert.equal((runner.match(/^\s*await check\(/gm) ?? []).length, 13, "the number of checks in the runner equals EXPECTED_CHECKS: removing one cannot go unnoticed");
+  assert.match(runner, /await attestDisposableCluster\(\{ url: urlFor\("postgres"\)/, "the cluster is proven disposable by the shared attestation");
+  assert.match(runner, /applyStorefrontGrants\(/, "the canonical grants file is what is tested, not a private copy");
+  assert.ok(runner.includes("OK: ${EXPECTED_CHECKS} checks executed against real PostgreSQL sessions, 0 skipped.") && runner.includes("cleanup: scratch database and roles dropped"), "the runner prints exactly the lines the workflow greps for");
+  assert.doesNotMatch(runner, /console\.(log|error)\([^)]*\b(password|CHECKOUT_ACL_PG_URL)\b/, "no credential is printed");
+});
+
+test("every HTTP gate that creates a storefront role takes its grants from the one canonical file, not from a private copy", () => {
+  for (const script of ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-pr37-worker-http.mjs"]) {
+    const text = readFileSync(script, "utf8");
+    assert.match(text, /applyStorefrontGrants\(/, script);
+    assert.doesNotMatch(text, /GRANT (SELECT|INSERT|DELETE|EXECUTE)[^\n]*(lock_checkout_products|checkout_replay_by_key|legal_document_versions|rate_limit_buckets)/, `${script}: no private copy of the storefront grants`);
+  }
+});
+
 test("B9 runs in the PostgreSQL job on the marked container and cannot pass by skipping", () => {
   const job = workflow.slice(workflow.indexOf("  postgres-integration:"), workflow.indexOf("  build:"));
   assert.ok(job.indexOf("node scripts/test-b9-postgres.mjs") > job.indexOf("node scripts/ci-mark-disposable-cluster.mjs"), "the cluster is marked before B9 runs");
