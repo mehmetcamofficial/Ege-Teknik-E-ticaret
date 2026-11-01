@@ -35,3 +35,12 @@ pnpm typecheck
 ```
 
 Bu raporun oluşturulması testlerin Mac'te yeniden çalıştırıldığı anlamına gelmez. Eski 84 test sonucu **bu değişikliğe ait yeni test sonucu değildir**.
+
+## 2026-11-02 — Sipariş numaralı havale açıklaması (müşteri adımı)
+
+- `public/checkout.html` sipariş sonucu ekranına `Havale/EFT açıklama referansı` alanı eklendi. Bu alanda **sadece sunucudan dönen sipariş numarası** gösterilir; müşterinin formdan girdiği bir banka referansı kullanılmaz. Kopyalama düğmesinin sonucu erişilebilir durum alanına yazılır.
+- `public/store-core.js` referansı `textContent` ile yazar ve Clipboard API varsa kopyalar. Kullanılamıyorsa müşteriye manuel kopyalama mesajı gösterir.
+- Banka hesabı, IBAN, son ödeme tarihi ve otomatik ödeme onayı eklenmedi. Müşteri, **yalnız doğrulanmış şirket hesabı kendisine ayrıca iletildikten sonra** ödemeyi yapmalıdır.
+- `tests/eft-payment-instructions.test.mjs` statik regresyon denetimi eklendi. Bu testin ve mevcut birim testlerinin yeni commit üzerinde Mac'te çalıştırılması gerekir; **son 49/49 PostgreSQL PASS** önceki commit `b34d019` üzerindedir ve bu müşteri arayüzü değişikliğini test etmez.
+- Bir müşteri birden fazla banka transferi yaparsa, referansın **banka işlem kimliği** değil, sipariş eşleştirme açıklaması olduğu unutulmamalıdır. Yönetici tarafından kaydedilen gerçek **banka hareket referansı** ayrı ve benzersizdir. İkisi karıştırılmamalıdır.
+- Checkout, ETBİS ve hukukçu onayları nedeniyle Production'da **NO-GO**. Banka POS'u / iyzico kapalıdır.
