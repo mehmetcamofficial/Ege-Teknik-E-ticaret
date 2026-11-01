@@ -9,7 +9,7 @@ Her onay, `inventory.json` içindeki dosya **SHA-256** değerine verilmelidir; m
 |---|---|---|---|
 | distance-sales | `cb319b88f528` | ☐ | |
 | pre-information | `b37bef80ac9a` | ☐ | |
-| kvkk | `93ef244ffd8d` | ☐ | |
+| kvkk | **YENİ HASH GEREKLİ** (tekrar satırları düzeltildi) | ☐ | |
 | privacy | `d413ab20e7dc` | ☐ | |
 | cookies | `6907123cbf77` | ☐ | |
 | delivery-returns | `18194bdf5c26` | ☐ | |
@@ -42,3 +42,20 @@ Her onay, `inventory.json` içindeki dosya **SHA-256** değerine verilmelidir; m
 | MM | | | |
 | İŞ | | | |
 | TEK | | | |
+
+
+## 6. Teknik ön inceleme — 2026-11-02 (onay değildir)
+
+Durum: **REVIEW REQUIRED / PRODUCTION PUBLISH BLOCKED**. Bu not hukukçu veya işletme onayı oluşturmaz; bütün onay kutuları boş kalır.
+
+| Kontrol | Gözlem | Kapanış kanıtı |
+|---|---|---|
+| Checkout hukuki sürüm kaydı | Production `legal_documents` ve `legal_document_versions` envanterleri 0 kayıt; `/api/legal/required` 503 | Owner yetkisiyle yalnız onaylı sürümler yayınlandıktan sonra API 200 ve sürüm ID doğrulaması |
+| Şirket ve iade adresi | RC belgeleri Cumhuriyet Mah. Ant Sk. No:7 B; farklı oda/eski kod kayıtlarında İkiçeşmelik Mah. No:13/1D | Güncel şirket sicili/vergi levhası ve gerçek iade adresi işletme tarafından yazılı teyit edilmeli |
+| Mesafeli satış | §6'da `[DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı]` işareti var | Gerçek GREE/TLC standardı, 4 metre kapsamı ve ek iş fiyat politikası yetkili işletme/hukukçu tarafından teyit edilmeli; müşteri metninden iç not çıkarılmalı |
+| Ön bilgilendirme | 1–7 gün taahhüdü, ödeme yöntemi ve taşıyıcı koşulları taslakta; fiili Production operasyonuna uygunluk onaylanmadı | Ödeme ve teslimat operasyonu, şikâyet/iade sorumlusu, doğru checkout düğme metni teyidi |
+| KVKK | Yinelenen VKN/MERSİS satırları ayrı dalda kaldırıldı; değişen metnin eski checklist hash'i geçersiz | Yeni içerik SHA-256 ve `inventory.json` yeniden hesaplanmalı; veri işleme/aktarım, saklama ve VERBİS hukukçu incelemesi |
+| Dinamik hukuki alanlar | Mesafeli satış ve ön bilgilendirmedeki `{{...}}` değişkenleri `LEGAL_TEMPLATE_TOKENS` beyaz listesinde tanımlı; yalnız kaynak-kod kontrolü | İzole DB'de gerçek render ve kabul regresyonu; Production sipariş oluşturma yapılmadan smoke |
+| ETBİS | Şirket yetkilisi kaydı henüz tamamlamadı | Şirket/domain ETBİS kayıt kanıtı |
+
+**Yayın disiplini:** Bu denetim Production'a yazma, hukuki sürüm yayınlama, release onayı veya checkout açma yetkisi vermez. `kvkk.md` içeriği değiştiği için önceki `inventory.json` ve eski hash değerine dayanarak onay verilemez.
