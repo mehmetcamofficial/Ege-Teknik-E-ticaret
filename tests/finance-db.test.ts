@@ -89,6 +89,22 @@ test("the same Idempotency-Key replays the payment once; reused for a different 
   assert.equal((await db.select().from(payments).where(eq(payments.orderId, id))).length, 1);
 });
 
+test("EFT reference is unique across orders and distinct idempotency keys under concurrency", { skip }, async () => {
+  const firstOrder = await makeOrder(40, 1000);
+  const secondOrder = await makeOrder(41, 1000);
+  const ref = `BANK-${run}-SAME-TRANSFER`;
+  const body = { amount: 500, method: "bank_transfer" as const, reference: ref, note: "" };
+  const [a,b] = await Promise.all([
+    recordManualPayment(db, { orderId: firstOrder, body, actor, idempotencyKey: key(), now: at(41) }),
+    recordManualPayment(db, { orderId: secondOrder, body, actor, idempotencyKey: key(), now: at(41) }),
+  ]);
+  assert.equal([a,b].filter(x => x.ok).length,1);
+  assert.equal([a,b].filter(x => !x.ok && x.refusal.code === "BANK_REFERENCE_REUSED").length,1);
+  const rows = await db.select().from(payments).where(and(eq(payments.method,"bank_transfer"),eq(payments.reference,ref)));
+  assert.equal(rows.length,1);
+  assert.equal((await loadOrderLedger(db, firstOrder))!.collected + (await loadOrderLedger(db, secondOrder))!.collected,500);
+});
+
 test("concurrent payments on one order are serialized by the row lock: the total is never exceeded", { skip }, async () => {
   const id = await makeOrder(4, 1000);
   const results = await Promise.all([0, 1, 2].map(() => recordManualPayment(db, { orderId: id, body: { amount: 600, method: "cash", reference: "", note: "" }, actor, idempotencyKey: key(), now: at(4) })));
