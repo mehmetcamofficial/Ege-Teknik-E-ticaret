@@ -59,10 +59,18 @@ Açıkça **BLOCKER** olarak işaretli: C1, H4.
 |---|---|---|
 | Ticari ad | Ege Teknik | Doğrulanmış (VERIFICATION A) |
 | Telefon / e-posta | 0542 795 75 60 / info@egeteknik.tr | Doğrulanmış (VERIFICATION A) |
-| Adres | İkiçeşmelik Mah. Süleyman Demirel Bulvarı, Ege Uluçınar Koop. No:13/1D, 09400 Kuşadası/Aydın | Doğrulanmış (VERIFICATION A) |
+| Adres | **ÇELİŞKİ:** Hukuki RC taslakları Cumhuriyet Mah. Ant Sk. No: 7 B; Kuşadası Ticaret Odası üye listesi İkiçeşmelik Mah. Süleyman Demirel Bul. No: 13/1D adresini gösteriyor. | **BLOCKED:** Güncel resmî şirket kayıtlarıyla teyit edilmedi; hukuki yayın için yeterli değil. |
 | KEP adresi | gösterilmiyor | **Eksik (B2)**; "Elektronik Bildirim Adresi KEP sayılmaz" |
 | ETBİS kaydı | gösterilmiyor | **Eksik (C1, BLOCKER)** |
 | Kargo/iade taşıyıcısı | belirtilmiyor | **Eksik (E1–E3)**; kargo kapalı |
 | Ödeme kuruluşu | belirtilmiyor | **Aktif değil (D1)** |
 
 Yasal metinlerde doğrulanmamış bilgi yayımlanmaz kuralı korunmuştur (RC metinlerinde "KEP doğrulandığında eklenir" ifadesi bulunur).
+
+
+## Ek doğrulama kaydı — 2026-11-02: adres çelişkisi
+
+- `docs/legal-drafts/SOURCES.md` P3-LEGAL-1.2 Cumhuriyet Mah. adresinin işletmeden resmî kayıt doğrulamasıyla geldiğini belirtiyor; bu incelemede doğrudan resmî belge okunmadı.
+- Kuşadası Ticaret Odası 11. Meslek Komitesi listesi aynı tam ticaret unvanına karşılık İkiçeşmelik Mah. adresi gösteriyor: https://kuto.org.tr/en/corporate/data-bank/11-meslek-komitesi-uye-listesi/ . Listenin güncelliği teyit edilmedi.
+- Güncel ticaret sicili adres kaydı/vergi levhası ve ayrı bir iade adresi varsa bunun işletme teyidi olmadan hiçbir adres değiştirilmeyecek ve hukuki RC'ler Production'da yayımlanmayacak.
+- Belgelerdeki VKN/MERSİS tekrarını kaldırmak yalnızca editoryal düzeltmedir; hukuk/işletme onayı yerine geçmez.
