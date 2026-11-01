@@ -43,3 +43,16 @@ Salt-okunur `filter_project_envs(decrypt=false)` sonucunda ödeme/mesajlaşmayla
 5. ETBİS ve diğer işletme/owner kapıları tamamlanmadıkça `release-gates.json` değişmez; Production hukuki yayın veya sipariş kabulü açılmaz.
 
 **Sonuç:** Kodda ödeme yolu bulunması Production tahsilatının açık olduğu anlamına gelmez. Canlı ödeme hizmeti ve gerçek operasyon şartları onaylanmadan sözleşme güncellemesi veya ödeme etkinleştirilmesi yapılmayacaktır.
+
+## 5. İşletme ürün kararı — müşterinin çoklu ödeme seçimi (2026-11-02)
+
+**KARAR VERİLDİ (ürün davranışı):** Müşteri checkout'ta nasıl ödeyeceğini kendisi seçecek: (1) sipariş sonrası havale/EFT veya manuel ödeme, (2) sözleşmeli banka sanal POS'u, (3) iyzico. Bu, üç sağlayıcının bugün aktif olduğunun veya ödeme kabulüne izin verildiğinin teyidi **değildir**.
+
+- **PAY-01 ürün seçimi: KARAR VERİLDİ; operasyonel hazırlık: BLOCKED.** Havale/EFT'nin gerçek şirket hesap bilgileri, alıcı adı, ödeme vadesi, iade prosedürü ve mutabakat yetkilisi henüz işletmece doğrulanmadı.
+- Banka POS'u ve iyzico **yalnız** ayrı işyeri sözleşmesi, anahtar/ortam konfigürasyonu, test ödeme+iade+callback doğrulaması ve hukukçu gözden geçirmesi geçerse müşteri için etkin/görünür olacak. Sonradan etkinleşen sağlayıcı ayrı yayın kararı gerektirir.
+- Checkout bir **sunucu kontrollü ödeme yöntemleri envanteri** kullanmalı; etkin olmayan yöntemi seçtirmemeli. Seçenek değiştirildiğinde tutar, sipariş/ödeme bağlamı ve hukuki önizleme gerektiren değişiklikler yeniden sunucu tarafından hesaplanmalı; onay değişirse eski token reddedilmeli.
+- İstemcinin gönderdiği `paymentProvider` tek başına ödeme tamamlandı kanıtı olamaz. Havale/EFT için işletme tahsilat mutabakatı, kart için doğrulanmış sağlayıcı webhook/ödeme kaydı gerekir. Çift tahsilat ve tekrar bildirimlere karşı idempotent işleme zorunlu.
+- Mevcut `orderRequestSchema` yalnız `PayTR`, `iyzico`, `discovery` değerlerini tanıyor. **`discovery` havale/EFT ile aynı anlamda varsayılmayacak**; banka POS'u da otomatik olarak PayTR diye etiketlenmeyecek. Yeni sağlayıcı bağımsız adapter/enum ve migration uygunluğu incelenerek uygulanmalı.
+- Hukuki metinlerin ödeme, iade ve ödeme yükümlülüğü ibareleri nihai ödeme UX ile hukukçu tarafından karşılaştırılmalı; bir metin değişirse ilgili aday hash'i yeniden üretilecek. `release-gates.json` hâlâ BLOCKED.
+
+**Bu karar yalnızca ayrı Git dalındaki planlama kaydıdır. Üretim koduna, ödeme konfigürasyonuna, onay kutularına veya Production DB'ye değişiklik uygulanmadı.**
