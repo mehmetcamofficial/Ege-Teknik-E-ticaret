@@ -183,6 +183,13 @@
       "when": 1792800000000,
       "tag": "0025_notification_send_budget",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793635200000,
+      "tag": "0026_eft04b_bank_reconciliation",
+      "breakpoints": true
     }
   ]
 }
