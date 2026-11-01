@@ -92,6 +92,12 @@ export const manualPaymentSchema = z.object({
   note: z.string().trim().max(500).default(""),
   // When the money was actually received (e.g. yesterday's EFT). Server clock when omitted; never in the future.
   paidAt: z.string().datetime({ offset: true }).optional(),
+}).superRefine((payment, context) => {
+  // EFT is recorded only against a bank-confirmed transaction identifier.
+  // This reference is evidence linkage, not proof of settlement by itself.
+  if (payment.method === "bank_transfer" && !payment.reference) {
+    context.addIssue({ code: "custom", path: ["reference"], message: "Havale/EFT için banka işlem referansı zorunludur." });
+  }
 });
 export type ManualPaymentInput = z.infer<typeof manualPaymentSchema>;
 
