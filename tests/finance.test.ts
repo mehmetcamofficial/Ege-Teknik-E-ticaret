@@ -92,6 +92,16 @@ test("manual payment bodies: integer TL, manual methods only - 'online' can neve
   assert.deepEqual([...manualPaymentMethods].sort(), paymentMethods.filter((m) => m !== "online").sort());
 });
 
+test("EFT: bank transaction reference is required; cash and physical POS stay backwards compatible", () => {
+  assert.equal(manualPaymentSchema.safeParse({ amount: 500, method: "bank_transfer" }).success, false);
+  assert.equal(manualPaymentSchema.safeParse({ amount: 500, method: "bank_transfer", reference: "  " }).success, false);
+  const eft = manualPaymentSchema.safeParse({ amount: 500, method: "bank_transfer", reference: "  BANK-REF-1001  " });
+  assert.equal(eft.success, true);
+  if (eft.success) assert.equal(eft.data.reference, "BANK-REF-1001");
+  assert.equal(manualPaymentSchema.safeParse({ amount: 500, method: "cash" }).success, true);
+  assert.equal(manualPaymentSchema.safeParse({ amount: 500, method: "pos" }).success, true);
+});
+
 test("received-at: never in the future, never before the order", () => {
   const created = new Date("2026-09-01T10:00:00Z"), now = new Date("2026-09-10T10:00:00Z");
   assert.equal(resolvePaidAt(undefined, created, now).ok, true);
