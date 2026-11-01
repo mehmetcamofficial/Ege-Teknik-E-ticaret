@@ -1,16 +1,16 @@
 # Scoped checkout — isolated HTTP E2E gate
 
 ## Current verified baseline
-- Draft stack: PR #17 (legal immutability) → #18 (scoped DB connection gate) → #19 (checkout row lock and hardened legal evidence trigger).
-- Migration 0017 and 0018 are **not** applied to active Neon Preview or Production.
+- Revision 2026-10-29. Stack: PR #39 (database identity attestation) → PR #40 (scoped checkout hardening). The earlier PR #17–#19 stack and CI run below are historical.
+- The migration chain is **0000–0025** (26 ledger entries). Migrations 0017–0025 are **not** applied to active Neon Preview or Production by anything in this repository; that is a separate, approved operation (runbook Phase 2).
 - Disposable PostgreSQL 18 tests verify restricted LOGIN transaction and two legal acceptance records without any `orders` UPDATE grant.
 - `tests/checkout-scoped-http-contract.test.ts` checks source-level HTTP handler wiring; it is not an HTTP E2E test.
 - `scripts/test-checkout-http-e2e.mjs` launches real Next.js HTTP handlers against the CI-owned PostgreSQL 18 service container. [Run 38000674472](https://github.com/mehmetcamofficial/Ege-Teknik-E-ticaret/actions/runs/38000674472) passed all four jobs, 22/22 integration tests, 38/38 commerce tests, and real HTTP preview/order/replay/conflict plus negative cases, stale legal version, legacy-off and invalid scoped-credential fail-closed.
 
 ## Required isolated test environment
-1. Start a **disposable local PostgreSQL 18 database** and apply migrations 0000–0018 with the repository migrator. Refuse any database URL that is not loopback with a database name starting `sprintb`. Never reuse active Preview/Production connection strings.
+1. Start a **disposable local PostgreSQL 18 database** and apply migrations 0000–0025 with the repository migrator. Refuse any database URL that is not loopback with a database name starting `sprintb`. Never reuse active Preview/Production connection strings.
 2. Seed one published online product with inventory and three published/effective legal documents: `distance-sales`, `pre-information`, and the actual KVKK notice slug required by `missingNoticeSlugs`. Seed only fictitious customer data.
-3. Create distinct **LOGIN** roles for storefront and admin. The storefront role must have no `products` UPDATE, no `orders` UPDATE (including columns), no superuser/CREATEDB/CREATEROLE/BYPASSRLS, and must have explicit EXECUTE on `lock_checkout_products(text[])`. Grant only the read/insert and column-level inventory/rate-limit privileges required by checkout. Never use a Neon privileged role.
+3. Create distinct **LOGIN** roles for storefront and admin. The storefront role must have no `products` UPDATE, no `orders` UPDATE (including columns), no superuser/CREATEDB/CREATEROLE/BYPASSRLS, and must have explicit EXECUTE on `lock_checkout_products(text[])` and `checkout_replay_by_key(text,text)`. **Apply the grants from the one canonical file `docs/ops/checkout-storefront-grants-20261029.sql`** through `scripts/checkout-storefront-grants.mjs` (all HTTP gates do; none keeps a private copy, which `tests/ci-workflow-policy.test.ts` enforces). Never use a Neon privileged role.
 4. Launch a **local Next.js server** with `CHECKOUT_SCOPED_DB_ENABLED=true`, all three database URLs pointing at that disposable local database with separate role names, and synthetic test-only signing/hash secrets. The application's `APP_ENV` / `NEON_BRANCH_ID` guard must be satisfied by an explicitly isolated test configuration, never by substituting real Preview/Production branch IDs.
 5. Prove the launched process actually uses the restricted LOGIN role for both checkout endpoints before sending any order-writing request. A local URL alone is not evidence that its DB is disposable.
 
@@ -25,6 +25,18 @@ Verified at HEAD `37f9bd4` on [CI 38000674472](https://github.com/mehmetcamoffic
 - Stale legal document version, incorrect displayed total, out-of-stock and marketing opt-in: refusal without partial writes.
 - Verify no response leaks internal DB IDs, passwords, connection strings or raw SQL errors.
 - With `CHECKOUT_SCOPED_DB_ENABLED=false`, legacy path remains operational on the same disposable database; missing/invalid scoped credentials must fail closed when enabled.
+
+## Gates that cover the scoped checkout (all on disposable PostgreSQL / pure unit level; none touches Preview or Production)
+
+| Gate | What it proves | Command |
+| --- | --- | --- |
+| Pool settings (unit) | the scoped pool pins TLS verification whatever `sslmode` the URL carries; refuses `NODE_TLS_REJECT_UNAUTHORIZED=0`; in Preview refuses a wrong role, database, endpoint or hostile parameter before a pool exists | `node --test --experimental-strip-types tests/db-pool-config.test.ts` |
+| Pool TLS (real driver) | a real `pg` client against a self-signed TLS server: the old config is bypassed, the scoped settings refuse the certificate | `tests/db-pool-config-tls.test.ts` (needs `openssl`) |
+| Grant file (unit) | the canonical grants are exactly the reviewed minimum, nothing broader | `tests/checkout-storefront-grants.test.ts` |
+| ACL matrix (real PostgreSQL) | with the canonical grants applied, the storefront's EFFECTIVE privileges equal the minimum exactly; role attributes; no PUBLIC EXECUTE on any SECURITY DEFINER function; forbidden statements fail with 42501 | `CI=true CHECKOUT_ACL_PG_URL=<disposable loopback cluster> pnpm test:checkout-acl-postgres` |
+| HTTP E2E (real Next.js + PostgreSQL) | the scenarios above | `pnpm test:http-checkout` |
+
+The ACL matrix refuses any cluster that `scripts/disposable-cluster-attest.mjs` does not accept (loopback, not the recovery port, only `postgres`/`sprintb*` databases, not Neon, lab or CI-marked). The Neon-form hostnames used in unit tests are **not** a verification of a real Neon endpoint.
 
 ## Release hold
 Do **not** merge, run migrations on active Preview/Production, provision production credentials, or enable the scoped checkout flag based on these instructions alone. See `docs/preview-scoped-checkout-rollout-runbook.md` for the exact approval-gated backup, migration, role, deployment and rollback gates.

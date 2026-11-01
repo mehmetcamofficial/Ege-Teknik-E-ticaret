@@ -159,8 +159,9 @@ test("the bootstrap is test-only: nothing in the application imports it", () => 
     .split("\n").filter(Boolean).sort();
   assert.ok(existsSync(BOOTSTRAP), "the bootstrap module must exist");
   // H4-C and H5-A added runners, generated from the HTTP E2E harness, with exactly the same refusal guards (asserted below).
+  // PR #40 added the checkout storefront ACL matrix; it creates its OWN new database (CI, loopback, cluster proof and port guards are asserted in tests/ci-workflow-policy.test.ts).
   // PR #37 added the scoped-worker HTTP QA runner; unlike the others it creates its OWN new database (guards asserted below).
-  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-b9-postgres.mjs", "scripts/test-migration-upgrade-pr37.mjs", "scripts/test-pr37-worker-http.mjs", RUNNER].sort(),
+  assert.deepEqual(importers, ["scripts/test-checkout-http-e2e.mjs", "scripts/test-h4-checkout-http.mjs", "scripts/test-h5-notifications-http.mjs", "scripts/test-b9-postgres.mjs", "scripts/test-checkout-acl-postgres.mjs", "scripts/test-migration-upgrade-pr37.mjs", "scripts/test-pr37-worker-http.mjs", RUNNER].sort(),
     "only the disposable PostgreSQL runners may import the destructive bootstrap");
   const worker = readFileSync("scripts/test-pr37-worker-http.mjs", "utf8");
   assert.match(worker, /process\.env\.CI !== "true"/, "the PR37 worker runner must refuse non-CI execution");
