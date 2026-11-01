@@ -61,4 +61,11 @@ env -u DATABASE_URL -u STOREFRONT_DATABASE_URL -u ADMIN_DATABASE_URL \
   -u FINANCE_TEST_DATABASE_URL -u SPRINTB_PG_URL -u P3B_PG_URL \
   COMMERCE_PG_URL="postgresql://$ROLE@127.0.0.1:$PORT/$DB" \
   pnpm test:commerce-postgres
-printf '[eft-pg18] PASS: all commerce PostgreSQL suites executed, 0 skipped. Disposable cluster will stop.\n'
+printf '[eft-pg18] PASS: commerce PostgreSQL regression gate.\n'
+printf '[eft-pg18] Running EFT-04C.2 real HTTP RBAC and listing test on the same disposable instance.\n'
+env -u DATABASE_URL -u STOREFRONT_DATABASE_URL -u ADMIN_DATABASE_URL \
+  -u FINANCE_TEST_DATABASE_URL -u SPRINTB_PG_URL -u P3B_PG_URL \
+  EFT04C_ISOLATED_QA="1" \
+  EFT04C_HTTP_PG_URL="postgresql://$ROLE@127.0.0.1:$PORT/$DB" \
+  node scripts/test-eft04c-http.mjs
+printf '[eft-pg18] PASS: commerce + real HTTP EFT authorization and read-only listing; disposable cluster will stop.\n'
