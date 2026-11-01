@@ -59,7 +59,7 @@ test("review approval requires separate humans and a real order, never creates p
   await pool.query(`INSERT INTO eft_reconciliation_reviews (id,movement_id) VALUES ($1,$2)`,[review,movement]);
   await assert.rejects(pool.query(`UPDATE eft_reconciliation_reviews SET status='approved' WHERE id=$1`,[review]),/eft_reviews_approval_ck/);
   const orderId=prefix+"-order";
-  await pool.query(`INSERT INTO orders (id,order_number,customer_name,phone,city,address,subtotal,vat_total,total) VALUES ($1,$2,'Synthetic tester','05000000000','Aydın','Synthetic address',1000,0,1000)`,[orderId,prefix.toUpperCase()]);
+  await pool.query(`INSERT INTO orders (id,order_number,idempotency_key,customer_name,phone,city,address,subtotal,vat_total,total) VALUES ($1,$2,$3,'Synthetic tester','05000000000','Aydın','Synthetic address',1000,0,1000)`,[orderId,prefix.toUpperCase(),prefix+'-idempotency']);
   await assert.rejects(pool.query(`UPDATE eft_reconciliation_reviews SET status='approved',order_id=$2,reviewed_by='same',approved_by='same',reviewed_at=$3,approved_at=$3 WHERE id=$1`,[review,orderId,reviewedAt]),/eft_reviews_approval_ck/);
   await pool.query(`UPDATE eft_reconciliation_reviews SET status='approved',order_id=$2,reviewed_by='checker-1',approved_by='approver-2',reviewed_at=$3,approved_at=$3 WHERE id=$1`,[review,orderId,reviewedAt]);
   const p=await pool.query(`SELECT count(*)::int AS n FROM payments WHERE order_id=$1`,[orderId]);
