@@ -89,7 +89,8 @@
       "acceptance": "notice only (must be published; never a checkbox)",
       "orderTokens": [],
       "rcBanner": "RELEASE CANDIDATE — LEGAL REVIEW REQUIRED · NOT YET PUBLISHED",
-      "usedIn": "Checkout: bilgilendirme bağlantısı (kutu değil); yayınlanmadan sipariş alınmaz; /legal/[slug]"
+      "usedIn": "Checkout: bilgilendirme bağlantısı (kutu değil); yayınlanmadan sipariş alınmaz; /legal/[slug]",
+      "words": 1416
     },
     {
       "file": "docs/legal-drafts/privacy.md",
