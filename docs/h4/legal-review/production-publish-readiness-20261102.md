@@ -13,11 +13,11 @@
 | Current Production env variable **presence** | PASS | Vercel project `dragonfire-09s-projects/ege-teknik-phase3a`: `LEGAL_PREVIEW_SIGNING_SECRET` appears with target `production` and sensitive type. Value, runtime binding and length were not read/verified |
 | Production document inventory | BLOCKED | Previous Production read-only inventory returned 0 document rows and 0 versions; API `/api/legal/required` returned 503. Recheck immediately before approved publication |
 | Storefront legal approval | BLOCKED | Human legal/company sign-off absent; `approval-checklist.md` boxes intentionally left empty |
-| Company address | BLOCKED | RC uses Cumhuriyet Mah.; older registration / chamber source uses İkiçeşmelik Mah.; current official certificate and separately-designated returns address still needed |
+| Seller address | OPERATOR CONFIRMED | User confirms previously officially verified seller address is Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın. Older İkiçeşmelik record is not to be used; current registry certificate not re-read in this session. Return handling address must be operationally confirmed |
 | Mandatory business registration | BLOCKED | ETBİS registration pending authorized company representative |
 | Operating terms | BLOCKED | Payment method, actual logistics and fees, service/installation scope, warranty, return routing, notice button text and customer notifications require matching live operation |
 | KVKK vendor transfer | BLOCKED | Vercel, Neon, Clerk, Sentry real DPA/region/subprocessor and applicable KVKK transfer mechanism require legal review |
-| KVKK hash inventory | BLOCKED | The branch's `kvkk.md` has an editorial change. `inventory.json` still contains **the old SHA-256**, so it must be regenerated and reviewed before any hash-based approval; never treat stale hash as valid |
+| Three source-document candidate hashes | PASS (technical only) | `inventory.json` now contains KVKK file SHA-256 `001ac84e37c9…`; distance-sales and pre-information prior checksums remain byte-identical. Frozen file-hash candidates recorded in `critical-legal-candidate-lock-20261102.md`. **No legal sign-off** |
 
 ## 2. Verified application publish contract (source only)
 
@@ -43,3 +43,7 @@
 ## 4. Current operator decision
 
 **NO-GO: Do not publish or turn on checkout.** The legal database implementation and the isolated tests can be treated as technically prepared, but human approvals, current company address, ETBİS, vendor review, final hash register and operational readiness are not closed.
+
+## 5. 2026-11-02 update
+
+The company operator instructed retention of the previously official-record-verified Cumhuriyet Mah. Ant Sk. No: 7 B address. The three critical *source-file* SHA-256 checksums were recorded in `critical-legal-candidate-lock-20261102.md`; the KVKK `inventory.json` hash and word count were refreshed. These do not equate to runtime canonical `hashLegalDocument(title,body)` checksums, nor to legal approval. **NO-GO decision remains.**
