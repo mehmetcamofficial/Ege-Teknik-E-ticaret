@@ -19,7 +19,7 @@
       <div class="summary-row"><span>KDV</span><b data-confirmation-vat></b></div>
       <div class="summary-row"><span>Teslimat</span><b data-confirmation-shipping></b></div>
       <div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-confirmation-total></b></div>
-      <p class="notice" data-confirmation-payment-notice>Online ödeme henüz aktif değil; bu siparişte kart bilgisi alınmadı ve ödeme tahsil edilmedi. Sipariş kaydınız oluşturuldu; ödeme yöntemini netleştirmek için ekibimiz verdiğiniz telefon veya e-posta üzerinden sizinle iletişime geçer. Sipariş alındı e-postası, e-posta hizmeti kullanılabilir olduğunda gönderilmeye çalışılır ve ulaşması garanti edilmez; SMS gönderilmez. Lütfen takip numaranızı saklayın.</p>
+      <p class="notice" data-confirmation-payment-notice>Siparişiniz havale/EFT ödeme bekliyor durumunda kaydedildi; bu adımda ödeme tahsil edilmedi ve kart bilgisi alınmadı. Doğrulanmış şirket hesabı ve sipariş referansı ekibimizce verdiğiniz telefon veya e-posta üzerinden iletilecektir. Havale/EFT hesaba geçip yetkili görevli tarafından doğrulanmadan sipariş ödenmiş sayılmaz. Sipariş alındı e-postası, e-posta hizmeti kullanılabilir olduğunda gönderilmeye çalışılır ve ulaşması garanti edilmez; SMS gönderilmez. Lütfen takip numaranızı saklayın.</p>
       <h3>Teslimat bilgileri</h3>
       <p data-confirmation-delivery></p>
       <h3>Kabul ettiğiniz hukuki metinler</h3>
@@ -47,13 +47,14 @@
         <p class="field-help checkout-billing">Bu siparişte ayrı bir fatura adresi alınmaz; hukuki metinlerde fatura bilgisi olarak ad soyad ve il kullanılır.</p>
         <div data-delivery-options aria-live="polite"></div>
         <h2 class="checkout-step"><span aria-hidden="true">3</span>Ödeme yöntemi</h2>
-        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked aria-describedby="payment-steps"><span><b>Siparişi kaydet, ödemeyi sonra teyit et</b><br><small>Siparişiniz kaydedilir; ödeme bu adımda alınmaz. Ödeme yöntemi sipariş sonrasında sizinle netleştirilir. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
+        <label class="pay-option"><input type="radio" name="provider" value="discovery" checked aria-describedby="payment-steps"><span><b>Havale / EFT — sipariş sonrası ödeme</b><br><small>Siparişiniz ödeme bekliyor durumunda kaydedilir. Ege Teknik doğrulanmış şirket hesap ve ödeme referansı bilgilerini sizinle ayrıca paylaşır. Bu ekranda ödeme alınmaz. Standart kapsam dışı işler ayrıca bildirilir ve onayınız olmadan ücretlendirilmez.</small></span></label>
+        <p class="field-help" data-future-payment-methods>Banka sanal POS ve iyzico başvuruları sonuçlanmadığı için şu an kullanılamaz; hazır olduklarında ayrı ödeme seçenekleri olarak açılabilir.</p>
         <ol class="payment-steps" id="payment-steps" aria-label="Sipariş sonrası adımlar">
           <li><b>Siparişi onaylarsınız.</b> Siparişiniz ve kabul ettiğiniz hukuki metinler kaydedilir.</li>
           <li><b>Ödeme alınmaz.</b> Kart bilgisi istenmez, hesabınızdan tahsilat yapılmaz.</li>
-          <li><b>Ödemeyi birlikte netleştiririz.</b> Ekibimiz, verdiğiniz telefon veya e-posta üzerinden sizinle iletişime geçer. Sipariş alındı e-postası, e-posta hizmeti kullanılabilir olduğunda gönderilmeye çalışılır ve ulaşması garanti edilmez; SMS gönderilmez. Siparişinizi takip numaranızla <a href="order-lookup.html">Siparişimi görüntüle</a> sayfasından görebilirsiniz.</li>
+          <li><b>Havale / EFT ödeme bilgileri iletilir.</b> Ekibimiz, doğrulanmış şirket hesabını ve sipariş referansını verdiğiniz telefon veya e-posta üzerinden sizinle paylaşır. Ödemeniz hesaba geçtiğinde yetkili görevli tahsilatı doğrular. Sipariş alındı e-postası, e-posta hizmeti kullanılabilir olduğunda gönderilmeye çalışılır ve ulaşması garanti edilmez; SMS gönderilmez. Siparişinizi takip numaranızla <a href="order-lookup.html">Siparişimi görüntüle</a> sayfasından görebilirsiniz.</li>
         </ol>
-        <div class="notice" id="payment-status">Online ödeme şu anda kullanılamıyor. Ödeme seçenekleri için Ege Teknik ile iletişime geçebilirsiniz.</div>
+        <div class="notice" id="payment-status">Kartlı ödeme şu anda kullanılamıyor. Havale/EFT hesap bilgileri sipariş sonrasında Ege Teknik tarafından teyit edilerek iletilir; sipariş oluşturmak ödeme yapıldığı anlamına gelmez.</div>
       </section>
       <aside class="panel"><h2>Sipariş özeti</h2><button type="button" class="ghost" data-open-cart-drawer hidden>Sepeti düzenle</button><div data-cart-items></div><div class="summary-row"><span>Ara toplam</span><b data-subtotal>₺0</b></div><div class="summary-row"><span>KDV (ara toplama dahil)</span><b data-vat>₺0</b></div><div data-charge-summary></div><div class="summary-row" style="font-size:20px"><b>Ödenecek toplam (KDV dâhil)</b><b data-total>₺0</b></div><p class="notice" data-charge-notice hidden></p><p class="tax-note"><small>Gösterilen tüm tutarlar KDV dâhildir.</small></p><fieldset class="consents" data-legal-consents aria-label="Yasal onaylar"></fieldset>
       <section class="legal-preview" aria-labelledby="legal-preview-heading">
