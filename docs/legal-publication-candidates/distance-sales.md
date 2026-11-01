@@ -17,8 +17,6 @@
 | E-posta | info@egeteknik.tr |
 | Web | egeteknik.tr |
 
-KEP adresi doğrulandığında ilgili belge sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
-
 ### 1.2. Alıcı
 
 | | |
