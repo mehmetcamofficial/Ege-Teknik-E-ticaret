@@ -169,7 +169,7 @@ export function PaymentActionPanels({ orderId, ledger, onChanged, canRecord = tr
             <FormField label={payMethod === "bank_transfer" ? "Banka işlem referansı (zorunlu)" : "Referans (dekont / slip no)"} htmlFor="pay-reference">
               <Input id="pay-reference" maxLength={100} required={payMethod === "bank_transfer"} value={payReference} onChange={(e) => setPayReference(e.target.value)} />
             </FormField>
-            {payMethod === "bank_transfer" && <Notice tone="warning">Dekont beyanı tek başına tahsilat kanıtı değildir. Şirket banka hesabı hareketlerinde tutar, alıcı ve işlem referansını doğrulamadan ödeme kaydetmeyin.</Notice>}
+            {payMethod === "bank_transfer" && <Notice tone="info">Dekont beyanı tek başına tahsilat kanıtı değildir. Şirket banka hesabı hareketlerinde tutar, alıcı ve işlem referansını doğrulamadan ödeme kaydetmeyin.</Notice>}
             <Button type="button" onClick={() => void savePayment()}>Ödemeyi kaydet</Button>
           </fieldset>
         </Panel>
