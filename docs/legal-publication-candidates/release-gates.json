@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "status": "REVIEW_ONLY_NOT_APPROVED",
+  "sourceDirectory": "docs/legal-drafts",
+  "candidateDirectory": "docs/legal-publication-candidates",
+  "sellerAddress": "Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın",
+  "documents": [
+    {
+      "slug": "distance-sales",
+      "source": "docs/legal-drafts/distance-sales.md",
+      "candidate": "docs/legal-publication-candidates/distance-sales.md",
+      "approval": false
+    },
+    {
+      "slug": "pre-information",
+      "source": "docs/legal-drafts/pre-information.md",
+      "candidate": "docs/legal-publication-candidates/pre-information.md",
+      "approval": false
+    },
+    {
+      "slug": "kvkk",
+      "source": "docs/legal-drafts/kvkk.md",
+      "candidate": "docs/legal-publication-candidates/kvkk.md",
+      "approval": false
+    }
+  ],
+  "releaseBlockers": [
+    {
+      "id": "LEGAL_COUNSEL_APPROVAL",
+      "cleared": false,
+      "owner": "hukukçu",
+      "evidence": ""
+    },
+    {
+      "id": "INSTALLATION_SCOPE_4M",
+      "cleared": false,
+      "owner": "işletme/hukukçu",
+      "evidence": ""
+    },
+    {
+      "id": "ACTUAL_PAYMENT_DELIVERY_RETURNS",
+      "cleared": false,
+      "owner": "işletme",
+      "evidence": ""
+    },
+    {
+      "id": "KVKK_INTERNATIONAL_TRANSFERS_RETENTION",
+      "cleared": false,
+      "owner": "hukukçu/teknik",
+      "evidence": ""
+    },
+    {
+      "id": "ETBIS_REGISTRATION",
+      "cleared": false,
+      "owner": "şirket yetkilisi",
+      "evidence": ""
+    },
+    {
+      "id": "PUBLICATION_OWNER_APPROVAL",
+      "cleared": false,
+      "owner": "owner",
+      "evidence": ""
+    }
+  ]
+}
