@@ -9,7 +9,7 @@ Her onay, `inventory.json` içindeki dosya **SHA-256** değerine verilmelidir; m
 |---|---|---|---|
 | distance-sales | `cb319b88f528` | ☐ | |
 | pre-information | `b37bef80ac9a` | ☐ | |
-| kvkk | **YENİ HASH GEREKLİ** (tekrar satırları düzeltildi) | ☐ | |
+| kvkk | `001ac84e37c9` (yeni taslak SHA-256; onay bekliyor) | ☐ | |
 | privacy | `d413ab20e7dc` | ☐ | |
 | cookies | `6907123cbf77` | ☐ | |
 | delivery-returns | `18194bdf5c26` | ☐ | |
@@ -54,7 +54,7 @@ Durum: **REVIEW REQUIRED / PRODUCTION PUBLISH BLOCKED**. Bu not hukukçu veya i�
 | Şirket ve iade adresi | RC belgeleri Cumhuriyet Mah. Ant Sk. No:7 B; farklı oda/eski kod kayıtlarında İkiçeşmelik Mah. No:13/1D | Güncel şirket sicili/vergi levhası ve gerçek iade adresi işletme tarafından yazılı teyit edilmeli |
 | Mesafeli satış | §6'da `[DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı]` işareti var | Gerçek GREE/TLC standardı, 4 metre kapsamı ve ek iş fiyat politikası yetkili işletme/hukukçu tarafından teyit edilmeli; müşteri metninden iç not çıkarılmalı |
 | Ön bilgilendirme | 1–7 gün taahhüdü, ödeme yöntemi ve taşıyıcı koşulları taslakta; fiili Production operasyonuna uygunluk onaylanmadı | Ödeme ve teslimat operasyonu, şikâyet/iade sorumlusu, doğru checkout düğme metni teyidi |
-| KVKK | Yinelenen VKN/MERSİS satırları ayrı dalda kaldırıldı; değişen metnin eski checklist hash'i geçersiz | Yeni içerik SHA-256 ve `inventory.json` yeniden hesaplanmalı; veri işleme/aktarım, saklama ve VERBİS hukukçu incelemesi |
+| KVKK | Yinelenen VKN/MERSİS satırları ayrı dalda kaldırıldı; değişen metnin eski checklist hash'i geçersiz | Yeni SHA-256 `001ac84e37c9` hesaplandı ve envantere yazıldı; hukukçu onayı halen gerekli; veri işleme/aktarım, saklama ve VERBİS hukukçu incelemesi |
 | Dinamik hukuki alanlar | Mesafeli satış ve ön bilgilendirmedeki `{{...}}` değişkenleri `LEGAL_TEMPLATE_TOKENS` beyaz listesinde tanımlı; yalnız kaynak-kod kontrolü | İzole DB'de gerçek render ve kabul regresyonu; Production sipariş oluşturma yapılmadan smoke |
 | ETBİS | Şirket yetkilisi kaydı henüz tamamlamadı | Şirket/domain ETBİS kayıt kanıtı |
 
