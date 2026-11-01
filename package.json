@@ -30,7 +30,9 @@
     "content:export": "node --experimental-strip-types scripts/export-content-registry.mjs",
     "content:check": "node --experimental-strip-types scripts/export-content-registry.mjs --check",
     "admin:bootstrap-first": "node --experimental-strip-types scripts/bootstrap-first-admin.mts",
-    "auth:hash-password": "node scripts/hash-admin-password.mjs"
+    "auth:hash-password": "node scripts/hash-admin-password.mjs",
+    "verify:legal-publication": "node scripts/verify-legal-publication.mjs",
+    "test:legal-publication": "node --test tests/legal-publication-gate.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
