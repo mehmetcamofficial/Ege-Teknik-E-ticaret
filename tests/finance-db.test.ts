@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test, { after, before } from "node:test";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { adminUsers, auditLogs, inventory, orderItems, orders, payments, products } from "../db/schema.ts";
 import { loadFinanceReport, loadOrderLedger, recordManualPayment, recordRefund, type FinanceDb } from "../lib/finance-db.ts";
 import type { OrderStatus } from "../lib/order-domain.ts";
