@@ -474,6 +474,25 @@ function renderOrderConfirmation(data){
   const box=document.querySelector('[data-order-confirmation]');if(!box)return;
   const items=Array.isArray(data.items)?data.items:[],d=data.delivery||{};
   box.querySelector('[data-confirmation-number]').innerHTML=`Takip numarası: <b>${esc(data.orderNumber)}</b>`;
+  // Reuse the server-issued order number as the proposed bank transfer memo.
+  // Never derive it from cart/user input and never invent an account/IBAN.
+  const transferRef=box.querySelector('[data-bank-transfer-reference]');
+  if(transferRef)transferRef.textContent=String(data.orderNumber||'');
+  const copyRef=box.querySelector('[data-bank-transfer-reference-copy]');
+  const copyStatus=box.querySelector('[data-bank-transfer-copy-status]');
+  if(copyRef){
+    copyRef.disabled=!data.orderNumber;
+    copyRef.onclick=async()=>{
+      if(!data.orderNumber)return;
+      try{
+        if(!navigator.clipboard?.writeText)throw new Error('clipboard unavailable');
+        await navigator.clipboard.writeText(String(data.orderNumber));
+        if(copyStatus)copyStatus.textContent='Sipariş referansı kopyalandı.';
+      }catch{
+        if(copyStatus)copyStatus.textContent='Kopyalama kullanılamıyor. Yukarıdaki referansı seçerek kopyalayabilirsiniz.';
+      }
+    };
+  }
   box.querySelector('[data-confirmation-items]').innerHTML=items.map(i=>`<div class="summary-row"><span>${esc(i.productName)}<br><small>${money(i.unitPrice)} × ${esc(i.quantity)} adet</small></span><b>${money(i.lineTotal)}</b></div>`).join('');
   box.querySelector('[data-confirmation-subtotal]').textContent=money(items.reduce((s,i)=>s+i.lineTotal,0));
   box.querySelector('[data-confirmation-vat]').textContent=money(data.vatTotal);
