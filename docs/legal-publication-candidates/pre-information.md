@@ -32,8 +32,6 @@ Sipariş özetinde gösterilmeyen ek bedel tüketiciden talep edilmez. Standart 
 | E-posta | info@egeteknik.tr |
 | Web | egeteknik.tr |
 
-KEP adresi doğrulandığında ilgili belge sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
-
 ## 3. Ödeme ve fatura
 
 Sipariş için kullanılabilen ödeme yöntemleri yalnız checkout ekranında gerçekten aktif olan seçeneklerdir. Aktif olmayan bir sanal POS veya ödeme kuruluşu bu formda vaat edilmez.
