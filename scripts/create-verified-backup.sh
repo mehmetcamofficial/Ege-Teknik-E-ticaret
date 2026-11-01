@@ -15,6 +15,9 @@ pg_restore --version | grep -Eq ' 18([. ]|$)'
 BACKUP_PREFIX="${BACKUP_PREFIX:-ege-teknik-production}"
 [[ "$BACKUP_PREFIX" =~ ^ege-teknik-(production|synthetic)$ ]] || exit 1
 SOURCE_LABEL="neon-production"; [[ "$BACKUP_PREFIX" == "ege-teknik-synthetic" ]] && SOURCE_LABEL="synthetic"
+# Production must connect as the read-only backup role (attested in backup-dump.mjs before any dump); a value inherited from the
+# environment can never weaken it. The synthetic prefix (disposable test sources) is not forced to the Production role.
+if [[ "$BACKUP_PREFIX" == "ege-teknik-production" ]]; then export BACKUP_EXPECTED_ROLE="backup_reader_ro"; fi
 BACKUP_DIR="$(mktemp -d "$RUNNER_TEMP/ege-backup.XXXXXXXX")"
 printf 'backup_dir=%s\n' "$BACKUP_DIR" >> "$GITHUB_OUTPUT"
 DUMP="$BACKUP_DIR/source.dump"; CHECK="$BACKUP_DIR/check.dump"; TOC="$BACKUP_DIR/toc.txt"
