@@ -13,8 +13,6 @@
 | Ticari ad | Ege Teknik |
 | VKN | 3250963985 |
 | MERSİS numarası | 0325096398500001 |
-| VKN | 3250963985 |
-| MERSİS numarası | 0325096398500001 |
 | Adres | Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın |
 | Vergi dairesi | Kuşadası Vergi Dairesi |
 | E-posta / telefon | info@egeteknik.tr / 0542 795 75 60 |
