@@ -28,6 +28,9 @@ ENC="$BACKUP_DIR/$BASE.dump.enc"
 node scripts/backup-dump.mjs "$DUMP"
 pg_restore --list "$DUMP" | grep -v '^;' > "$TOC"
 [[ -s "$TOC" ]] || { echo "Dump table of contents is empty" >&2; exit 1; }
+# Production archives must carry OWNER / ACL / DEFAULT ACL metadata and the critical objects; otherwise nothing is encrypted or uploaded.
+# The synthetic prefix (disposable test sources) is not forced to the Production schema.
+if [[ "$BACKUP_PREFIX" == "ege-teknik-production" ]]; then node scripts/backup-toc-guard.mjs "$TOC"; fi
 node scripts/backup-crypto-gcm.mjs encrypt "$DUMP" "$ENC"
 node scripts/backup-crypto-gcm.mjs decrypt "$ENC" "$CHECK"
 cmp -s "$DUMP" "$CHECK"

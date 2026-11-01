@@ -189,15 +189,66 @@ test('Production backup alert has an issue fallback when the label is unavailabl
 
 // ---------------------------------------------------------------- backup role attestation (secret-free; fake psql / pg_dump / pg_restore)
 
+// ---------------------------------------------------------------- TOC guard fixtures (synthetic; shaped like `pg_restore --list`)
+
+const OWNER = 'neondb_owner';
+function productionToc({ acl = true, defaultAcl = true, owner = OWNER, data = true, tables = ['orders', 'order_items', 'order_legal_acceptances', 'products', 'admin_users'], extra = 0, skipAclFor = null, skip = [] } = {}) {
+  let id = 100; const L = [';', '; Archive created at 2026-11-01 12:00:00 +03', ';     dbname: neondb'];
+  const add = (s) => { if (!skip.some((x) => s.includes(x))) L.push(`${id++}; 0 0 ${s}`); };
+  add(`SCHEMA - drizzle ${owner}`);
+  for (const f of ['admin_users_retire_owner_guard()', 'legal_document_versions_guard()', 'product_reviews_guard()']) add(`FUNCTION public ${f} ${owner}`);
+  const all = ['__migr', ...tables, ...Array.from({ length: extra }, (_, i) => `extra_${i}`)];
+  for (const t of all) {
+    const [schema, name] = t === '__migr' ? ['drizzle', '__drizzle_migrations'] : ['public', t];
+    add(`TABLE ${schema} ${name} ${owner}`);
+    if (data) add(`TABLE DATA ${schema} ${name} ${owner}`);
+    if (acl && schema === 'public' && name !== skipAclFor) add(`ACL public TABLE ${name} ${owner}`);
+  }
+  if (acl) add('ACL - SCHEMA public pg_database_owner');
+  if (defaultAcl) for (const k of ['TABLES', 'SEQUENCES']) add(`DEFAULT ACL public DEFAULT PRIVILEGES FOR ${k} ${OWNER}`);
+  return L.join('\n') + '\n';
+}
+const guardRun = (toc) => { const r = spawnSync(process.execPath, [resolve('scripts/backup-toc-guard.mjs'), '-'], { input: toc, encoding: 'utf8' }); return { status: r.status, out: (r.stdout + r.stderr).trim() }; };
+
+test('TOC guard: complete production TOC passes, whatever its total entry count', () => {
+  assert.deepEqual(guardRun(productionToc()), { status: 0, out: 'BACKUP TOC GUARD: PASS' });
+  assert.equal(guardRun(productionToc({ extra: 40 })).status, 0, 'more tables after future migrations still pass');
+  assert.equal(guardRun(productionToc({ tables: ['orders', 'order_items', 'order_legal_acceptances', 'products', 'admin_users'] })).status, 0);
+});
+test('TOC guard: dump without ACL and DEFAULT ACL (the 2026-11-01 shape) is BLOCKED, even when padded to a large entry count', () => {
+  for (const toc of [productionToc({ acl: false, defaultAcl: false }), productionToc({ acl: false, defaultAcl: false, extra: 300 })]) {
+    const r = guardRun(toc); assert.equal(r.status, 1);
+    assert.match(r.out, /^BACKUP TOC GUARD: BLOCKED \(acl_missing_for_public_table, acl_missing_for_public_schema, default_acl_missing_tables_neondb_owner, default_acl_missing_sequences_neondb_owner\)$/);
+  }
+});
+test('TOC guard: each missing piece is its own BLOCKED reason', () => {
+  const cases = [
+    [productionToc({ defaultAcl: false }), 'default_acl_missing_tables_neondb_owner'],
+    [productionToc({ skipAclFor: 'orders' }), 'acl_missing_for_public_table'],
+    [productionToc({ skip: ['ACL - SCHEMA public'] }), 'acl_missing_for_public_schema'],
+    [productionToc({ owner: 'mehmetcam' }), 'unexpected_or_missing_owner'],
+    [productionToc({ data: false }), 'critical_table_data_missing:public.orders'],
+    [productionToc({ tables: ['order_items', 'order_legal_acceptances', 'products', 'admin_users'] }), 'critical_table_missing:public.orders'],
+    [productionToc({ skip: ['SCHEMA - drizzle'] }), 'critical_schema_missing:drizzle'],
+    [productionToc({ skip: ['legal_document_versions_guard()'] }), 'critical_function_missing:legal_document_versions_guard()'],
+    ['', 'toc_unreadable'],
+  ];
+  for (const [toc, reason] of cases) { const r = guardRun(toc); assert.equal(r.status, 1, reason); assert.ok(r.out.includes(reason), `${reason} in: ${r.out}`); }
+});
+test('TOC guard: output carries only the verdict and rule ids (no connection or credential material)', () => {
+  assert.ok(!/postgres|password|S3cr3t|@/i.test(guardRun(productionToc({ acl: false })).out));
+});
+
 const SECRET_URL = 'postgresql://backup_reader_ro:S3cr3t%40pw@ep-private-host.example.neon.tech:5432/neondb?sslmode=require&channel_binding=require';
-async function attestBin(t, psqlBody) {
+async function attestBin(t, psqlBody, tocText = productionToc()) {
   const dir = await mkdtemp(join(tmpdir(), 'et-attest-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const bin = join(dir, 'bin'); await mkdir(bin);
   // psql prints 't' only when the SQL names the role the connection really has (PGUSER); the SQL is checked, never the URL.
   await writeFile(join(bin, 'psql'), `#!/usr/bin/env bash\nset -u\n${psqlBody}\n`, { mode: 0o755 });
   await writeFile(join(bin, 'pg_dump'), `#!/usr/bin/env bash\nset -eu\nif [[ "$*" == '--version' ]]; then echo 'pg_dump (PostgreSQL) 18.6'; exit; fi\nfor A in "$@"; do case "$A" in --file=*) F="\${A#--file=}";; esac; done\nprintf 'PGDMP fixture %0200d' 0 > "$F"\ntouch "${dir}/pg_dump_ran"\n`, { mode: 0o755 });
-  await writeFile(join(bin, 'pg_restore'), `#!/usr/bin/env bash\nset -eu\nif [[ "$*" == '--version' ]]; then echo 'pg_restore (PostgreSQL) 18.6'; exit; fi\nprintf '1; 0 0 TABLE public x o\\n'\n`, { mode: 0o755 });
+  await writeFile(join(dir, 'toc.txt'), tocText);
+  await writeFile(join(bin, 'pg_restore'), `#!/usr/bin/env bash\nset -eu\nif [[ "$*" == '--version' ]]; then echo 'pg_restore (PostgreSQL) 18.6'; exit; fi\ncat "${dir}/toc.txt"\n`, { mode: 0o755 });
   return { dir, bin, PATH: bin + ':' + process.env.PATH };
 }
 const REAL_ROLE_PSQL = `[[ "$PGUSER" == "backup_reader_ro" && "$*" == *"current_user = 'backup_reader_ro' AND session_user = 'backup_reader_ro'"* ]] && echo t || echo f`;
@@ -237,8 +288,8 @@ test('attestation: without BACKUP_EXPECTED_ROLE the adapter behaves exactly as b
   const r = dumpRun(b, { DATABASE_URL: SECRET_URL });
   assert.equal(r.status, 0, r.stderr); assert.equal(r.stdout, '');
 });
-async function verifiedRun(t, { prefix, expected, psqlBody }) {
-  const b = await attestBin(t, psqlBody);
+async function verifiedRun(t, { prefix, expected, psqlBody, tocText }) {
+  const b = await attestBin(t, psqlBody, tocText);
   const env = { PATH: b.PATH, HOME: process.env.HOME, RUNNER_TEMP: b.dir, GITHUB_OUTPUT: join(b.dir, 'out'), DATABASE_URL: SECRET_URL,
     BACKUP_GCM_KEY_B64: randomBytes(32).toString('base64'), BACKUP_GCM_KEY_ID: 'test-1' };
   if (prefix) env.BACKUP_PREFIX = prefix;
@@ -265,4 +316,27 @@ test('production workflow cannot downgrade the check: it never sets the syntheti
   assert.match(backup, /run: bash scripts\/create-verified-backup\.sh/);
   const s = await readFile('scripts/create-verified-backup.sh', 'utf8');
   assert.match(s, /\[\[ "\$BACKUP_PREFIX" == "ege-teknik-production" \]\]; then export BACKUP_EXPECTED_ROLE="backup_reader_ro"/);
+});
+
+test('verified backup, production prefix: a TOC without ACL/DEFAULT ACL is rejected before encryption and upload', async (t) => {
+  const { b, r } = await verifiedRun(t, { psqlBody: REAL_ROLE_PSQL, tocText: productionToc({ acl: false, defaultAcl: false }) });
+  assert.notEqual(r.status, 0); assert.match(r.stderr, /BACKUP TOC GUARD: BLOCKED/);
+  const out = await readFile(join(b.dir, 'out'), 'utf8');
+  assert.ok(!/encrypted_file|checksum_file|manifest_file/.test(out), 'nothing is handed to the upload step');
+  assert.deepEqual((await readdir(b.dir)).filter((n) => n.endsWith('.enc')), []);
+  const dirs = (await readdir(b.dir)).filter((n) => n.startsWith('ege-backup.'));
+  for (const d of dirs) assert.deepEqual((await readdir(join(b.dir, d))).filter((n) => /\.(enc|sha256|json)$/.test(n)), []);
+});
+test('verified backup, production prefix: a complete TOC passes the guard and the backup is produced', async (t) => {
+  const { r } = await verifiedRun(t, { psqlBody: REAL_ROLE_PSQL });
+  assert.equal(r.status, 0, r.stderr); assert.match(r.stdout, /^BACKUP TOC GUARD: PASS$/m);
+});
+test('verified backup, synthetic prefix: the Production TOC guard is not applied to test sources', async (t) => {
+  const { r } = await verifiedRun(t, { prefix: 'ege-teknik-synthetic', psqlBody: `exit 99`, tocText: '1; 0 0 TABLE public synthetic_only o\n' });
+  assert.equal(r.status, 0, r.stderr); assert.ok(!/TOC GUARD/.test(r.stdout + r.stderr));
+});
+test('guard placement: runs after the TOC is built and before encryption', async () => {
+  const s = await readFile('scripts/create-verified-backup.sh', 'utf8');
+  assert.ok(s.indexOf('backup-toc-guard.mjs') > s.indexOf('Dump table of contents is empty'));
+  assert.ok(s.indexOf('backup-toc-guard.mjs') < s.indexOf('backup-crypto-gcm.mjs encrypt'));
 });
