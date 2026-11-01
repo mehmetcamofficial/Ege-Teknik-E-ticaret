@@ -197,3 +197,43 @@ export const notificationOutbox=pgTable("notification_outbox",{id:text("id").pri
   check("notification_outbox_error_ck",sql`${t.lastErrorCode} IS NULL OR ${t.lastErrorCode} ~ '^[a-z0-9_]{1,40}$'`),
   check("notification_outbox_claim_token_ck",sql`${t.claimToken} IS NULL OR (${t.status} = 'sending' AND ${t.claimToken} ~ '^[0-9a-f]{32}$')`),
 ]);
+
+
+/** EFT-04B: review-only account metadata. No full IBAN or banking credentials. */
+export const merchantBankAccounts=pgTable("merchant_bank_accounts",{
+  id:text("id").primaryKey(),bankCode:text("bank_code").notNull(),accountLabel:text("account_label").notNull(),ibanLast4:text("iban_last4").notNull(),
+  currency:text("currency").notNull().default("TRY"),status:text("status").notNull().default("draft"),
+  verifiedBy:text("verified_by"),verifiedAt:timestamp("verified_at",{withTimezone:true}),
+  approvedBy:text("approved_by"),approvedAt:timestamp("approved_at",{withTimezone:true}),...timestamps,
+},t=>[
+  check("eft_accounts_iban_last4_ck",sql`${t.ibanLast4} ~ '^[0-9]{4}$'`),
+  check("eft_accounts_currency_ck",sql`${t.currency} = 'TRY'`),
+  check("eft_accounts_status_ck",sql`${t.status} IN ('draft','verified','disabled')`),
+  check("eft_accounts_approval_ck",sql`${t.status} <> 'verified' OR (${t.verifiedBy} IS NOT NULL AND ${t.verifiedAt} IS NOT NULL AND ${t.approvedBy} IS NOT NULL AND ${t.approvedAt} IS NOT NULL AND ${t.verifiedBy} <> ${t.approvedBy})`),
+]);
+export const bankMovements=pgTable("bank_movements",{
+  id:text("id").primaryKey(),bankAccountId:text("bank_account_id").notNull().references(()=>merchantBankAccounts.id),
+  bankTransactionId:text("bank_transaction_id").notNull(),amountTl:integer("amount_tl").notNull(),direction:text("direction").notNull(),
+  memo:text("memo").notNull().default(""),occurredAt:timestamp("occurred_at",{withTimezone:true}).notNull(),
+  status:text("status").notNull().default("unmatched"),...timestamps,
+},t=>[
+  uniqueIndex("eft_movements_account_tx_uq").on(t.bankAccountId,t.bankTransactionId),
+  index("eft_movements_status_occurred_idx").on(t.status,t.occurredAt),
+  check("eft_movements_amount_ck",sql`${t.amountTl} > 0`),
+  check("eft_movements_direction_ck",sql`${t.direction} IN ('credit','debit')`),
+  check("eft_movements_status_ck",sql`${t.status} IN ('unmatched','under_review','reviewed')`),
+  check("eft_movements_reference_ck",sql`length(btrim(${t.bankTransactionId})) BETWEEN 4 AND 100`),
+]);
+export const eftReconciliationReviews=pgTable("eft_reconciliation_reviews",{
+  id:text("id").primaryKey(),movementId:text("movement_id").notNull().references(()=>bankMovements.id),
+  orderId:text("order_id").references(()=>orders.id),status:text("status").notNull().default("pending"),
+  decisionReason:text("decision_reason").notNull().default(""),reviewedBy:text("reviewed_by"),
+  reviewedAt:timestamp("reviewed_at",{withTimezone:true}),approvedBy:text("approved_by"),
+  approvedAt:timestamp("approved_at",{withTimezone:true}),...timestamps,
+},t=>[
+  uniqueIndex("eft_reviews_movement_uq").on(t.movementId),
+  index("eft_reviews_status_created_idx").on(t.status,t.createdAt),
+  check("eft_reviews_status_ck",sql`${t.status} IN ('pending','approved','rejected')`),
+  check("eft_reviews_approval_ck",sql`${t.status} <> 'approved' OR (${t.orderId} IS NOT NULL AND ${t.reviewedBy} IS NOT NULL AND ${t.reviewedAt} IS NOT NULL AND ${t.approvedBy} IS NOT NULL AND ${t.approvedAt} IS NOT NULL AND ${t.reviewedBy} <> ${t.approvedBy})`),
+  check("eft_reviews_rejection_ck",sql`${t.status} <> 'rejected' OR length(btrim(${t.decisionReason})) >= 3`),
+]);
