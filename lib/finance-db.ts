@@ -58,6 +58,19 @@ export async function recordManualPayment(db: FinanceDb, input: { orderId: strin
       if (!samePaymentRequest(existing, input.orderId, input.body)) return refused(409, "IDEMPOTENCY_KEY_REUSED", "Bu istek anahtarı farklı bir ödeme için kullanıldı.");
       return { ok: true as const, replayed: true, paymentId: existing.id, paymentStatus: order.paymentStatus };
     }
+    // Prevent a bank transaction from being allocated twice, even with distinct
+    // Idempotency-Key values or two different orders. The transaction-scoped
+    // advisory lock serializes the reference lookup+insert across order rows.
+    // Reference is a linkage identifier, never proof of received funds.
+    if (input.body.method === "bank_transfer") {
+      const ref = input.body.reference.trim();
+      if (!ref) return refused(400, "BANK_REFERENCE_REQUIRED", "Havale/EFT için banka işlem referansı zorunludur.");
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${"ege-bank-transfer:" + ref}, 0))`);
+      const [previousTransfer] = await tx.select({ id: payments.id }).from(payments)
+        .where(and(eq(payments.provider, MANUAL_PROVIDER), eq(payments.method, "bank_transfer"), eq(payments.reference, ref)))
+        .limit(1);
+      if (previousTransfer) return refused(409, "BANK_REFERENCE_REUSED", "Bu banka işlem referansı daha önce kaydedildi. Banka hareketlerini kontrol edin.");
+    }
     const { collected, refunded } = await ledgerSums(tx, order.id);
     const valid = validateManualPayment({ orderStatus: order.status, total: order.total, collected, amount: input.body.amount });
     if (!valid.ok) return valid;
