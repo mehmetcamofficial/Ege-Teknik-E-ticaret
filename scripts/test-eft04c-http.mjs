@@ -38,9 +38,9 @@ const cookieFor = async (role) => {
   return "ege_admin_session="+token;
 };
 const count = async (table) => Number((await owner.query("SELECT count(*)::int AS n FROM "+table)).rows[0].n);
-const req = async (base,cookie,method="GET") => {
+const req = async (base,cookie,method="GET",sameOrigin=false) => {
   const result=await fetch(base+"/api/admin/eft-reconciliation",{method,redirect:"manual",
-    headers:cookie?{cookie}:undefined,signal:AbortSignal.timeout(25000)});
+    headers:{...(cookie?{cookie}:{}),...(sameOrigin?{origin:base}:{})},signal:AbortSignal.timeout(25000)});
   let data=null;
   const body=await result.text();
   try {data=JSON.parse(body);}catch {}
@@ -89,11 +89,15 @@ try {
   assert.equal(JSON.stringify(c.data).includes("TR000000000000000000000000"),false);
   const d=await req(server.base,ownerCookie);
   assert.equal(d.status,200,"super admin should have read access");
-  const e=await req(server.base,financeCookie,"POST");
-  assert.equal(e.status,405,"write method must not be implemented");
+  // Proxy must reject unsafe cross-origin/missing-origin mutations BEFORE route handling.
+  const noOrigin=await req(server.base,financeCookie,"POST");
+  assert.equal(noOrigin.status,403,"missing Origin must fail the same-origin guard");
+  // With a valid same-origin request the GET-only Next.js route must reject writes.
+  const e=await req(server.base,financeCookie,"POST",true);
+  assert.equal(e.status,405,"valid same-origin write must reach the GET-only route and be refused");
   assert.equal(await count("payments"),p0,"no payments created");
   assert.equal(await count("eft_reconciliation_reviews"),r0,"no reviews created");
-  console.log("[eft04c-http] PASS: anonymous 403, staff 403, finance 200, super-admin 200, POST 405, 1 synthetic movement, zero payment/review writes");
+  console.log("[eft04c-http] PASS: anonymous 403, staff 403, finance 200, super-admin 200, POST missing-Origin 403, same-Origin 405, 1 synthetic movement, zero payment/review writes");
 } catch(e) {
   console.error("[eft04c-http] FAIL: "+(e?.message??"unknown"));
   process.exitCode=1;
