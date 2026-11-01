@@ -20,5 +20,9 @@ test("HTTP tests use actual admin session cookies and route GET, not mocked auth
 });
 test("test asserts denial, authorized read, no unsafe writes or secret leakage",()=>{
   for(const token of ['a.status,403','b.status,403','c.status,200','d.status,200','e.status,405','count("payments")','count("eft_reconciliation_reviews")','settlementEnabled,false']) assert.ok(source.includes(token),token);
+  assert.match(source,/const noOrigin=await req\(server\.base,financeCookie,"POST"\)/);
+  assert.match(source,/noOrigin\.status,403/);
+  assert.match(source,/req\(server\.base,financeCookie,"POST",true\)/);
+  assert.match(source,/origin:base/);
   assert.match(wrapper,/node scripts\/test-eft04c-http\.mjs/);
 });
