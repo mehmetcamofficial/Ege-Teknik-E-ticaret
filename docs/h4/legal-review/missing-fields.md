@@ -59,7 +59,7 @@ Açıkça **BLOCKER** olarak işaretli: C1, H4.
 |---|---|---|
 | Ticari ad | Ege Teknik | Doğrulanmış (VERIFICATION A) |
 | Telefon / e-posta | 0542 795 75 60 / info@egeteknik.tr | Doğrulanmış (VERIFICATION A) |
-| Adres | **ÇELİŞKİ:** Hukuki RC taslakları Cumhuriyet Mah. Ant Sk. No: 7 B; Kuşadası Ticaret Odası üye listesi İkiçeşmelik Mah. Süleyman Demirel Bul. No: 13/1D adresini gösteriyor. | **BLOCKED:** Güncel resmî şirket kayıtlarıyla teyit edilmedi; hukuki yayın için yeterli değil. |
+| Adres | **İŞLETME TEYİDİ (2026-11-02):** Hukuki RC taslaklarındaki Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın adresi kullanılacak. İkiçeşmelik Mah. adresi eski oda/kod kaydında görünüyor; güncel satıcı adresi yerine geçirilmeyecek. | **OPERATÖR TEYİDİ:** Daha önce resmî şirket kaydıyla doğrulanan Cumhuriyet Mah. adresi için kullanıcının açık teyidi alındı. Güncel resmî belge bu oturumda yeniden açılmadı; iade adresinin işlevsel doğrulaması ayrı. |
 | KEP adresi | gösterilmiyor | **Eksik (B2)**; "Elektronik Bildirim Adresi KEP sayılmaz" |
 | ETBİS kaydı | gösterilmiyor | **Eksik (C1, BLOCKER)** |
 | Kargo/iade taşıyıcısı | belirtilmiyor | **Eksik (E1–E3)**; kargo kapalı |
@@ -74,3 +74,7 @@ Yasal metinlerde doğrulanmamış bilgi yayımlanmaz kuralı korunmuştur (RC me
 - Kuşadası Ticaret Odası 11. Meslek Komitesi listesi aynı tam ticaret unvanına karşılık İkiçeşmelik Mah. adresi gösteriyor: https://kuto.org.tr/en/corporate/data-bank/11-meslek-komitesi-uye-listesi/ . Listenin güncelliği teyit edilmedi.
 - Güncel ticaret sicili adres kaydı/vergi levhası ve ayrı bir iade adresi varsa bunun işletme teyidi olmadan hiçbir adres değiştirilmeyecek ve hukuki RC'ler Production'da yayımlanmayacak.
 - Belgelerdeki VKN/MERSİS tekrarını kaldırmak yalnızca editoryal düzeltmedir; hukuk/işletme onayı yerine geçmez.
+
+## Ek karar — 2026-11-02 (işletme adresi)
+
+Kullanıcı, önceki resmî şirket kaydında geçen **Cumhuriyet Mah. Ant Sk. No: 7 B, Kuşadası / Aydın** adresinin kullanılacağını kesinleştirdi. Hukuki RC'deki adres olduğu gibi korunur; eski İkiçeşmelik Mah. adresiyle değiştirilmez. Bu karar, kayıt belgesinin bu oturumda yeniden incelendiği anlamına gelmez. Cayma/iade için fiilen kullanılacak adres, işletme süreçlerinde ayrıca teyit edilmelidir.
