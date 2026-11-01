@@ -15,8 +15,6 @@
 | E-posta / telefon | info@egeteknik.tr / 0542 795 75 60 |
 | Web | egeteknik.tr |
 
-KEP adresi doğrulandığında bu metnin sonraki sürümüne eklenir; doğrulanmamış bilgi yayımlanmaz.
-
 ## 2. İşlenen kişisel veri kategorileri
 
 Ege Teknik ile kurduğunuz ilişkiye göre aşağıdaki veriler işlenebilir:
