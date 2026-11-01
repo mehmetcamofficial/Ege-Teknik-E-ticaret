@@ -131,6 +131,7 @@ export function PaymentActionPanels({ orderId, ledger, onChanged, canRecord = tr
   async function savePayment() {
     const amount = Number(payAmount);
     if (!Number.isInteger(amount) || amount <= 0) return toast.error("Tutarı tam TL olarak girin.");
+    if (payMethod === "bank_transfer" && !payReference.trim()) return toast.error("EFT için banka işlem referansını girin ve banka hesabına gelen tutarı doğrulayın.");
     setBusy(true);
     const r = await postIdempotent(`/api/admin/orders/${orderId}/payments`, payKey, { amount, method: payMethod, reference: payReference.trim() });
     setBusy(false);
@@ -165,9 +166,10 @@ export function PaymentActionPanels({ orderId, ledger, onChanged, canRecord = tr
             <FormField label="Yöntem" htmlFor="pay-method">
               <select id="pay-method" className={selectClass} value={payMethod} onChange={(e) => setPayMethod(e.target.value)}>{manualPaymentMethods.map((m) => <option key={m} value={m}>{paymentMethodLabel[m]}</option>)}</select>
             </FormField>
-            <FormField label="Referans (dekont / slip no)" htmlFor="pay-reference">
-              <Input id="pay-reference" maxLength={100} value={payReference} onChange={(e) => setPayReference(e.target.value)} />
+            <FormField label={payMethod === "bank_transfer" ? "Banka işlem referansı (zorunlu)" : "Referans (dekont / slip no)"} htmlFor="pay-reference">
+              <Input id="pay-reference" maxLength={100} required={payMethod === "bank_transfer"} value={payReference} onChange={(e) => setPayReference(e.target.value)} />
             </FormField>
+            {payMethod === "bank_transfer" && <Notice tone="warning">Dekont beyanı tek başına tahsilat kanıtı değildir. Şirket banka hesabı hareketlerinde tutar, alıcı ve işlem referansını doğrulamadan ödeme kaydetmeyin.</Notice>}
             <Button type="button" onClick={() => void savePayment()}>Ödemeyi kaydet</Button>
           </fieldset>
         </Panel>
