@@ -56,3 +56,14 @@ Salt-okunur `filter_project_envs(decrypt=false)` sonucunda ödeme/mesajlaşmayla
 - Hukuki metinlerin ödeme, iade ve ödeme yükümlülüğü ibareleri nihai ödeme UX ile hukukçu tarafından karşılaştırılmalı; bir metin değişirse ilgili aday hash'i yeniden üretilecek. `release-gates.json` hâlâ BLOCKED.
 
 **Bu karar yalnızca ayrı Git dalındaki planlama kaydıdır. Üretim koduna, ödeme konfigürasyonuna, onay kutularına veya Production DB'ye değişiklik uygulanmadı.**
+
+## 6. 2026-11-02 Havale/EFT önce — ayrı dalda uygulanan sınırlı checkout değişikliği
+
+Kullanıcı açıkça **Havale/EFT sipariş seçeneğini ilk aşamada**, banka POS'u ile iyzico'yu ise başvuru/onay sonuçlarına kadar **pasif** istedi.
+
+- `public/checkout.html` ödeme yöntemini **Havale / EFT — sipariş sonrası ödeme** adıyla gösterir. İç API değerini, mevcut checkout ile geriye dönük uyumu korumak için `discovery` olarak bırakır; bu **yeni ve bağımsız bir havale ödeme kayıt altyapısının tamamlandığı anlamına gelmez**.
+- Müşteriye IBAN/banka hesabı uydurulmaz; doğrulanmış şirket hesabı ve sipariş referansı işletme tarafından ayrıca iletilir. Sipariş kayıtlı ama **ödenmemiş** durumdadır; yetkili muhasebe/tahsilat doğrulaması olmadan ödendiye alınamaz.
+- Banka POS'u ile iyzico checkout'ta seçilemez; ikisi de bağlanan, sözleşmeli ve testleri geçmiş gerçek sağlayıcılar olmadan açılmaz.
+- `tests/checkout-bank-transfer-policy.test.mjs` yeni ürün politikası için kaynak-kod/HTML regresyon testidir; Mac'te çalıştırılmadıkça PASS raporlanmaz.
+- **Sınır:** Bu aşama yalnız müşteri metni ve mevcut `discovery` akışını kullanır; yeni `bank_transfer` enum, IBAN yönetimi, ödeme son tarihi, otomatik mutabakat, yeni admin ödeme eşleştirme, etkinleştirilmiş Production sipariş kabulü veya gerçek tahsilat içermez. Bu yetenekler bağımsız teknik ve işletme onayı ister.
+- **Production yasal kapısı hâlâ BLOCKED**: ETBİS, onaylanmış hukuki metinler, montaj ve teslimat/iadeler. Bu dal `main`e merge edilmedi; deploy edilmedi.
