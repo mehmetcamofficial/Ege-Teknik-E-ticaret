@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { bankMovements, eftReconciliationReviews, merchantBankAccounts } from "../db/schema.ts";
 
