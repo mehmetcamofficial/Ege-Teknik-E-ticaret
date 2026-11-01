@@ -45,13 +45,14 @@ import { BootstrapError, bootstrapDisposableDatabase, defaultStageDeps } from ".
 const TEST_FILES = [
   "tests/paytr-db.test.ts",
   "tests/finance-db.test.ts",
+  "tests/eft04b-db.test.ts",
   "tests/h5-rbac-db.test.ts",
   "tests/orders-db.test.ts",
   "tests/blog-db.test.ts",
   "tests/service-requests-db.test.ts",
 ];
 /** How many of those tests need the database (the other tests in the same files are hermetic). Floor, not an exact count. */
-const EXPECTED_MIN_TESTS = 31;
+const EXPECTED_MIN_TESTS = 36;
 /** The runner's own input. Deliberately not named *_DATABASE_URL: tests/ci-workflow-policy.test.ts forbids that token in the workflow. */
 const ENV_NAME = "COMMERCE_PG_URL";
 /** What the suites themselves read. Supplied to the child process only. */
