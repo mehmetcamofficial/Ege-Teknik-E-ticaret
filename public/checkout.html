@@ -13,6 +13,13 @@
       <h2 tabindex="-1" data-confirmation-heading>Siparişiniz kaydedildi</h2>
       <dl class="order-status" aria-label="Sipariş ve ödeme durumu"><div><dt>Sipariş</dt><dd>Kaydedildi</dd></div><div><dt>Ödeme</dt><dd>Tahsil edilmedi</dd></div></dl>
       <p data-confirmation-number></p>
+      <div class="notice" data-bank-transfer-instructions aria-label="Havale EFT ödeme referansı">
+        <strong>Havale/EFT açıklama referansı</strong>
+        <p>Şirket banka hesabı ekibimiz tarafından doğrulanıp size iletildiğinde, aşağıdaki sipariş numarasını havale açıklamasına yazın. Bu sayfada IBAN verilmez ve sipariş oluşturulurken para tahsil edilmez.</p>
+        <p><code data-bank-transfer-reference></code></p>
+        <button type="button" class="ghost" data-bank-transfer-reference-copy>Referansı kopyala</button>
+        <small data-bank-transfer-copy-status role="status" aria-live="polite"></small>
+      </div>
       <p class="field-help">Siparişinizi sonradan görüntülemek için <a href="order-lookup.html">Siparişimi görüntüle</a> sayfasını takip numaranız ve sipariş verirken kullandığınız e-posta adresiyle kullanabilirsiniz.</p>
       <div data-confirmation-items></div>
       <div class="summary-row"><span>Ara toplam</span><b data-confirmation-subtotal></b></div>
