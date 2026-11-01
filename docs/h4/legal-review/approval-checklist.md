@@ -51,7 +51,7 @@ Durum: **REVIEW REQUIRED / PRODUCTION PUBLISH BLOCKED**. Bu not hukukçu veya i�
 | Kontrol | Gözlem | Kapanış kanıtı |
 |---|---|---|
 | Checkout hukuki sürüm kaydı | Production `legal_documents` ve `legal_document_versions` envanterleri 0 kayıt; `/api/legal/required` 503 | Owner yetkisiyle yalnız onaylı sürümler yayınlandıktan sonra API 200 ve sürüm ID doğrulaması |
-| Şirket ve iade adresi | RC belgeleri Cumhuriyet Mah. Ant Sk. No:7 B; farklı oda/eski kod kayıtlarında İkiçeşmelik Mah. No:13/1D | Güncel şirket sicili/vergi levhası ve gerçek iade adresi işletme tarafından yazılı teyit edilmeli |
+| Şirket ve iade adresi | Kullanıcı, daha önce resmî kayıttan doğrulanmış Cumhuriyet Mah. Ant Sk. No: 7 B adresinin kullanılacağını teyit etti; İkiçeşmelik adresi kullanılmayacak | Şirket adresi operatör teyidi kayıtlı; fiili iade adresi ve varsa güncel sicil belgesinin arşiv kanıtı ayrıca kontrol edilmeli |
 | Mesafeli satış | §6'da `[DOĞRULAMA BEKLİYOR: standart montaj paketi kapsamı]` işareti var | Gerçek GREE/TLC standardı, 4 metre kapsamı ve ek iş fiyat politikası yetkili işletme/hukukçu tarafından teyit edilmeli; müşteri metninden iç not çıkarılmalı |
 | Ön bilgilendirme | 1–7 gün taahhüdü, ödeme yöntemi ve taşıyıcı koşulları taslakta; fiili Production operasyonuna uygunluk onaylanmadı | Ödeme ve teslimat operasyonu, şikâyet/iade sorumlusu, doğru checkout düğme metni teyidi |
 | KVKK | Yinelenen VKN/MERSİS satırları ayrı dalda kaldırıldı; değişen metnin eski checklist hash'i geçersiz | Yeni SHA-256 `001ac84e37c9` hesaplandı ve envantere yazıldı; hukukçu onayı halen gerekli; veri işleme/aktarım, saklama ve VERBİS hukukçu incelemesi |
@@ -59,3 +59,7 @@ Durum: **REVIEW REQUIRED / PRODUCTION PUBLISH BLOCKED**. Bu not hukukçu veya i�
 | ETBİS | Şirket yetkilisi kaydı henüz tamamlamadı | Şirket/domain ETBİS kayıt kanıtı |
 
 **Yayın disiplini:** Bu denetim Production'a yazma, hukuki sürüm yayınlama, release onayı veya checkout açma yetkisi vermez. `kvkk.md` içeriği değiştiği için önceki `inventory.json` ve eski hash değerine dayanarak onay verilemez.
+
+## 7. Kritik belge aday sürümleri (2026-11-02)
+
+`critical-legal-candidate-lock-20261102.md` üç Markdown kaynak dosyasının **dosya SHA-256** değerlerini sabitler: `distance-sales cb319b88f528`, `pre-information b37bef80ac9a`, `kvkk 001ac84e37c9`. Bunlar veritabanı kanonik `title + body` hash değerleri değildir. Tüm hukukçu ve işletme onay kutuları **bilerek boş** kalır; hiçbiri Production yayın yetkisi vermez.
