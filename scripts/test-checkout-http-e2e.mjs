@@ -7,7 +7,7 @@
  */
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { spawn } from "node:child_process";
+import { startNextDev } from "./http-test-server.mjs";
 import { readFileSync } from "node:fs";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
@@ -30,8 +30,7 @@ const owner = new pg.Pool({ connectionString: raw, max: 3 });
 const dbUrl = (role, password) => { const u = new URL(raw); u.username = role; u.password = password; return u.toString(); };
 const storefrontUrl = dbUrl("sprintb_http_storefront", storePassword);
 const adminUrl = dbUrl("sprintb_http_admin", adminPassword);
-let port = 43000 + Math.floor(Math.random() * 1000);
-let base = `http://127.0.0.1:${port}`;
+let base = "";   // set from the server the OS gave a port to (scripts/http-test-server.mjs)
 let server;
 let serverOutput = "";
 const log = (line) => { serverOutput = (serverOutput + line).slice(-6000); };
@@ -51,37 +50,19 @@ const assertStatus = (result, status, label) => {
 };
 const stopServer = async () => {
   if (!server) return;
-  const child = server;
+  const running = server;
   server = undefined;
-  child.kill("SIGTERM");
-  await Promise.race([
-    new Promise((resolve) => child.once("exit", resolve)),
-    new Promise((resolve) => setTimeout(resolve, 4000)),
-  ]);
+  await running.stop();
 };
 const startServer = async (overrides) => {
-  port += 1;
-  base = `http://127.0.0.1:${port}`;
   serverOutput = "";
-  server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "-H", "127.0.0.1", "-p", String(port)],
-    { env: { ...process.env, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci",
+  server = await startNextDev({ onOutput: log, env: { ...process.env, APP_ENV: "development", NEON_BRANCH_ID: "disposable-http-ci",
       EXPECTED_NEON_DEVELOPMENT_BRANCH_ID: "disposable-http-ci",
       DATABASE_URL: raw, STOREFRONT_DATABASE_URL: storefrontUrl, ADMIN_DATABASE_URL: adminUrl,
       CHECKOUT_SCOPED_DB_ENABLED: "true", LEGAL_PREVIEW_SIGNING_SECRET: signingSecret,
       IP_HASH_SALT: secret(), LOCAL_BUILD_NO_UPLOAD: "1", NEXT_TELEMETRY_DISABLED: "1",
-      ...overrides }, stdio: ["ignore", "pipe", "pipe"] });
-  server.stdout.on("data", (chunk) => log(chunk.toString()));
-  server.stderr.on("data", (chunk) => log(chunk.toString()));
-  let ready = false;
-  for (let i = 0; i < 90; i++) {
-    if (server.exitCode !== null) throw Error("local Next server exited before readiness");
-    try {
-      const response = await fetch(base + "/api/health", { signal: AbortSignal.timeout(1000) });
-      if (response.status < 500) { ready = true; break; }
-    } catch { /* compile/startup */ }
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  }
-  assert.ok(ready, "local Next server did not become ready");
+      ...overrides } });
+  base = server.base;
 };
 try {
   await bootstrapDisposableDatabase({ Pool: pg.Pool, drizzle, migrate, url: raw, journal,

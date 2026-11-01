@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// CI-only real PostgreSQL upgrade gate: 0018 -> 0023 via the actual Drizzle migrator.
+// CI-only real PostgreSQL upgrade gate: 0018 -> 0025 via the actual Drizzle migrator.
 // Never accepts remote hosts; resets ONLY a disposable sprintb* loopback database.
 import assert from "node:assert/strict";
 import { cpSync, mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
@@ -19,7 +19,7 @@ if (process.env.CI !== "true" || !target || !["127.0.0.1", "localhost", "::1"].i
   process.exit(1);
 }
 const journal = JSON.parse(readFileSync("drizzle-pg/meta/_journal.json", "utf8"));
-assert.equal(journal.entries.length, 24);
+assert.equal(journal.entries.length, 26);
 const folder = mkdtempSync(join(tmpdir(), "pr37-migration-upgrade-"));
 const pool = new pg.Pool({ connectionString: raw, max: 1, connectionTimeoutMillis: 15000 });
 const stage = (lastIdx) => {
@@ -39,16 +39,21 @@ try {
   assert.equal((await pool.query("SELECT to_regclass('public.notification_outbox') AS t")).rows[0].t, null);
   await migrate(drizzle(pool), { migrationsFolder: "drizzle-pg" });
   const after = (await pool.query("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations")).rows[0].n;
-  assert.equal(after, 24, "upgrade must record 24 migrations");
+  assert.equal(after, 26, "upgrade must record 26 migrations");
   const schema = (await pool.query(`SELECT to_regprocedure('public.checkout_replay_by_key(text,text)') IS NOT NULL AS replay,
     to_regprocedure('public.legal_acceptance_no_mutation()') IS NOT NULL AS immutable,
     to_regclass('public.notification_outbox') IS NOT NULL AS outbox,
+    EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='notification_outbox' AND column_name='claim_token') AS claim_token,
+    EXISTS (SELECT 1 FROM pg_constraint WHERE conname='notification_outbox_claim_token_ck') AS claim_token_check,
+    to_regclass('public.notification_send_budget') IS NOT NULL AS send_budget,
+    to_regclass('public.notification_send_reservation') IS NOT NULL AS send_reservation,
+    to_regprocedure('public.reserve_notification_send(text,text[],text[],integer[],timestamptz)') IS NOT NULL AS reserve_fn,
     (SELECT count(*)::int FROM information_schema.columns WHERE table_schema='public' AND table_name='used_products'
       AND column_name IN ('inspection_date','inspection_result','cooling_test','heating_test','condition_grade','known_defects','missing_accessories','warranty_months')) AS inspection_columns`)).rows[0];
-  assert.deepEqual(schema, { replay: true, immutable: true, outbox: true, inspection_columns: 8 });
+  assert.deepEqual(schema, { replay: true, immutable: true, outbox: true, claim_token: true, claim_token_check: true, send_budget: true, send_reservation: true, reserve_fn: true, inspection_columns: 8 });
   await migrate(drizzle(pool), { migrationsFolder: "drizzle-pg" });
-  assert.equal((await pool.query("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations")).rows[0].n, 24, "rerun must be idempotent");
-  console.log("[migration-upgrade] PASS: real Drizzle 0018->0023, 19->24 ledger, schema, idempotency");
+  assert.equal((await pool.query("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations")).rows[0].n, 26, "rerun must be idempotent");
+  console.log("[migration-upgrade] PASS: real Drizzle 0018->0025, 19->26 ledger, schema, idempotency");
 } finally {
   await pool.end().catch(() => {});
   rmSync(folder, { recursive: true, force: true });

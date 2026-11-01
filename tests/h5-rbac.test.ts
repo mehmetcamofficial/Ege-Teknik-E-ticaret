@@ -97,7 +97,8 @@ test("H5-B migration 0023 widens three CHECK lists and touches no user, role ass
   for (const needle of ["admin_users_role_ck", "admin_invites_role_ck", "admin_grants_permission_ck", "finance_manager", "payments:record", "payments:refund"]) assert.ok(code.includes(needle), needle);
   assert.match(sql, /UYGULANMADI/);
   const journal = JSON.parse(read("drizzle-pg/meta/_journal.json")).entries;
-  assert.deepEqual(journal.slice(-2).map((e: { tag: string }) => e.tag), ["0022_notification_outbox", "0023_finance_permissions"]);
+  const tags = journal.map((e: { tag: string }) => e.tag);
+  assert.deepEqual(tags.slice(tags.indexOf("0022_notification_outbox"), tags.indexOf("0022_notification_outbox") + 2), ["0022_notification_outbox", "0023_finance_permissions"], "0022 and 0023 stay adjacent and in order; later migrations may follow");
 });
 
 test("H5-B the refund card needs the refund flag and the collect card the record flag", () => {
