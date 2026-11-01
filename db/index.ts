@@ -3,10 +3,12 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
 import { resolveScopedDatabaseUrl, scopedCheckoutEnabled, type DatabaseScope } from "../lib/db-access-scope";
+import { resolveNotificationWorkerDatabaseUrl } from "../lib/notification-worker-db-url";
 
 const globalForDb = globalThis as unknown as {
   egeTeknikPool?: Pool;
   egeTeknikScopedPools?: Partial<Record<DatabaseScope, Pool>>;
+  egeTeknikNotificationWorkerPool?: Pool;
 };
 
 function databaseUrl() {
@@ -45,6 +47,16 @@ export function getScopedPool(scope: DatabaseScope): Pool {
   const pools = globalForDb.egeTeknikScopedPools ??= {};
   if (!pools[scope]) pools[scope] = createPool(connectionString);
   return pools[scope];
+}
+
+/** Dedicated outbox worker connection; never falls back to legacy/owner credentials. */
+export function getNotificationWorkerDb() {
+  assertEnvironmentIsolation();
+  const url = resolveNotificationWorkerDatabaseUrl(process.env);
+  if (!globalForDb.egeTeknikNotificationWorkerPool) {
+    globalForDb.egeTeknikNotificationWorkerPool = createPool(url);
+  }
+  return drizzle(globalForDb.egeTeknikNotificationWorkerPool, { schema });
 }
 
 export function getStorefrontDb() { return drizzle(getScopedPool("storefront"), { schema }); }

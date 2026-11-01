@@ -122,13 +122,12 @@ test("H5-A the admin banner says so when e-mail is disabled and never claims del
   assert.equal(describeNotifications({ providerConfigured: true, providerReason: null, adminRecipientsConfigured: true, byStatus: { pending: 1 }, oldestWaitingSeconds: 1200 }).tone, "warning");
 });
 
-test("H5-A worker route requires a long secret (404 when absent, 401 when wrong) and returns counts only", () => {
-  const route = readFileSync("app/api/internal/notifications/dispatch/route.ts", "utf8");
-  assert.match(route, /secret\.length < 32\) return Response\.json\(\{ error: "not_configured" \}, \{ status: 404/);
-  assert.match(route, /timingSafeEqual/);
-  assert.match(route, /status: 401/);
+test("H5-A worker route is GET-only, delegates to the tested handler and never reads a request body", () => {
+  const route = readFileSync("app/api/internal/notifications/dispatch/route.ts", "utf8"), handler = readFileSync("lib/notifications/dispatch-handler.ts", "utf8");
   assert.doesNotMatch(route, /export (?:async function|const) POST/, "GET only (cron style); no body is read");
-  assert.match(route, /cache-control": "no-store"/);
+  assert.match(route, /handleDispatch\(/);
+  assert.match(handler, /cache-control": "no-store"/);
+  assert.doesNotMatch(handler, /request\.(?:json|text|formData|arrayBuffer)/);
 });
 
 test("H5-A the worker never logs or audits a raw address, subject or body", () => {
@@ -141,4 +140,90 @@ test("H5-A the worker never logs or audits a raw address, subject or body", () =
   assert.match(outbox, /ON CONFLICT \(dedupe_key\) DO NOTHING/);
   assert.match(outbox, /FOR UPDATE SKIP LOCKED/);
   assert.match(outbox, /tx\.transaction\(async \(savepoint\)/, "enqueue runs in a SAVEPOINT");
+});
+
+// ---- PR #37: dedicated scoped notification worker (source-level locks; the live behaviour is proven by scripts/test-pr37-worker-http.mjs) ----
+const outboxSource = () => readFileSync("lib/notifications/outbox.ts", "utf8");
+/** Code only: block and line comments are removed so that explanations may name a table without counting as a use of it. */
+const codeOnly = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+test("PR37 the worker route can reach no database connection other than the dedicated worker one", () => {
+  const route = readFileSync("app/api/internal/notifications/dispatch/route.ts", "utf8");
+  assert.deepEqual([...route.matchAll(/import \{([^}]*)\} from "@\/db"/g)].flatMap((m) => m[1].split(",").map((x) => x.trim())), ["getNotificationWorkerDb"]);
+  assert.doesNotMatch(route, /\bgetDb\b|getAdminDb|getStorefrontDb|getCheckoutDb|getPool|getScopedPool|process\.env\.(?:DATABASE_URL|ADMIN_DATABASE_URL|STOREFRONT_DATABASE_URL)/);
+});
+
+test("R-03 every worker result is fenced by the claim token and its audit line is part of the same statement", () => {
+  const outbox = codeOnly(outboxSource());
+  const worker = outbox.slice(0, outbox.indexOf("export async function operationsSummary"));
+  assert.match(worker, /claim_token = replace\(gen_random_uuid\(\)::text, '-', ''\)/, "every claim writes a fresh random token");
+  assert.match(worker, /RETURNING id, kind, order_id AS "orderId", dedupe_key AS "dedupeKey", attempts, claim_token AS "claimToken"/, "and gets it back");
+  assert.match(worker, /WHERE id = \$\{row\.id\} AND status = 'sending' AND claim_token = \$\{row\.claimToken\} RETURNING id\)/, "a result is applied only to the claim that owns the row");
+  assert.match(worker, /WITH moved AS \([\s\S]*?UPDATE notification_outbox SET \$\{change\}, locked_until = NULL, claim_token = NULL[\s\S]*?logged AS \(\s*INSERT INTO public\.audit_logs[\s\S]*?FROM moved\)\s*SELECT id FROM moved/, "state change and audit insert are one statement");
+  assert.doesNotMatch(worker, /db\.update\(notificationOutbox\)|\baudit\(/, "no unfenced update and no separate audit insert remain in the worker path");
+  assert.match(worker, /claim_token_invalid/, "a claim whose token cannot be proven is never sent (fail closed)");
+  assert.ok(worker.indexOf("holdClaim()") > 0 && worker.indexOf("holdClaim()") < worker.indexOf("provider.send("), "ownership is checked and the lease renewed immediately before the provider call");
+  assert.match(worker, /SET status = 'dead', last_error_code = 'stalled', locked_until = NULL, claim_token = NULL/, "the stalled sweep drops the token (the CHECK ties it to 'sending')");
+  assert.doesNotMatch(worker, /attempts = \$\{row\.attempts\}/, "attempts is not the fence: a requeue resets it");
+});
+
+test("R-03 migration 0024 is additive and the worker gets exactly one new column privilege pair", () => {
+  const sql = readFileSync("drizzle-pg/0024_notification_claim_token.sql", "utf8");
+  assert.match(sql, /ADD COLUMN "claim_token" text;/);
+  assert.match(sql, /"claim_token" IS NULL OR \("notification_outbox"\."status" = 'sending' AND "notification_outbox"\."claim_token" ~ '\^\[0-9a-f\]\{32\}\$'\)/);
+  assert.doesNotMatch(sql.replace(/^--.*$/gm, ""), /\b(DROP|DELETE|TRUNCATE|UPDATE|INSERT|GRANT|REVOKE)\b/i, "no data change, no drop, no grant in the migration");
+  const operator = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8");
+  const grant = (privilege: string) => operator.match(new RegExp(`GRANT ${privilege} \\(([^)]*)\\)\\s+ON public\\.notification_outbox`))?.[1].split(",").map((c) => c.trim()) ?? [];
+  assert.ok(grant("SELECT").includes("claim_token") && grant("UPDATE").includes("claim_token"), "the worker reads and writes the token");
+  assert.ok(!grant("INSERT").includes("claim_token"), "but cannot choose a token at insert time");
+});
+
+test("PR37 the worker has no admin_users fallback and reads orders ONLY through the notification_orders view (R-01)", () => {
+  const outbox = codeOnly(outboxSource());
+  assert.doesNotMatch(outbox, /adminUsers|admin_users/, "the worker role has no access to admin_users, so the code must not touch it");
+  assert.doesNotMatch(outbox, /\.select\(\)\.from\((?:orders|orderItems)\)/, "select() without a column list would need table-level SELECT");
+  const workerPart = outbox.slice(0, outbox.indexOf("export async function operationsSummary"));   // operationsSummary is the ADMIN summary (admin connection), not the worker
+  assert.match(workerPart, /FROM public\.notification_orders WHERE id = \$\{orderId\}/, "an order is loaded from the view");
+  assert.match(workerPart, /FROM public\.notification_orders o CROSS JOIN/, "the sweep reads the view too");
+  assert.doesNotMatch(workerPart, /(?:FROM|JOIN)\s+(?:public\.)?orders\b|\.from\(orders\)|\borders\.[a-zA-Z]/, "the worker code never names the orders table");
+  assert.doesNotMatch(workerPart, /shippingAddressSnapshot|shipping_address_snapshot/, "the snapshot (it holds the phone and the street address) is never read by the worker");
+  const withoutProviderField = workerPart.replace(/idempotencyKey: row\.dedupeKey/g, "");   // the e-mail provider's own message field, not orders.idempotency_key
+  for (const sensitive of ["phone", "address", "notes", "billing_address_snapshot", "billingAddressSnapshot", "request_fingerprint", "requestFingerprint", "idempotency_key", "idempotencyKey"]) {
+    assert.ok(!new RegExp(`\\b${sensitive}\\b`).test(withoutProviderField), `${sensitive} is never read by the worker`);
+  }
+});
+
+test("PR37 audit INSERT names exactly the seven granted columns and binds every value as a parameter", () => {
+  const outbox = outboxSource();
+  const block = /INSERT INTO public\.audit_logs \(([\s\S]*?)\)\s*SELECT ([\s\S]*?) FROM moved\)/.exec(outbox);
+  assert.ok(block, "explicit audit INSERT present (it reads the fenced UPDATE's RETURNING)");
+  assert.deepEqual(block[1].split(",").map((c) => c.trim()).filter(Boolean), ["id", "actor_user_id", "actor_email", "action", "entity_type", "entity_id", "payload"]);
+  assert.equal((block[2].match(/\$\{/g) ?? []).length, 5, "five bound parameters (id, actor user, actor e-mail, action, payload); the entity type is a fixed literal and the entity id comes from the UPDATE; no string concatenation");
+  assert.doesNotMatch(block[0], /request_id|ip_hash|created_at/);
+  assert.match(block[2], /JSON\.stringify\(payload\)\}::jsonb/);
+});
+
+test("PR37 the operator SQL grants exactly the minimal set, gives the worker NOTHING on orders and exposes only the whitelisted view (R-01)", () => {
+  const sql = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8").split("\n").filter((l) => !/^\s*--/.test(l)).join("\n");
+  assert.doesNotMatch(sql, /GRANT\s+ALL|(?<!NO)SUPERUSER|(?<!NO)BYPASSRLS|(?<!NO)CREATEROLE|(?<!NO)CREATEDB|(?<!NO)REPLICATION|WITH GRANT OPTION|TO PUBLIC/i);
+  assert.match(sql, /NOSUPERUSER[^;]*NOBYPASSRLS/);
+  assert.match(sql, /WITH INHERIT TRUE, SET FALSE/);
+  for (const table of ["admin_users", "customers", "payments", "drizzle"]) assert.ok(!sql.includes(table), `${table} is not granted`);
+  const grants = [...sql.matchAll(/GRANT\s+(SELECT|INSERT|UPDATE)\s*\(([^)]*)\)\s+ON\s+public\.(\w+)/g)].map((m) => `${m[3]}:${m[1]}:${m[2].split(",").map((c) => c.trim()).sort().join(",")}`).sort();
+  assert.deepEqual(grants.map((g) => g.split(":").slice(0, 2).join(":")), ["audit_logs:INSERT", "notification_outbox:INSERT", "notification_outbox:SELECT", "notification_outbox:UPDATE", "order_items:SELECT"], "column-level grants: no orders entry any more");
+  const tableLevel = [...sql.matchAll(/GRANT\s+(?!\w+\s*\()([A-Z, ]+?)\s+ON\s+(?:TABLE\s+)?public\.(\w+)\s+TO/g)].map((m) => `${m[1].trim()} ON ${m[2]}`);
+  assert.deepEqual(tableLevel, ["SELECT ON notification_orders"], "the only table-level grant is SELECT on the view");
+  assert.ok(!/GRANT[^;]*\bpublic\.orders\b/.test(sql) && !/GRANT[^;]*\bON\s+orders\b/.test(sql), "nothing is granted on the orders table itself");
+  const view = /CREATE VIEW public\.notification_orders WITH \(([^)]*)\) AS([\s\S]*?);/.exec(sql);
+  assert.ok(view, "the view is created by the operator SQL");
+  assert.match(view[1], /security_barrier = true/); assert.match(view[1], /security_invoker = false/);
+  assert.doesNotMatch(view[2], /\b(phone|address|notes|billing_address_snapshot|request_fingerprint|idempotency_key|customer_id|legal_evidence_version)\b/, "the view selects no sensitive column");
+  assert.equal((view[2].match(/shipping_address_snapshot/g) ?? []).length, 2, "the snapshot is referenced twice, only to extract the district and the method");
+  assert.match(view[2], /shipping_address_snapshot ->> 'district' AS district/); assert.match(view[2], /shipping_address_snapshot -> 'delivery' ->> 'method' AS delivery_method/);
+  assert.match(view[2], /FROM public\.orders AS o/, "every reference is schema-qualified");
+  assert.match(sql, /REVOKE ALL ON public\.notification_orders FROM PUBLIC;/);
+  assert.ok(!/DELETE|TRUNCATE|TRIGGER|REFERENCES/i.test(sql.replace(/NOCREATEROLE/g, "")), "no DELETE/TRUNCATE/TRIGGER/REFERENCES");
+  const raw = readFileSync("docs/ops/notification-worker-grants-20261024.sql", "utf8");
+  assert.match(raw, /DROP VIEW public\.notification_orders;/, "the rollback block removes the view, which is owned by the operator, not by the worker");
+  assert.doesNotMatch(raw, /no phone, street address/, "the old, wrong claim that a column grant hid the street address is gone");
 });

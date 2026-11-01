@@ -68,11 +68,17 @@ const ADMIN = process.env.GDRIVE03_LOCAL_PG_ADMIN_URL;
 const skip = ADMIN ? false : 'set GDRIVE03_LOCAL_PG_ADMIN_URL (disposable loopback PostgreSQL 18) to run the chain';
 
 function fakeDrive(account) {
-  const files = new Map();
+  const files = new Map(), permissionChecks = [], driveId = 'gd03-synthetic-shared-drive';
+  let folderId;
   return {
-    files,
+    files, permissionChecks, driveId,
     async about() { return { user: { emailAddress: account } }; },
-    async getFolder(id) { return { id, mimeType: 'application/vnd.google-apps.folder', trashed: false, capabilities: { canAddChildren: true }, permissions: [{ type: 'user', role: 'writer' }] }; },
+    async getFolder(id) { folderId = id; return { id, driveId, mimeType: 'application/vnd.google-apps.folder', trashed: false, capabilities: { canAddChildren: true } }; },
+    async listPermissions(id) {
+      assert.ok(id === folderId || id === driveId, 'permissions requested only for the folder or its Shared Drive');
+      permissionChecks.push(id);
+      return [{ type: 'user', role: 'writer' }];
+    },
     async findByName(_f, name) { return [...files.entries()].filter(([, v]) => v.name === name).map(([id, v]) => ({ id, name: v.name })); },
     async uploadResumable(_f, name, path, { size }) { const id = `id-${files.size}`; files.set(id, { name, data: await readFile(path) }); return { id, name, size: String(size) }; },
     async downloadToFile(id, dest) { await writeFile(dest, files.get(id).data, { flag: 'wx' }); },
@@ -95,6 +101,7 @@ test('chain (fake Drive): synthetic DB -> encrypt -> upload -> download -> sha25
     const o = Object.fromEntries((await readFile(out, 'utf8')).split('\n').filter(Boolean).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
     const drive = fakeDrive(account);
     await uploadBackupSet({ client: drive, folderId: folder, expectedAccount: account, files: { archive: o.encrypted_file, checksum: o.checksum_file, manifest: o.manifest_file }, workRoot: dir });
+    assert.deepEqual(drive.permissionChecks, [folder, drive.driveId], 'both live permission checks run before the round trip');
 
     const rawKey = key;
     const logs = []; const origLog = console.log; console.log = (m) => logs.push(m);
