@@ -50,7 +50,7 @@ CREATE TABLE "eft_reconciliation_reviews" (
  CONSTRAINT "eft_reviews_status_ck" CHECK (status IN ('unmatched','proposed','needs_review','approved','rejected')),
  CONSTRAINT "eft_reviews_amount_ck" CHECK (proposed_amount IS NULL OR proposed_amount > 0),
  CONSTRAINT "eft_reviews_revision_ck" CHECK (revision > 0),
- CONSTRAINT "eft_reviews_distinct_actors_ck" CHECK (approved_by IS NULL OR (approved_by <> created_by AND (reviewed_by IS NULL OR approved_by <> reviewed_by))),
+ CONSTRAINT "eft_reviews_distinct_actors_ck" CHECK (approved_by IS NULL OR (approved_by <> created_by AND reviewed_by IS NOT NULL AND reviewed_by <> created_by AND approved_by <> reviewed_by)),
  CONSTRAINT "eft_reviews_approved_ck" CHECK (status <> 'approved' OR (order_id IS NOT NULL AND payment_id IS NOT NULL AND reviewed_by IS NOT NULL AND approved_by IS NOT NULL))
 );
 --> statement-breakpoint
