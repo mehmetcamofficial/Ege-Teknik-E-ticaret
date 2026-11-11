@@ -54,6 +54,15 @@ try {
   for (const table of ["merchant_bank_accounts", "bank_movements", "eft_reconciliation_reviews"]) {
     assert.notEqual((await pool.query("SELECT to_regclass($1) AS t", ["public." + table])).rows[0].t, null, table + " must exist");
   }
+  const eftConstraints = (await pool.query(`SELECT conname, pg_get_constraintdef(oid) AS definition
+    FROM pg_constraint WHERE conname IN ('eft_reviews_distinct_actors_ck','eft_reviews_approved_ck')`)).rows;
+  assert.equal(eftConstraints.length, 2, "EFT approval CHECK constraints must exist");
+  const distinct = eftConstraints.find((c) => c.conname === "eft_reviews_distinct_actors_ck")?.definition ?? "";
+  for (const pair of ["approved_by <> created_by", "approved_by <> reviewed_by", "reviewed_by <> created_by"])
+    assert.ok(distinct.includes(pair), "three-person control missing: " + pair);
+  const unique = (await pool.query(`SELECT indexname FROM pg_indexes WHERE schemaname='public'
+    AND indexname IN ('bank_movements_external_uq','bank_movements_fingerprint_uq','eft_reviews_movement_approved_uq')`)).rows;
+  assert.equal(unique.length, 3, "bank movement dedupe and approval uniqueness indexes must exist");
   await migrate(drizzle(pool), { migrationsFolder: "drizzle-pg" });
   assert.equal((await pool.query("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations")).rows[0].n, 27, "rerun must be idempotent");
   console.log("[migration-upgrade] PASS: real Drizzle 0018->0026, 19->27 ledger, schema, idempotency");
