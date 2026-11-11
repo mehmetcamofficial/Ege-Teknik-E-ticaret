@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { orders, payments } from "../db/schema.ts";
 import { bankMovements, eftReconciliationReviews } from "../db/eft-reconciliation-schema.ts";
 import { audit, ledgerSums, type FinanceActor, type FinanceDb } from "./finance-db.ts";
