@@ -14,7 +14,7 @@ test("EFT migration is registered and staging tables exist",()=>{
 });
 test("canonical schema owns EFT tables and contains replay constraints",()=>{
  const schema=read("db/schema.ts");
- for(const name of ["merchantBankAccounts","bankMovements","eftReconciliationReviews"]) assert.ok(schema.includes("export const "+name+"="));
+ for(const name of ["merchantBankAccounts","bankMovements","eftReconciliationReviews"]) assert.ok(new RegExp("export const "+name+"\\s*=").test(schema));
  assert.match(schema,/bank_movements_external_uq/);
  assert.match(schema,/eft_reviews_distinct_actors_ck/);
 });
