@@ -102,6 +102,14 @@ try {
     await assert.rejects(fixtureClient.query(`UPDATE eft_reconciliation_reviews
       SET approved_by='eft-ci-approver' WHERE id='eft-ci-review'`), (error) => error.code === "23514");
     await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_distinct_actors");
+    // Even three distinct actors cannot mark a review approved without an order and payment.
+    await fixtureClient.query(`UPDATE eft_reconciliation_reviews
+      SET reviewed_by='eft-ci-reviewer' WHERE id='eft-ci-review'`);
+    await fixtureClient.query("SAVEPOINT eft_missing_ledger");
+    await assert.rejects(fixtureClient.query(`UPDATE eft_reconciliation_reviews
+      SET status='approved', approved_by='eft-ci-approver'
+      WHERE id='eft-ci-review'`), (error) => error.code === "23514");
+    await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_missing_ledger");
   } finally {
     await fixtureClient.query("ROLLBACK");
     fixtureClient.release();
