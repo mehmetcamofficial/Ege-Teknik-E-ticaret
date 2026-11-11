@@ -230,3 +230,41 @@ test("EFT settlement: concurrent approval writes one payment and one audit row",
   const replay = await settleEftReview(db, { reviewId, actor: approverActor, sourceVerified: true });
   assert.deepEqual(replay, { ok: false, code: "ALREADY_APPROVED" });
 });
+
+test("EFT settlement: audit insertion failure rolls back payment, review and order", { skip }, async () => {
+  const orderId = await makeOrder(11, 850);
+  const creator = "eft-rollback-maker-" + run, reviewer = "eft-rollback-reviewer-" + run, approver = "eft-rollback-approver-" + run;
+  await db.insert(adminUsers).values([
+    { id: creator, externalUserId: creator, email: creator + "@example.test", role: "finance_manager" },
+    { id: reviewer, externalUserId: reviewer, email: reviewer + "@example.test", role: "finance_manager" },
+    { id: approver, externalUserId: approver, email: approver + "@example.test", role: "super_admin" },
+  ]);
+  const accountId = "eft-rollback-account-" + run, movementId = "eft-rollback-movement-" + run, reviewId = "eft-rollback-review-" + run;
+  await db.insert(merchantBankAccounts).values({ id: accountId, bankLabel: "CI rollback bank", accountAlias: "CI", ibanLast4: "5678" });
+  await db.insert(bankMovements).values({ id: movementId, bankAccountId: accountId, source: "ci-fixture", externalTransactionId: "rollback-tx-" + run, importFingerprint: "e".repeat(64), amount: 850, bookedAt: at(11) });
+  await db.insert(eftReconciliationReviews).values({ id: reviewId, movementId, orderId, status: "proposed", proposedAmount: 850, createdBy: creator, reviewedBy: reviewer });
+  const actor = { userId: approver, email: approver + "@example.test", permissions: ["payments:record", "audit:read"] };
+  // Only the disposable, fully migrated CI database is used by this suite.
+  // The trigger deliberately fails at the last audit INSERT after the payment and review writes.
+  const suffix = run.replace(/[^a-z0-9]/g, "");
+  const triggerName = "eft_audit_failure_" + suffix;
+  const functionName = "eft_audit_failure_fn_" + suffix;
+  await pool.query("CREATE FUNCTION " + functionName + "() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action = 'eft_reconciliation_approved' THEN RAISE EXCEPTION 'EFT_AUDIT_INJECTED_FAILURE'; END IF; RETURN NEW; END $$");
+  await pool.query("CREATE TRIGGER " + triggerName + " BEFORE INSERT ON audit_logs FOR EACH ROW EXECUTE FUNCTION " + functionName + "()");
+  try {
+    await assert.rejects(settleEftReview(db, { reviewId, actor, sourceVerified: true }), /EFT_AUDIT_INJECTED_FAILURE/);
+  } finally {
+    await pool.query("DROP TRIGGER IF EXISTS " + triggerName + " ON audit_logs");
+    await pool.query("DROP FUNCTION IF EXISTS " + functionName + "()");
+  }
+  const rows = await db.select().from(payments).where(eq(payments.orderId, orderId));
+  assert.equal(rows.length, 0);
+  const [review] = await db.select().from(eftReconciliationReviews).where(eq(eftReconciliationReviews.id, reviewId));
+  assert.equal(review.status, "proposed");
+  assert.equal(review.paymentId, null);
+  assert.equal(review.approvedBy, null);
+  const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+  assert.equal(order.paymentStatus, "pending");
+  const logs = await db.select().from(auditLogs).where(eq(auditLogs.entityId, orderId));
+  assert.equal(logs.filter((entry) => entry.action === "eft_reconciliation_approved").length, 0);
+});
