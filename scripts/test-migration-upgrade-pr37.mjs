@@ -90,6 +90,18 @@ try {
       VALUES ($1,$2,'ci-import','tx-zero',$3,0,now())`,
       ["eft-ci-zero", account, "c".repeat(64)]), (error) => error.code === "23514");
     await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_zero_amount");
+    // DB-level three-person separation must reject a creator who also reviewed.
+    for (const id of ["eft-ci-creator", "eft-ci-reviewer", "eft-ci-approver"]) {
+      await fixtureClient.query(`INSERT INTO admin_users (id,external_user_id,email,role)
+        VALUES ($1,$2,$3,'finance_manager')`, [id, "external-" + id, id + "@example.test"]);
+    }
+    await fixtureClient.query(`INSERT INTO eft_reconciliation_reviews
+      (id,movement_id,status,created_by,reviewed_by)
+      VALUES ('eft-ci-review','eft-ci-m1','proposed','eft-ci-creator','eft-ci-creator')`);
+    await fixtureClient.query("SAVEPOINT eft_distinct_actors");
+    await assert.rejects(fixtureClient.query(`UPDATE eft_reconciliation_reviews
+      SET approved_by='eft-ci-approver' WHERE id='eft-ci-review'`), (error) => error.code === "23514");
+    await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_distinct_actors");
   } finally {
     await fixtureClient.query("ROLLBACK");
     fixtureClient.release();
