@@ -79,6 +79,16 @@ try {
     await pool.query("SAVEPOINT eft_dedupe_fingerprint");
     await assert.rejects(pool.query(movement, ["eft-ci-m3", account, "tx-2", "a".repeat(64)]), (error) => error.code === "23505");
     await pool.query("ROLLBACK TO SAVEPOINT eft_dedupe_fingerprint");
+    // A malformed fingerprint or zero-value movement must never enter reconciliation.
+    await pool.query("SAVEPOINT eft_invalid_fingerprint");
+    await assert.rejects(pool.query(movement, ["eft-ci-m4", account, "tx-4", "not-a-sha256"]), (error) => error.code === "23514");
+    await pool.query("ROLLBACK TO SAVEPOINT eft_invalid_fingerprint");
+    await pool.query("SAVEPOINT eft_zero_amount");
+    await assert.rejects(pool.query(`INSERT INTO bank_movements
+      (id,bank_account_id,source,external_transaction_id,import_fingerprint,amount,booked_at)
+      VALUES ($1,$2,'ci-import','tx-zero',$3,0,now())`,
+      ["eft-ci-zero", account, "c".repeat(64)]), (error) => error.code === "23514");
+    await pool.query("ROLLBACK TO SAVEPOINT eft_zero_amount");
   } finally {
     await pool.query("ROLLBACK");
   }
