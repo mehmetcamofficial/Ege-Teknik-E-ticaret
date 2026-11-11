@@ -64,33 +64,35 @@ try {
     AND indexname IN ('bank_movements_external_uq','bank_movements_fingerprint_uq','eft_reviews_movement_approved_uq')`)).rows;
   assert.equal(unique.length, 3, "bank movement dedupe and approval uniqueness indexes must exist");
   // Exercise the real PostgreSQL uniqueness constraints without retaining fixture rows.
-  await pool.query("BEGIN");
+  const fixtureClient = await pool.connect();
+  await fixtureClient.query("BEGIN");
   try {
     const account = "eft-ci-account";
-    await pool.query(`INSERT INTO merchant_bank_accounts (id,bank_label,account_alias,iban_last4)
+    await fixtureClient.query(`INSERT INTO merchant_bank_accounts (id,bank_label,account_alias,iban_last4)
       VALUES ($1,'CI bank','CI account','1234')`, [account]);
     const movement = `INSERT INTO bank_movements
       (id,bank_account_id,source,external_transaction_id,import_fingerprint,amount,booked_at)
       VALUES ($1,$2,'ci-import',$3,$4,100,now())`;
-    await pool.query(movement, ["eft-ci-m1", account, "tx-1", "a".repeat(64)]);
-    await pool.query("SAVEPOINT eft_dedupe_external");
-    await assert.rejects(pool.query(movement, ["eft-ci-m2", account, "tx-1", "b".repeat(64)]), (error) => error.code === "23505");
-    await pool.query("ROLLBACK TO SAVEPOINT eft_dedupe_external");
-    await pool.query("SAVEPOINT eft_dedupe_fingerprint");
-    await assert.rejects(pool.query(movement, ["eft-ci-m3", account, "tx-2", "a".repeat(64)]), (error) => error.code === "23505");
-    await pool.query("ROLLBACK TO SAVEPOINT eft_dedupe_fingerprint");
+    await fixtureClient.query(movement, ["eft-ci-m1", account, "tx-1", "a".repeat(64)]);
+    await fixtureClient.query("SAVEPOINT eft_dedupe_external");
+    await assert.rejects(fixtureClient.query(movement, ["eft-ci-m2", account, "tx-1", "b".repeat(64)]), (error) => error.code === "23505");
+    await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_dedupe_external");
+    await fixtureClient.query("SAVEPOINT eft_dedupe_fingerprint");
+    await assert.rejects(fixtureClient.query(movement, ["eft-ci-m3", account, "tx-2", "a".repeat(64)]), (error) => error.code === "23505");
+    await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_dedupe_fingerprint");
     // A malformed fingerprint or zero-value movement must never enter reconciliation.
-    await pool.query("SAVEPOINT eft_invalid_fingerprint");
-    await assert.rejects(pool.query(movement, ["eft-ci-m4", account, "tx-4", "not-a-sha256"]), (error) => error.code === "23514");
-    await pool.query("ROLLBACK TO SAVEPOINT eft_invalid_fingerprint");
-    await pool.query("SAVEPOINT eft_zero_amount");
-    await assert.rejects(pool.query(`INSERT INTO bank_movements
+    await fixtureClient.query("SAVEPOINT eft_invalid_fingerprint");
+    await assert.rejects(fixtureClient.query(movement, ["eft-ci-m4", account, "tx-4", "not-a-sha256"]), (error) => error.code === "23514");
+    await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_invalid_fingerprint");
+    await fixtureClient.query("SAVEPOINT eft_zero_amount");
+    await assert.rejects(fixtureClient.query(`INSERT INTO bank_movements
       (id,bank_account_id,source,external_transaction_id,import_fingerprint,amount,booked_at)
       VALUES ($1,$2,'ci-import','tx-zero',$3,0,now())`,
       ["eft-ci-zero", account, "c".repeat(64)]), (error) => error.code === "23514");
-    await pool.query("ROLLBACK TO SAVEPOINT eft_zero_amount");
+    await fixtureClient.query("ROLLBACK TO SAVEPOINT eft_zero_amount");
   } finally {
-    await pool.query("ROLLBACK");
+    await fixtureClient.query("ROLLBACK");
+    fixtureClient.release();
   }
   await migrate(drizzle(pool), { migrationsFolder: "drizzle-pg" });
   assert.equal((await pool.query("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations")).rows[0].n, 27, "rerun must be idempotent");
