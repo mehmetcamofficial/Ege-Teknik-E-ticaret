@@ -231,5 +231,5 @@ export const eftReconciliationReviews = pgTable("eft_reconciliation_reviews",{
  check("eft_reviews_status_ck",sql`${t.status} IN ('unmatched','proposed','needs_review','approved','rejected')`),
  check("eft_reviews_amount_ck",sql`${t.proposedAmount} IS NULL OR ${t.proposedAmount} > 0`),
  check("eft_reviews_revision_ck",sql`${t.revision} > 0`),
- check("eft_reviews_distinct_actors_ck",sql`${t.approvedBy} IS NULL OR (${t.approvedBy} <> ${t.createdBy} AND (${t.reviewedBy} IS NULL OR ${t.approvedBy} <> ${t.reviewedBy}))`),
+ check("eft_reviews_distinct_actors_ck",sql`${t.approvedBy} IS NULL OR (${t.approvedBy} <> ${t.createdBy} AND ${t.reviewedBy} IS NOT NULL AND ${t.reviewedBy} <> ${t.createdBy} AND ${t.approvedBy} <> ${t.reviewedBy})`),
  check("eft_reviews_approved_ck",sql`${t.status} <> 'approved' OR (${t.orderId} IS NOT NULL AND ${t.paymentId} IS NOT NULL AND ${t.reviewedBy} IS NOT NULL AND ${t.approvedBy} IS NOT NULL)`)]);
