@@ -5,6 +5,8 @@ import pg from "pg";
 import { eq } from "drizzle-orm";
 import { adminUsers, auditLogs, inventory, orderItems, orders, payments, products } from "../db/schema.ts";
 import { loadFinanceReport, loadOrderLedger, recordManualPayment, recordRefund, type FinanceDb } from "../lib/finance-db.ts";
+import { merchantBankAccounts, bankMovements, eftReconciliationReviews } from "../db/schema.ts";
+import { settleEftReview } from "../lib/eft-reconciliation-db.ts";
 import type { OrderStatus } from "../lib/order-domain.ts";
 import { transitionOrder } from "../lib/order-transition.ts";
 import { orderTransitionDeps } from "../lib/order-transition-db.ts";
@@ -187,4 +189,44 @@ test("DB CHECKs refuse a non-positive payment and a 'paid' payment without paid_
   const id = await makeOrder(9, 100);
   await assert.rejects(db.insert(payments).values({ id: crypto.randomUUID(), orderId: id, provider: "manual", amount: 0, status: "pending" }));
   await assert.rejects(db.insert(payments).values({ id: crypto.randomUUID(), orderId: id, provider: "manual", amount: 10, status: "paid" }));
+});
+
+test("EFT settlement: concurrent approval writes one payment and one audit row", { skip }, async () => {
+  const orderId = await makeOrder(10, 850);
+  const creator = "eft-maker-" + run, reviewer = "eft-reviewer-" + run, approver = "eft-approver-" + run;
+  await db.insert(adminUsers).values([
+    { id: creator, externalUserId: creator, email: creator + "@example.test", role: "finance_manager" },
+    { id: reviewer, externalUserId: reviewer, email: reviewer + "@example.test", role: "finance_manager" },
+    { id: approver, externalUserId: approver, email: approver + "@example.test", role: "super_admin" },
+  ]);
+  const accountId = "eft-account-" + run, movementId = "eft-movement-" + run, reviewId = "eft-review-" + run;
+  await db.insert(merchantBankAccounts).values({ id: accountId, bankLabel: "CI bank", accountAlias: "CI", ibanLast4: "1234" });
+  await db.insert(bankMovements).values({
+    id: movementId, bankAccountId: accountId, source: "ci-fixture",
+    externalTransactionId: "tx-" + run, importFingerprint: "d".repeat(64), amount: 850, bookedAt: at(10),
+  });
+  await db.insert(eftReconciliationReviews).values({
+    id: reviewId, movementId, orderId, status: "proposed", proposedAmount: 850, createdBy: creator, reviewedBy: reviewer,
+  });
+  const approverActor = { userId: approver, email: approver + "@example.test", permissions: ["payments:record", "audit:read"] };
+  const [first, second] = await Promise.all([
+    settleEftReview(db, { reviewId, actor: approverActor, sourceVerified: true }),
+    settleEftReview(db, { reviewId, actor: approverActor, sourceVerified: true }),
+  ]);
+  const results = [first, second];
+  assert.equal(results.filter((result) => result.ok).length, 1);
+  assert.equal(results.filter((result) => !result.ok && result.code === "ALREADY_APPROVED").length, 1);
+  const rows = await db.select().from(payments).where(eq(payments.orderId, orderId));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].method, "bank_transfer");
+  assert.equal(rows[0].amount, 850);
+  const [review] = await db.select().from(eftReconciliationReviews).where(eq(eftReconciliationReviews.id, reviewId));
+  assert.equal(review.status, "approved");
+  assert.equal(review.paymentId, rows[0].id);
+  const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+  assert.equal(order.paymentStatus, "paid");
+  const logs = await db.select().from(auditLogs).where(eq(auditLogs.entityId, orderId));
+  assert.equal(logs.filter((entry) => entry.action === "eft_reconciliation_approved").length, 1);
+  const replay = await settleEftReview(db, { reviewId, actor: approverActor, sourceVerified: true });
+  assert.deepEqual(replay, { ok: false, code: "ALREADY_APPROVED" });
 });
