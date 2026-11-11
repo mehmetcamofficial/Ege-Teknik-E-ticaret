@@ -69,7 +69,7 @@ test("H5-B routes authenticate, then check the specific permission, answer 403 i
 
 test("H5-B no code path sets a payment as collected or an order as paid outside the ledger-guarded services", () => {
   const writers = walk("app").concat(walk("lib")).filter((f) => /\.(ts|tsx)$/.test(f)).filter((f) => /status\s*:\s*["']paid["']|paymentStatus\s*:\s*["']paid["']|set\(\{[^}]*status:\s*["']paid["']/.test(read(f)));
-  assert.deepEqual(writers.sort(), writers.filter((f) => /^lib\/(finance-db|paytr-db|order-transition-db|finance)\.ts$/.test(f)).sort(), `unexpected writers of 'paid': ${writers}`);
+  assert.deepEqual(writers.sort(), writers.filter((f) => /^lib\/(eft-reconciliation-db|finance-db|paytr-db|order-transition-db|finance)\.ts$/.test(f)).sort(), `unexpected writers of 'paid': ${writers}`);
 });
 
 test("H5-B escalation paths: only super_admin can grant, invite or change roles, and finance grants are short and audited", () => {
