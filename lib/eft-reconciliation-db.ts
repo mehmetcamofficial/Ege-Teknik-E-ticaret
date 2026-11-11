@@ -15,7 +15,7 @@ export async function settleEftReview(db: FinanceDb, input: {
 }) {
  if (!input.actor.permissions.includes("payments:record") || !input.actor.permissions.includes("audit:read"))
    return { ok:false as const, code:"FORBIDDEN" };
- if (!input.sourceVerified) return { ok:false as const, code:"UNVERIFIED_BANK_SOURCE" };
+ if (input.sourceVerified !== true) return { ok:false as const, code:"UNVERIFIED_BANK_SOURCE" };
  const now=input.now??new Date();
  return db.transaction(async tx=>{
    const [candidate]=await tx.select({id:eftReconciliationReviews.id,orderId:eftReconciliationReviews.orderId})
