@@ -63,6 +63,25 @@ try {
   const unique = (await pool.query(`SELECT indexname FROM pg_indexes WHERE schemaname='public'
     AND indexname IN ('bank_movements_external_uq','bank_movements_fingerprint_uq','eft_reviews_movement_approved_uq')`)).rows;
   assert.equal(unique.length, 3, "bank movement dedupe and approval uniqueness indexes must exist");
+  // Exercise the real PostgreSQL uniqueness constraints without retaining fixture rows.
+  await pool.query("BEGIN");
+  try {
+    const account = "eft-ci-account";
+    await pool.query(`INSERT INTO merchant_bank_accounts (id,bank_label,account_alias,iban_last4)
+      VALUES ($1,'CI bank','CI account','1234')`, [account]);
+    const movement = `INSERT INTO bank_movements
+      (id,bank_account_id,source,external_transaction_id,import_fingerprint,amount,booked_at)
+      VALUES ($1,$2,'ci-import',$3,$4,100,now())`;
+    await pool.query(movement, ["eft-ci-m1", account, "tx-1", "a".repeat(64)]);
+    await pool.query("SAVEPOINT eft_dedupe_external");
+    await assert.rejects(pool.query(movement, ["eft-ci-m2", account, "tx-1", "b".repeat(64)]), (error) => error.code === "23505");
+    await pool.query("ROLLBACK TO SAVEPOINT eft_dedupe_external");
+    await pool.query("SAVEPOINT eft_dedupe_fingerprint");
+    await assert.rejects(pool.query(movement, ["eft-ci-m3", account, "tx-2", "a".repeat(64)]), (error) => error.code === "23505");
+    await pool.query("ROLLBACK TO SAVEPOINT eft_dedupe_fingerprint");
+  } finally {
+    await pool.query("ROLLBACK");
+  }
   await migrate(drizzle(pool), { migrationsFolder: "drizzle-pg" });
   assert.equal((await pool.query("SELECT count(*)::int AS n FROM drizzle.__drizzle_migrations")).rows[0].n, 27, "rerun must be idempotent");
   console.log("[migration-upgrade] PASS: real Drizzle 0018->0026, 19->27 ledger, schema, idempotency");
